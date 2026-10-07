@@ -7,6 +7,7 @@ import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
 import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
+import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
 
 const config=loadRuntimeConfig();
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
@@ -31,5 +32,6 @@ if(hasFinance){
 
 export default createProductionComposition({
   bundle,
-  workerId:config.workerId
+  workerId:config.workerId,
+  operationalTick:createFinanceOperationalTickFromEnv()
 });
