@@ -10,6 +10,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 4 Tool Gateway + Side-Effect Contracts: PASS on real PostgreSQL 15.17
 - Phase 5 Verified Learning + Memory: PASS on real PostgreSQL 15.17
 - Phase 6 Operational Supervision + Incident Control: PASS on real PostgreSQL 15.17
+- Phase 7 Production Readiness + Deployment Hardening: TECHNICALLY PASS; live deployment proof pending
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -180,3 +181,23 @@ Implemented and real-PostgreSQL tested:
 Phase 6 tests live under `tests/phase6/`.
 
 See `docs/PHASE6_SCOPE.md` and `PHASE6_DOD_CHECKLIST.md`.
+
+
+## Phase 7 — Production Readiness + Deployment Hardening
+Implemented and production-like tested:
+- strict production configuration validation
+- required composition module in production
+- startup database connectivity + restart recovery gate
+- liveness and readiness endpoints
+- graceful shutdown and readiness drain
+- runtime tick overlap protection
+- signal-aware process entrypoint
+- production Dockerfile
+- production compose configuration with required-variable guards
+- deployment / rollback / backup / restore runbook
+
+Phase 7 tests live under `tests/phase7/`.
+
+Container files passed static lint/config validation and simulated production dependency installation. A real Docker build/run and a real production deployment remain pending because the verifier environment has no Docker and no production system was changed.
+
+See `docs/PHASE7_SCOPE.md`, `docs/PRODUCTION_RUNBOOK.md`, and `PHASE7_DOD_CHECKLIST.md`.
