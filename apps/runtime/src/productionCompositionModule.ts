@@ -6,6 +6,7 @@ import { syncVerificationContracts } from "../../production/src/verificationCont
 import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
 import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
+import { GMAIL_READ_VERIFICATION_CONTRACTS } from "../../production/src/gmailBundle";
 
 const config=loadRuntimeConfig();
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
@@ -22,6 +23,12 @@ if(hasEBoekhouden){
 const hasBol=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("bol_"));
 if(hasBol){
   await syncVerificationContracts(BOL_VERIFICATION_CONTRACTS);
+}
+const hasGmailReads=bundle.raw.capabilities.some((c)=>
+  ["gmail_search_threads","gmail_get_thread","gmail_get_message"].includes(c.capabilityId)
+);
+if(hasGmailReads){
+  await syncVerificationContracts(GMAIL_READ_VERIFICATION_CONTRACTS);
 }
 
 export default createProductionComposition({
