@@ -5,6 +5,8 @@ import { assembleContext } from "./contextAssembler";
 import { proposePlan } from "./planner";
 import { beginReplanAtomic } from "../../kernel/src/replanning";
 import { persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
+import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
+import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 
 export async function runBrainReplanCycle(input: {
   gateway: ModelGateway;
@@ -13,6 +15,7 @@ export async function runBrainReplanCycle(input: {
   dataClassification: DataClassification;
   maxCostUsd: number;
   preferredProviders?: string[];
+  capabilityPolicies: CapabilityAuthorityPolicy;
 }) {
   const goal = await withTransaction(async (client) => {
     const res = await client.query(
@@ -52,12 +55,31 @@ export async function runBrainReplanCycle(input: {
     preferredProviders:input.preferredProviders
   });
 
+  const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
+    goalId: input.goalId,
+    legalEntityId: goal.company_scope ?? null,
+    steps: candidate.steps,
+    capabilityPolicies: input.capabilityPolicies
+  }));
+
+  if (!authority.authorized) {
+    await transitionGoalAtomic(
+      input.goalId,
+      "PLANNING",
+      "WAITING_OWNER",
+      "replanned_candidate_requires_authority",
+      { blocked: authority.blocked }
+    );
+    throw new Error("Replanned candidate blocked by authority policy");
+  }
+
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {
     failed:false,
     context,
     candidate,
+    authority,
     persisted
   };
 }
