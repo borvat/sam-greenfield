@@ -23,6 +23,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 17 Finance Reconciliation Preview: PASS on real PostgreSQL 15.17
 - Phase 18 Operational Finance Loop: PASS on real PostgreSQL 15.17
 - Phase 19 Executive Command Center: PASS on real PostgreSQL 15.17
+- Phase 20 Live Golden Chain Acceptance Gate: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -394,3 +395,14 @@ SAM now has a secure owner-facing Command Center service. The dashboard can crea
 The production service runs on port `8082` via `npm run start:command-center`.
 
 See `docs/PHASE19_SCOPE.md` and `PHASE19_DOD_CHECKLIST.md`.
+
+
+## Phase 20 — Live Golden Chain Acceptance Gate
+SAM now includes a deployment acceptance runner that proves the real owner path after deployment: runtime ready → Command Center ready → optional MCP alive → create one GREEN canary goal through the Command Center → poll its Golden Chain → require persisted plan, work, execution and VERIFIED independent verification before PASS. The gate fails on readiness errors, WAITING_OWNER for a GREEN canary, terminal failures, missing verification evidence, or timeout.
+
+Run it from a trusted operator environment with:
+`npm run live:acceptance`
+
+The runner is ready, but LIVE_PROVEN status still requires executing it against the actual deployed SAM services with production credentials.
+
+See `docs/PHASE20_SCOPE.md` and `PHASE20_DOD_CHECKLIST.md`.
