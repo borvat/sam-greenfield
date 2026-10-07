@@ -8,7 +8,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: main
+  branch: deploy/sam-free-trial
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh runtime
@@ -58,7 +58,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: main
+  branch: deploy/sam-free-trial
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh command-center
@@ -121,7 +121,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: main
+  branch: deploy/sam-free-trial
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh mcp
