@@ -70,3 +70,13 @@ Operational checks:
 5. Never place the bearer token in source control, logs, or tool output.
 
 The MCP process and executive worker are deliberately separate. Restarting the MCP bridge must not interrupt the executive worker.
+
+
+## Real model providers
+The production bundle may call `withStandardModelProvidersFromEnv(...)` to register the five supported real provider adapters.
+
+A provider is enabled only when its API key and model name are set. Qwen also requires an explicit compatible-mode base URL.
+
+Provider registry metadata is synchronized into `model_providers` at production composition startup. Default privacy is PUBLIC + INTERNAL only. CONFIDENTIAL or RESTRICTED must be opted in explicitly per provider after policy review.
+
+Never place provider keys in source control, the production bundle file, logs, audit payloads, or tool responses.
