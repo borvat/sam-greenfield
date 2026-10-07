@@ -44,6 +44,8 @@ export interface ProductionActionDispatcher{
     capabilityId:string;
     params:Record<string,unknown>;
     actor:string;
+    legalEntityId?:string;
+    objective?:string;
   }):Promise<unknown>;
   reconcile?(input:{
     operationKey?:string;
