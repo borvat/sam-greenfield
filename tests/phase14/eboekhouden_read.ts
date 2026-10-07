@@ -44,12 +44,24 @@ async function mock(){
     assert.ok(body.includes("<soap:SecurityCode2>code2</soap:SecurityCode2>"));
 
     if(action.endsWith("/GetFacturen")){
+      if(body.includes("<soap:Relatiecode>MANY</soap:Relatiecode>")){
+        const many=Array.from({length:501},(_,i)=>
+          `<cFactuur><Factuurnummer>M-${i+1}</Factuurnummer><Relatiecode>MANY</Relatiecode></cFactuur>`
+        ).join("");
+        res.end(envelope(`<GetFacturenResponse xmlns="http://www.e-boekhouden.nl/soap"><GetFacturenResult><Facturen>${many}</Facturen></GetFacturenResult></GetFacturenResponse>`));
+        return;
+      }
       assert.ok(body.includes("<soap:Relatiecode>REL1</soap:Relatiecode>"));
       res.end(envelope('<GetFacturenResponse xmlns="http://www.e-boekhouden.nl/soap"><GetFacturenResult><Facturen><cFactuur><Factuurnummer>F-1</Factuurnummer><Relatiecode>REL1</Relatiecode><TotaalInclBTW>121.00</TotaalInclBTW></cFactuur><cFactuur><Factuurnummer>F-2</Factuurnummer><Relatiecode>REL1</Relatiecode><TotaalInclBTW>242.00</TotaalInclBTW></cFactuur></Facturen></GetFacturenResult></GetFacturenResponse>'));
       return;
     }
 
     if(action.endsWith("/GetMutaties")){
+      if(body.includes("<soap:Factuurnummer>FAIL</soap:Factuurnummer>")){
+        res.statusCode=500;
+        res.end(envelope('<soap:Fault><faultcode>Server</faultcode><faultstring>forced failure</faultstring></soap:Fault>'));
+        return;
+      }
       assert.ok(body.includes("<soap:DatumVan>2026-10-01</soap:DatumVan>"));
       res.end(envelope('<GetMutatiesResponse xmlns="http://www.e-boekhouden.nl/soap"><GetMutatiesResult><Mutaties><cMutatie><Mutatienr>100</Mutatienr><Datum>2026-10-01</Datum><Factuurnummer>F-1</Factuurnummer></cMutatie><cMutatie><Mutatienr>101</Mutatienr><Datum>2026-10-02</Datum><Factuurnummer>F-2</Factuurnummer></cMutatie></Mutaties></GetMutatiesResult></GetMutatiesResponse>'));
       return;
@@ -86,6 +98,14 @@ async function main(){
   assert.equal((invoices.result as any).count,1);
   assert.equal((invoices.result as any).items[0].Factuurnummer,"F-1");
 
+  const manyInvoices=await new EBoekhoudenInvoicesAdapter(client).execute({
+    capabilityId:"eboekhouden_get_invoices",
+    idempotencyKey:"read-many",
+    params:{relation_code:"MANY",limit:999}
+  });
+  assert.equal((manyInvoices.result as any).count,500);
+  assert.equal((manyInvoices.result as any).items[499].Factuurnummer,"M-500");
+
   const mutations=await new EBoekhoudenMutationsAdapter(client).execute({
     capabilityId:"eboekhouden_get_mutations",
     idempotencyKey:"read-mut",
@@ -101,6 +121,16 @@ async function main(){
   });
   assert.equal((openItems.result as any).count,1);
   assert.equal((openItems.result as any).items[0].MutFactuur,"F-1");
+
+  const beforeFailureClose=m.closed;
+  let forcedFailure=false;
+  try{
+    await client.getMutations({invoiceNumber:"FAIL"});
+  }catch(err){
+    forcedFailure=err instanceof Error&&err.message.includes("HTTP 500");
+  }
+  assert.equal(forcedFailure,true);
+  assert.equal(m.closed,beforeFailureClose+1);
 
   const invVerify=await new EBoekhoudenInvoicesVerifier(client).verify({
     execution:{id:"e1",capabilityId:"eboekhouden_get_invoices",params:{relation_code:"REL1",limit:1},evidence:{count:1},operationKeyRef:null},
@@ -121,7 +151,7 @@ async function main(){
   assert.equal(openVerify.result,"VERIFIED");
 
   assert.equal(m.opened,m.closed);
-  assert.equal(m.opened,6);
+  assert.equal(m.opened,9);
 
   const base={capabilities:[],toolDefinitions:[],toolAdapters:[]};
   const noEnv=withEBoekhoudenFromEnv(base,{} as NodeJS.ProcessEnv);
