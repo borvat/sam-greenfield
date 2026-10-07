@@ -20,3 +20,23 @@ export async function withTransaction<T>(fn: (client: any) => Promise<T>): Promi
     client.release();
   }
 }
+
+export async function setTenantContext(
+  client: any,
+  context: { orgId?: string | null; legalEntityId?: string | null }
+): Promise<void> {
+  await client.query(
+    "SELECT set_config('app.current_org_id', $1, true), set_config('app.current_legal_entity_id', $2, true)",
+    [context.orgId ?? "", context.legalEntityId ?? ""]
+  );
+}
+
+export async function withTenantTransaction<T>(
+  context: { orgId?: string | null; legalEntityId?: string | null },
+  fn: (client: any) => Promise<T>
+): Promise<T> {
+  return withTransaction(async (client) => {
+    await setTenantContext(client, context);
+    return fn(client);
+  });
+}
