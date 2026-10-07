@@ -14,14 +14,15 @@ async function createGoal(input:{
 }):Promise<string>{
   return withTransaction(async(client)=>{
     const entity=await client.query(
-      "SELECT id,org_id FROM legal_entities WHERE id=$1",
+      "SELECT id FROM legal_entities WHERE id=$1",
       [input.legalEntityId]
     );
     if(entity.rowCount!==1) throw new Error("Legal entity not found");
 
+    // Goal business IDs are globally unique by schema. Use the canonical global
+    // goal sequence (NULL scope), matching the Phase 0 RLS/security paths.
     const business=await client.query(
-      "SELECT next_business_id('goal',$1) AS business_id",
-      [entity.rows[0].org_id]
+      "SELECT next_business_id('goal',NULL) AS business_id"
     );
 
     const inserted=await client.query(
