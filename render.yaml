@@ -13,7 +13,6 @@ services:
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh runtime
   healthCheckPath: /readyz
-  maxShutdownDelaySeconds: 30
   envVars:
   - &id001
     key: NODE_ENV
@@ -55,7 +54,6 @@ services:
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh command-center
   healthCheckPath: /readyz
-  maxShutdownDelaySeconds: 30
   envVars:
   - *id001
   - *id002
@@ -98,7 +96,6 @@ services:
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh mcp
   healthCheckPath: /livez
-  maxShutdownDelaySeconds: 30
   envVars:
   - *id001
   - *id002
