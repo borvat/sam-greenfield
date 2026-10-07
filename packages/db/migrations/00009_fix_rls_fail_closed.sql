@@ -40,3 +40,8 @@ $$;
 COMMENT ON POLICY legal_entities_tenant_isolation_fail_closed ON legal_entities IS 'FAIL-CLOSED: missing org context denies access';
 COMMENT ON POLICY goals_tenant_isolation_fail_closed ON goals IS 'FAIL-CLOSED: missing legal entity context denies access';
 COMMENT ON POLICY financial_documents_tenant_isolation_fail_closed ON financial_documents IS 'FAIL-CLOSED: missing context denies, explicit bypass only via service_role/is_admin, never NULL';
+
+
+-- Ensure the business ID sequence store is fail-closed like every other tenant-scoped table.
+-- No permissive policy is added here; non-privileged direct access remains denied by default.
+ALTER TABLE business_id_sequences ENABLE ROW LEVEL SECURITY;
