@@ -6,6 +6,7 @@ import { syncVerificationContracts } from "../../production/src/verificationCont
 import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
 import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
+import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
 
 const config=loadRuntimeConfig();
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
@@ -22,6 +23,10 @@ if(hasEBoekhouden){
 const hasBol=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("bol_"));
 if(hasBol){
   await syncVerificationContracts(BOL_VERIFICATION_CONTRACTS);
+}
+const hasFinance=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("finance_"));
+if(hasFinance){
+  await syncVerificationContracts(FINANCE_RECONCILIATION_CONTRACTS);
 }
 
 export default createProductionComposition({
