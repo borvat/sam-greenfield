@@ -3,7 +3,11 @@ import {
   BolOrdersAdapter,
   BolReturnsAdapter,
   BolInvoicesAdapter,
-  BolRetailerAdapter
+  BolRetailerAdapter,
+  BolOrderDetailAdapter,
+  BolShipmentsAdapter,
+  BolCommissionAdapter,
+  BolCompetingOffersAdapter
 } from "../../tools/src/bolReadAdapters";
 import type { ProductionBundle,VerificationAdapter } from "./types";
 
@@ -11,7 +15,11 @@ const CAPABILITIES=[
   "bol_list_orders",
   "bol_list_returns",
   "bol_list_invoices",
-  "bol_get_retailer"
+  "bol_get_retailer",
+  "bol_get_order",
+  "bol_list_shipments",
+  "bol_get_commission",
+  "bol_get_competing_offers"
 ] as const;
 
 function verifier(
@@ -42,8 +50,16 @@ function verifier(
           periodStartDate:p.period_start_date,
           periodEndDate:p.period_end_date
         });
-      }else{
+      }else if(capabilityId==="bol_get_retailer"){
         await client.getCurrentRetailer();
+      }else if(capabilityId==="bol_get_order"){
+        await client.getOrder(p.order_id);
+      }else if(capabilityId==="bol_list_shipments"){
+        await client.listShipments({page:p.page,fulfilmentMethod:p.fulfilment_method});
+      }else if(capabilityId==="bol_get_commission"){
+        await client.getCommission({ean:p.ean,unitPrice:p.unit_price,condition:p.condition});
+      }else{
+        await client.getCompetingOffers({ean:p.ean,page:p.page,countryCode:p.country_code,bestOfferOnly:p.best_offer_only,condition:p.condition});
       }
 
       return {
@@ -86,7 +102,11 @@ export function withBolRetailerFromEnv(
     new BolOrdersAdapter(client),
     new BolReturnsAdapter(client),
     new BolInvoicesAdapter(client),
-    new BolRetailerAdapter(client)
+    new BolRetailerAdapter(client),
+    new BolOrderDetailAdapter(client),
+    new BolShipmentsAdapter(client),
+    new BolCommissionAdapter(client),
+    new BolCompetingOffersAdapter(client)
   ];
 
   return {
