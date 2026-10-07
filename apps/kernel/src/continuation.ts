@@ -53,3 +53,39 @@ export async function wakeDueGoals(limit = 100): Promise<string[]> {
     return ids;
   });
 }
+
+
+export async function wakeGoalFromEventAtomic(
+  goalId: string,
+  sourceEventSeq: number,
+  sourceEventType: string
+): Promise<boolean> {
+  return withTransaction(async (client) => {
+    const goal = await client.query(
+      "SELECT id,state FROM goals WHERE id=$1 FOR UPDATE",
+      [goalId]
+    );
+    if (goal.rowCount !== 1) return false;
+    if (!["WAITING_EXTERNAL","WAITING_OWNER","BLOCKED"].includes(goal.rows[0].state)) {
+      return false;
+    }
+
+    const from = goal.rows[0].state as GoalState;
+    await client.query(
+      "UPDATE goals SET state='MODELING',next_wake_at=NULL,updated_at=now() WHERE id=$1",
+      [goalId]
+    );
+    await insertOutboxEvent(client, {
+      aggregateType: "goal",
+      aggregateId: goalId,
+      eventType: "GOAL_WOKEN_BY_EVENT",
+      payload: {
+        from,
+        to: "MODELING",
+        source_event_seq: sourceEventSeq,
+        source_event_type: sourceEventType
+      }
+    });
+    return true;
+  });
+}
