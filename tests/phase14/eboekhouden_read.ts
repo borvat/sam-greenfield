@@ -151,7 +151,7 @@ async function main(){
   assert.equal(openVerify.result,"VERIFIED");
 
   assert.equal(m.opened,m.closed);
-  assert.equal(m.opened,9);
+  assert.equal(m.opened,8);
 
   const base={capabilities:[],toolDefinitions:[],toolAdapters:[]};
   const noEnv=withEBoekhoudenFromEnv(base,{} as NodeJS.ProcessEnv);
@@ -164,6 +164,15 @@ async function main(){
     EBOEKHOUDEN_SOAP_ENDPOINT:m.endpoint
   } as NodeJS.ProcessEnv);
   const validated=validateProductionBundle(configured);
+  const financeIds=configured.capabilities.map((x)=>x.capabilityId).sort();
+  assert.deepEqual(financeIds,[
+    "eboekhouden_get_invoices",
+    "eboekhouden_get_mutations",
+    "eboekhouden_get_open_items"
+  ]);
+  assert.ok(financeIds.every((id)=>id.startsWith("eboekhouden_get_")));
+  assert.ok(configured.toolDefinitions.every((tool)=>tool.sideEffect===false));
+
   for(const id of ["eboekhouden_get_invoices","eboekhouden_get_mutations","eboekhouden_get_open_items"]){
     assert.equal(validated.catalog.get(id).authorityClass,"GREEN");
     assert.equal(validated.tools.definition(id).sideEffect,false);
