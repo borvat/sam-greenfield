@@ -31,9 +31,11 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           type:"object",
           properties:{
             capability_id:{type:"string"},
+            legal_entity_id:{type:"string"},
+            objective:{type:"string"},
             params:{type:"object"}
           },
-          required:["capability_id","params"],
+          required:["capability_id","legal_entity_id","params"],
           additionalProperties:false
         }
       },
@@ -41,13 +43,21 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
         if(!dispatcher) return {ok:false,unavailable:true,error:"Production capability dispatcher is not registered"};
         const capabilityId=String(args.capability_id??"");
         const params=(args.params??{}) as Record<string,unknown>;
+        const legalEntityId=String(args.legal_entity_id??"");
+        const objective=args.objective?String(args.objective):undefined;
         const manifest=await dispatcher.manifest();
         const item=manifest.find((m)=>m.capabilityId===capabilityId);
         if(!item) return {ok:false,error:`Unknown production capability: ${capabilityId}`};
         if(item.availability!=="AVAILABLE"){
           return {ok:false,unavailable:true,error:`Capability ${capabilityId} is ${item.availability}`};
         }
-        return {ok:true,data:await dispatcher.execute({capabilityId,params,actor:context.actor})};
+        return {ok:true,data:await dispatcher.execute({
+          capabilityId,
+          params,
+          actor:context.actor,
+          legalEntityId,
+          objective
+        })};
       }
     },
     {
