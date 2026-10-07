@@ -6,6 +6,7 @@ import { scheduleContinuationAtomic, wakeDueGoals } from "../../apps/kernel/src/
 import { reconcileExpiredLeases } from "../../apps/kernel/src/reconciliation";
 import { recordIndependentVerificationAtomic } from "../../apps/kernel/src/verification";
 import { loadVerifiedWorldModel } from "../../apps/brain/src/worldModel";
+import { beginSideEffectAtomic, markSideEffectSentAtomic, confirmSideEffectAtomic } from "../../apps/kernel/src/sideEffects";
 
 async function scalar(sql: string, params: any[] = []) {
   const r = await pool.query(sql, params);
@@ -62,6 +63,24 @@ async function main() {
   const woke = await wakeDueGoals();
   assert.ok(woke.includes(continuationGoal.goalId));
   assert.equal((await scalar("SELECT state FROM goals WHERE id=$1",[continuationGoal.goalId])).state, "MODELING");
+
+  const opKey = `P1:effect:${Date.now()}:${Math.random()}`;
+  const effectA = await beginSideEffectAtomic({
+    operationKey: opKey,
+    capabilityId: "gmail_send",
+    requestHash: "hash-smoke"
+  });
+  const effectB = await beginSideEffectAtomic({
+    operationKey: opKey,
+    capabilityId: "gmail_send",
+    requestHash: "hash-smoke"
+  });
+  assert.equal(effectA.created, true);
+  assert.equal(effectB.created, false);
+  assert.equal(effectA.operation.id, effectB.operation.id);
+  await markSideEffectSentAtomic(opKey, "provider-ref-smoke");
+  await confirmSideEffectAtomic(opKey);
+  assert.equal((await scalar("SELECT state FROM side_effect_operations WHERE operation_key=$1",[opKey])).state, "CONFIRMED");
 
   const verifyGoal = await createGoal("VERIFYING");
   const contract = await scalar("SELECT id FROM verification_contracts WHERE capability_id='gmail_send' LIMIT 1");
