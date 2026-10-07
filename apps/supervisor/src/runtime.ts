@@ -9,6 +9,7 @@ export async function runOperationalSupervisorTick(input:{
   staleVerificationMinutes?:number;
   oldOutboxMinutes?:number;
   modelLookbackMinutes?:number;
+  actor?:string;
 }={}){
   return withTransaction(async(client)=>{
     const snapshot=await captureHealthSnapshot(client,{
@@ -19,8 +20,9 @@ export async function runOperationalSupervisorTick(input:{
     });
 
     const candidates=evaluateHealth(snapshot,input.policy ?? DEFAULT_SUPERVISOR_POLICY);
-    const incidentDelta=await reconcileIncidents(client,candidates);
-    const activeIncidents=await loadActiveIncidents(client);
+    const actor=input.actor ?? "operational-supervisor";
+    const incidentDelta=await reconcileIncidents(client,candidates,actor);
+    const activeIncidents=await loadActiveIncidents(client,actor);
 
     return {
       snapshot,
