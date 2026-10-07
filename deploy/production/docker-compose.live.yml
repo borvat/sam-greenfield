@@ -1,0 +1,172 @@
+x-sam-env: &sam-env
+  NODE_ENV: production
+  DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  SAM_PRODUCTION_BUNDLE_MODULE: /app/apps/production/src/defaultBundleModule.ts
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_MODEL: ${OPENAI_MODEL:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+  GOOGLE_MODEL: ${GOOGLE_MODEL:-}
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-}
+  QWEN_API_KEY: ${QWEN_API_KEY:-}
+  QWEN_MODEL: ${QWEN_MODEL:-}
+  QWEN_BASE_URL: ${QWEN_BASE_URL:-}
+  GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+  GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+  GOOGLE_OAUTH_REFRESH_TOKEN: ${GOOGLE_OAUTH_REFRESH_TOKEN:-}
+  GMAIL_FROM_EMAIL: ${GMAIL_FROM_EMAIL:-}
+  EBOEKHOUDEN_API_TOKEN: ${EBOEKHOUDEN_API_TOKEN:-}
+  EBOEKHOUDEN_SOURCE: SAM
+  BOL_CLIENT_ID: ${BOL_CLIENT_ID:-}
+  BOL_CLIENT_SECRET: ${BOL_CLIENT_SECRET:-}
+  SAM_FINANCE_LEGAL_ENTITY_ID: ${SAM_FINANCE_LEGAL_ENTITY_ID:-}
+  SAM_FINANCE_LOOP_INTERVAL_MINUTES: ${SAM_FINANCE_LOOP_INTERVAL_MINUTES:-180}
+  SAM_FINANCE_LOOKBACK_DAYS: ${SAM_FINANCE_LOOKBACK_DAYS:-30}
+  SAM_FINANCE_MATERIAL_VARIANCE_COUNT: ${SAM_FINANCE_MATERIAL_VARIANCE_COUNT:-1}
+  SAM_FINANCE_MAX_PAGES: ${SAM_FINANCE_MAX_PAGES:-5}
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - sam_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [sam-internal]
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: ["npm","run","db:migrate","--","--apply"]
+    environment:
+      <<: *sam-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks: [sam-internal]
+
+  sam:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *sam-env
+      SAM_WORKER_ID: ${SAM_WORKER_ID:?SAM_WORKER_ID is required}
+      SAM_COMPOSITION_MODULE: /app/apps/runtime/src/productionCompositionModule.ts
+      HOST: 0.0.0.0
+      PORT: 8080
+      SAM_TICK_INTERVAL_MS: 1000
+      SAM_SHUTDOWN_GRACE_MS: 15000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD","node","-e","fetch('http://127.0.0.1:8080/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    stop_grace_period: 20s
+    networks: [sam-internal]
+
+  sam-mcp:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: ["npm","run","start:mcp"]
+    restart: unless-stopped
+    environment:
+      <<: *sam-env
+      SAM_MCP_PORT: 8081
+      SAM_MCP_HOST: 0.0.0.0
+      SAM_MCP_ACTOR: chatgpt-mcp
+      SAM_MCP_BEARER_TOKEN: ${SAM_MCP_BEARER_TOKEN:?SAM_MCP_BEARER_TOKEN is required}
+      SAM_MCP_ALLOWED_HOSTS: ${SAM_MCP_ALLOWED_HOSTS:?SAM_MCP_ALLOWED_HOSTS is required}
+      SAM_MCP_ALLOWED_ORIGINS: ${SAM_MCP_ALLOWED_ORIGINS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose: ["8081"]
+    healthcheck:
+      test: ["CMD","node","-e","fetch('http://127.0.0.1:8081/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    networks: [sam-internal]
+
+  sam-command-center:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: ["npm","run","start:command-center"]
+    restart: unless-stopped
+    environment:
+      <<: *sam-env
+      SAM_COMMAND_CENTER_PORT: 8082
+      SAM_COMMAND_CENTER_HOST: 0.0.0.0
+      SAM_COMMAND_CENTER_BEARER_TOKEN: ${SAM_COMMAND_CENTER_BEARER_TOKEN:?SAM_COMMAND_CENTER_BEARER_TOKEN is required}
+      SAM_COMMAND_CENTER_ALLOWED_HOSTS: ${SAM_COMMAND_CENTER_ALLOWED_HOSTS:?SAM_COMMAND_CENTER_ALLOWED_HOSTS is required}
+      SAM_COMMAND_CENTER_ALLOWED_ORIGINS: ${SAM_COMMAND_CENTER_ALLOWED_ORIGINS:-}
+      SAM_COMMAND_CENTER_LEGAL_ENTITY_ID: ${SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:?SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose: ["8082"]
+    healthcheck:
+      test: ["CMD","node","-e","fetch('http://127.0.0.1:8082/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    networks: [sam-internal]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SAM_COMMAND_CENTER_DOMAIN: ${SAM_COMMAND_CENTER_DOMAIN:?SAM_COMMAND_CENTER_DOMAIN is required}
+      SAM_MCP_DOMAIN: ${SAM_MCP_DOMAIN:?SAM_MCP_DOMAIN is required}
+      SAM_TLS_EMAIL: ${SAM_TLS_EMAIL:?SAM_TLS_EMAIL is required}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      sam-command-center:
+        condition: service_healthy
+      sam-mcp:
+        condition: service_healthy
+    networks: [sam-internal]
+
+volumes:
+  sam_postgres:
+  caddy_data:
+  caddy_config:
+
+networks:
+  sam-internal:
+    driver: bridge
