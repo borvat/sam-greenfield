@@ -130,3 +130,14 @@ The canonical production bundle registers four GREEN read-only marketplace capab
 Authentication uses bol's OAuth2 client-credentials flow. Access tokens are cached and reused; one 401 triggers one token refresh + retry.
 
 This phase intentionally exposes no bol write action. Shipping confirmations, stock/price changes, cancellations, return handling, invoice uploads, and other marketplace mutations remain out of scope until separately approved and implemented behind the authority/verification layer.
+
+
+## Gmail operational inbox reads
+When Google OAuth credentials are configured, the canonical bundle now exposes:
+- gmail_search_threads: GREEN
+- gmail_get_thread: GREEN
+- gmail_get_message: GREEN
+
+These read-only capabilities support supplier replies, logistics/carrier updates, procurement follow-up and topic-based mailbox review. Gmail search is bounded to 500 results and a 500-character query. Read verifiers perform a fresh Gmail API readback.
+
+gmail_send remains YELLOW and approval-gated.
