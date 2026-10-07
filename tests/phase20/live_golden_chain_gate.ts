@@ -103,6 +103,7 @@ async function main(){
   assert.equal(evidence.executionCount,1);
   assert.equal(evidence.verifiedCount,1);
   assert.equal(evidence.polls,3);
+  assert.deepEqual(evidence.observedStates,["PLANNING","EXECUTING","COMPLETED"]);
 
   const blocked=await listen(async(req,res)=>{
     if(req.url==="/readyz")return send(res,200,{status:"ready"});
@@ -144,7 +145,40 @@ async function main(){
   }catch(err){incompleteError=err instanceof Error?err.message:String(err)}
   assert.match(incompleteError,/no VERIFIED independent verification/);
 
-  await Promise.all([close(runtime.server),close(mcp.server),close(fakeCc.server),close(blocked.server),close(fakeIncomplete.server)]);
+  const badRuntime=await listen((req,res)=>{
+    if(req.url==="/readyz")return send(res,503,{status:"not_ready"});
+    send(res,404,{});
+  });
+  let runtimeError="";
+  try{
+    await runLiveGoldenChain({runtimeUrl:badRuntime.base,commandCenterUrl:fakeCc.base,commandCenterToken:"live-token",objective:"GREEN canary",timeoutMs:1000,pollMs:1,sleep:async()=>{}});
+  }catch(err){runtimeError=err instanceof Error?err.message:String(err)}
+  assert.match(runtimeError,/Runtime is not ready/);
+
+  const badCommand=await listen((req,res)=>{
+    if(req.url==="/readyz")return send(res,503,{status:"not_ready"});
+    send(res,404,{});
+  });
+  let commandError="";
+  try{
+    await runLiveGoldenChain({runtimeUrl:runtime.base,commandCenterUrl:badCommand.base,commandCenterToken:"live-token",objective:"GREEN canary",timeoutMs:1000,pollMs:1,sleep:async()=>{}});
+  }catch(err){commandError=err instanceof Error?err.message:String(err)}
+  assert.match(commandError,/Command Center is not ready/);
+
+  const badMcp=await listen((req,res)=>{
+    if(req.url==="/livez")return send(res,503,{status:"down"});
+    send(res,404,{});
+  });
+  let mcpError="";
+  try{
+    await runLiveGoldenChain({runtimeUrl:runtime.base,commandCenterUrl:fakeCc.base,commandCenterToken:"live-token",mcpUrl:badMcp.base,objective:"GREEN canary",timeoutMs:1000,pollMs:1,sleep:async()=>{}});
+  }catch(err){mcpError=err instanceof Error?err.message:String(err)}
+  assert.match(mcpError,/MCP is not alive/);
+
+  await Promise.all([
+    close(runtime.server),close(mcp.server),close(fakeCc.server),close(blocked.server),close(fakeIncomplete.server),
+    close(badRuntime.server),close(badCommand.server),close(badMcp.server)
+  ]);
   console.log("PHASE20_LIVE_GOLDEN_CHAIN_GATE PASS");
   await pool.end();
 }
