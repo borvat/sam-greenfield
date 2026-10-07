@@ -220,7 +220,7 @@ def test_outbox_rollback_real():
     try:
         cur2.execute("BEGIN")
         cur2.execute("UPDATE goals SET state='PLANNING' WHERE id=%s", (gid,))
-        cur2.execute("INSERT INTO outbox_events (aggregate_type, aggregate_id, event_type, payload) VALUES ('goal', %s, 'GOAL_STATE_CHANGED', '{"state":"PLANNING"}'::jsonb)", (gid,))
+        cur2.execute("INSERT INTO outbox_events (aggregate_type, aggregate_id, event_type, payload) VALUES ('goal', %s, 'GOAL_STATE_CHANGED', '{\"state\":\"PLANNING\"}'::jsonb)", (gid,))
         cur2.execute("ROLLBACK")
     except:
         cur2.execute("ROLLBACK")
@@ -233,7 +233,7 @@ def test_outbox_rollback_real():
     print(f"✓ transactional outbox rollback real: state change + outbox atomic, rollback proved (state={state}, outbox=0)")
     cur.execute("BEGIN")
     cur.execute("UPDATE goals SET state='PLANNING' WHERE id=%s", (gid,))
-    cur.execute("INSERT INTO outbox_events (aggregate_type, aggregate_id, event_type, payload) VALUES ('goal', %s, 'GOAL_STATE_CHANGED', '{"state":"PLANNING"}'::jsonb)", (gid,))
+    cur.execute("INSERT INTO outbox_events (aggregate_type, aggregate_id, event_type, payload) VALUES ('goal', %s, 'GOAL_STATE_CHANGED', '{\"state\":\"PLANNING\"}'::jsonb)", (gid,))
     cur.execute("COMMIT")
     cur.execute("SELECT state FROM goals WHERE id=%s", (gid,))
     assert cur.fetchone()[0] == "PLANNING"
