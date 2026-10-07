@@ -49,3 +49,24 @@ pg_restore --no-owner --dbname=sam_restore_test sam.backup
 - Close HTTP listener.
 - Close database pool.
 - Rely on lease expiry + Phase 1 restart recovery if the process is terminated before clean completion.
+
+
+## ChatGPT MCP bridge
+SAM exposes its ChatGPT tool surface from a separate MCP process on port 8081.
+
+Required production values:
+- SAM_MCP_BEARER_TOKEN
+- SAM_MCP_ALLOWED_HOSTS
+
+Optional:
+- SAM_MCP_ALLOWED_ORIGINS
+- SAM_MCP_ACTOR
+
+Operational checks:
+1. Confirm GET /livez returns 200.
+2. Connect ChatGPT to the /mcp endpoint using the approved secure path.
+3. Verify read tools are listed.
+4. sam_execute is advertised only when a validated production dispatcher is present.
+5. Never place the bearer token in source control, logs, or tool output.
+
+The MCP process and executive worker are deliberately separate. Restarting the MCP bridge must not interrupt the executive worker.
