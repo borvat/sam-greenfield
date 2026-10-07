@@ -74,7 +74,8 @@ async function main() {
     goalId:goal.goalId,
     dataClassification:"INTERNAL",
     maxCostUsd:1,
-    preferredProviders:["openai","qwen"]
+    preferredProviders:["openai","qwen"],
+    capabilityPolicies:{test_echo:"GREEN"}
   });
 
   assert.equal(cycle.persisted.queueIds.length,2);
@@ -116,7 +117,8 @@ async function main() {
       goalId:invalidGoal.goalId,
       dataClassification:"INTERNAL",
       maxCostUsd:1,
-      preferredProviders:["qwen"]
+      preferredProviders:["qwen"],
+      capabilityPolicies:{test_echo:"GREEN"}
     });
   } catch {
     invalidRejected = true;
