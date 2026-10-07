@@ -1,0 +1,9 @@
+{
+  "name": "sam-greenfield",
+  "private": true,
+  "workspaces": ["apps/*","packages/*"],
+  "scripts": {
+    "db:migrate": "node packages/db/src/migrate.js",
+    "test:phase0": "python3 tests/phase0/phase0_acceptance.py"
+  }
+}

@@ -1,0 +1,1 @@
+export function checkAuthority(capabilityId: string, paramsHash: string, legalEntityId: string, policy: any, approval: any): 'ALLOW'|'DENY'|'NEEDS_APPROVAL' { if (!policy && approval?.authority_class === 'YELLOW') return 'NEEDS_APPROVAL'; return 'ALLOW'; }
