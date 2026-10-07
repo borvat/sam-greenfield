@@ -13,6 +13,9 @@ async function mockBol(){
   if(req.url==="/token"){tokens++;res.end(JSON.stringify({access_token:"bt",expires_in:299}));return;}
   if(req.url?.startsWith("/retailer/invoices")){
     assert.equal(req.headers.authorization,"Bearer bt");
+    const u=new URL(`http://local${req.url}`);
+    assert.equal(u.searchParams.get("period-start-date"),"2026-09-01");
+    assert.equal(u.searchParams.get("period-end-date"),"2026-09-30");
     res.end(JSON.stringify({invoiceListItems:[
       {invoiceId:"INV-100",amount:100},
       {invoiceId:"INV-200",amount:50},
@@ -36,6 +39,9 @@ async function mockE(){
     res.end(JSON.stringify({items:[{id:"O1",amount:42.5},{id:"O2",amount:"7.50"},{id:"O3"}]}));return;
   }
   if(req.url?.startsWith("/v1/mutation?")){
+    const u=new URL(`http://local${req.url}`);
+    assert.equal(u.searchParams.get("limit"),"100");
+    assert.equal(u.searchParams.get("offset"),"0");
     res.end(JSON.stringify({items:[
       {id:"M1",invoiceNumber:"INV-100"},
       {id:"M2",invoiceNumber:"INV-300"},
@@ -70,6 +76,7 @@ async function main(){
  const base={capabilities:[],toolDefinitions:[],toolAdapters:[]};
  assert.equal(withFinanceReconciliationFromEnv(base,{} as NodeJS.ProcessEnv).capabilities.length,0);
  assert.equal(withFinanceReconciliationFromEnv(base,{BOL_CLIENT_ID:"x",BOL_CLIENT_SECRET:"y"} as NodeJS.ProcessEnv).capabilities.length,0);
+ assert.equal(withFinanceReconciliationFromEnv(base,{EBOEKHOUDEN_API_TOKEN:"api"} as NodeJS.ProcessEnv).capabilities.length,0);
 
  const bundle=withFinanceReconciliationFromEnv(base,env);
  const v=validateProductionBundle(bundle);
