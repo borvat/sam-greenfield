@@ -136,11 +136,11 @@ def test_financial_immutability_real():
     else:
         legal_id = row[0]
     conn.commit()
-    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{"amount":100}'::jsonb, now(), true) RETURNING id", (f"INV{int(time.time()*1000)}", legal_id))
+    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{\"amount\":100}'::jsonb, now(), true) RETURNING id", (f"INV{int(time.time()*1000)}", legal_id))
     doc_id = cur.fetchone()[0]
     conn.commit()
     try:
-        cur.execute("UPDATE financial_documents SET payload='{"amount":999}'::jsonb WHERE id=%s", (doc_id,))
+        cur.execute("UPDATE financial_documents SET payload='{\"amount\":999}'::jsonb WHERE id=%s", (doc_id,))
         conn.commit()
         assert False
     except psycopg2.errors.RaiseException as e:
