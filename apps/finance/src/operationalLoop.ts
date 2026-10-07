@@ -154,15 +154,15 @@ export async function runFinanceOperationalLoop(input:{
         );
         goalId=inserted.rows[0].id;
         await client.query(
-          "INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result) VALUES('finance-operational-loop',$1,'FINANCE_VARIANCE_GOAL_CREATED','legal_entity',$2,$3::jsonb,'finance_loop','GREEN','CREATED')",
-          [goalId,input.legalEntityId,JSON.stringify({fingerprint:fp,brief})]
+          "INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result,timestamp) VALUES('finance-operational-loop',$1,'FINANCE_VARIANCE_GOAL_CREATED','legal_entity',$2,$3::jsonb,'finance_loop','GREEN','CREATED',$4::timestamptz)",
+          [goalId,input.legalEntityId,JSON.stringify({fingerprint:fp,brief}),now.toISOString()]
         );
       }
     }
 
     await client.query(
-      "INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result) VALUES('finance-operational-loop',$1,'FINANCE_OPERATIONAL_BRIEF','legal_entity',$2,$3::jsonb,'finance_loop','GREEN',$4)",
-      [goalId,input.legalEntityId,JSON.stringify({fingerprint:fp,brief}),materialVariance?"MATERIAL_VARIANCE":"CLEAN"]
+      "INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result,timestamp) VALUES('finance-operational-loop',$1,'FINANCE_OPERATIONAL_BRIEF','legal_entity',$2,$3::jsonb,'finance_loop','GREEN',$4,$5::timestamptz)",
+      [goalId,input.legalEntityId,JSON.stringify({fingerprint:fp,brief}),materialVariance?"MATERIAL_VARIANCE":"CLEAN",now.toISOString()]
     );
     return {goalId};
   });
