@@ -114,11 +114,17 @@ async function main(){
   assert.equal(retailer.retailerId,"1055479");
   assert.equal(m.getTokens(),2);
 
+  const boundaryRange=await client.listInvoices({
+    periodStartDate:"2026-09-01",
+    periodEndDate:"2026-10-02"
+  });
+  assert.equal(boundaryRange.invoiceListItems[0].invoiceId,"i1");
+
   let badRange=false;
   try{
     await client.listInvoices({
-      periodStartDate:"2026-01-01",
-      periodEndDate:"2026-03-01"
+      periodStartDate:"2026-09-01",
+      periodEndDate:"2026-10-03"
     });
   }catch{
     badRange=true;
@@ -151,10 +157,21 @@ async function main(){
   }
 
   await syncVerificationContracts(BOL_VERIFICATION_CONTRACTS);
+  const expectedBolCapabilities=[
+    "bol_list_orders",
+    "bol_list_returns",
+    "bol_list_invoices",
+    "bol_get_retailer"
+  ];
   const contracts=await pool.query(
-    "SELECT capability_id FROM verification_contracts WHERE capability_id LIKE 'bol_%' ORDER BY capability_id"
+    "SELECT capability_id FROM verification_contracts WHERE capability_id=ANY($1::text[]) ORDER BY capability_id",
+    [expectedBolCapabilities]
   );
   assert.equal(contracts.rowCount,4);
+  assert.deepEqual(
+    contracts.rows.map((r)=>r.capability_id).sort(),
+    [...expectedBolCapabilities].sort()
+  );
 
   const adapter=validated.tools.adapter("bol_list_orders");
   const read=await adapter.execute({
