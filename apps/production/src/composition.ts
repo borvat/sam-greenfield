@@ -9,6 +9,7 @@ import { verifyNextExecution } from "./verifier";
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
+  operationalTick?:()=>Promise<unknown>;
 }):RuntimeComposition{
   const executors=createToolExecutors({
     catalog:input.bundle.catalog,
@@ -30,8 +31,9 @@ export function createProductionComposition(input:{
         executors
       });
       const verification=await verifyNextExecution(input.bundle);
+      const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {reconciliation,planning,execution,verification};
+      return {reconciliation,planning,execution,verification,operational};
     }
   };
 }
