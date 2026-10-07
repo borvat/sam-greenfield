@@ -1,19 +1,24 @@
 import type { ActiveIncident,IncidentCandidate } from "./types";
 
-export async function loadActiveIncidents(client:any):Promise<ActiveIncident[]>{
+export async function loadActiveIncidents(
+  client:any,
+  actor="operational-supervisor"
+):Promise<ActiveIncident[]>{
   const res=await client.query(
     `WITH latest AS (
        SELECT DISTINCT ON (after_ref->>'incident_key')
               action,after_ref,timestamp
          FROM audit_log
-        WHERE action IN ('INCIDENT_OPENED','INCIDENT_RESOLVED')
+        WHERE actor=$1
+          AND action IN ('INCIDENT_OPENED','INCIDENT_RESOLVED')
           AND after_ref ? 'incident_key'
         ORDER BY after_ref->>'incident_key',timestamp DESC,id DESC
      )
      SELECT after_ref,timestamp
        FROM latest
       WHERE action='INCIDENT_OPENED'
-      ORDER BY timestamp,after_ref->>'incident_key'`
+      ORDER BY timestamp,after_ref->>'incident_key'`,
+    [actor]
   );
 
   return res.rows.map((row:any)=>({
@@ -31,7 +36,7 @@ export async function reconcileIncidents(
   candidates:IncidentCandidate[],
   actor="operational-supervisor"
 ):Promise<{opened:string[];resolved:string[];active:string[]}>{
-  const active=await loadActiveIncidents(client);
+  const active=await loadActiveIncidents(client,actor);
   const activeByKey=new Map(active.map((i)=>[i.incidentKey,i]));
   const candidatesByKey=new Map(candidates.map((i)=>[i.incidentKey,i]));
 
