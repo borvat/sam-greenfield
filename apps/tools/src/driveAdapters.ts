@@ -47,7 +47,11 @@ export class DriveCreateFolderAdapter implements ReconciliableToolAdapter{
     const parentId=request.params.parent_id?String(request.params.parent_id).trim():undefined;
     if(!name) throw new Error("drive_create_folder requires name");
 
-    const file=await this.client.createFolder({name,parentId});
+    const file=await this.client.createFolder({
+      name,
+      parentId,
+      operationKey:request.idempotencyKey
+    });
     if(typeof file?.id!=="string") throw new Error("Drive create folder response missing id");
 
     return {
@@ -89,11 +93,32 @@ export class DriveCreateFolderAdapter implements ReconciliableToolAdapter{
       }
     }
 
+    const listed=await this.client.searchByOperationKey(input.idempotencyKey);
+    const matches=Array.isArray(listed?.files)?listed.files:[];
+    if(matches.length===1&&matches[0]?.id){
+      return {
+        result:"CONFIRMED",
+        evidence:{
+          provider_file_id:matches[0].id,
+          reconciliation:"operation_marker_search"
+        }
+      };
+    }
+    if(matches.length>1){
+      return {
+        result:"NOT_FOUND",
+        evidence:{
+          reconciliation:"operation_marker_ambiguous",
+          match_count:matches.length
+        }
+      };
+    }
+
     return {
       result:"NOT_FOUND",
       evidence:{
-        reconciliation:"provider_reference_unavailable",
-        idempotency_key:input.idempotencyKey
+        reconciliation:"operation_marker_search",
+        match_count:0
       }
     };
   }
