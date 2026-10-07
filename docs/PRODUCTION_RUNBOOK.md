@@ -2,7 +2,9 @@
 
 ## Startup
 1. Load secrets from the deployment secret store; never commit them.
-2. Set NODE_ENV=production, DATABASE_URL, and SAM_WORKER_ID.
+2. Set NODE_ENV=production, DATABASE_URL, SAM_WORKER_ID, and SAM_PRODUCTION_BUNDLE_MODULE.
+   Use the repository's canonical composition module at /app/apps/runtime/src/productionCompositionModule.ts.
+   The production bundle must contain only reviewed real capability/tool/model/verifier adapters; test fakes are forbidden.
 3. Apply migrations before starting the runtime.
 4. Start the runtime process.
 5. Do not route traffic/work until /readyz returns 200.
