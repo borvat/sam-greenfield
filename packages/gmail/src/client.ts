@@ -51,4 +51,46 @@ export class GmailApiClient{
     const query=encodeURIComponent(`rfc822msgid:${messageId}`);
     return this.request(`/messages?maxResults=1&labelIds=SENT&q=${query}`);
   }
+
+  searchThreads(input:{
+    query?:string;
+    maxResults?:unknown;
+    pageToken?:string;
+    labelIds?:string[];
+    includeSpamTrash?:boolean;
+  }={}):Promise<any>{
+    const u=new URL("http://local/threads");
+    const max=Math.max(1,Math.min(500,Number(input.maxResults??100)||100));
+    u.searchParams.set("maxResults",String(max));
+    if(input.query?.trim()){
+      const q=input.query.trim();
+      if(q.length>500) throw new Error("Gmail search query must be <=500 characters");
+      u.searchParams.set("q",q);
+    }
+    if(input.pageToken?.trim()){
+      u.searchParams.set("pageToken",input.pageToken.trim().slice(0,2000));
+    }
+    for(const label of (input.labelIds??[]).slice(0,50)){
+      const value=String(label).trim();
+      if(value) u.searchParams.append("labelIds",value);
+    }
+    u.searchParams.set("includeSpamTrash",String(input.includeSpamTrash===true));
+    return this.request(`/threads?${u.searchParams.toString()}`);
+  }
+
+  getThread(id:string,format="full"):Promise<any>{
+    const allowed=["full","metadata","minimal"];
+    if(!allowed.includes(format)) throw new Error("Invalid Gmail thread format");
+    return this.request(
+      `/threads/${encodeURIComponent(id)}?format=${encodeURIComponent(format)}`
+    );
+  }
+
+  getMessageWithFormat(id:string,format="full"):Promise<any>{
+    const allowed=["full","metadata","minimal"];
+    if(!allowed.includes(format)) throw new Error("Invalid Gmail message format");
+    return this.request(
+      `/messages/${encodeURIComponent(id)}?format=${encodeURIComponent(format)}`
+    );
+  }
 }
