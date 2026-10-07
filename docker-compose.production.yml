@@ -54,6 +54,11 @@ x-sam-adapter-env: &sam-adapter-env
   EBOEKHOUDEN_SOURCE: ${EBOEKHOUDEN_SOURCE:-SAM}
   EBOEKHOUDEN_API_BASE_URL: ${EBOEKHOUDEN_API_BASE_URL:-https://api.e-boekhouden.nl}
 
+  BOL_CLIENT_ID: ${BOL_CLIENT_ID:-}
+  BOL_CLIENT_SECRET: ${BOL_CLIENT_SECRET:-}
+  BOL_TOKEN_URL: ${BOL_TOKEN_URL:-https://login.bol.com/token}
+  BOL_RETAILER_BASE_URL: ${BOL_RETAILER_BASE_URL:-https://api.bol.com/retailer}
+
 services:
   sam:
     build:
