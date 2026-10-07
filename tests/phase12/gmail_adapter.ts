@@ -105,6 +105,15 @@ async function main(){
 
   assert.equal(first.providerReference,"gmail-1");
   assert.equal(first.evidence.rfc822_message_id,deterministicMessageId(opKey));
+  assert.equal(deterministicMessageId(opKey),deterministicMessageId(opKey));
+
+  const sendCall=m.seen.find((x)=>x.url==="/gmail/v1/users/me/messages/send");
+  const sendPayload=JSON.parse(sendCall.text);
+  const sentRaw=Buffer.from(
+    sendPayload.raw.replace(/-/g,"+").replace(/_/g,"/"),
+    "base64"
+  ).toString("utf8");
+  assert.ok(sentRaw.includes(`X-SAM-Operation-Key: ${opKey}`));
 
   const byProvider=await adapter.reconcile({
     capabilityId:"gmail_send",
@@ -138,6 +147,27 @@ async function main(){
   });
   assert.equal(verified.result,"VERIFIED");
   assert.equal(verified.verifier,"gmail-independent-readback");
+
+  const verifiedBySearch=await verifier.verify({
+    execution:{
+      id:"execution-2",
+      capabilityId:"gmail_send",
+      params:{},
+      evidence:{},
+      operationKeyRef:opKey
+    },
+    contract:{
+      id:"contract-1",
+      method:"list_search",
+      requiredEvidenceFields:{},
+      independentQueryTemplate:{}
+    }
+  });
+  assert.equal(verifiedBySearch.result,"VERIFIED");
+  assert.equal(
+    (verifiedBySearch.evidence as any).method,
+    "gmail_rfc822msgid_search"
+  );
 
   let aiWordingBlocked=false;
   try{
