@@ -8,12 +8,16 @@ import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekho
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
 import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
+import { GMAIL_READ_VERIFICATION_CONTRACTS } from "../../production/src/gmailReadBundle";
 
 async function initializeProductionComposition(){
   const config=loadRuntimeConfig();
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
   const bundle=await loadProductionBundle(bundlePath);
   await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
+  if(bundle.raw.capabilities.some(c=>c.capabilityId==="gmail_list_messages")){
+    await syncVerificationContracts(GMAIL_READ_VERIFICATION_CONTRACTS);
+  }
   const hasDrive=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("drive_"));
   if(hasDrive){
     await syncVerificationContracts(DRIVE_VERIFICATION_CONTRACTS);

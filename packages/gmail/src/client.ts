@@ -38,6 +38,20 @@ export class GmailApiClient{
     });
   }
 
+  listMessages(input:{query?:string;limit:number}):Promise<any>{
+    if(!Number.isInteger(input.limit)||input.limit<1||input.limit>20) throw new Error("Gmail read limit must be between 1 and 20");
+    const params=new URLSearchParams({maxResults:String(input.limit)});
+    if(input.query) params.set("q",input.query);
+    return this.request(`/messages?${params}`);
+  }
+
+  getMessageMetadata(id:string):Promise<any>{
+    if(!id.trim()) throw new Error("Gmail metadata requires message_id");
+    const params=new URLSearchParams({format:"metadata"});
+    for(const header of ["From","To","Subject","Date"]) params.append("metadataHeaders",header);
+    return this.request(`/messages/${encodeURIComponent(id)}?${params}`);
+  }
+
   async getMessage(id:string):Promise<any|null>{
     try{
       return await this.request(`/messages/${encodeURIComponent(id)}?format=minimal`);

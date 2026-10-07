@@ -12,8 +12,11 @@ instance was created in Sam's workspace (`tea-db35rbflot8c739g8rhg`):
 `dpg-db37k3rbc2fs73csjung-a`, named `sam-trial-postgres`.
 It is available and expires on 2026-11-06. External database access is disabled.
 The Blueprint reuses this exact instance and preserves its database name and user.
-No application services have been deployed yet. Never create a second database
-or change any resource to a paid plan to complete this trial.
+Three free web services were created. Command Center is live: its readiness
+check confirms database access and the active legal entity, and unauthenticated
+business API requests return 401. Migrations and company initialization passed.
+Runtime and MCP remain blocked by missing real provider capabilities. Never
+create a second database or change a resource to a paid plan for this trial.
 
 ## Trial limits and billing
 
@@ -47,10 +50,17 @@ Auto-deploy and preview environments are off.
 Lovable Gmail/Drive workspace connections are not portable OAuth credentials.
 Never copy or extract their tokens to Render. Direct Google access needs an
 owner-authorized Google OAuth application and secure credentials.
-The current native SAM adapter supports Drive search/metadata and Gmail send;
-Gmail task reading, multiple-account routing, and web search still need
-implementation and verification. Do not register send/write capabilities for
-a read-only trial. No Gmail or Drive connection on Render has been established.
+The selected trial sets `SAM_GOOGLE_READ_ONLY=true`: Gmail lists at most 20
+messages per call and reads sender, recipient, subject, and date metadata; Drive
+provides search/metadata. Gmail send and Drive writes are excluded. e-Boekhouden,
+bol, and finance reconciliation are excluded from this trial. Multiple-account
+routing is not implemented. No live Gmail or Drive read has passed yet.
+
+For runtime and MCP, enter `GOOGLE_OAUTH_CLIENT_ID`,
+`GOOGLE_OAUTH_CLIENT_SECRET`, and `GOOGLE_OAUTH_REFRESH_TOKEN` in Render
+Environment settings, using owner-approved Gmail readonly and Drive readonly
+scopes. Never enter them in chat. These must be credentials for the SAM Google
+OAuth app; Lovable connections do not establish this authorization.
 
 Model and bol credentials must be entered in Render securely
 only when those integrations are being tested; do not put credentials in Git
@@ -70,6 +80,6 @@ or chat. Missing credentials are not replaced by mocks to pass acceptance.
 8. Require retained goal, plan, work, execution, and independent VERIFIED
    evidence before reporting a real Golden Chain PASS.
 
-YAML schema and launcher syntax validation do not prove database bootstrap,
-Google authentication, a real model call, or goal execution. Those checks remain
-pending until deployment and credentials are available.
+Local mocked Google read tests and runtime initialization regression tests
+verify adapter behavior and startup error handling. They do not prove Google
+authentication, a real model call, or goal execution. Those checks remain pending.

@@ -25,6 +25,8 @@ services:
     fromDatabase:
       name: sam-trial-postgres
       property: connectionString
+  - key: SAM_GOOGLE_READ_ONLY
+    value: 'true'
   - key: SAM_PRODUCTION_BUNDLE_MODULE
     value: apps/production/src/defaultBundleModule.ts
   - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
@@ -58,6 +60,8 @@ services:
   - *id001
   - *id002
   - *id003
+  - key: SAM_GOOGLE_READ_ONLY
+    value: 'true'
   - key: SAM_PRODUCTION_BUNDLE_MODULE
     fromService:
       type: web
@@ -100,6 +104,8 @@ services:
   - *id001
   - *id002
   - *id003
+  - key: SAM_GOOGLE_READ_ONLY
+    value: 'true'
   - key: SAM_PRODUCTION_BUNDLE_MODULE
     fromService:
       type: web
