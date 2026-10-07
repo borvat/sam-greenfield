@@ -20,6 +20,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 14 Real e-Boekhouden Read-Only Accounting Adapter: PASS on real PostgreSQL 15.17
 - Phase 15 Real bol Retailer Read-Only Adapter: PASS on real PostgreSQL 15.17
 - Phase 16 bol Operational Intelligence Read Surface: PASS on real PostgreSQL 15.17
+- Phase 17 Finance Reconciliation Preview: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -373,3 +374,7 @@ See `docs/PHASE15_SCOPE.md` and `PHASE15_DOD_CHECKLIST.md`.
 
 ## Phase 16 — bol Operational Intelligence
 Added four production read-only capabilities: order detail, shipments, commission calculation and competing-offer intelligence. All are GREEN, sideEffect=false, bounded, independently re-read for verification, and covered by fresh PostgreSQL 15.17 acceptance. No bol write action was introduced. See `docs/PHASE16_SCOPE.md` and `PHASE16_DOD_CHECKLIST.md`.
+
+
+## Phase 17 — Finance Reconciliation Preview
+Added two deterministic GREEN read-only finance capabilities: `finance_reconciliation_preview` and `finance_outstanding_snapshot`. The reconciliation engine compares bol invoice references against e-Boekhouden mutation references using exact-reference matching only, preserves ambiguous and one-sided records, and never writes accounting data. Both capabilities are independently re-read for verification and are only registered when both bol and e-Boekhouden credentials are configured. See `docs/PHASE17_SCOPE.md` and `PHASE17_DOD_CHECKLIST.md`.
