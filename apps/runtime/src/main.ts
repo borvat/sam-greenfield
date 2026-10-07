@@ -6,7 +6,7 @@ import { pool } from "../../../packages/db/src/client";
 async function loadComposition(path:string):Promise<RuntimeComposition>{
   if(!path) throw new Error("SAM_COMPOSITION_MODULE is required");
   const mod=await import(pathToFileURL(path).href);
-  const composition=(mod.default ?? mod.composition ?? mod) as Partial<RuntimeComposition>;
+  const composition=await (mod.default ?? mod.composition ?? mod) as Partial<RuntimeComposition>;
   if(typeof composition.runWorkTick!=="function"){
     throw new Error("Composition module must export runWorkTick()");
   }
