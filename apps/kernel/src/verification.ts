@@ -13,10 +13,15 @@ export async function recordIndependentVerificationAtomic(input: {
 }): Promise<string> {
   return withTransaction(async (client) => {
     const execution = await client.query(
-      "SELECT id, goal_id, plan_hash, execution_hash FROM executions WHERE id=$1 FOR UPDATE",
+      "SELECT id, goal_id, plan_id, plan_hash, execution_hash, actor FROM executions WHERE id=$1 FOR UPDATE",
       [input.executionId]
     );
     if (execution.rowCount !== 1) throw new Error("Execution not found");
+
+    const ex = execution.rows[0];
+    if (ex.actor === input.verifier) {
+      throw new Error("Verifier must be independent from execution actor");
+    }
 
     const contract = await client.query(
       "SELECT id, must_not_trust_execution_result FROM verification_contracts WHERE id=$1",
@@ -30,7 +35,14 @@ export async function recordIndependentVerificationAtomic(input: {
       throw new Error("Independent verification evidence is required");
     }
 
-    const ex = execution.rows[0];
+    if (ex.goal_id) {
+      const goal = await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
+      if (goal.rowCount !== 1) throw new Error("Goal not found for execution");
+      if (goal.rows[0].state !== "VERIFYING") {
+        throw new Error(`Goal must be VERIFYING before verification, got ${goal.rows[0].state}`);
+      }
+    }
+
     const inserted = await client.query(
       `INSERT INTO verifications
         (execution_id, verifier, method, contract_id, independent_evidence, result, plan_hash, execution_hash)
@@ -52,9 +64,32 @@ export async function recordIndependentVerificationAtomic(input: {
 
     if (ex.goal_id) {
       if (input.result === "VERIFIED") {
-        await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
-          verification_id: verificationId
-        });
+        const coverage = await client.query(
+          `SELECT
+             COUNT(*)::int AS total,
+             COUNT(*) FILTER (
+               WHERE EXISTS (
+                 SELECT 1
+                   FROM executions e
+                   JOIN verifications v ON v.execution_id=e.id
+                  WHERE e.queue_id=w.id
+                    AND v.result='VERIFIED'
+               )
+             )::int AS verified
+             FROM work_queue w
+            WHERE w.goal_id=$1
+              AND w.plan_id=$2
+              AND w.status='EXECUTED'`,
+          [ex.goal_id, ex.plan_id]
+        );
+        const total = Number(coverage.rows[0].total);
+        const verified = Number(coverage.rows[0].verified);
+        if (total > 0 && total === verified) {
+          await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
+            verification_id: verificationId,
+            verified_executions: verified
+          });
+        }
       } else if (input.result === "FAILED") {
         await transitionGoal(client, ex.goal_id, "VERIFYING", "REPLANNING", "independent_verification_failed", {
           verification_id: verificationId
