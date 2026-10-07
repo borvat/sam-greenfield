@@ -1,0 +1,23 @@
+{
+  email {$SAM_TLS_EMAIL}
+}
+
+{$SAM_COMMAND_CENTER_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy sam-command-center:8082
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "no-referrer"
+  }
+}
+
+{$SAM_MCP_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy sam-mcp:8081
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "no-referrer"
+  }
+}
