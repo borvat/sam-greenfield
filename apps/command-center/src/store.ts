@@ -103,3 +103,17 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput)
     return goal;
   });
 }
+
+
+export async function commandCenterReadiness(legalEntityId:string){
+  return withTransaction(async client=>{
+    const db=await client.query("SELECT 1 AS ok");
+    const entity=await client.query("SELECT id,status FROM legal_entities WHERE id=$1",[legalEntityId]);
+    const ready=db.rowCount===1&&entity.rowCount===1&&entity.rows[0].status==="ACTIVE";
+    return {
+      ready,
+      database:db.rowCount===1,
+      legalEntityActive:entity.rowCount===1&&entity.rows[0].status==="ACTIVE"
+    };
+  });
+}
