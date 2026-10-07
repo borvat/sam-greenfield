@@ -22,6 +22,7 @@ export interface LiveGoldenChainEvidence{
   verifiedCount:number;
   auditCount:number;
   durationMs:number;
+  observedStates:string[];
 }
 
 function base(url:string):string{return url.replace(/\/$/,"")}
@@ -82,6 +83,7 @@ export async function runLiveGoldenChain(options:LiveGoldenChainOptions):Promise
   const goalId=String(created.body.data.id);
   const businessId=String(created.body.data.business_id??"");
   let polls=0;
+  const observedStates:string[]=[];
 
   while(Date.now()-started<=timeoutMs){
     polls++;
@@ -94,6 +96,7 @@ export async function runLiveGoldenChain(options:LiveGoldenChainOptions):Promise
 
     const data=timeline.body?.data??{};
     const state=String(data?.goal?.state??"");
+    if(state&&!observedStates.includes(state)) observedStates.push(state);
     if(state==="FAILED"||state==="CANCELLED"){
       throw new Error("Canary entered terminal failure state: "+state);
     }
@@ -124,7 +127,8 @@ export async function runLiveGoldenChain(options:LiveGoldenChainOptions):Promise
         verificationCount:verifications.length,
         verifiedCount:verified.length,
         auditCount:audit.length,
-        durationMs:Date.now()-started
+        durationMs:Date.now()-started,
+        observedStates
       };
     }
 
