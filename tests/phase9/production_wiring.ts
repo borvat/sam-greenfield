@@ -19,25 +19,65 @@ async function legalEntity(){
 
 async function main(){
   let executed=0;
+  await pool.query(
+    `INSERT INTO verification_contracts
+     (capability_id,description,verification_method,required_evidence_fields,independent_query_template)
+     VALUES('p9_green','Phase 9 acceptance verifier','db_query','{"confirmed":"boolean"}'::jsonb,'{"probe":"phase9"}'::jsonb)
+     ON CONFLICT(capability_id) DO NOTHING`
+  );
+
   const bundle=validateProductionBundle({
-    capabilities:[{
+    capabilities:[
+      {
+        capabilityId:"p9_green",
+        authorityClass:"GREEN",
+        specialistAgentId:"ops",
+        specialistVersion:"9.0.0"
+      },
+      {
+        capabilityId:"p9_yellow",
+        authorityClass:"YELLOW",
+        specialistAgentId:"ops",
+        specialistVersion:"9.0.0"
+      }
+    ],
+    toolDefinitions:[
+      {
+        capabilityId:"p9_green",
+        authorityClass:"GREEN",
+        sideEffect:false
+      },
+      {
+        capabilityId:"p9_yellow",
+        authorityClass:"YELLOW",
+        sideEffect:true
+      }
+    ],
+    toolAdapters:[
+      {
+        capabilityId:"p9_green",
+        async execute(request){
+          executed+=1;
+          return {
+            result:{ok:true,params:request.params},
+            evidence:{source:"phase9_acceptance"}
+          };
+        }
+      },
+      {
+        capabilityId:"p9_yellow",
+        async execute(){
+          throw new Error("p9_yellow must not execute without approval");
+        }
+      }
+    ],
+    verificationAdapters:[{
       capabilityId:"p9_green",
-      authorityClass:"GREEN",
-      specialistAgentId:"ops",
-      specialistVersion:"9.0.0"
-    }],
-    toolDefinitions:[{
-      capabilityId:"p9_green",
-      authorityClass:"GREEN",
-      sideEffect:false
-    }],
-    toolAdapters:[{
-      capabilityId:"p9_green",
-      async execute(request){
-        executed+=1;
+      async verify(){
         return {
-          result:{ok:true,params:request.params},
-          evidence:{source:"phase9_acceptance"}
+          result:"VERIFIED",
+          evidence:{confirmed:true,source:"independent_phase9_verifier"},
+          verifier:"phase9-independent-verifier"
         };
       }
     }],
@@ -70,13 +110,37 @@ async function main(){
   const tick=await composition.runWorkTick() as any;
 
   assert.equal(tick.execution.processed,true);
+  assert.equal(tick.verification.processed,true);
   assert.equal(executed,1);
 
   const goal=await pool.query("SELECT state FROM goals WHERE id=$1",[data.goalId]);
-  assert.equal(goal.rows[0].state,"VERIFYING");
+  assert.equal(goal.rows[0].state,"COMPLETED");
 
-  const noVerifierTick=await composition.runWorkTick() as any;
-  assert.equal(noVerifierTick.verification.processed,false);
+  const yellow=await surface.invoke("sam_execute",{
+    capability_id:"p9_yellow",
+    legal_entity_id:entityId,
+    params:{recipient:"supplier@example.com"},
+    objective:"Phase 9 approval-gated action"
+  },{
+    actor:"phase9-chatgpt",
+    systemOwner:true
+  });
+  assert.equal(yellow.ok,true);
+  const yellowData=yellow.data as any;
+  assert.equal(yellowData.status,"WAITING_OWNER");
+  assert.equal(yellowData.approvalIds.length,1);
+
+  const yellowGoal=await pool.query(
+    "SELECT state FROM goals WHERE id=$1",
+    [yellowData.goalId]
+  );
+  assert.equal(yellowGoal.rows[0].state,"WAITING_OWNER");
+
+  const yellowQueue=await pool.query(
+    "SELECT COUNT(*)::int AS count FROM work_queue WHERE goal_id=$1",
+    [yellowData.goalId]
+  );
+  assert.equal(Number(yellowQueue.rows[0].count),0);
   assert.equal(executed,1);
 
   let missingAdapterBlocked=false;
