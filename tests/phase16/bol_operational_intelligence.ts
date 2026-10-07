@@ -51,6 +51,17 @@ async function main(){
  assert.equal(tokenCalls,1);
  assert.throws(()=>new BolRetailerClient({clientId:"x",clientSecret:"y"}).getCommission({ean:"bad",unitPrice:1}),/EAN/);
  assert.throws(()=>new BolRetailerClient({clientId:"x",clientSecret:"y"}).getCompetingOffers({ean:"8712345678901",countryCode:"DE"}),/Invalid value/);
+ assert.throws(()=>new BolRetailerClient({clientId:"x",clientSecret:"y"}).getCommission({ean:"8712345678901",unitPrice:-0.01}),/Invalid unit price/);
+ assert.throws(()=>new BolRetailerClient({clientId:"x",clientSecret:"y"}).getCommission({ean:"8712345678901",unitPrice:10000}),/Invalid unit price/);
+
+ await c.listShipments({page:9999,fulfilmentMethod:"ALL"});
+ const boundedShipment=calls.findLast(x=>String(x.url).startsWith("/retailer/shipments?"));
+ assert.ok(String(boundedShipment.url).includes("page=200"));
+
+ await c.getCompetingOffers({ean:"8712345678901",page:9999,countryCode:"BE",bestOfferOnly:false,condition:"ALL"});
+ const boundedOffers=calls.findLast(x=>String(x.url).startsWith("/retailer/products/8712345678901/offers?"));
+ assert.ok(String(boundedOffers.url).includes("page=200"));
+ assert.ok(String(boundedOffers.url).includes("country-code=BE"));
  await new Promise<void>((resolve,reject)=>server.close(e=>e?reject(e):resolve()));
  console.log("PHASE16_BOL_INTELLIGENCE PASS capabilities=4");
  await pool.end();
