@@ -40,6 +40,25 @@ export function validateProductionBundle(bundle:ProductionBundle):ValidatedProdu
     }
   }
 
+  const modelAdapters=bundle.modelAdapters??[];
+  const modelConfigs=bundle.modelProviderConfigs??[];
+  const modelAdapterIds=new Set(modelAdapters.map((a)=>a.providerId));
+  const modelConfigIds=new Set(modelConfigs.map((c)=>c.providerId));
+
+  if(modelAdapters.length!==modelConfigs.length){
+    throw new Error("Production model adapters/configs must be one-to-one");
+  }
+  for(const adapter of modelAdapters){
+    if(!modelConfigIds.has(adapter.providerId)){
+      throw new Error(`Model adapter has no provider config: ${adapter.providerId}`);
+    }
+  }
+  for(const config of modelConfigs){
+    if(!modelAdapterIds.has(config.providerId)){
+      throw new Error(`Model provider config has no adapter: ${config.providerId}`);
+    }
+  }
+
   const verifiers=new Map<string,VerificationAdapter>();
   for(const verifier of bundle.verificationAdapters??[]){
     if(verifiers.has(verifier.capabilityId)){
