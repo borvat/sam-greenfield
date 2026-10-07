@@ -26,6 +26,7 @@ function isoDate(value:unknown):string|undefined{
 
 export class BolRetailerClient{
   private token:{value:string;expiresAt:number}|null=null;
+  private tokenPromise:Promise<string>|null=null;
 
   constructor(private readonly options:{
     clientId:string;
@@ -39,37 +40,48 @@ export class BolRetailerClient{
     const now=Date.now();
     if(!force&&this.token&&this.token.expiresAt-now>30_000) return this.token.value;
 
-    const fetchImpl=this.options.fetchImpl??fetch;
-    const basic=Buffer.from(
-      `${this.options.clientId}:${this.options.clientSecret}`,
-      "utf8"
-    ).toString("base64");
+    if(force) this.token=null;
+    if(this.tokenPromise) return this.tokenPromise;
 
-    const response=await fetchImpl(
-      this.options.tokenUrl??"https://login.bol.com/token",
-      {
-        method:"POST",
-        headers:{
-          authorization:`Basic ${basic}`,
-          accept:"application/json",
-          "content-type":"application/x-www-form-urlencoded"
-        },
-        body:new URLSearchParams({grant_type:"client_credentials"})
-      }
-    );
-    const body:any=await response.json().catch(()=>({}));
-    if(!response.ok||typeof body?.access_token!=="string"){
-      throw new Error(
-        `bol OAuth HTTP ${response.status}: ${String(body?.error_description??body?.error??"unknown").slice(0,500)}`
+    this.tokenPromise=(async()=>{
+      const fetchImpl=this.options.fetchImpl??fetch;
+      const basic=Buffer.from(
+        `${this.options.clientId}:${this.options.clientSecret}`,
+        "utf8"
+      ).toString("base64");
+
+      const response=await fetchImpl(
+        this.options.tokenUrl??"https://login.bol.com/token",
+        {
+          method:"POST",
+          headers:{
+            authorization:`Basic ${basic}`,
+            accept:"application/json",
+            "content-type":"application/x-www-form-urlencoded"
+          },
+          body:new URLSearchParams({grant_type:"client_credentials"})
+        }
       );
-    }
+      const body:any=await response.json().catch(()=>({}));
+      if(!response.ok||typeof body?.access_token!=="string"){
+        throw new Error(
+          `bol OAuth HTTP ${response.status}: ${String(body?.error_description??body?.error??"unknown").slice(0,500)}`
+        );
+      }
 
-    const expires=Number(body?.expires_in??299);
-    this.token={
-      value:body.access_token,
-      expiresAt:Date.now()+Math.max(30,expires)*1000
-    };
-    return body.access_token;
+      const expires=Number(body?.expires_in??299);
+      this.token={
+        value:body.access_token,
+        expiresAt:Date.now()+Math.max(30,expires)*1000
+      };
+      return body.access_token as string;
+    })();
+
+    try{
+      return await this.tokenPromise;
+    }finally{
+      this.tokenPromise=null;
+    }
   }
 
   private get baseUrl():string{
