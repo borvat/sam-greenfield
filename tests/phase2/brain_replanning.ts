@@ -87,7 +87,8 @@ async function main(){
     reason:"independent verification failed",
     dataClassification:"INTERNAL",
     maxCostUsd:1,
-    preferredProviders:["qwen"]
+    preferredProviders:["qwen"],
+    capabilityPolicies:{test_echo:"GREEN"}
   });
 
   assert.equal(replanned.failed,false);
@@ -120,7 +121,8 @@ async function main(){
     reason:"budget exhaustion probe",
     dataClassification:"INTERNAL",
     maxCostUsd:1,
-    preferredProviders:["qwen"]
+    preferredProviders:["qwen"],
+    capabilityPolicies:{test_echo:"GREEN"}
   });
   assert.equal(exhausted.failed,true);
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[goal.goalId])).state,"FAILED");
