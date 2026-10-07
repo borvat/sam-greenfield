@@ -5,14 +5,15 @@ All three Node web services and PostgreSQL 15 explicitly use `plan: free`.
 No private service, paid worker, cron job, or paid pre-deploy hook is required.
 This is a supervised trial, not evidence of live SAM operation.
 
-## Current blocker
+## Current deployment state
 
-On 2026-10-07, creation of a free PostgreSQL database in the confirmed
-Sam's workspace (`tea-db35rbflot8c739g8rhg`) returned HTTP 402:
-`Payment information is required to complete this request.`
-No database or service was created. The owner must complete Render's secure
-billing/account verification at https://dashboard.render.com/billing before
-resource creation can be retried. Do not change any resource to a paid plan.
+On 2026-10-07, Render account verification succeeded and a free PostgreSQL 15
+instance was created in Sam's workspace (`tea-db35rbflot8c739g8rhg`):
+`dpg-db37k3rbc2fs73csjung-a`, named `sam-trial-postgres`.
+It is available and expires on 2026-11-06. External database access is disabled.
+The Blueprint reuses this exact instance and preserves its database name and user.
+No application services have been deployed yet. Never create a second database
+or change any resource to a paid plan to complete this trial.
 
 ## Trial limits and billing
 
@@ -51,15 +52,15 @@ Gmail task reading, multiple-account routing, and web search still need
 implementation and verification. Do not register send/write capabilities for
 a read-only trial. No Gmail or Drive connection on Render has been established.
 
-Optional model and bol credential fields must be entered in Render securely
+Model and bol credentials must be entered in Render securely
 only when those integrations are being tested; do not put credentials in Git
 or chat. Missing credentials are not replaced by mocks to pass acceptance.
 
 ## Deployment and acceptance
 
-1. Complete the account verification requested by Render without upgrading.
-2. Push these deployment files and package-lock.json to the trial branch.
-3. Create the Blueprint in the confirmed workspace and verify every plan is Free.
+1. Use the `deploy/sam-free-trial-ready` branch for the Blueprint.
+2. Reuse the existing `sam-trial-postgres` instance when Render prompts.
+3. Apply the Blueprint in the confirmed workspace and verify every plan is Free.
 4. Supply only the secure credentials required for the selected trial.
 5. Check startup migrations and company initialization, runtime and Command
    Center readiness, and the MCP health endpoint.

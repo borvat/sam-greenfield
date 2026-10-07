@@ -1,4 +1,4 @@
-# Free, time-limited SAM deployment trial. No paid compute plans.
+# Free SAM trial; reuse the existing sam-trial-postgres database.
 previews:
   generation: 'off'
 services:
@@ -8,7 +8,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: deploy/sam-free-trial
+  branch: deploy/sam-free-trial-ready
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh runtime
@@ -24,7 +24,7 @@ services:
   - &id003
     key: DATABASE_URL
     fromDatabase:
-      name: sam-postgres
+      name: sam-trial-postgres
       property: connectionString
   - key: SAM_PRODUCTION_BUNDLE_MODULE
     value: apps/production/src/defaultBundleModule.ts
@@ -36,14 +36,6 @@ services:
     value: Surooh Holding Group B.V.
   - key: SAM_LEGAL_ENTITY_NAME
     value: QNAN B.V.
-  - key: OPENAI_API_KEY
-    sync: false
-  - key: OPENAI_MODEL
-    sync: false
-  - key: BOL_CLIENT_ID
-    sync: false
-  - key: BOL_CLIENT_SECRET
-    sync: false
   - key: SAM_WORKER_ID
     value: sam-render-1
   - key: SAM_COMPOSITION_MODULE
@@ -58,7 +50,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: deploy/sam-free-trial
+  branch: deploy/sam-free-trial-ready
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh command-center
@@ -93,26 +85,6 @@ services:
       type: web
       name: sam-runtime
       envVarKey: SAM_LEGAL_ENTITY_NAME
-  - key: OPENAI_API_KEY
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: OPENAI_API_KEY
-  - key: OPENAI_MODEL
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: OPENAI_MODEL
-  - key: BOL_CLIENT_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: BOL_CLIENT_ID
-  - key: BOL_CLIENT_SECRET
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: BOL_CLIENT_SECRET
   - key: SAM_COMMAND_CENTER_BEARER_TOKEN
     generateValue: true
 - name: sam-mcp
@@ -121,7 +93,7 @@ services:
   plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
-  branch: deploy/sam-free-trial
+  branch: deploy/sam-free-trial-ready
   autoDeployTrigger: 'off'
   buildCommand: npm ci --omit=dev
   startCommand: sh deploy/render/start.sh mcp
@@ -156,32 +128,12 @@ services:
       type: web
       name: sam-runtime
       envVarKey: SAM_LEGAL_ENTITY_NAME
-  - key: OPENAI_API_KEY
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: OPENAI_API_KEY
-  - key: OPENAI_MODEL
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: OPENAI_MODEL
-  - key: BOL_CLIENT_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: BOL_CLIENT_ID
-  - key: BOL_CLIENT_SECRET
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: BOL_CLIENT_SECRET
   - key: SAM_MCP_BEARER_TOKEN
     generateValue: true
 databases:
-- name: sam-postgres
-  databaseName: sam
-  user: sam
+- name: sam-trial-postgres
+  databaseName: sam_trial_postgres
+  user: sam_trial_postgres_user
   plan: free
   region: frankfurt
   postgresMajorVersion: '15'
