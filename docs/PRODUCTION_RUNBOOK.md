@@ -80,3 +80,18 @@ A provider is enabled only when its API key and model name are set. Qwen also re
 Provider registry metadata is synchronized into `model_providers` at production composition startup. Default privacy is PUBLIC + INTERNAL only. CONFIDENTIAL or RESTRICTED must be opted in explicitly per provider after policy review.
 
 Never place provider keys in source control, the production bundle file, logs, audit payloads, or tool responses.
+
+
+## Gmail production adapter
+The canonical production bundle can register `gmail_send` when Google OAuth values are configured.
+
+Required:
+- GOOGLE_OAUTH_CLIENT_ID
+- GOOGLE_OAUTH_CLIENT_SECRET
+- GOOGLE_OAUTH_REFRESH_TOKEN
+
+The Gmail send capability is YELLOW and therefore remains blocked until SAM authority approval exists. The adapter creates a deterministic RFC 2822 Message-ID from the SAM idempotency key and uses Gmail readback for reconciliation and independent verification.
+
+External email content is rejected when it contains explicit AI-assistant wording such as ChatGPT / artificial intelligence / language model. This enforces the company external-message rule that SAM must communicate as the company, not announce itself as an AI assistant.
+
+OAuth refresh tokens must be stored only in the deployment secret store.
