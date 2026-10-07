@@ -19,6 +19,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 13 Real Google Drive Adapters + Verification Contracts: PASS on real PostgreSQL 15.17
 - Phase 14 Real e-Boekhouden Read-Only Accounting Adapter: PASS on real PostgreSQL 15.17
 - Phase 15 Real bol Retailer Read-Only Adapter: PASS on real PostgreSQL 15.17
+- Phase 16 bol Operational Intelligence Read Surface: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -368,3 +369,7 @@ Implemented and protocol-tested:
 - no bol write endpoints in production
 
 See `docs/PHASE15_SCOPE.md` and `PHASE15_DOD_CHECKLIST.md`.
+
+
+## Phase 16 — bol Operational Intelligence
+Added four production read-only capabilities: order detail, shipments, commission calculation and competing-offer intelligence. All are GREEN, sideEffect=false, bounded, independently re-read for verification, and covered by fresh PostgreSQL 15.17 acceptance. No bol write action was introduced. See `docs/PHASE16_SCOPE.md` and `PHASE16_DOD_CHECKLIST.md`.
