@@ -130,3 +130,33 @@ The canonical production bundle registers four GREEN read-only marketplace capab
 Authentication uses bol's OAuth2 client-credentials flow. Access tokens are cached and reused; one 401 triggers one token refresh + retry.
 
 This phase intentionally exposes no bol write action. Shipping confirmations, stock/price changes, cancellations, return handling, invoice uploads, and other marketplace mutations remain out of scope until separately approved and implemented behind the authority/verification layer.
+
+
+## Phase 21 live self-host deployment
+The repository now includes a self-contained Docker deployment package under `deploy/production/`.
+
+Files:
+- `docker-compose.live.yml`
+- `Caddyfile`
+- `env.production.example`
+- `deploy.sh`
+
+Deployment flow:
+1. Provision a Linux host with Docker Engine + Docker Compose v2 and public TCP 80/443.
+2. Point the selected Command Center and MCP DNS names to the host.
+3. Copy `deploy/production/env.production.example` to `deploy/production/.env.production`.
+4. Fill real secrets only on the server. Never commit the file.
+5. Set the production legal-entity IDs after the target database has the correct legal entity.
+6. Run:
+   `sh deploy/production/deploy.sh`
+7. Confirm the public Command Center HTTPS endpoint and MCP HTTPS endpoint are reachable.
+8. From a trusted operator environment, configure the SAM_LIVE_* values and run:
+   `npm run live:acceptance`
+9. Mark deployment LIVE_PROVEN only after the live Golden Chain runner prints `LIVE_GOLDEN_CHAIN PASS`.
+
+The live compose keeps PostgreSQL, runtime, MCP and Command Center on the private Docker network. Only Caddy publishes ports 80/443.
+
+### Migration runner
+`npm run db:migrate -- --apply` now performs real migrations. It serializes migration application using a PostgreSQL advisory lock and records every filename/hash in `sam_schema_migrations`. Re-running is idempotent; modifying an already applied migration produces a hard failure.
+
+Do not manually edit `sam_schema_migrations`. New schema changes must be new numbered migration files.
