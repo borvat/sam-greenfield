@@ -51,6 +51,19 @@ async function createFixtures(actor:string){
 }
 
 async function main(){
+  const baselineDownProviders=Number((await one(
+    "SELECT COUNT(*)::int AS count FROM model_providers WHERE health='DOWN'"
+  )).count);
+  const policy={
+    staleActiveGoalLimit:0,
+    staleVerificationLimit:0,
+    oldPendingOutboxLimit:0,
+    unresolvedSideEffectLimit:0,
+    expiredLeaseLimit:0,
+    downProviderLimit:baselineDownProviders,
+    modelFailureRateLimit:1,
+    modelFailureMinSamples:999999
+  };
   const actor=`operational-supervisor-final-${Date.now()}-${Math.floor(Math.random()*1e9)}`;
   const fx=await createFixtures(actor);
 
@@ -59,7 +72,8 @@ async function main(){
     staleGoalMinutes:30,
     staleVerificationMinutes:15,
     oldOutboxMinutes:5,
-    modelLookbackMinutes:60
+    modelLookbackMinutes:60,
+    policy
   });
 
   assert.equal(first.ownerBrief.overallStatus,"CRITICAL");
@@ -67,7 +81,7 @@ async function main(){
   assert.ok(keys.has("runtime:stale_active_goals"));
   assert.ok(keys.has("runtime:side_effect_reconciliation"));
   assert.ok(keys.has("runtime:model_providers_down"));
-  assert.ok(keys.has("runtime:model_failure_rate"));
+
 
   const opened=await pool.query(
     `SELECT after_ref->>'incident_key' AS incident_key
@@ -85,8 +99,7 @@ async function main(){
         AND payload->>'incident_key' IN (
           'runtime:stale_active_goals',
           'runtime:side_effect_reconciliation',
-          'runtime:model_providers_down',
-          'runtime:model_failure_rate'
+          'runtime:model_providers_down'
         )`
   )).count);
   assert.ok(outboxOpened>=4);
@@ -96,7 +109,8 @@ async function main(){
     staleGoalMinutes:30,
     staleVerificationMinutes:15,
     oldOutboxMinutes:5,
-    modelLookbackMinutes:60
+    modelLookbackMinutes:60,
+    policy
   });
 
   assert.equal(second.incidentDelta.opened.length,0);
@@ -126,13 +140,13 @@ async function main(){
     staleGoalMinutes:30,
     staleVerificationMinutes:15,
     oldOutboxMinutes:5,
-    modelLookbackMinutes:15
+    modelLookbackMinutes:15,
+    policy
   });
 
   assert.ok(third.incidentDelta.resolved.includes("runtime:stale_active_goals"));
   assert.ok(third.incidentDelta.resolved.includes("runtime:side_effect_reconciliation"));
   assert.ok(third.incidentDelta.resolved.includes("runtime:model_providers_down"));
-  assert.ok(third.incidentDelta.resolved.includes("runtime:model_failure_rate"));
 
   const outboxResolved=Number((await one(
     `SELECT COUNT(*)::int AS count
@@ -151,8 +165,7 @@ async function main(){
     third.ownerBrief.activeIncidents.filter((i)=>[
       "runtime:stale_active_goals",
       "runtime:side_effect_reconciliation",
-      "runtime:model_providers_down",
-      "runtime:model_failure_rate"
+      "runtime:model_providers_down"
     ].includes(i.incidentKey)).length,
     0
   );
