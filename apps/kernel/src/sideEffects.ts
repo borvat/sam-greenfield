@@ -80,3 +80,28 @@ export async function confirmSideEffectAtomic(operationKey: string): Promise<voi
     }
   });
 }
+
+export async function bindSideEffectToWorkAtomic(
+  queueId: string,
+  operationKey: string
+): Promise<void> {
+  await withTransaction(async (client) => {
+    const op = await client.query(
+      "SELECT operation_key FROM side_effect_operations WHERE operation_key=$1 FOR UPDATE",
+      [operationKey]
+    );
+    if (op.rowCount !== 1) throw new Error("Side effect operation not found");
+
+    const work = await client.query(
+      `UPDATE work_queue
+          SET operation_key_ref=$2
+        WHERE id=$1
+          AND (operation_key_ref IS NULL OR operation_key_ref=$2)
+        RETURNING id`,
+      [queueId, operationKey]
+    );
+    if (work.rowCount !== 1) {
+      throw new Error("Work item already bound to a different side effect");
+    }
+  });
+}
