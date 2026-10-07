@@ -54,3 +54,20 @@ export class BolRetailerAdapter extends BolReadAdapter{
     return this.output(await this.client.getCurrentRetailer());
   }
 }
+
+export class BolOrderDetailAdapter extends BolReadAdapter{
+  readonly capabilityId="bol_get_order";
+  async execute(request:ToolExecutionRequest){return this.output(await this.client.getOrder(request.params.order_id));}
+}
+export class BolShipmentsAdapter extends BolReadAdapter{
+  readonly capabilityId="bol_list_shipments";
+  async execute(request:ToolExecutionRequest){return this.output(await this.client.listShipments({page:request.params.page,fulfilmentMethod:request.params.fulfilment_method}));}
+}
+export class BolCommissionAdapter extends BolReadAdapter{
+  readonly capabilityId="bol_get_commission";
+  async execute(request:ToolExecutionRequest){return this.output(await this.client.getCommission({ean:request.params.ean,unitPrice:request.params.unit_price,condition:request.params.condition}));}
+}
+export class BolCompetingOffersAdapter extends BolReadAdapter{
+  readonly capabilityId="bol_get_competing_offers";
+  async execute(request:ToolExecutionRequest){return this.output(await this.client.getCompetingOffers({ean:request.params.ean,page:request.params.page,countryCode:request.params.country_code,bestOfferOnly:request.params.best_offer_only,condition:request.params.condition}));}
+}
