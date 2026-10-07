@@ -59,9 +59,9 @@ def setup():
     else:
         entity_b = row[0]
     conn.commit()
-    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{"amount":100}'::jsonb) RETURNING id", (f"SEC_TEST_A_{int(time.time()*1000)}", entity_a))
+    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{\"amount\":100}'::jsonb) RETURNING id", (f"SEC_TEST_A_{int(time.time()*1000)}", entity_a))
     doc_a = cur.fetchone()[0]
-    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{"amount":200}'::jsonb) RETURNING id", (f"SEC_TEST_B_{int(time.time()*1000)}", entity_b))
+    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{\"amount\":200}'::jsonb) RETURNING id", (f"SEC_TEST_B_{int(time.time()*1000)}", entity_b))
     doc_b = cur.fetchone()[0]
     cur.execute("INSERT INTO goals (business_id, company_scope, objective, state) VALUES (next_business_id('goal', NULL), %s, 'SEC_TEST_Goal A', 'NEW') RETURNING id", (entity_a,))
     goal_a = cur.fetchone()[0]
@@ -95,7 +95,7 @@ def test_fail_closed():
     print("\n--- TEST 2: No tenant context -> INSERT blocked ---")
     cur.execute("SET app.current_legal_entity_id = ''")
     try:
-        cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{"amount":300}'::jsonb)", (f"SEC_TEST_NOCTX_{int(time.time()*1000)}", entity_a))
+        cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload) VALUES (%s,%s,'invoice','{\"amount\":300}'::jsonb)", (f"SEC_TEST_NOCTX_{int(time.time()*1000)}", entity_a))
         if cur.rowcount == 0:
             print("✓ PASS: No context INSERT blocked: rowcount 0 (WITH CHECK denied) - FAIL-CLOSED")
             conn.rollback()
@@ -110,7 +110,7 @@ def test_fail_closed():
 
     print("\n--- TEST 3: No context -> UPDATE blocked ---")
     cur.execute("SET app.current_legal_entity_id = ''")
-    cur.execute("UPDATE financial_documents SET payload='{"amount":999}'::jsonb WHERE id=%s", (doc_a,))
+    cur.execute("UPDATE financial_documents SET payload='{\"amount\":999}'::jsonb WHERE id=%s", (doc_a,))
     assert cur.rowcount == 0
     print("✓ PASS: No context UPDATE blocked (rowcount 0)")
 
