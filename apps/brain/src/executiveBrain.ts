@@ -3,6 +3,8 @@ import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import { observeAndEnterPlanning, persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
 import { proposePlan } from "./planner";
+import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
+import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 
 export async function runBrainPlanningCycle(input: {
   gateway: ModelGateway;
@@ -10,6 +12,7 @@ export async function runBrainPlanningCycle(input: {
   dataClassification: DataClassification;
   maxCostUsd: number;
   preferredProviders?: string[];
+  capabilityPolicies: CapabilityAuthorityPolicy;
 }) {
   const goal = await withTransaction(async (client) => {
     const res = await client.query(
@@ -36,11 +39,30 @@ export async function runBrainPlanningCycle(input: {
     preferredProviders: input.preferredProviders
   });
 
+  const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
+    goalId: input.goalId,
+    legalEntityId: context.entityId,
+    steps: candidate.steps,
+    capabilityPolicies: input.capabilityPolicies
+  }));
+
+  if (!authority.authorized) {
+    await transitionGoalAtomic(
+      input.goalId,
+      "PLANNING",
+      "WAITING_OWNER",
+      "candidate_plan_requires_authority",
+      { blocked: authority.blocked }
+    );
+    throw new Error("Candidate plan blocked by authority policy");
+  }
+
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {
     context,
     candidate,
+    authority,
     persisted
   };
 }
