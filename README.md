@@ -13,6 +13,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 7 Production Readiness + Deployment Hardening: TECHNICALLY PASS; live deployment proof pending
 - Phase 8 ChatGPT Tool Surface + Capability Gateway: PASS on real PostgreSQL 15.17
 - Phase 9 Production Wiring + Kernel-backed Dispatch: PASS on real PostgreSQL 15.17
+- Phase 10 MCP Transport Bridge for ChatGPT: PASS on real PostgreSQL 15.17 + real MCP HTTP handshake
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -246,3 +247,26 @@ Phase 9 tests live under `tests/phase9/`.
 Phase 9 closes the production orchestration boundary. Real external model/tool/verifier adapters are intentionally still separate from this foundation and must be added without synthetic substitutes.
 
 See `docs/PHASE9_SCOPE.md` and `PHASE9_DOD_CHECKLIST.md`.
+
+
+## Phase 10 — MCP Transport Bridge for ChatGPT
+Implemented and protocol-tested:
+- official MCP TypeScript SDK v2
+- Streamable HTTP transport
+- real MCP HTTP handshake with the official client
+- 28 read tools advertised without a production dispatcher
+- 30 tools advertised with a production dispatcher
+- sam_execute hidden when unavailable
+- bearer-token protection
+- allowed-host protection
+- optional origin allow-list
+- dedicated MCP process and /livez endpoint
+- separate production sam-mcp service on port 8081
+
+The MCP transport delegates every tool call to the Phase 8 ChatGPTToolRegistry and preserves the Phase 9 kernel-backed execution boundary.
+
+Phase 10 tests live under `tests/phase10/`.
+
+A public HTTPS endpoint / secure MCP tunnel and a real ChatGPT live connection remain deployment tasks, not protocol implementation gaps.
+
+See `docs/PHASE10_SCOPE.md` and `PHASE10_DOD_CHECKLIST.md`.
