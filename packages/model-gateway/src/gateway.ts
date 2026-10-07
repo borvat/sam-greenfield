@@ -2,6 +2,7 @@ import { withTransaction } from "../../db/src/client";
 import { recordModelCall } from "../../db/src/modelCalls";
 import { loadProviderRegistry } from "./registry";
 import { routeModel } from "./router";
+import { applyRecentFailureCircuitBreaker } from "./health";
 import type { ModelProviderAdapter, ModelTask, ProviderResult } from "./types";
 
 export class ModelGateway {
@@ -12,16 +13,32 @@ export class ModelGateway {
     result: ProviderResult;
     attempts: number;
   }> {
-    const providers = await withTransaction((client) => loadProviderRegistry(client));
+    const providers = await withTransaction(async (client) => {
+      const registry = await loadProviderRegistry(client);
+      return applyRecentFailureCircuitBreaker(client, registry);
+    });
     const candidates = routeModel(task, providers);
     if (candidates.length === 0) {
       throw new Error("No eligible model provider for task");
     }
 
     let lastError: unknown;
+    let reservedBudgetUsd = 0;
 
     for (let i = 0; i < candidates.length; i++) {
       const candidate = candidates[i];
+
+      if (
+        task.maxCostUsd !== undefined &&
+        reservedBudgetUsd + candidate.estimatedCostUsd > task.maxCostUsd
+      ) {
+        lastError = new Error(
+          `Model fallback budget exhausted: reserved=${reservedBudgetUsd.toFixed(6)} next=${candidate.estimatedCostUsd.toFixed(6)} ceiling=${task.maxCostUsd.toFixed(6)}`
+        );
+        break;
+      }
+      reservedBudgetUsd += candidate.estimatedCostUsd;
+
       const adapter = this.adapters[candidate.providerId];
       if (!adapter) {
         lastError = new Error(`No adapter configured for provider ${candidate.providerId}`);
