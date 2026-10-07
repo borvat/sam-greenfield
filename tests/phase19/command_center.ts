@@ -16,7 +16,7 @@ async function main(){
  const entity=await makeEntity("P19");
  const other=await makeEntity("P19-other");
  const service=await startCommandCenterHttpServer({
-  legalEntityId:entity,port:0,host:"127.0.0.1",bearerToken:"owner-secret"
+  legalEntityId:entity,port:0,host:"127.0.0.1",bearerToken:"owner-secret",allowedHosts:"127.0.0.1"
  });
  const a=service.server.address();if(!a||typeof a==="string")throw new Error("address");
  const base=`http://127.0.0.1:${a.port}`;
@@ -50,9 +50,14 @@ async function main(){
  const hidden=await pool.query("SELECT id FROM goals WHERE company_scope=$1",[other]);
  assert.equal((await req(base,`/api/goals/${hidden.rows[0].id}/timeline`,"owner-secret")).status,404);
 
- await pool.query(`INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result)
- VALUES('test',$1,'FINANCE_OPERATIONAL_BRIEF','legal_entity',$2,$3::jsonb,'finance_loop','GREEN','CLEAN')`,[goalId,entity,JSON.stringify({brief:{materialVariance:false}})]);
- const finance=await req(base,"/api/finance/latest","owner-secret");assert.equal(finance.status,200);assert.equal(finance.body.data.goal_id,goalId);
+ await pool.query(`INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result,timestamp)
+ VALUES('test',$1,'FINANCE_OPERATIONAL_BRIEF','legal_entity',$2,$3::jsonb,'finance_loop','GREEN','CLEAN','2026-10-07T12:00:00Z')`,[goalId,entity,JSON.stringify({brief:{materialVariance:false,scope:"configured"}})]);
+ await pool.query(`INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result,timestamp)
+ VALUES('test',$1,'FINANCE_OPERATIONAL_BRIEF','legal_entity',$2,$3::jsonb,'finance_loop','GREEN','MATERIAL_VARIANCE','2026-10-07T13:00:00Z')`,[hidden.rows[0].id,other,JSON.stringify({brief:{materialVariance:true,scope:"other"}})]);
+ const finance=await req(base,"/api/finance/latest","owner-secret");
+ assert.equal(finance.status,200);
+ assert.equal(finance.body.data.goal_id,goalId);
+ assert.equal(finance.body.data.after_ref.brief.scope,"configured");
 
  const red=await req(base,"/api/goals","owner-secret",{method:"POST",body:JSON.stringify({
   objective:"Forbidden red goal",authority_ceiling:"RED"
