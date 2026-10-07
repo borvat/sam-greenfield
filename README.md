@@ -9,6 +9,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 3 Specialist Agents + Capability Execution: PASS on real PostgreSQL 15.17
 - Phase 4 Tool Gateway + Side-Effect Contracts: PASS on real PostgreSQL 15.17
 - Phase 5 Verified Learning + Memory: PASS on real PostgreSQL 15.17
+- Phase 6 Operational Supervision + Incident Control: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -159,3 +160,23 @@ Implemented and real-PostgreSQL tested:
 Phase 5 tests live under `tests/phase5/`.
 
 See `docs/PHASE5_SCOPE.md` and `PHASE5_DOD_CHECKLIST.md`.
+
+
+## Phase 6 — Operational Supervision + Incident Control
+Implemented and real-PostgreSQL tested:
+- deterministic runtime health snapshot
+- stale-goal and stale-verification detection
+- expired-lease detection
+- old outbox backlog detection
+- unreconciled side-effect detection
+- provider-down detection
+- recent model failure-rate policy
+- append-only incident OPEN / RESOLVED lifecycle
+- deduplicated repeated supervisor ticks
+- durable incident outbox events
+- structured owner operational brief
+- model-independent supervision path
+
+Phase 6 tests live under `tests/phase6/`.
+
+See `docs/PHASE6_SCOPE.md` and `PHASE6_DOD_CHECKLIST.md`.
