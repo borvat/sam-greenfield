@@ -1,8 +1,63 @@
 import { GoogleRefreshTokenProvider } from "../../../packages/google-auth/src/refreshToken";
 import { GmailApiClient } from "../../../packages/gmail/src/client";
 import { GmailSendAdapter } from "../../tools/src/gmailSendAdapter";
+import {
+  GmailSearchThreadsAdapter,
+  GmailGetThreadAdapter,
+  GmailGetMessageAdapter
+} from "../../tools/src/gmailReadAdapters";
 import { GmailSentVerificationAdapter } from "./gmailVerifier";
-import type { ProductionBundle } from "./types";
+import type { ProductionBundle,VerificationAdapter } from "./types";
+
+const GMAIL_READ_CAPABILITIES=[
+  "gmail_search_threads",
+  "gmail_get_thread",
+  "gmail_get_message"
+] as const;
+
+export const GMAIL_READ_VERIFICATION_CONTRACTS=GMAIL_READ_CAPABILITIES.map((capabilityId)=>({
+  capabilityId,
+  description:`Verify ${capabilityId} by an independent Gmail API readback`,
+  verificationMethod:"api_readback" as const,
+  requiredEvidenceFields:{readback:"boolean"},
+  independentQueryTemplate:{api:"gmail",method:"GET"}
+}));
+
+function gmailReadVerifier(
+  capabilityId:typeof GMAIL_READ_CAPABILITIES[number],
+  client:GmailApiClient
+):VerificationAdapter{
+  return {
+    capabilityId,
+    async verify(input){
+      const p=input.execution.params??{};
+      if(capabilityId==="gmail_search_threads"){
+        await client.searchThreads({
+          query:p.query?String(p.query):undefined,
+          maxResults:p.max_results,
+          pageToken:p.page_token?String(p.page_token):undefined,
+          labelIds:Array.isArray(p.label_ids)?p.label_ids.map(String):undefined,
+          includeSpamTrash:p.include_spam_trash===true
+        });
+      }else if(capabilityId==="gmail_get_thread"){
+        await client.getThread(
+          String(p.thread_id??""),
+          p.format?String(p.format):"full"
+        );
+      }else{
+        await client.getMessageWithFormat(
+          String(p.message_id??""),
+          p.format?String(p.format):"full"
+        );
+      }
+      return {
+        result:"VERIFIED" as const,
+        evidence:{method:"gmail-independent-api-readback"},
+        verifier:"gmail-independent-readback"
+      };
+    }
+  };
+}
 
 export function withGmailFromEnv(
   bundle:ProductionBundle,
@@ -38,7 +93,13 @@ export function withGmailFromEnv(
         authorityClass:"YELLOW",
         specialistAgentId:"communications",
         specialistVersion:"1.0.0"
-      }
+      },
+      ...GMAIL_READ_CAPABILITIES.map((capabilityId)=>({
+        capabilityId,
+        authorityClass:"GREEN" as const,
+        specialistAgentId:"communications",
+        specialistVersion:"1.0.0"
+      }))
     ],
     toolDefinitions:[
       ...bundle.toolDefinitions,
@@ -46,15 +107,24 @@ export function withGmailFromEnv(
         capabilityId:"gmail_send",
         authorityClass:"YELLOW",
         sideEffect:true
-      }
+      },
+      ...GMAIL_READ_CAPABILITIES.map((capabilityId)=>({
+        capabilityId,
+        authorityClass:"GREEN" as const,
+        sideEffect:false
+      }))
     ],
     toolAdapters:[
       ...bundle.toolAdapters,
-      new GmailSendAdapter(client,{fromEmail:env.GMAIL_FROM_EMAIL?.trim()||undefined})
+      new GmailSendAdapter(client,{fromEmail:env.GMAIL_FROM_EMAIL?.trim()||undefined}),
+      new GmailSearchThreadsAdapter(client),
+      new GmailGetThreadAdapter(client),
+      new GmailGetMessageAdapter(client)
     ],
     verificationAdapters:[
       ...(bundle.verificationAdapters??[]),
-      new GmailSentVerificationAdapter(client)
+      new GmailSentVerificationAdapter(client),
+      ...GMAIL_READ_CAPABILITIES.map((capabilityId)=>gmailReadVerifier(capabilityId,client))
     ]
   };
 }
