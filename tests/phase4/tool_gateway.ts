@@ -169,7 +169,7 @@ async function main(){
       catalog:mismatchCatalog,
       tools:new ToolRegistry(
         [{capabilityId:"x",authorityClass:"YELLOW",sideEffect:true}],
-        [{capabilityId:"x",async execute()=>({providerReference:"x",result:{},evidence:{}})}]
+        [{capabilityId:"x",async execute(){return {providerReference:"x",result:{},evidence:{}};}}]
       )
     });
   }catch{
