@@ -60,9 +60,9 @@ def setup_entities():
         entity_b = row[0]
     conn.commit()
     # Insert data as superuser (bypasses RLS for setup)
-    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{"amount":100}'::jsonb, now(), false) RETURNING id", (f"TEST_RLS_A_{int(time.time()*1000)}", entity_a))
+    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{\"amount\":100}'::jsonb, now(), false) RETURNING id", (f"TEST_RLS_A_{int(time.time()*1000)}", entity_a))
     doc_a_id = cur.fetchone()[0]
-    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{"amount":200}'::jsonb, now(), false) RETURNING id", (f"TEST_RLS_B_{int(time.time()*1000)}", entity_b))
+    cur.execute("INSERT INTO financial_documents (business_id, legal_entity_id, doc_type, payload, issued_at, is_immutable) VALUES (%s,%s,'invoice','{\"amount\":200}'::jsonb, now(), false) RETURNING id", (f"TEST_RLS_B_{int(time.time()*1000)}", entity_b))
     doc_b_id = cur.fetchone()[0]
     cur.execute("INSERT INTO goals (business_id, company_scope, objective, state) VALUES (next_business_id('goal', NULL), %s, 'TEST_RLS_Goal A', 'NEW') RETURNING id", (entity_a,))
     goal_a_id = cur.fetchone()[0]
@@ -101,7 +101,7 @@ def test_rls_tenant_isolation():
     assert len(cur.fetchall()) == 1
     print("✓ PASS: Tenant A can read own doc (app role)")
 
-    cur.execute("UPDATE financial_documents SET payload='{"amount":999}'::jsonb WHERE id=%s", (doc_b_id,))
+    cur.execute("UPDATE financial_documents SET payload='{\"amount\":999}'::jsonb WHERE id=%s", (doc_b_id,))
     assert cur.rowcount == 0
     print("✓ PASS: Tenant A cannot UPDATE B doc (app role, rowcount 0)")
 
