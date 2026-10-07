@@ -2,6 +2,7 @@ import type { ProductionBundle } from "./types";
 import { withStandardModelProvidersFromEnv } from "./standardModels";
 import { withGmailFromEnv } from "./gmailBundle";
 import { withGoogleDriveFromEnv } from "./driveBundle";
+import { withBolFromEnv } from "./bolBundle";
 
 let bundle:ProductionBundle={
   capabilities:[],
@@ -12,5 +13,6 @@ let bundle:ProductionBundle={
 bundle=withStandardModelProvidersFromEnv(bundle);
 bundle=withGmailFromEnv(bundle);
 bundle=withGoogleDriveFromEnv(bundle);
+bundle=withBolFromEnv(bundle);
 
 export default bundle;
