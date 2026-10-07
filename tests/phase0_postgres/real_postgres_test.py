@@ -76,12 +76,13 @@ def test_rls_isolation_real_with_app_role():
     cur.execute("SELECT policyname, tablename, qual, with_check FROM pg_policies WHERE schemaname='public' ORDER BY tablename, policyname")
     policies = cur.fetchall()
     policy_text = " ".join([f"{p[0]} {p[1]} {p[2]} {p[3]}" for p in policies])
-    assert "IS NOT NULL AND org_id = current_org_id()" in policy_text, f"Fail-closed org policy missing in {policy_text}"
-    assert "IS NOT NULL AND legal_entity_id = current_legal_entity_id()" in policy_text, "Fail-closed legal entity policy missing"
-    assert "IS NOT NULL AND company_scope = current_legal_entity_id()" in policy_text, "Fail-closed goals policy missing"
+    normalized_policy_text = policy_text.replace("(", "").replace(")", "")
+    assert "IS NOT NULL AND org_id = current_org_id()" in normalized_policy_text, f"Fail-closed org policy missing in {policy_text}"
+    assert "IS NOT NULL AND legal_entity_id = current_legal_entity_id()" in normalized_policy_text, "Fail-closed legal entity policy missing"
+    assert "IS NOT NULL AND company_scope = current_legal_entity_id()" in normalized_policy_text, "Fail-closed goals policy missing"
     # Ensure NO fail-open pattern exists
-    assert "IS NULL OR org_id = current_org_id()" not in policy_text, "FAIL-OPEN policy still present! Security breach"
-    assert "IS NULL OR legal_entity_id = current_legal_entity_id()" not in policy_text, "FAIL-OPEN policy still present!"
+    assert "IS NULL OR org_id = current_org_id()" not in normalized_policy_text, "FAIL-OPEN policy still present! Security breach"
+    assert "IS NULL OR legal_entity_id = current_legal_entity_id()" not in normalized_policy_text, "FAIL-OPEN policy still present!"
     print(f"✓ RLS fail-closed policies verified, no fail-open patterns, {len(policies)} policies")
     print(f"  Policies: {[p[0] for p in policies]}")
     conn.close()
