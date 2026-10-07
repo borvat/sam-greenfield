@@ -1,3 +1,4 @@
+import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import type { ActiveIncident,IncidentCandidate } from "./types";
 
 export async function loadActiveIncidents(
@@ -46,9 +47,10 @@ export async function reconcileIncidents(
   for(const candidate of candidates){
     if(activeByKey.has(candidate.incidentKey)) continue;
 
-    await client.query(
+    const audit=await client.query(
       `INSERT INTO audit_log(actor,action,entity_type,source,result,after_ref)
-       VALUES($1,'INCIDENT_OPENED','runtime','supervisor','OPEN',$2::jsonb)`,
+       VALUES($1,'INCIDENT_OPENED','runtime','supervisor','OPEN',$2::jsonb)
+       RETURNING id`,
       [
         actor,
         JSON.stringify({
@@ -60,15 +62,28 @@ export async function reconcileIncidents(
         })
       ]
     );
+    await insertOutboxEvent(client,{
+      aggregateType:"runtime_incident",
+      aggregateId:audit.rows[0].id,
+      eventType:"SUPERVISOR_INCIDENT_OPENED",
+      payload:{
+        incident_key:candidate.incidentKey,
+        severity:candidate.severity,
+        code:candidate.code,
+        title:candidate.title,
+        detail:candidate.detail
+      }
+    });
     opened.push(candidate.incidentKey);
   }
 
   for(const incident of active){
     if(candidatesByKey.has(incident.incidentKey)) continue;
 
-    await client.query(
+    const audit=await client.query(
       `INSERT INTO audit_log(actor,action,entity_type,source,result,after_ref)
-       VALUES($1,'INCIDENT_RESOLVED','runtime','supervisor','RESOLVED',$2::jsonb)`,
+       VALUES($1,'INCIDENT_RESOLVED','runtime','supervisor','RESOLVED',$2::jsonb)
+       RETURNING id`,
       [
         actor,
         JSON.stringify({
@@ -80,6 +95,18 @@ export async function reconcileIncidents(
         })
       ]
     );
+    await insertOutboxEvent(client,{
+      aggregateType:"runtime_incident",
+      aggregateId:audit.rows[0].id,
+      eventType:"SUPERVISOR_INCIDENT_RESOLVED",
+      payload:{
+        incident_key:incident.incidentKey,
+        severity:incident.severity,
+        code:incident.code,
+        title:incident.title,
+        detail:incident.detail
+      }
+    });
     resolved.push(incident.incidentKey);
   }
 
