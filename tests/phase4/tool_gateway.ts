@@ -136,7 +136,7 @@ async function main(){
         {capabilityId:"p4_send",authorityClass:"YELLOW",sideEffect:true}
       ],
       [
-        {capabilityId:"p4_read",async execute()=>({result:{},evidence:{}})},
+        {capabilityId:"p4_read",async execute(){return {result:{},evidence:{}};}},
         {
           capabilityId:"p4_send",
           async execute(){
