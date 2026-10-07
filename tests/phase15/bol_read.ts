@@ -10,6 +10,7 @@ async function mock(){
   const seen:any[]=[];
   let tokens=0;
   let force401=true;
+  let successfulOrderReads=0;
 
   const server=createServer(async(req,res)=>{
     const chunks:Buffer[]=[];
@@ -48,11 +49,17 @@ async function mock(){
     assert.equal(req.headers.authorization,`Bearer access-${tokens}`);
 
     if(req.url?.startsWith("/retailer/orders?")){
+      successfulOrderReads+=1;
       const u=new URL(`http://local${req.url}`);
-      assert.equal(u.searchParams.get("page"),"200");
+      assert.equal(
+        u.searchParams.get("page"),
+        successfulOrderReads===1?"200":"1"
+      );
       assert.equal(u.searchParams.get("fulfilment-method"),"ALL");
       assert.equal(u.searchParams.get("status"),"OPEN");
-      assert.equal(u.searchParams.get("change-interval-minute"),"60");
+      if(successfulOrderReads===1){
+        assert.equal(u.searchParams.get("change-interval-minute"),"60");
+      }
       res.end(JSON.stringify({orders:[{orderId:"o1"}]}));
       return;
     }
@@ -181,18 +188,26 @@ async function main(){
   });
   assert.equal((read.result as any).data.orders[0].orderId,"o1");
 
-  const verifier=validated.verifiers.get("bol_list_orders")!;
-  const verified=await verifier.verify({
-    execution:{
-      id:"e15",
-      capabilityId:"bol_list_orders",
-      params:{page:1,fulfilment_method:"ALL",status:"OPEN"},
-      evidence:read.evidence,
-      operationKeyRef:null
-    },
-    contract:{id:"c15",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}
-  });
-  assert.equal(verified.result,"VERIFIED");
+  const verificationInputs:any={
+    bol_list_orders:{page:1,fulfilment_method:"ALL",status:"OPEN"},
+    bol_list_returns:{page:1,handled:false,fulfilment_method:"FBR"},
+    bol_list_invoices:{period_start_date:"2026-09-01",period_end_date:"2026-09-30"},
+    bol_get_retailer:{}
+  };
+  for(const id of expectedBolCapabilities){
+    const verifier=validated.verifiers.get(id)!;
+    const verified=await verifier.verify({
+      execution:{
+        id:`e15-${id}`,
+        capabilityId:id,
+        params:verificationInputs[id],
+        evidence:{readback:true},
+        operationKeyRef:null
+      },
+      contract:{id:`c15-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}
+    });
+    assert.equal(verified.result,"VERIFIED");
+  }
 
   assert.equal(
     configured.capabilities.some((c)=>c.capabilityId.startsWith("bol_")&&c.authorityClass!=="GREEN"),
