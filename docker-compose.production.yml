@@ -32,7 +32,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
-      SAM_PRODUCTION_BUNDLE_MODULE: ${SAM_PRODUCTION_BUNDLE_MODULE:-}
+      SAM_PRODUCTION_BUNDLE_MODULE: ${SAM_PRODUCTION_BUNDLE_MODULE:-/app/apps/production/src/defaultBundleModule.ts}
       SAM_MCP_PORT: 8081
       SAM_MCP_HOST: 0.0.0.0
       SAM_MCP_ACTOR: ${SAM_MCP_ACTOR:-chatgpt-mcp}
