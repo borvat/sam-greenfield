@@ -22,6 +22,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 16 bol Operational Intelligence Read Surface: PASS on real PostgreSQL 15.17
 - Phase 17 Finance Reconciliation Preview: PASS on real PostgreSQL 15.17
 - Phase 18 Operational Finance Loop: PASS on real PostgreSQL 15.17
+- Phase 19 Executive Command Center: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -385,3 +386,11 @@ Added two deterministic GREEN read-only finance capabilities: `finance_reconcili
 SAM now runs a durable finance-observation loop over bol and e-Boekhouden. It builds a deterministic owner brief, classifies material reconciliation variance, writes append-only audit evidence, and creates one deduplicated internal `finance_reconciliation` goal when attention is required. Recent runs are suppressed, concurrent same-entity runs are serialized, and no external financial write is introduced. Phase 18 also hardens concurrent bol/e-Boekhouden authentication and fixes global NULL-scoped business-ID sequencing through migration `00010`.
 
 See `docs/PHASE18_SCOPE.md` and `PHASE18_DOD_CHECKLIST.md`.
+
+
+## Phase 19 — Executive Command Center
+SAM now has a secure owner-facing Command Center service. The dashboard can create NEW executive goals and show legal-entity scoped overview metrics, goal state, Golden Chain timeline, and the latest finance brief. The Command Center never bypasses the kernel: created goals enter the existing NEW → MODELING → PLANNING → EXECUTION → VERIFICATION flow. API routes are bearer-protected, dashboard/API requests are host-allowlisted, RED goals are rejected, and the deployment legal entity is fixed by trusted environment configuration rather than browser input.
+
+The production service runs on port `8082` via `npm run start:command-center`.
+
+See `docs/PHASE19_SCOPE.md` and `PHASE19_DOD_CHECKLIST.md`.
