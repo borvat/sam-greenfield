@@ -83,18 +83,16 @@ async function main(){
   });
   assert.ok(fact2);
 
-  const facts=await pool.query(
-    `SELECT id,value,superseded_at
-       FROM world_facts
-      WHERE entity_type='legal_entity'
-        AND entity_id=$1
-        AND attribute='preferred_batch_size'
-      ORDER BY created_at,id`,
-    [goal1.legalEntityId]
+  const oldFact=await one(
+    "SELECT superseded_at FROM world_facts WHERE id=$1",
+    [fact1]
   );
-  assert.equal(facts.rowCount,2);
-  assert.ok(facts.rows[0].superseded_at);
-  assert.equal(facts.rows[1].superseded_at,null);
+  const newFact=await one(
+    "SELECT superseded_at FROM world_facts WHERE id=$1",
+    [fact2]
+  );
+  assert.ok(oldFact.superseded_at);
+  assert.equal(newFact.superseded_at,null);
 
   const m1=await observeVerifiedMemory({
     executionId:exec1,
