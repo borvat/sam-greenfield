@@ -35,13 +35,15 @@ async function mock(){
       assert.equal(req.headers.authorization,"Bearer drive-access");
       const body=JSON.parse(text);
       assert.equal(body.mimeType,"application/vnd.google-apps.folder");
+      assert.equal(typeof body.appProperties?.samOperationKey,"string");
       const item={
         id:"folder-1",
         name:body.name,
         mimeType:body.mimeType,
         parents:body.parents??[],
         trashed:false,
-        webViewLink:"https://drive.example/folder-1"
+        webViewLink:"https://drive.example/folder-1",
+        appProperties:body.appProperties
       };
       files.set(item.id,item);
       res.end(JSON.stringify(item));
@@ -58,7 +60,12 @@ async function mock(){
       const u=new URL(`http://local${req.url}`);
       const q=u.searchParams.get("q")??"";
       assert.ok(q.includes("trashed = false"));
-      const result=[...files.values()].filter((f)=>!f.trashed);
+      let result=[...files.values()].filter((f)=>!f.trashed);
+      if(q.includes("appProperties has")){
+        const markerMatch=q.match(/value='([^']+)'/);
+        const marker=markerMatch?.[1]??"";
+        result=result.filter((f)=>f.appProperties?.samOperationKey===marker);
+      }
       res.end(JSON.stringify({files:result,nextPageToken:null}));
       return;
     }
@@ -116,6 +123,17 @@ async function main(){
     idempotencyKey:"create-1"
   });
   assert.equal(reconciled.result,"CONFIRMED");
+
+  const reconciledAfterProviderRefLoss=await createAdapter.reconcile({
+    capabilityId:"drive_create_folder",
+    providerReference:null,
+    idempotencyKey:"create-1"
+  });
+  assert.equal(reconciledAfterProviderRefLoss.result,"CONFIRMED");
+  assert.equal(
+    (reconciledAfterProviderRefLoss.evidence as any).reconciliation,
+    "operation_marker_search"
+  );
 
   const metaVerified=await new DriveGetMetadataVerifier(client).verify({
     execution:{
