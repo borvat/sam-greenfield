@@ -92,7 +92,7 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
         priority: step.priority,
         dueAt: step.dueAt,
         idempotencyKey: step.idempotencyKey,
-        operationKeyRef: step.operationKeyRef
+        operationKeyRef: null
       });
       queueIds.push(queueId);
     }
