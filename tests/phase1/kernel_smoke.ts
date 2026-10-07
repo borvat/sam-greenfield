@@ -84,9 +84,18 @@ async function main() {
 
   const verifyGoal = await createGoal("VERIFYING");
   const contract = await scalar("SELECT id FROM verification_contracts WHERE capability_id='gmail_send' LIMIT 1");
-  const exec = await pool.query(
-    "INSERT INTO executions(goal_id,plan_hash,execution_hash,capability_id,params,result,evidence,fencing_token,actor,status) VALUES($1,'plan-h','exec-h','gmail_send','{}','{}','{}',1,'worker','DONE') RETURNING id",
+  const plan = await pool.query(
+    "INSERT INTO plans(goal_id,version,steps,plan_hash) VALUES($1,1,'[]'::jsonb,'plan-h') RETURNING id",
     [verifyGoal.goalId]
+  );
+  await pool.query("UPDATE goals SET current_plan_id=$2 WHERE id=$1",[verifyGoal.goalId,plan.rows[0].id]);
+  const work = await pool.query(
+    "INSERT INTO work_queue(goal_id,plan_id,capability_id,status,fencing_token) VALUES($1,$2,'gmail_send','EXECUTED',1) RETURNING id",
+    [verifyGoal.goalId,plan.rows[0].id]
+  );
+  const exec = await pool.query(
+    "INSERT INTO executions(queue_id,goal_id,plan_id,plan_hash,execution_hash,capability_id,params,result,evidence,fencing_token,actor,status) VALUES($1,$2,$3,'plan-h','exec-h','gmail_send','{}','{}','{}',1,'worker','DONE') RETURNING id",
+    [work.rows[0].id,verifyGoal.goalId,plan.rows[0].id]
   );
   await recordIndependentVerificationAtomic({
     executionId: exec.rows[0].id,
