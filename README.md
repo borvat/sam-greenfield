@@ -7,6 +7,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 1 Executive Kernel: PASS on real PostgreSQL 15.17
 - Phase 2 Brain + Model Gateway: PASS on real PostgreSQL 15.17
 - Phase 3 Specialist Agents + Capability Execution: PASS on real PostgreSQL 15.17
+- Phase 4 Tool Gateway + Side-Effect Contracts: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -120,3 +121,22 @@ Implemented and real-PostgreSQL tested:
 Phase 3 tests live under `tests/phase3/`.
 
 See `docs/PHASE3_SCOPE.md` and `PHASE3_DOD_CHECKLIST.md`.
+
+
+## Phase 4 — Tool Gateway + Side-Effect Contracts
+Implemented and real-PostgreSQL tested:
+- trusted Tool Registry
+- catalog/tool authority consistency
+- exact approval consumption for YELLOW/RED side effects
+- semantic operation keys created before external calls
+- provider idempotency-key propagation
+- duplicate CONFIRMED side-effect deduplication
+- fail-closed unresolved PENDING/SENT operations
+- independent tool readback reconciliation
+- crash-window no-resend behavior
+- read-only vs side-effect execution separation
+- reconciliation to CONFIRMED / RECONCILED
+
+Phase 4 tests live under `tests/phase4/`.
+
+See `docs/PHASE4_SCOPE.md` and `PHASE4_DOD_CHECKLIST.md`.
