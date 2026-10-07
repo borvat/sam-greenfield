@@ -24,6 +24,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 18 Operational Finance Loop: PASS on real PostgreSQL 15.17
 - Phase 19 Executive Command Center: PASS on real PostgreSQL 15.17
 - Phase 20 Live Golden Chain Acceptance Gate: PASS on real PostgreSQL 15.17
+- Phase 21 Production Deployment Package: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -406,3 +407,11 @@ Run it from a trusted operator environment with:
 The runner is ready, but LIVE_PROVEN status still requires executing it against the actual deployed SAM services with production credentials.
 
 See `docs/PHASE20_SCOPE.md` and `PHASE20_DOD_CHECKLIST.md`.
+
+
+## Phase 21 — Production Deployment Package
+SAM now includes a self-host production deployment package under `deploy/production/`: PostgreSQL 15, migration job, runtime, MCP, Executive Command Center, and Caddy TLS ingress. The migration runner now actually applies SQL, records migration hashes, is idempotent, serializes concurrent migration attempts and refuses drift in previously applied files. Only Caddy publishes ports 80/443; internal services remain on the private Docker network.
+
+Deployment is started with `sh deploy/production/deploy.sh` after creating the server-only `.env.production`. SAM is still not marked LIVE_PROVEN until this runs on the real Docker host and `npm run live:acceptance` returns `LIVE_GOLDEN_CHAIN PASS` against the deployed services.
+
+See `docs/PHASE21_SCOPE.md` and `PHASE21_DOD_CHECKLIST.md`.
