@@ -37,7 +37,8 @@ async function main(){
       NODE_ENV:"production",
       DATABASE_URL:"postgres://user:secret@db/sam",
       SAM_WORKER_ID:"worker-1",
-      POSTGRES_PASSWORD:"postgres"
+      POSTGRES_PASSWORD:"postgres",
+      SAM_COMPOSITION_MODULE:"/tmp/composition.ts"
     } as NodeJS.ProcessEnv);
   }catch(err){
     defaultPasswordBlocked=err instanceof Error && err.message.includes("forbidden");
@@ -48,12 +49,14 @@ async function main(){
     NODE_ENV:"production",
     DATABASE_URL:"postgres://user:secret@db/sam",
     SAM_WORKER_ID:"worker-1",
+    SAM_COMPOSITION_MODULE:"/tmp/composition.ts",
     PORT:"8081",
     SAM_TICK_INTERVAL_MS:"2000",
     SAM_SHUTDOWN_GRACE_MS:"5000"
   } as NodeJS.ProcessEnv);
   assert.equal(cfg.workerId,"worker-1");
   assert.equal(cfg.port,8081);
+  assert.equal(cfg.compositionModule,"/tmp/composition.ts");
 
   const queueId=await createExpiredLease();
   const gate=new ReadinessGate();
