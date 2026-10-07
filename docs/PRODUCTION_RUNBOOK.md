@@ -106,3 +106,15 @@ The canonical production bundle registers Drive capabilities whenever Google OAu
 Drive read tools are independently re-read during verification. Folder creation stores a deterministic hashed SAM operation marker in Drive appProperties so reconciliation can still confirm a provider-success/process-crash window even when the provider file ID was not persisted locally.
 
 The runtime synchronizes the three Drive verification contracts before work begins.
+
+
+## e-Boekhouden read-only accounting adapter
+The canonical production bundle registers four GREEN read-only accounting capabilities when EBOEKHOUDEN_API_TOKEN is configured:
+- eboekhouden_list_mutations
+- eboekhouden_outstanding_invoices
+- eboekhouden_list_ledgers
+- eboekhouden_list_relations
+
+SAM exchanges the long-lived API token for a short-lived REST session token and retries once after a 401 by refreshing the session. The production bundle contains no e-Boekhouden accounting write endpoint in this phase.
+
+This keeps e-Boekhouden as an accounting truth/read source while write automation remains explicitly out of scope until separately approved and verified.
