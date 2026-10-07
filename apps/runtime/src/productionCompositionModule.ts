@@ -4,6 +4,7 @@ import { createProductionComposition } from "../../production/src/composition";
 import { syncProductionModelRegistry } from "../../production/src/modelRegistry";
 import { syncVerificationContracts } from "../../production/src/verificationContracts";
 import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
+import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 
 const config=loadRuntimeConfig();
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
@@ -12,6 +13,10 @@ await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
 const hasDrive=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("drive_"));
 if(hasDrive){
   await syncVerificationContracts(DRIVE_VERIFICATION_CONTRACTS);
+}
+const hasEBoekhouden=bundle.raw.capabilities.some((c)=>c.capabilityId.startsWith("eboekhouden_"));
+if(hasEBoekhouden){
+  await syncVerificationContracts(EBOEKHOUDEN_VERIFICATION_CONTRACTS);
 }
 
 export default createProductionComposition({
