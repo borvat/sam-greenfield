@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {withTransaction} from "../../../packages/db/src/client";
+import {pool,withTransaction} from "../../../packages/db/src/client";
 import type {BolRetailerClient} from "../../../packages/bol/src/client";
 import type {EBoekhoudenClient} from "../../../packages/eboekhouden/src/client";
 import {reconcileExactReferences,outstandingSnapshot} from "./reconciliation";
@@ -68,9 +68,21 @@ export async function runFinanceOperationalLoop(input:{
   lookbackDays?:number;
   materialVarianceCount?:number;
   maxPages?:number;
-}):Promise<{status:"DISABLED"|"SKIPPED_RECENT"|"EXECUTED";brief?:Brief;goalId?:string|null;fingerprint?:string}>{
+}):Promise<{status:"DISABLED"|"SKIPPED_LOCKED"|"SKIPPED_RECENT"|"EXECUTED";brief?:Brief;goalId?:string|null;fingerprint?:string}>{
   if(!input.legalEntityId) return {status:"DISABLED"};
 
+  const lockClient=await pool.connect();
+  const lockKey="finance_operational:"+input.legalEntityId;
+  const lock=await lockClient.query(
+    "SELECT pg_try_advisory_lock(hashtextextended($1,0)) AS locked",
+    [lockKey]
+  );
+  if(lock.rows[0]?.locked!==true){
+    lockClient.release();
+    return {status:"SKIPPED_LOCKED"};
+  }
+
+  try{
   const now=input.now??new Date();
   const interval=int(input.intervalMinutes,180,1,1440);
   const lookback=int(input.lookbackDays,30,1,31);
@@ -156,4 +168,14 @@ export async function runFinanceOperationalLoop(input:{
   });
 
   return {status:"EXECUTED",brief,goalId:result.goalId,fingerprint:fp};
+  }finally{
+    try{
+      await lockClient.query(
+        "SELECT pg_advisory_unlock(hashtextextended($1,0))",
+        [lockKey]
+      );
+    }finally{
+      lockClient.release();
+    }
+  }
 }
