@@ -23,6 +23,11 @@ async function main(){
 
  const live=await fetch(base+"/livez");assert.equal(live.status,200);
  const html=await fetch(base+"/");assert.equal(html.status,200);assert.ok((await html.text()).includes("SAM Executive Command Center"));
+ const badHost=await fetch(base+"/api/overview",{headers:{host:"evil.example",authorization:"Bearer owner-secret"}});
+ assert.equal(badHost.status,403);
+ assert.equal((await badHost.json()).error,"host_not_allowed");
+ const badRoot=await fetch(base+"/",{headers:{host:"evil.example"}});
+ assert.equal(badRoot.status,403);
  assert.equal((await req(base,"/api/overview")).status,401);
 
  const created=await req(base,"/api/goals","owner-secret",{method:"POST",body:JSON.stringify({
