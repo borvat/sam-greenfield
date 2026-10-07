@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import http from "node:http";
 import {pool} from "../../packages/db/src/client";
 import {startCommandCenterHttpServer} from "../../apps/command-center/src/http";
 
@@ -12,6 +13,17 @@ async function req(base:string,path:string,token?:string,init:RequestInit={}){
  const r=await fetch(base+path,{...init,headers});let body:any={};try{body=await r.json()}catch{}
  return {status:r.status,body};
 }
+async function rawHost(port:number,path:string,hostHeader:string,token?:string){
+ return new Promise<{status:number;body:any}>((resolve,reject)=>{
+  const headers:any={host:hostHeader};if(token)headers.authorization="Bearer "+token;
+  const q=http.get({host:"127.0.0.1",port,path,headers},res=>{
+   const chunks:Buffer[]=[];res.on("data",c=>chunks.push(Buffer.from(c)));res.on("end",()=>{
+    const text=Buffer.concat(chunks).toString("utf8");let body:any={};try{body=text?JSON.parse(text):{}}catch{}
+    resolve({status:res.statusCode??0,body});
+   });
+  });q.on("error",reject);
+ });
+}
 async function main(){
  const entity=await makeEntity("P19");
  const other=await makeEntity("P19-other");
@@ -23,10 +35,10 @@ async function main(){
 
  const live=await fetch(base+"/livez");assert.equal(live.status,200);
  const html=await fetch(base+"/");assert.equal(html.status,200);assert.ok((await html.text()).includes("SAM Executive Command Center"));
- const badHost=await fetch(base+"/api/overview",{headers:{host:"evil.example",authorization:"Bearer owner-secret"}});
+ const badHost=await rawHost(a.port,"/api/overview","evil.example","owner-secret");
  assert.equal(badHost.status,403);
- assert.equal((await badHost.json()).error,"host_not_allowed");
- const badRoot=await fetch(base+"/",{headers:{host:"evil.example"}});
+ assert.equal(badHost.body.error,"host_not_allowed");
+ const badRoot=await rawHost(a.port,"/","evil.example");
  assert.equal(badRoot.status,403);
  assert.equal((await req(base,"/api/overview")).status,401);
 
