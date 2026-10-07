@@ -28,6 +28,7 @@ async function main(){
  const a=server.address();if(!a||typeof a==="string")throw new Error("mock");
  const base=`http://127.0.0.1:${a.port}`;
  const env={BOL_CLIENT_ID:"id",BOL_CLIENT_SECRET:"secret",BOL_TOKEN_URL:`${base}/token`,BOL_RETAILER_BASE_URL:`${base}/retailer`} as NodeJS.ProcessEnv;
+ const c=new BolRetailerClient({clientId:"id",clientSecret:"secret",tokenUrl:`${base}/token`,baseUrl:`${base}/retailer`});
  const bundle=withBolRetailerFromEnv({capabilities:[],toolDefinitions:[],toolAdapters:[]},env);
  const v=validateProductionBundle(bundle);
  const specs=[
