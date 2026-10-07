@@ -7,6 +7,7 @@ export interface RuntimeConfig{
   workerId:string;
   tickIntervalMs:number;
   shutdownGraceMs:number;
+  compositionModule:string;
 }
 
 function positiveInt(name:string,value:string|undefined,fallback:number):number{
@@ -28,6 +29,7 @@ export function loadRuntimeConfig(env:NodeJS.ProcessEnv=process.env):RuntimeConf
   }
   if(mode==="production"){
     if(!env.SAM_WORKER_ID?.trim()) throw new Error("SAM_WORKER_ID is required in production");
+    if(!env.SAM_COMPOSITION_MODULE?.trim()) throw new Error("SAM_COMPOSITION_MODULE is required in production");
     if(env.POSTGRES_PASSWORD==="postgres"){
       throw new Error("Default POSTGRES_PASSWORD is forbidden in production");
     }
@@ -39,6 +41,7 @@ export function loadRuntimeConfig(env:NodeJS.ProcessEnv=process.env):RuntimeConf
     port:positiveInt("PORT",env.PORT,8080),
     workerId:env.SAM_WORKER_ID?.trim() || "sam-local",
     tickIntervalMs:positiveInt("SAM_TICK_INTERVAL_MS",env.SAM_TICK_INTERVAL_MS,1000),
-    shutdownGraceMs:positiveInt("SAM_SHUTDOWN_GRACE_MS",env.SAM_SHUTDOWN_GRACE_MS,15000)
+    shutdownGraceMs:positiveInt("SAM_SHUTDOWN_GRACE_MS",env.SAM_SHUTDOWN_GRACE_MS,15000),
+    compositionModule:env.SAM_COMPOSITION_MODULE?.trim() || ""
   };
 }
