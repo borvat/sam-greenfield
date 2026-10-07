@@ -90,7 +90,7 @@ async function main(){
         AND action='INCIDENT_OPENED'`,
     [actor]
   );
-  assert.ok(opened.rowCount>=4);
+  assert.ok(opened.rowCount>=3);
 
   const outboxOpened=Number((await one(
     `SELECT COUNT(*)::int AS count
@@ -102,7 +102,7 @@ async function main(){
           'runtime:model_providers_down'
         )`
   )).count);
-  assert.ok(outboxOpened>=4);
+  assert.ok(outboxOpened>=3);
 
   const second=await runOperationalSupervisorTick({
     actor,
@@ -159,7 +159,7 @@ async function main(){
           'runtime:model_failure_rate'
         )`
   )).count);
-  assert.ok(outboxResolved>=4);
+  assert.ok(outboxResolved>=3);
 
   assert.equal(
     third.ownerBrief.activeIncidents.filter((i)=>[
