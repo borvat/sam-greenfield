@@ -40,8 +40,25 @@ async function main(){
   assert.ok(v.verifiers.get(id));
  }
  await syncVerificationContracts(BOL_VERIFICATION_CONTRACTS);
- const q=await pool.query("SELECT capability_id FROM verification_contracts WHERE capability_id LIKE 'bol_%'");
+ const ids=["bol_list_orders","bol_get_order","bol_list_returns","bol_list_shipments","bol_get_offer"];
+ const q=await pool.query("SELECT capability_id FROM verification_contracts WHERE capability_id=ANY($1::text[])",[ids]);
  assert.equal(q.rowCount,5);
+
+ for(const [capabilityId,params] of [
+   ["bol_list_orders",{status:"OPEN",fulfilment_method:"ALL"}],
+   ["bol_get_order",{order_id:"O1"}],
+   ["bol_list_returns",{handled:false}],
+   ["bol_list_shipments",{fulfilment_method:"ALL"}],
+   ["bol_get_offer",{offer_id:"F1"}]
+ ] as const){
+   const tool=v.tools.adapter(capabilityId);
+   const ex=await tool.execute({capabilityId,params:{...params},idempotencyKey:`verify-${capabilityId}`});
+   const check=await v.verifiers.get(capabilityId)!.verify({
+     execution:{id:`e-${capabilityId}`,capabilityId,params:{...params},evidence:ex.evidence,operationKeyRef:null},
+     contract:{id:`c-${capabilityId}`,method:capabilityId.startsWith("bol_list_")?"list_search":"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}
+   });
+   assert.equal(check.result,"VERIFIED");
+ }
 
  const adapter=v.tools.adapter("bol_get_order");
  const executed=await adapter.execute({capabilityId:"bol_get_order",params:{order_id:"O1"},idempotencyKey:"read"});
