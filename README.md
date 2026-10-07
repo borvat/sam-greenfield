@@ -11,6 +11,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 5 Verified Learning + Memory: PASS on real PostgreSQL 15.17
 - Phase 6 Operational Supervision + Incident Control: PASS on real PostgreSQL 15.17
 - Phase 7 Production Readiness + Deployment Hardening: TECHNICALLY PASS; live deployment proof pending
+- Phase 8 ChatGPT Tool Surface + Capability Gateway: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -201,3 +202,23 @@ Phase 7 tests live under `tests/phase7/`.
 Container files passed static lint/config validation and simulated production dependency installation. A real Docker build/run and a real production deployment remain pending because the verifier environment has no Docker and no production system was changed.
 
 See `docs/PHASE7_SCOPE.md`, `docs/PRODUCTION_RUNBOOK.md`, and `PHASE7_DOD_CHECKLIST.md`.
+
+
+## Phase 8 — ChatGPT Tool Surface + Capability Gateway
+Implemented and real-PostgreSQL tested:
+- 31 ChatGPT-facing tools at foundation
+- broad read coverage across runtime, goals, queue, verification, approvals, incidents, memory, models, finance, company state, and reliability data
+- fixed-query read tools only
+- explicit system-owner guard
+- `sam_capability_manifest`
+- `sam_execute`
+- `sam_reconcile_side_effects`
+- fail-closed UNAVAILABLE state when production dispatcher/reconciler is absent
+- unknown tools and unknown capabilities fail closed
+- no synthetic/test adapter promoted into production
+
+Phase 8 tests live under `tests/phase8/`.
+
+The tool surface is ready, but real action availability still depends on production capability wiring and a transport bridge such as MCP/OpenAI app integration.
+
+See `docs/PHASE8_SCOPE.md` and `PHASE8_DOD_CHECKLIST.md`.
