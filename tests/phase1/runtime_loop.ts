@@ -29,7 +29,7 @@ async function main() {
   const goal = await createGoal("PLANNING");
   const plan = await persistPlanAndDelegateAtomic({
     goalId: goal.goalId,
-    steps: [{ capabilityId:"test_echo", params:{value:42} }]
+    steps: [{ capabilityId:"test_echo", params:{value:42}, priority:2147483647 }]
   });
 
   const firstLease = await claimNextWorkAtomic("worker-crash",1);
