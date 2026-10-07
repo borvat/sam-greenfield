@@ -5,7 +5,7 @@ import { leaseWorkAtomic } from "../../apps/kernel/src/queue";
 import { recordExecutionAndRequestVerificationAtomic } from "../../apps/kernel/src/execution";
 import { recordIndependentVerificationAtomic } from "../../apps/kernel/src/verification";
 import { beginReplanAtomic } from "../../apps/kernel/src/replanning";
-import { relayNextOutboxToEventFabricAtomic } from "../../apps/kernel/src/outboxRelay";
+import { relayOutboxUntilEmpty } from "../../apps/kernel/src/outboxRelay";
 import { runKernelTick } from "../../apps/kernel/src/runtimeSupervisor";
 
 async function one(sql: string, params: any[] = []) {
@@ -82,14 +82,17 @@ async function verifyRelayIdempotency() {
   );
   const id = out.rows[0].id;
 
-  const first = await relayNextOutboxToEventFabricAtomic();
-  assert.equal(first.relayed,true);
+  const firstBatch = await relayOutboxUntilEmpty();
+  assert.ok(firstBatch > 0);
 
   const count1 = Number((await one(
     "SELECT COUNT(*)::int c FROM event_fabric_events WHERE dedup_key=$1",
     [`outbox:${id}`]
   )).c);
   assert.equal(count1,1);
+
+  const secondBatch = await relayOutboxUntilEmpty();
+  assert.equal(secondBatch,0);
 
   const count2 = Number((await one(
     "SELECT COUNT(*)::int c FROM event_fabric_events WHERE dedup_key=$1",
