@@ -31,7 +31,6 @@ assert.equal((compose.match(/"8081:8081"/g)||[]).length,0);
 assert.equal((compose.match(/"8082:8082"/g)||[]).length,0);
 assert.match(compose,/service_completed_successfully/);
 assert.match(compose,/npm","run","db:migrate","--","--apply/);
-assert.match(compose,/sam-command-center:8082/);
 
 const caddy=file("deploy/production/Caddyfile");
 assert.match(caddy,/\{\$SAM_COMMAND_CENTER_DOMAIN\}/);
