@@ -16,7 +16,7 @@ Add real Google Drive production capabilities to SAM using the existing Google O
 - Folder creation uses Drive files.create with the folder MIME type.
 - Verification re-reads Google Drive state and never trusts the execution return payload.
 - Verification contracts are present before execution can complete.
-- Reconciliation confirms side effects by provider file id and, if needed, by deterministic name + parent lookup.
+- Reconciliation confirms side effects by provider file id and, if needed, by a deterministic Drive appProperties operation marker derived from SAM's idempotency key.
 - No synthetic/test adapter is promoted to production.
 
 ## Environment
