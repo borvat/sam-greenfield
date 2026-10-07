@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { AccessTokenProvider } from "../../google-auth/src/refreshToken";
 
 export class GoogleDriveApiClient{
@@ -58,18 +59,35 @@ export class GoogleDriveApiClient{
     return this.request(`/files?${url.searchParams.toString()}`);
   }
 
-  createFolder(input:{name:string;parentId?:string}):Promise<any>{
+  static operationMarker(operationKey:string):string{
+    return createHash("sha256").update(operationKey).digest("hex");
+  }
+
+  createFolder(input:{name:string;parentId?:string;operationKey:string}):Promise<any>{
     const body:any={
       name:input.name,
-      mimeType:"application/vnd.google-apps.folder"
+      mimeType:"application/vnd.google-apps.folder",
+      appProperties:{
+        samOperationKey:GoogleDriveApiClient.operationMarker(input.operationKey)
+      }
     };
     if(input.parentId?.trim()) body.parents=[input.parentId.trim()];
     return this.request(
-      "/files?fields=id,name,mimeType,parents,webViewLink",
+      "/files?fields=id,name,mimeType,parents,webViewLink,appProperties",
       {
         method:"POST",
         body:JSON.stringify(body)
       }
+    );
+  }
+
+  searchByOperationKey(operationKey:string):Promise<any>{
+    const marker=GoogleDriveApiClient.operationMarker(operationKey).replace(/'/g,"\\'");
+    const query=encodeURIComponent(
+      `trashed = false and appProperties has { key='samOperationKey' and value='${marker}' }`
+    );
+    return this.request(
+      `/files?pageSize=2&fields=files(id,name,mimeType,parents,trashed,webViewLink,appProperties)&q=${query}`
     );
   }
 }
