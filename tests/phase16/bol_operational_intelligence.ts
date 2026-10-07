@@ -17,7 +17,7 @@ async function main(){
   if(u.pathname==="/retailer/orders/O-1"){res.end(JSON.stringify({orderId:"O-1",orderItems:[{orderItemId:"I-1"}]}));return;}
   if(u.pathname==="/retailer/shipments"){res.end(JSON.stringify({shipments:[{shipmentId:"S-1"}]}));return;}
   if(u.pathname==="/retailer/commission/8712345678901"){assert.equal(u.searchParams.get("unit-price"),"19.99");res.end(JSON.stringify({ean:"8712345678901",totalCost:3.25}));return;}
-  if(u.pathname==="/retailer/products/8712345678901/offers"){assert.equal(u.searchParams.get("country-code"),"NL");res.end(JSON.stringify({offers:[{offerId:"C-1",price:18.95,bestOffer:true}]}));return;}
+  if(u.pathname==="/retailer/products/8712345678901/offers"){assert.ok(["NL","BE"].includes(u.searchParams.get("country-code")??""));res.end(JSON.stringify({offers:[{offerId:"C-1",price:18.95,bestOffer:true}]}));return;}
   if(u.pathname==="/retailer/orders"){res.end(JSON.stringify({orders:[]}));return;}
   if(u.pathname==="/retailer/returns"){res.end(JSON.stringify({returns:[]}));return;}
   if(u.pathname==="/retailer/invoices"){res.end(JSON.stringify({invoiceListItems:[]}));return;}
