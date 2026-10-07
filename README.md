@@ -12,6 +12,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 6 Operational Supervision + Incident Control: PASS on real PostgreSQL 15.17
 - Phase 7 Production Readiness + Deployment Hardening: TECHNICALLY PASS; live deployment proof pending
 - Phase 8 ChatGPT Tool Surface + Capability Gateway: PASS on real PostgreSQL 15.17
+- Phase 9 Production Wiring + Kernel-backed Dispatch: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -222,3 +223,26 @@ Phase 8 tests live under `tests/phase8/`.
 The tool surface is ready, but real action availability still depends on production capability wiring and a transport bridge such as MCP/OpenAI app integration.
 
 See `docs/PHASE8_SCOPE.md` and `PHASE8_DOD_CHECKLIST.md`.
+
+
+## Phase 9 — Production Wiring + Kernel-backed Dispatch
+Implemented and real-PostgreSQL tested:
+- trusted production bundle contract
+- capability/tool/adapter consistency validation
+- concrete-adapter requirement for every production capability
+- kernel-backed ChatGPT sam_execute
+- durable direct capability goals/plans/queue work
+- approval-gated YELLOW/RED path
+- pending approval creation with zero queued work while blocked
+- production side-effect reconciliation hook
+- autonomous planning hook when real model adapters exist
+- independent verifier hook when a real verifier exists
+- canonical production composition module
+- production compose wiring via SAM_PRODUCTION_BUNDLE_MODULE
+- canonical global goal business-ID generation for cross-org safety
+
+Phase 9 tests live under `tests/phase9/`.
+
+Phase 9 closes the production orchestration boundary. Real external model/tool/verifier adapters are intentionally still separate from this foundation and must be added without synthetic substitutes.
+
+See `docs/PHASE9_SCOPE.md` and `PHASE9_DOD_CHECKLIST.md`.
