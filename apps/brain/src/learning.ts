@@ -185,21 +185,59 @@ export async function recordOwnerRule(input:{
   scope?:Record<string,unknown>;
   source:string;
   approvedBy:string;
+  supersedesMemoryId?:string;
 }):Promise<string>{
   return withTransaction(async(client)=>{
     if(!input.approvedBy.trim()) throw new Error("approvedBy is required");
+
+    let supersedes:string|null=null;
+    if(input.supersedesMemoryId){
+      const prior=await client.query(
+        `SELECT id,status,type
+           FROM memory_records
+          WHERE id=$1
+          FOR UPDATE`,
+        [input.supersedesMemoryId]
+      );
+      if(prior.rowCount!==1) throw new Error("Memory to supersede not found");
+      if(prior.rows[0].status!=="APPROVED_RULE"){
+        throw new Error("Only APPROVED_RULE memory can be explicitly superseded");
+      }
+      if(prior.rows[0].type!==input.type){
+        throw new Error("Superseded memory type mismatch");
+      }
+      supersedes=prior.rows[0].id;
+    }
+
     const inserted=await client.query(
       `INSERT INTO memory_records
-        (type,statement,scope,source,confidence,support_count,status)
-       VALUES($1,$2,$3::jsonb,$4,1,1,'APPROVED_RULE')
+        (type,statement,scope,source,confidence,support_count,status,supersedes)
+       VALUES($1,$2,$3::jsonb,$4,1,1,'APPROVED_RULE',$5)
        RETURNING id`,
       [
         input.type,
         input.statement,
         JSON.stringify(input.scope ?? {}),
-        `${input.source};approved_by:${input.approvedBy}`
+        `${input.source};approved_by:${input.approvedBy}`,
+        supersedes
       ]
     );
-    return inserted.rows[0].id;
+    const id=inserted.rows[0].id as string;
+
+    if(supersedes){
+      const updated=await client.query(
+        `UPDATE memory_records
+            SET status='SUPERSEDED',
+                superseded_by=$2,
+                last_confirmed_at=now()
+          WHERE id=$1
+            AND status='APPROVED_RULE'
+          RETURNING id`,
+        [supersedes,id]
+      );
+      if(updated.rowCount!==1) throw new Error("Approved-rule supersession failed");
+    }
+
+    return id;
   });
 }
