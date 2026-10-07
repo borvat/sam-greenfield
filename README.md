@@ -14,6 +14,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 8 ChatGPT Tool Surface + Capability Gateway: PASS on real PostgreSQL 15.17
 - Phase 9 Production Wiring + Kernel-backed Dispatch: PASS on real PostgreSQL 15.17
 - Phase 10 MCP Transport Bridge for ChatGPT: PASS on real PostgreSQL 15.17 + real MCP HTTP handshake
+- Phase 11 Real Model Provider Adapters: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -270,3 +271,26 @@ Phase 10 tests live under `tests/phase10/`.
 A public HTTPS endpoint / secure MCP tunnel and a real ChatGPT live connection remain deployment tasks, not protocol implementation gaps.
 
 See `docs/PHASE10_SCOPE.md` and `PHASE10_DOD_CHECKLIST.md`.
+
+
+## Phase 11 — Real Model Provider Adapters
+Implemented and protocol-tested:
+- OpenAI Responses API adapter
+- Anthropic Messages API adapter
+- Google Gemini generateContent adapter
+- DeepSeek OpenAI-compatible Chat Completions adapter
+- Qwen / Alibaba Model Studio OpenAI-compatible adapter
+- environment-only credentials
+- deployment-configured model names
+- normalized token usage
+- JSON output parsing
+- one-to-one production adapter/provider-config validation
+- startup synchronization into model_providers
+- PUBLIC + INTERNAL default privacy
+- fail-closed provider absence when credentials/config are incomplete
+
+Phase 11 tests live under `tests/phase11/`.
+
+The adapters were verified against local HTTP protocol mocks matching each provider's wire contract. No live provider keys or paid API calls were used during acceptance.
+
+See `docs/PHASE11_SCOPE.md` and `PHASE11_DOD_CHECKLIST.md`.
