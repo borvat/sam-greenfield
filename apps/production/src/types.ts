@@ -1,5 +1,5 @@
 import type { CapabilityDefinition } from "../../agents/src/capabilityCatalog";
-import type { DataClassification,ModelProviderAdapter } from "../../../packages/model-gateway/src/types";
+import type { DataClassification,ModelProviderAdapter,ProviderConfig } from "../../../packages/model-gateway/src/types";
 import type { ToolAdapter,ToolDefinition } from "../../../packages/tool-gateway/src/types";
 import type { VerificationResult } from "../../kernel/src/verification";
 
@@ -31,6 +31,7 @@ export interface ProductionBundle{
   toolDefinitions:ToolDefinition[];
   toolAdapters:ToolAdapter[];
   modelAdapters?:ModelProviderAdapter[];
+  modelProviderConfigs?:ProviderConfig[];
   verificationAdapters?:VerificationAdapter[];
   dataClassification?:DataClassification;
   planningMaxCostUsd?:number;
