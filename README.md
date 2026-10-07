@@ -16,6 +16,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 10 MCP Transport Bridge for ChatGPT: PASS on real PostgreSQL 15.17 + real MCP HTTP handshake
 - Phase 11 Real Model Provider Adapters: PASS on real PostgreSQL 15.17
 - Phase 12 Real Gmail Adapter + Independent Verification: PASS on real PostgreSQL 15.17
+- Phase 13 Real Google Drive Adapters + Verification Contracts: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -316,3 +317,22 @@ Phase 12 tests live under `tests/phase12/`.
 The adapter was verified against a local Gmail/OAuth protocol mock. No real Gmail account or production credentials were used during acceptance.
 
 See `docs/PHASE12_SCOPE.md` and `PHASE12_DOD_CHECKLIST.md`.
+
+
+## Phase 13 — Real Google Drive Adapters + Verification Contracts
+Implemented and protocol-tested:
+- drive_get_metadata (GREEN)
+- drive_search (GREEN)
+- drive_create_folder (YELLOW)
+- Google OAuth refresh-token reuse
+- deterministic hashed Drive appProperties operation marker
+- crash-window side-effect reconciliation without providerReference
+- independent Drive readback verification
+- runtime synchronization of Drive verification contracts
+- canonical production bundle registration
+
+Phase 13 tests live under `tests/phase13/`.
+
+The adapters were verified against a local Drive/OAuth protocol mock. No real Google Drive account or production credentials were used during acceptance.
+
+See `docs/PHASE13_SCOPE.md` and `PHASE13_DOD_CHECKLIST.md`.
