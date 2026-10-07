@@ -51,12 +51,12 @@ export async function learnVerifiedWorldFact(input:{
         WHERE entity_type=$1
           AND entity_id=$2
           AND attribute=$3
-          AND scope::text=$4
+          AND scope IS NOT DISTINCT FROM $4::jsonb
           AND status='VERIFIED'
           AND superseded_at IS NULL
         ORDER BY source_timestamp DESC,confidence DESC,event_seq_ref DESC NULLS LAST,id DESC
         FOR UPDATE`,
-      [input.entityType,input.entityId,input.attribute,stableScope(scope)]
+      [input.entityType,input.entityId,input.attribute,JSON.stringify(scope)]
     );
 
     const inserted=await client.query(
@@ -113,11 +113,11 @@ export async function observeVerifiedMemory(input:{
          FROM memory_records
         WHERE type=$1
           AND statement=$2
-          AND scope::text=$3
+          AND scope IS NOT DISTINCT FROM $3::jsonb
           AND status IN ('OBSERVED','REINFORCED')
         ORDER BY created_at ASC,id ASC
         FOR UPDATE`,
-      [input.type,input.statement,stableScope(scope)]
+      [input.type,input.statement,JSON.stringify(scope)]
     );
 
     const threshold=input.reinforcementThreshold ?? 2;
