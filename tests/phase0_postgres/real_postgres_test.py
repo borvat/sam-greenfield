@@ -188,7 +188,7 @@ def test_lease_fencing_race_real():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("DELETE FROM work_queue")
-    cur.execute("INSERT INTO work_queue (id, fencing_token, lease_owner, status) VALUES (gen_random_uuid(), 1, 'init', 'QUEUED') RETURNING id")
+    cur.execute("INSERT INTO work_queue (id, capability_id, fencing_token, lease_owner, status) VALUES (gen_random_uuid(), 'test_capability', 1, 'init', 'QUEUED') RETURNING id")
     qid = cur.fetchone()[0]
     conn.commit()
     cur.execute("SELECT acquire_lease(%s, %s, %s)", (qid, "worker-a", 60))
