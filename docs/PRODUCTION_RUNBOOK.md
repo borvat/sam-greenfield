@@ -95,3 +95,14 @@ The Gmail send capability is YELLOW and therefore remains blocked until SAM auth
 External email content is rejected when it contains explicit AI-assistant wording such as ChatGPT / artificial intelligence / language model. This enforces the company external-message rule that SAM must communicate as the company, not announce itself as an AI assistant.
 
 OAuth refresh tokens must be stored only in the deployment secret store.
+
+
+## Google Drive production adapters
+The canonical production bundle registers Drive capabilities whenever Google OAuth credentials are configured:
+- drive_get_metadata: GREEN, read-only
+- drive_search: GREEN, read-only
+- drive_create_folder: YELLOW, side-effecting and approval-gated
+
+Drive read tools are independently re-read during verification. Folder creation stores a deterministic hashed SAM operation marker in Drive appProperties so reconciliation can still confirm a provider-success/process-crash window even when the provider file ID was not persisted locally.
+
+The runtime synchronizes the three Drive verification contracts before work begins.
