@@ -17,6 +17,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 11 Real Model Provider Adapters: PASS on real PostgreSQL 15.17
 - Phase 12 Real Gmail Adapter + Independent Verification: PASS on real PostgreSQL 15.17
 - Phase 13 Real Google Drive Adapters + Verification Contracts: PASS on real PostgreSQL 15.17
+- Phase 14 Real e-Boekhouden Read-Only Accounting Adapter: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -336,3 +337,18 @@ Phase 13 tests live under `tests/phase13/`.
 The adapters were verified against a local Drive/OAuth protocol mock. No real Google Drive account or production credentials were used during acceptance.
 
 See `docs/PHASE13_SCOPE.md` and `PHASE13_DOD_CHECKLIST.md`.
+
+
+## Phase 14 — Real e-Boekhouden Read-Only Accounting Adapter
+Implemented and protocol-tested:
+- REST v1 session exchange
+- automatic session caching and one-time 401 refresh/retry
+- mutations, outstanding invoices, ledgers and relations reads
+- GREEN/read-only capability metadata
+- independent readback verification
+- verification contracts
+- canonical production bundle wiring
+- no accounting write endpoints in production
+- shared adapter environment wiring for worker and MCP
+
+See `docs/PHASE14_SCOPE.md` and `PHASE14_DOD_CHECKLIST.md`.
