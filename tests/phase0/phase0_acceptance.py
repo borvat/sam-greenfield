@@ -11,9 +11,9 @@ def test_deterministic_migrations():
             break
     files = sorted([f.name for f in mig_dir.glob("*.sql")])
     assert files == sorted(files), "Migrations not deterministic"
-    # Updated to 9 migrations (00001..00009) - fail-closed RLS fix
-    assert len(files) == 9, f"Expected 9 migrations (00001..00009), got {len(files)}: {files}"
-    assert files[0].startswith("00001") and files[-1].startswith("00009"), f"Migration sequence should be 00001..00009, got {files}"
+    # Updated to 10 migrations (00001..00010) - global business ID sequence hardening
+    assert len(files) == 10, f"Expected 10 migrations (00001..00010), got {len(files)}: {files}"
+    assert files[0].startswith("00001") and files[-1].startswith("00010"), f"Migration sequence should be 00001..00010, got {files}"
     print(f"✓ deterministic_migrations PASS - {len(files)} files: {files}")
     return True
 
@@ -186,7 +186,7 @@ def test_clean_boot():
     else:
         mig_dir = Path("packages/db/migrations")
     files = sorted(mig_dir.glob("*.sql"))
-    assert len(files) == 9, f"Expected 9 migrations, got {len(files)}: {[f.name for f in files]}"
+    assert len(files) == 10, f"Expected 9 migrations, got {len(files)}: {[f.name for f in files]}"
     hashes = []
     for f in files:
         content = f.read_text()
