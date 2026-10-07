@@ -1,5 +1,6 @@
 export class EBoekhoudenClient{
   private session:{token:string;expiresAt:number}|null=null;
+  private sessionPromise:Promise<string>|null=null;
 
   constructor(private readonly options:{
     apiToken:string;
@@ -23,28 +24,39 @@ export class EBoekhoudenClient{
       return this.session.token;
     }
 
-    const fetchImpl=this.options.fetchImpl??fetch;
-    const response=await fetchImpl(`${this.baseUrl}/v1/session`,{
-      method:"POST",
-      headers:{"content-type":"application/json"},
-      body:JSON.stringify({
-        accessToken:this.options.apiToken,
-        source:(this.options.source??"SAM").trim()
-      })
-    });
-    const body:any=await response.json().catch(()=>({}));
-    if(!response.ok||typeof body?.token!=="string"){
-      throw new Error(
-        `e-Boekhouden session HTTP ${response.status}: ${String(body?.message??body?.error??"unknown").slice(0,500)}`
-      );
-    }
+    if(force) this.session=null;
+    if(this.sessionPromise) return this.sessionPromise;
 
-    const expiresIn=Number(body?.expiresIn??body?.expires_in??3600);
-    this.session={
-      token:body.token,
-      expiresAt:Date.now()+Math.max(60,expiresIn)*1000
-    };
-    return body.token;
+    this.sessionPromise=(async()=>{
+      const fetchImpl=this.options.fetchImpl??fetch;
+      const response=await fetchImpl(`${this.baseUrl}/v1/session`,{
+        method:"POST",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({
+          accessToken:this.options.apiToken,
+          source:(this.options.source??"SAM").trim()
+        })
+      });
+      const body:any=await response.json().catch(()=>({}));
+      if(!response.ok||typeof body?.token!=="string"){
+        throw new Error(
+          `e-Boekhouden session HTTP ${response.status}: ${String(body?.message??body?.error??"unknown").slice(0,500)}`
+        );
+      }
+
+      const expiresIn=Number(body?.expiresIn??body?.expires_in??3600);
+      this.session={
+        token:body.token,
+        expiresAt:Date.now()+Math.max(60,expiresIn)*1000
+      };
+      return body.token as string;
+    })();
+
+    try{
+      return await this.sessionPromise;
+    }finally{
+      this.sessionPromise=null;
+    }
   }
 
   private async request(path:string,retry401=true):Promise<any>{
