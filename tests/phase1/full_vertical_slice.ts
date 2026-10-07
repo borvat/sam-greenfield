@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { pool, withTransaction } from "../../packages/db/src/client";
 import { observeAndEnterPlanning, persistPlanAndStartExecution } from "../../apps/kernel/src/orchestrator";
 import { leaseWorkAtomic } from "../../apps/kernel/src/queue";
-import { beginSideEffectAtomic, markSideEffectSentAtomic, confirmSideEffectAtomic } from "../../apps/kernel/src/sideEffects";
+import { beginSideEffectAtomic, bindSideEffectToWorkAtomic, markSideEffectSentAtomic, confirmSideEffectAtomic } from "../../apps/kernel/src/sideEffects";
 import { recordExecutionAndRequestVerificationAtomic } from "../../apps/kernel/src/execution";
 import { recordIndependentVerificationAtomic } from "../../apps/kernel/src/verification";
 
@@ -67,6 +67,7 @@ async function main() {
   assert.equal(sideA.created, true);
   assert.equal(sideB.created, false);
   assert.equal(sideA.operation.id, sideB.operation.id);
+  await bindSideEffectToWorkAtomic(plan.queueIds[0], operationKey);
 
   const lease = await leaseWorkAtomic(plan.queueIds[0], "worker-phase1", 60);
   await markSideEffectSentAtomic(operationKey, "provider-ref-phase1");
