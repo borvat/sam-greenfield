@@ -1,7 +1,7 @@
 import {timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
-import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,createOwnerGoal} from "./store";
+import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
 function bearer(req:IncomingMessage):string{const h=req.headers.authorization??"";return h.startsWith("Bearer ")?h.slice(7):""}
@@ -27,6 +27,11 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
   const server=createServer(async(req,res)=>{
     try{
       if(req.method==="GET"&&req.url==="/livez"){json(res,200,{status:"alive"});return}
+      if(req.method==="GET"&&req.url==="/readyz"){
+        const state=await commandCenterReadiness(options.legalEntityId);
+        json(res,state.ready?200:503,{status:state.ready?"ready":"not_ready",...state});
+        return;
+      }
 
       if(hosts.size>0&&!hosts.has(host(req))){json(res,403,{error:"host_not_allowed"});return}
       if(req.method==="GET"&&req.url==="/"){res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");res.setHeader("cache-control","no-store");res.end(commandCenterHtml);return}
