@@ -177,6 +177,47 @@ export class BolRetailerClient{
     return this.request(q?`/invoices?${q}`:"/invoices");
   }
 
+  getOrder(orderId:unknown):Promise<any>{
+    const id=String(orderId??"").trim();
+    if(!id||id.length>64) throw new Error("Invalid bol order id");
+    return this.request(`/orders/${encodeURIComponent(id)}`);
+  }
+
+  listShipments(input:{page?:unknown;fulfilmentMethod?:unknown}={}):Promise<any>{
+    const u=new URL("http://local/shipments");
+    u.searchParams.set("page",String(int(input.page,1,1,200)));
+    if(input.fulfilmentMethod){
+      u.searchParams.set(
+        "fulfilment-method",
+        enumValue(input.fulfilmentMethod,["FBR","FBB","ALL"] as const,"ALL")
+      );
+    }
+    return this.request(`/shipments?${u.searchParams.toString()}`);
+  }
+
+  getCommission(input:{ean:unknown;unitPrice:unknown;condition?:unknown}):Promise<any>{
+    const ean=String(input.ean??"").trim();
+    if(!/^\d{13}$/.test(ean)) throw new Error("EAN must contain exactly 13 digits");
+    const price=Number(input.unitPrice);
+    if(!Number.isFinite(price)||price<0||price>9999) throw new Error("Invalid unit price");
+    const condition=enumValue(input.condition,["NEW","AS_NEW","GOOD","REASONABLE","MODERATE"] as const,"NEW");
+    const u=new URL("http://local/commission");
+    u.searchParams.set("unit-price",price.toFixed(2));
+    u.searchParams.set("condition",condition);
+    return this.request(`/commission/${ean}?${u.searchParams.toString()}`);
+  }
+
+  getCompetingOffers(input:{ean:unknown;page?:unknown;countryCode?:unknown;bestOfferOnly?:unknown;condition?:unknown}):Promise<any>{
+    const ean=String(input.ean??"").trim();
+    if(!/^\d{13}$/.test(ean)) throw new Error("EAN must contain exactly 13 digits");
+    const u=new URL("http://local/offers");
+    u.searchParams.set("page",String(int(input.page,1,1,200)));
+    u.searchParams.set("country-code",enumValue(input.countryCode,["NL","BE"] as const,"NL"));
+    u.searchParams.set("best-offer-only",String(Boolean(input.bestOfferOnly??false)));
+    u.searchParams.set("condition",enumValue(input.condition,["ALL","BAD","MODERATE","REASONABLE","GOOD","AS_NEW","NEW","REFURBISHED_A","REFURBISHED_B","REFURBISHED_C"] as const,"NEW"));
+    return this.request(`/products/${ean}/offers?${u.searchParams.toString()}`);
+  }
+
   getCurrentRetailer():Promise<any>{
     return this.request("/retailers/current");
   }
