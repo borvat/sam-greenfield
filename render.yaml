@@ -1,0 +1,188 @@
+# Free, time-limited SAM deployment trial. No paid compute plans.
+previews:
+  generation: 'off'
+services:
+- name: sam-runtime
+  type: web
+  runtime: node
+  plan: free
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: main
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh runtime
+  healthCheckPath: /readyz
+  maxShutdownDelaySeconds: 30
+  envVars:
+  - &id001
+    key: NODE_ENV
+    value: production
+  - &id002
+    key: NODE_VERSION
+    value: '22'
+  - &id003
+    key: DATABASE_URL
+    fromDatabase:
+      name: sam-postgres
+      property: connectionString
+  - key: SAM_PRODUCTION_BUNDLE_MODULE
+    value: apps/production/src/defaultBundleModule.ts
+  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
+    value: 73aa81c6-3a23-4369-9408-8bea0956d399
+  - key: SAM_ORG_ID
+    value: 566baa67-5d93-4195-a1d0-18c1649154bf
+  - key: SAM_ORG_NAME
+    value: Surooh Holding Group B.V.
+  - key: SAM_LEGAL_ENTITY_NAME
+    value: QNAN B.V.
+  - key: OPENAI_API_KEY
+    sync: false
+  - key: OPENAI_MODEL
+    sync: false
+  - key: BOL_CLIENT_ID
+    sync: false
+  - key: BOL_CLIENT_SECRET
+    sync: false
+  - key: SAM_WORKER_ID
+    value: sam-render-1
+  - key: SAM_COMPOSITION_MODULE
+    value: apps/runtime/src/productionCompositionModule.ts
+  - key: SAM_TICK_INTERVAL_MS
+    value: '1000'
+  - key: SAM_SHUTDOWN_GRACE_MS
+    value: '15000'
+- name: sam-command-center
+  type: web
+  runtime: node
+  plan: free
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: main
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh command-center
+  healthCheckPath: /readyz
+  maxShutdownDelaySeconds: 30
+  envVars:
+  - *id001
+  - *id002
+  - *id003
+  - key: SAM_PRODUCTION_BUNDLE_MODULE
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_PRODUCTION_BUNDLE_MODULE
+  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
+  - key: SAM_ORG_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_ORG_ID
+  - key: SAM_ORG_NAME
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_ORG_NAME
+  - key: SAM_LEGAL_ENTITY_NAME
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_LEGAL_ENTITY_NAME
+  - key: OPENAI_API_KEY
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: OPENAI_API_KEY
+  - key: OPENAI_MODEL
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: OPENAI_MODEL
+  - key: BOL_CLIENT_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: BOL_CLIENT_ID
+  - key: BOL_CLIENT_SECRET
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: BOL_CLIENT_SECRET
+  - key: SAM_COMMAND_CENTER_BEARER_TOKEN
+    generateValue: true
+- name: sam-mcp
+  type: web
+  runtime: node
+  plan: free
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: main
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh mcp
+  healthCheckPath: /livez
+  maxShutdownDelaySeconds: 30
+  envVars:
+  - *id001
+  - *id002
+  - *id003
+  - key: SAM_PRODUCTION_BUNDLE_MODULE
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_PRODUCTION_BUNDLE_MODULE
+  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
+  - key: SAM_ORG_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_ORG_ID
+  - key: SAM_ORG_NAME
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_ORG_NAME
+  - key: SAM_LEGAL_ENTITY_NAME
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: SAM_LEGAL_ENTITY_NAME
+  - key: OPENAI_API_KEY
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: OPENAI_API_KEY
+  - key: OPENAI_MODEL
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: OPENAI_MODEL
+  - key: BOL_CLIENT_ID
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: BOL_CLIENT_ID
+  - key: BOL_CLIENT_SECRET
+    fromService:
+      type: web
+      name: sam-runtime
+      envVarKey: BOL_CLIENT_SECRET
+  - key: SAM_MCP_BEARER_TOKEN
+    generateValue: true
+databases:
+- name: sam-postgres
+  databaseName: sam
+  user: sam
+  plan: free
+  region: frankfurt
+  postgresMajorVersion: '15'
+  ipAllowList: []
