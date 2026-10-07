@@ -118,3 +118,15 @@ The canonical production bundle registers four GREEN read-only accounting capabi
 SAM exchanges the long-lived API token for a short-lived REST session token and retries once after a 401 by refreshing the session. The production bundle contains no e-Boekhouden accounting write endpoint in this phase.
 
 This keeps e-Boekhouden as an accounting truth/read source while write automation remains explicitly out of scope until separately approved and verified.
+
+
+## bol Retailer API read-only adapter
+The canonical production bundle registers four GREEN read-only marketplace capabilities when BOL_CLIENT_ID and BOL_CLIENT_SECRET are configured:
+- bol_list_orders
+- bol_list_returns
+- bol_list_invoices
+- bol_get_retailer
+
+Authentication uses bol's OAuth2 client-credentials flow. Access tokens are cached and reused; one 401 triggers one token refresh + retry.
+
+This phase intentionally exposes no bol write action. Shipping confirmations, stock/price changes, cancellations, return handling, invoice uploads, and other marketplace mutations remain out of scope until separately approved and implemented behind the authority/verification layer.
