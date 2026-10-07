@@ -15,14 +15,9 @@ export async function scheduleContinuationAtomic(
       next_wake_at: wakeAt.toISOString()
     });
     await client.query(
-      "UPDATE goals SET next_wake_at=$2, wake_reason=$3 WHERE id=$1",
-      [goalId, wakeAt, reason]
-    ).catch(async () => {
-      await client.query(
-        "UPDATE goals SET next_wake_at=$2 WHERE id=$1",
-        [goalId, wakeAt]
-      );
-    });
+      "UPDATE goals SET next_wake_at=$2 WHERE id=$1",
+      [goalId, wakeAt]
+    );
   });
 }
 
