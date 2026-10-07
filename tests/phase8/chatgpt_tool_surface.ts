@@ -28,6 +28,7 @@ async function main(){
 
   const unavailable=await noActions.invoke("sam_execute",{
     capability_id:"anything",
+    legal_entity_id:"00000000-0000-0000-0000-000000000000",
     params:{}
   },{
     actor:"chatgpt-test",
@@ -66,6 +67,7 @@ async function main(){
 
   const result=await withActions.invoke("sam_execute",{
     capability_id:"phase8_safe_action",
+    legal_entity_id:"00000000-0000-0000-0000-000000000000",
     params:{x:1}
   },{
     actor:"chatgpt-test",
@@ -76,6 +78,7 @@ async function main(){
 
   const unknown=await withActions.invoke("sam_execute",{
     capability_id:"does_not_exist",
+    legal_entity_id:"00000000-0000-0000-0000-000000000000",
     params:{}
   },{
     actor:"chatgpt-test",
