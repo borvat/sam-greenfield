@@ -4,6 +4,11 @@
   "workspaces": ["apps/*","packages/*"],
   "scripts": {
     "db:migrate": "node packages/db/src/migrate.js",
-    "test:phase0": "python3 tests/phase0/phase0_acceptance.py"
+    "test:phase0": "python3 tests/phase0/phase0_acceptance.py",
+    "start": "tsx apps/runtime/src/main.ts"
+  },
+  "dependencies": {
+    "pg": "8.13.1",
+    "tsx": "4.19.2"
   }
 }
