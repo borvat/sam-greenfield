@@ -8,6 +8,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 2 Brain + Model Gateway: PASS on real PostgreSQL 15.17
 - Phase 3 Specialist Agents + Capability Execution: PASS on real PostgreSQL 15.17
 - Phase 4 Tool Gateway + Side-Effect Contracts: PASS on real PostgreSQL 15.17
+- Phase 5 Verified Learning + Memory: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -140,3 +141,21 @@ Implemented and real-PostgreSQL tested:
 Phase 4 tests live under `tests/phase4/`.
 
 See `docs/PHASE4_SCOPE.md` and `PHASE4_DOD_CHECKLIST.md`.
+
+
+## Phase 5 — Verified Learning + Memory
+Implemented and real-PostgreSQL tested:
+- independent-verification learning gate
+- VERIFIED world-fact append/supersession
+- semantic JSONB scope matching
+- repeated-support reinforcement for operational/commercial memory
+- duplicate evidence does not inflate support counts
+- explicit OWNER_DECISION / FORMAL_RULE approval path
+- explicit approved-rule supersession
+- VERIFIED facts only in world-model context
+- REINFORCED / APPROVED_RULE memory only in planning context
+- FAILED verification cannot poison durable learning
+
+Phase 5 tests live under `tests/phase5/`.
+
+See `docs/PHASE5_SCOPE.md` and `PHASE5_DOD_CHECKLIST.md`.
