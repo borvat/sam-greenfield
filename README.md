@@ -6,6 +6,7 @@ Greenfield implementation of SAM as a durable Executive Agent system.
 - Phase 0 Foundation: PASS on real PostgreSQL 15.17
 - Phase 1 Executive Kernel: PASS on real PostgreSQL 15.17
 - Phase 2 Brain + Model Gateway: PASS on real PostgreSQL 15.17
+- Phase 3 Specialist Agents + Capability Execution: PASS on real PostgreSQL 15.17
 - GitHub Actions: externally blocked by GitHub billing lock; hosted CI proof remains pending
 
 ## Architecture
@@ -100,3 +101,22 @@ for t in tests/phase2/*.ts; do npx tsx "$t"; done
 The repository workflow exists, but GitHub-hosted Actions are currently prevented from starting by an account billing lock. Real PostgreSQL 15.17 verification has been completed successfully outside GitHub Actions.
 
 Do not label GitHub CI as green until an actual hosted run completes successfully.
+
+
+## Phase 3 — Specialist Agents + Capability Execution
+Implemented and real-PostgreSQL tested:
+- Specialist Agent Registry
+- fail-closed capability ownership
+- Capability Catalog as the shared source for authority class + specialist ownership
+- capability-filtered queue claims
+- durable specialist handoff metadata
+- specialist version + actor auditability
+- Specialist Supervisor
+- Brain -> Catalog -> Authority -> Kernel -> Specialist execution flow
+- independent verification preserved outside executing specialists
+- cross-capability isolation
+- ambiguity rejection at registry construction
+
+Phase 3 tests live under `tests/phase3/`.
+
+See `docs/PHASE3_SCOPE.md` and `PHASE3_DOD_CHECKLIST.md`.
