@@ -74,6 +74,9 @@ async function checkDatabase(env, config) {
 
 function serviceEnvironment(service, config = readConfig()) {
   const env = developmentEnvironment(config.schema);
+  env.SAM_DEV_LEGAL_ENTITY_ID = config.legalEntityId;
+  env.SAM_DEV_PLANNING_POLICY_FILE = path.join(root, ".local/sam-dev/planning-policy.json");
+  env.SAM_DEV_VALIDATION_FILE = path.join(root, ".local/sam-dev/validation.json");
   const previewHost = process.env.REPLIT_DEV_DOMAIN || "";
   const hosts = ["127.0.0.1", "localhost", previewHost].filter(Boolean).join(",");
   // Keep the existing bearer controls on both services. Never write or log these values.
@@ -99,7 +102,7 @@ function serviceEnvironment(service, config = readConfig()) {
     env.SAM_MCP_ALLOWED_HOSTS = hosts;
     env.SAM_MCP_ALLOWED_ORIGINS = previewHost ? `https://${previewHost}` : "";
     env.SAM_MCP_BEARER_TOKEN = mcpToken;
-    // No production bundle => SAM's existing read-only surface, no action dispatcher.
+    // Safe mode selects only service health and sanitized test results, no dispatcher.
   } else {
     throw new Error("Unknown development service.");
   }

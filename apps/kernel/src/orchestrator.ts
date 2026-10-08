@@ -1,3 +1,4 @@
+import { localDevelopment, authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
 import { transitionGoalAtomic } from "./stateMachine";
 import { persistPlanAndDelegateAtomic, type PersistPlanInput } from "./planning";
 import { assembleContext } from "../../brain/src/contextAssembler";
@@ -9,6 +10,9 @@ export async function observeAndEnterPlanning(goalId: string): Promise<{
   facts: unknown[];
   memory: unknown[];
 }> {
+  if (localDevelopment()) {
+    await withTransaction(client => authorizeDevelopmentGoal(client, goalId));
+  }
   await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
 
   const context = await withTransaction(async (client) => {

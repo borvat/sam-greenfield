@@ -25,50 +25,6 @@ async function forbiddenHost() {
   });
 }
 
-async function checkRls() {
-  const role = `sam_replit_rls_test_${Date.now()}`;
-  const client = await pool.connect();
-  let roleCreated = false;
-  try {
-    const current = await client.query("SELECT current_schema() AS schema");
-    const schema = current.rows[0].schema;
-    assert.match(schema, /^sam_replit_test_[0-9]+$/);
-    const org = await client.query("INSERT INTO organizations(name) VALUES('RLS isolation test') RETURNING id");
-    const entities = await client.query(`INSERT INTO legal_entities(org_id,name)
-      VALUES($1,'RLS A'),($1,'RLS B') RETURNING id`, [org.rows[0].id]);
-    for (let i = 0; i < 2; i++) {
-      await client.query(`INSERT INTO goals(business_id,company_scope,domain,objective,state,completion_definition)
-        VALUES($1,$2,'test','RLS isolation test','NEW','No external execution')`,
-      [`RLS-${i}`, entities.rows[i].id]);
-    }
-    await client.query(`CREATE ROLE ${role} NOLOGIN NOSUPERUSER NOBYPASSRLS`);
-    roleCreated = true;
-    await client.query(`GRANT USAGE ON SCHEMA ${schema} TO ${role}`);
-    await client.query(`GRANT SELECT,INSERT ON ${schema}.goals TO ${role}`);
-    await client.query("BEGIN");
-    await client.query(`SET LOCAL ROLE ${role}`);
-    await client.query("SELECT set_config('app.current_legal_entity_id','',true)");
-    assert.equal((await client.query("SELECT count(*)::int AS n FROM goals")).rows[0].n, 0);
-    await client.query("SELECT set_config('app.current_legal_entity_id',$1,true)", [entities.rows[0].id]);
-    const own = await client.query("SELECT company_scope FROM goals");
-    assert.equal(own.rowCount, 1);
-    assert.equal(own.rows[0].company_scope, entities.rows[0].id);
-    await assert.rejects(client.query(`INSERT INTO goals
-      (business_id,company_scope,domain,objective,state,completion_definition)
-      VALUES('RLS-DENIED',$1,'test','Cross entity denied','NEW','No execution')`,
-    [entities.rows[1].id]), (error: any) => error.code === "42501");
-    await client.query("ROLLBACK");
-    console.log("DEVELOPMENT_RLS PASS: no context denies; own entity only; cross-entity write denied.");
-  } finally {
-    await client.query("ROLLBACK");
-    if (roleCreated) {
-      await client.query(`DROP OWNED BY ${role}`);
-      await client.query(`DROP ROLE ${role}`);
-    }
-    client.release();
-  }
-}
-
 async function main() {
   const config = dev.readConfig();
   const ccEnv = dev.serviceEnvironment("command-center", config);
@@ -137,16 +93,36 @@ async function main() {
       requestInit: { headers: { Authorization: `Bearer ${mcpEnv.SAM_MCP_BEARER_TOKEN}` } }
     }));
     const tools = await client.listTools();
-    assert.ok(tools.tools.length >= 25);
+    assert.deepEqual(tools.tools.map(tool=>tool.name).sort(),
+      ["sam_development_service_status","sam_development_test_results"]);
     assert.ok(tools.tools.every((tool: any) => tool.annotations?.readOnlyHint === true));
     assert.ok(!tools.tools.some(tool => ["sam_execute", "sam_reconcile_side_effects"].includes(tool.name)));
-    const status = await client.callTool({ name: "sam_system_status", arguments: {} });
+    const status = await client.callTool({ name: "sam_development_service_status", arguments: {} });
     assert.equal(status.isError ?? false, false);
+    assert.ok(!JSON.stringify(status).includes(token));
+    assert.ok(!JSON.stringify(status).includes(mcpEnv.SAM_MCP_BEARER_TOKEN));
+    for (const [name,args] of [
+      ["sam_list_users",{}], ["sam_list_memory",{}], ["sam_list_financial_documents",{}],
+      ["sam_list_legal_entities",{}], ["sam_system_status",{}], ["sam_execute",{}],
+      [mcpEnv.SAM_MCP_BEARER_TOKEN,{}],
+      ["sam_development_test_results",{legalEntityId:"ffffffff-ffff-ffff-ffff-ffffffffffff"}],
+      ["sam_development_test_results",{token:mcpEnv.SAM_MCP_BEARER_TOKEN}]
+    ] as [string,Record<string,unknown>][]) {
+      let result:any, error:any;
+      try{result=await client.callTool({name,arguments:args})}catch(caught){error=caught}
+      assert.ok(result?.isError===true||[-32601,-32602].includes(error?.code));
+      if(result){
+        assert.ok(!JSON.stringify(result).includes(mcpEnv.SAM_MCP_BEARER_TOKEN));
+      }
+      if(error){
+        assert.ok(!String(error.message).includes(mcpEnv.SAM_MCP_BEARER_TOKEN));
+      }
+    }
+    console.log("DEVELOPMENT_MCP_DENIAL PASS: live protocol rejects broad tools/entity arguments; bearer absent from valid and rejected outputs.");
     console.log(`DEVELOPMENT_LIVE_SERVICES PASS: authenticated dashboard; audited NEW goal; worker ready; MCP handshake/read tools=${tools.tools.length}; actions unavailable.`);
   } finally {
     await client.close();
   }
-  await checkRls();
   assert.equal((await pool.query("SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'")).rows[0].n, 0);
   console.log("DEVELOPMENT_ISOLATION PASS: pinned development identity; no external credentials; public schema untouched.");
 }

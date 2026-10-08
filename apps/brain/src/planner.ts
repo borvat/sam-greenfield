@@ -1,6 +1,7 @@
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
+import { localDevelopment, sanitizeDevelopmentPlanningInput, denyDevelopment, LOCAL_MODEL_BLOCK } from "../../development/src/planningPolicy";
 
 export interface CandidatePlan {
   assumptions: Record<string, unknown>;
@@ -49,6 +50,10 @@ export async function proposePlan(input: {
   maxCostUsd: number;
   preferredProviders?: string[];
 }): Promise<PersistPlanInput> {
+  if (localDevelopment()) {
+    sanitizeDevelopmentPlanningInput(input);
+    denyDevelopment(LOCAL_MODEL_BLOCK);
+  }
   const routed = await input.gateway.invoke({
     task: "executive_planning",
     capability: "planning",

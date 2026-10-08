@@ -3,6 +3,7 @@ import { recordModelCall } from "../../db/src/modelCalls";
 import { loadProviderRegistry } from "./registry";
 import { routeModel } from "./router";
 import { applyRecentFailureCircuitBreaker } from "./health";
+import { localDevelopment, denyDevelopment, LOCAL_MODEL_BLOCK } from "../../../apps/development/src/planningPolicy";
 import type { ModelProviderAdapter, ModelTask, ProviderResult } from "./types";
 
 export class ModelGateway {
@@ -13,6 +14,7 @@ export class ModelGateway {
     result: ProviderResult;
     attempts: number;
   }> {
+    if (localDevelopment()) denyDevelopment(LOCAL_MODEL_BLOCK);
     const providers = await withTransaction(async (client) => {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);

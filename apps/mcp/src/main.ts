@@ -3,6 +3,7 @@ import { createKernelProductionDispatcher } from "../../production/src/dispatche
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { pool } from "../../../packages/db/src/client";
 import { startMcpHttpServer } from "./http";
+import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
 
 function positiveInt(name:string,value:string|undefined,fallback:number):number{
   if(!value) return fallback;
@@ -17,6 +18,7 @@ async function main(){
   const allowedHosts=process.env.SAM_MCP_ALLOWED_HOSTS?.trim()??"";
   const allowedOrigins=process.env.SAM_MCP_ALLOWED_ORIGINS?.trim()??"";
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
+  if(localDevelopment() && bundlePath) denyDevelopment("PRODUCTION_BUNDLE_NOT_ALLOWED");
 
   if(production&&!token){
     throw new Error("SAM_MCP_BEARER_TOKEN is required in production");

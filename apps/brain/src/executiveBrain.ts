@@ -5,6 +5,7 @@ import { observeAndEnterPlanning, persistPlanAndStartExecution } from "../../ker
 import { proposePlan } from "./planner";
 import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
+import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
 
 export async function runBrainPlanningCycle(input: {
   gateway: ModelGateway;
@@ -15,6 +16,7 @@ export async function runBrainPlanningCycle(input: {
   capabilityPolicies: CapabilityAuthorityPolicy;
 }) {
   const goal = await withTransaction(async (client) => {
+    await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
       "SELECT id,objective,state FROM goals WHERE id=$1",
       [input.goalId]

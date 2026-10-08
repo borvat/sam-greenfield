@@ -18,9 +18,36 @@ authority gates, independent verification, migrations and production entry point
 - `npm run dev:command-center`: existing Command Center on port 5000.
 - `npm run dev:runtime`: existing runtime on port 8080, using the maintenance-only
   development composition (kernel recovery/outbox/events and operational supervisor).
-- `npm run dev:mcp`: existing MCP HTTP endpoint at port 3001 `/mcp`, read-only tools.
+- `npm run dev:mcp`: existing MCP HTTP endpoint at port 3001 `/mcp`, restricted to
+  `sam_development_service_status` and `sam_development_test_results` in safe mode.
 - Replit workflows run these three services separately.
-- `npm run test:development`: regression tests in a disposable, isolated test schema.
+- `npm run test:development`: original regression suites plus development boundaries
+  in disposable isolated test schemas. No roles, grants or connection tokens are created.
+- `node --experimental-websocket --no-warnings scripts/development/browser-check.cjs`:
+  loopback-only authenticated Chromium check; password stays in process memory and
+  the disposable session. Local screenshots redact goal identifiers and record text.
+
+## Development data boundaries
+
+Safe mode binds planning to `SAM_DEV_LEGAL_ENTITY_ID`. Its optional local
+`.local/sam-dev/planning-policy.json` is a data allowlist, not a credential:
+`legalEntityId`, `approvedGoals` (explicit `id`/`objective` pairs) and `approvedFacts`
+(explicit `id`/`domain`/`attribute`/scalar `value` records). Only synthetic
+`development_probe` facts and goals can pass. Missing policy means deny by default.
+Never copy production records into this policy. Changes to an approved value require
+new explicit approval; record IDs alone do not authorize new contents.
+
+Context assembly never loads memory in safe mode. Entity mismatches are rejected
+before kernel goal transitions, including replanning. Model input projections omit
+internal identifiers and row metadata; configured secrets and credential-shaped
+strings are rejected. Both planner and gateway block ALL model calls while local
+safe mode is active. These additional boundaries are opt-in; original production
+authority, verification and read surfaces remain unchanged outside safe mode.
+
+The development MCP tools accept no arguments and disclose no goal, user, memory,
+legal or financial records. Test results expose fixed enums and bounded counts only.
+Their current report does not mean an executive goal completed: the synthetic kernel
+probe stops at PLANNING because a separately approved model would be required.
 
 ## Safety and limits
 

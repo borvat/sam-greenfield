@@ -7,6 +7,7 @@ import { beginReplanAtomic } from "../../kernel/src/replanning";
 import { persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
 import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
+import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
 
 export async function runBrainReplanCycle(input: {
   gateway: ModelGateway;
@@ -18,6 +19,7 @@ export async function runBrainReplanCycle(input: {
   capabilityPolicies: CapabilityAuthorityPolicy;
 }) {
   const goal = await withTransaction(async (client) => {
+    await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
       "SELECT id,objective,state,company_scope FROM goals WHERE id=$1",
       [input.goalId]
