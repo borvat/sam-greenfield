@@ -1,2 +1,3 @@
 - [Development database identity](development-database-identity.md) — environment labels can be misleading; independently verify the database target before writing.
 - [Data release consent](data-release-consent.md) — read-only access does not authorize disclosure; widen development data scope only after an explicit owner decision.
+- [Managed AI availability](managed-ai-availability.md) — missing credentials do not prove unavailability; investigate Replit-managed setup before requesting a personal provider key.
