@@ -4,10 +4,13 @@ const { spawnSync } = require("node:child_process");
 const { root, developmentEnvironment, databaseClient, assertDevelopmentIdentity } = require("./environment.cjs");
 
 async function main() {
-  if (process.argv[2] !== "--approved-live-once") throw new Error("Explicit one-shot approval argument required.");
+  const approval = process.argv[2];
+  if (!["--approved-live-once", "--approved-followup-once"].includes(approval)) throw new Error("Explicit one-shot approval argument required.");
+  const suffix = approval === "--approved-followup-once" ? "-followup" : "";
   if (!process.env.DEEPSEEK_API_KEY) throw new Error("Secure DeepSeek credential missing.");
-  const lock = path.join(root, ".local/sam-dev/deepseek-probe-used.json");
+  const lock = path.join(root, `.local/sam-dev/deepseek-probe${suffix}-used.json`);
   if (fs.existsSync(lock)) throw new Error("Inference already claimed; no automatic retry permitted.");
+  if (suffix && !fs.existsSync(path.join(root, ".local/sam-dev/deepseek-probe-used.json"))) throw new Error("Previous approved attempt evidence missing.");
   const env = developmentEnvironment();
   const admin = databaseClient(env);
   await admin.connect();
@@ -25,14 +28,14 @@ async function main() {
     // No business service configuration, other credentials, or real entity bindings.
     isolated.DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
     isolated.DEEPSEEK_MODEL = "deepseek-flash"; // Process-scoped; no shared/production settings changed.
-    const run = spawnSync(process.execPath, ["--import", "tsx", "scripts/development/deepseek-probe.ts"], {
+    const run = spawnSync(process.execPath, ["--import", "tsx", "scripts/development/deepseek-probe.ts", approval], {
       cwd: root, env: isolated, stdio: "inherit", timeout: 100_000
     });
     if (run.status !== 0) process.exitCode = 1;
   } finally {
     if (created) {
       await admin.query(`DROP SCHEMA ${schema} CASCADE`);
-      const file = path.join(root, ".local/sam-dev/deepseek-probe-report.json");
+      const file = path.join(root, `.local/sam-dev/deepseek-probe${suffix}-report.json`);
       if (fs.existsSync(file)) {
         const report = JSON.parse(fs.readFileSync(file, "utf8"));
         report.disposableSchemaRemoved = true;

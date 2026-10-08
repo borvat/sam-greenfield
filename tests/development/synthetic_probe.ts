@@ -3,7 +3,7 @@ import { pool } from "../../packages/db/src/client";
 import { OpenAICompatibleChatAdapter } from "../../packages/model-providers/src/openaiCompatible";
 import { evaluatePlanAuthority } from "../../apps/brain/src/authorityGuard";
 import { ModelGateway } from "../../packages/model-gateway/src/gateway";
-import { syntheticTask, preflight, boundedTransport, validateSyntheticPlan, candidateShape,
+import { syntheticTask, preflight, boundedTransport, validateSyntheticPlan, candidateShape, rejectionEvidence, assertSafeResponse,
   PROBE_MODEL, PROBE_BASE_URL, PROBE_CAPABILITY, OUTPUT_LIMIT } from "../../apps/development/src/syntheticProbe";
 
 async function main() {
@@ -35,6 +35,45 @@ async function main() {
   assert.equal(originalValidated, false);
   assert.ok(!JSON.stringify(candidateShape({ "sk-private_fixture_12345": "PRIVATE_FIXTURE" })).includes("PRIVATE_FIXTURE"));
   assert.equal(candidateShape(plan).ranksMatchContract, true);
+  const diagnosticCases: [unknown, string, string, number?][] = [
+    ["not a JSON object", "original_structure", "ORIGINAL_NON_OBJECT"],
+    [{ steps: [] }, "original_structure", "ORIGINAL_NONEMPTY_STEPS"],
+    [{ steps: [{}] }, "original_structure", "ORIGINAL_CAPABILITY_ID", 0],
+    [{ ...plan, users: [] }, "synthetic_contract", "PLAN_FIELDS_ROOT_KEYS"],
+    [{ ...plan, assumptions: { fixture: true } }, "synthetic_contract", "PLAN_FIELDS_ASSUMPTIONS"],
+    [{ ...plan, dependencies: { fixture: true } }, "synthetic_contract", "PLAN_FIELDS_DEPENDENCIES"],
+    [{ ...plan, constraints: { proposalOnly: false } }, "synthetic_contract", "PLAN_FIELDS_CONSTRAINTS"],
+    [{ ...plan, steps: plan.steps.slice(0, 2) }, "synthetic_contract", "PLAN_FIELDS_STEP_COUNT"],
+    [{ ...plan, steps: plan.steps.map(step => ({ ...step, idempotencyKey: null })) }, "synthetic_contract", "PLAN_STEPS_KEYS", 0],
+    [{ ...plan, steps: [{ ...plan.steps[0], capabilityId: "email.send" }, ...plan.steps.slice(1)] }, "synthetic_contract", "PLAN_STEPS_CAPABILITY", 0],
+    [{ ...plan, steps: [{ ...plan.steps[0], params: { task: "B", extra: true } }, ...plan.steps.slice(1)] }, "synthetic_contract", "PLAN_STEPS_PARAMS", 0],
+    [{ ...plan, steps: [{ ...plan.steps[0], params: { task: "UNAPPROVED_FIXTURE" } }, ...plan.steps.slice(1)] }, "synthetic_contract", "PLAN_STEPS_TASK", 0],
+    [{ ...plan, steps: plan.steps.map((step, i) => ({ ...step, params: { task: i === 1 ? "B" : step.params.task } })) }, "synthetic_contract", "PLAN_STEPS_DUPLICATE_TASK", 1],
+    [{ ...plan, steps: plan.steps.map((step, i) => ({ ...step, priority: i ? 1 : 3 })) }, "synthetic_contract", "PLAN_STEPS_RANK_SEQUENCE", 1]
+  ];
+  for (const [fixture, phase, code, index] of diagnosticCases) {
+    const passed: string[] = [];
+    assert.throws(() => validateSyntheticPlan(fixture, () => {}, current => passed.push(current)), error => {
+      assert.deepEqual(rejectionEvidence(error), { phase, code, ...(index === undefined ? {} : { stepIndex: index }) });
+      assert.deepEqual(passed, phase === "original_structure" ? [] : ["original_structure"]);
+      return true;
+    });
+  }
+  const passed: string[] = [];
+  validateSyntheticPlan(plan, () => {}, phase => passed.push(phase));
+  assert.deepEqual(passed, ["original_structure", "synthetic_contract", "response_safety"]);
+  assert.throws(() => assertSafeResponse("sk-fixture_secret_12345678"), error =>
+    rejectionEvidence(error)?.phase === "response_safety" && rejectionEvidence(error)?.code === "SECRET_VALUE" &&
+    !JSON.stringify(rejectionEvidence(error)).includes("sk-fixture"));
+  assert.equal(process.env.TEST_RESPONSE_SECRET, undefined);
+  process.env.TEST_RESPONSE_SECRET = PROBE_CAPABILITY; // Synthetic marker only, in this isolated unit process.
+  try {
+    const beforeSafety: string[] = [];
+    assert.throws(() => validateSyntheticPlan(plan, () => {}, phase => beforeSafety.push(phase)), error =>
+      rejectionEvidence(error)?.phase === "response_safety" && rejectionEvidence(error)?.code === "SECRET_VALUE");
+    assert.deepEqual(beforeSafety, ["original_structure", "synthetic_contract"]);
+  } finally { delete process.env.TEST_RESPONSE_SECRET; }
+  assert.equal(rejectionEvidence(new Error("PRIVATE_FIXTURE")), null);
   for (const modified of [
     { ...plan.steps[0], capabilityId: "email.send" },
     { ...plan.steps[0], params: { task: "B", token: "fixture" } },
@@ -115,7 +154,7 @@ async function main() {
   assert.equal((await evaluatePlanAuthority(pool, authorityInput)).authorized, true);
   assert.equal((await evaluatePlanAuthority(pool, { ...authorityInput, capabilityPolicies: {} })).authorized, false);
   assert.equal((await evaluatePlanAuthority(pool, { ...authorityInput, capabilityPolicies: { [PROBE_CAPABILITY]: "RED" } })).authorized, false);
-  console.log("SYNTHETIC_PROBE_UNIT PASS: fixed-input rejection; tool/field rejection; bounded outputs; one attempt after success/error; original validation/authority; normal gateway stays denied. Responses here are unit fixtures, NOT live inference.");
+  console.log("SYNTHETIC_PROBE_UNIT PASS: separate original/contract/safety diagnostics; exact rejection codes and step indices; fixed-input rejection; tool/field rejection; bounded outputs; one attempt after success/error; original validation/authority; normal gateway stays denied. Responses here are unit fixtures, NOT live inference.");
 }
 main().then(async () => { await pool.end(); }).catch(async () => {
   console.error("SYNTHETIC_PROBE_UNIT FAIL: sensitive details suppressed.");

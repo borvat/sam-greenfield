@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pool } from "../../packages/db/src/client";
@@ -8,28 +8,50 @@ import { ModelGateway } from "../../packages/model-gateway/src/gateway";
 import { observeAndEnterPlanning } from "../../apps/kernel/src/orchestrator";
 import { sanitizeDevelopmentPlanningInput } from "../../apps/development/src/planningPolicy";
 import { evaluatePlanAuthority } from "../../apps/brain/src/authorityGuard";
-import { syntheticTask, preflight, boundedTransport, validateSyntheticPlan, candidateShape,
+import { syntheticTask, preflight, boundedTransport, validateSyntheticPlan, candidateShape, rejectionEvidence,
   PROBE_MODEL, PROBE_BASE_URL, PROBE_CAPABILITY, OBJECTIVE } from "../../apps/development/src/syntheticProbe";
 
-const reportFile = join(process.cwd(), ".local/sam-dev/deepseek-probe-report.json");
-const lockFile = join(process.cwd(), ".local/sam-dev/deepseek-probe-used.json");
+const suffix = process.argv[2] === "--approved-followup-once" ? "-followup" : "";
+const reportFile = join(process.cwd(), `.local/sam-dev/deepseek-probe${suffix}-report.json`);
+const lockFile = join(process.cwd(), `.local/sam-dev/deepseek-probe${suffix}-used.json`);
 const temp = mkdtempSync(join(tmpdir(), "sam-synthetic-probe-"));
 const report: any = {
   checkedAt: new Date().toISOString(), status: "BLOCKED", provider: "deepseek",
   requestedModel: PROBE_MODEL, liveInferenceAttempts: 0, authentication: "NOT_RUN",
   candidateValidation: "NOT_RUN", authorityValidation: "NOT_RUN", execution: "NOT_RUN",
   originalStructureValidation: "NOT_RUN", syntheticContractValidation: "NOT_RUN",
+  responseSafetyValidation: "NOT_RUN", accountCatalogRequests: 0,
   verification: "NOT_RUN", ordinaryExternalCallsBlocked: true,
   pricingSources: ["https://api-docs.deepseek.com/quick_start/pricing", "https://api-docs.deepseek.com/api/create-chat-completion"]
 };
 let stage = "local_preflight";
 function save() { writeFileSync(reportFile, JSON.stringify(report, null, 2)); }
+const phaseField = {
+  original_structure: "originalStructureValidation", synthetic_contract: "syntheticContractValidation",
+  response_safety: "responseSafetyValidation"
+};
 async function main() {
+  assert.ok(["--approved-live-once", "--approved-followup-once"].includes(process.argv[2]));
   assert.equal(process.env.SAM_DEVELOPMENT_SAFE_MODE, "1");
   assert.match((await pool.query("SELECT current_schema() AS s")).rows[0].s, /^sam_replit_test_[0-9]+$/);
   assert.equal(process.env.DEEPSEEK_MODEL, PROBE_MODEL);
   const task = syntheticTask();
   report.preflight = preflight(task);
+  report.previousInferenceAttempts = 0;
+  report.previousCostReservedUsd = 0;
+  report.previousUsageCostUpperBoundUsd = 0;
+  if (suffix) {
+    const previous = JSON.parse(readFileSync(join(process.cwd(), ".local/sam-dev/deepseek-probe-report.json"), "utf8"));
+    assert.equal(previous.liveInferenceAttempts, 1);
+    for (const cost of [previous.preflight?.costUpperBoundUsd, previous.actualCostUpperBoundUsd]) {
+      assert.ok(Number.isFinite(cost) && cost > 0 && cost <= 0.25);
+    }
+    report.previousInferenceAttempts = 1;
+    report.previousCostReservedUsd = Math.max(previous.preflight.costUpperBoundUsd, previous.actualCostUpperBoundUsd);
+    report.previousUsageCostUpperBoundUsd = previous.actualCostUpperBoundUsd;
+  }
+  report.combinedPreflightCostUpperBoundUsd = report.previousCostReservedUsd + report.preflight.costUpperBoundUsd;
+  assert.ok(report.combinedPreflightCostUpperBoundUsd <= 0.25);
   // This is the FULL model task, not business context or a business-derived preview.
   console.log(JSON.stringify({ LOCAL_SYNTHETIC_PREFLIGHT: "PASS", task, bounds: report.preflight }));
   stage = "synthetic_goal";
@@ -52,6 +74,7 @@ async function main() {
   report.contextBoundary = "PASS";
   await assert.rejects(new ModelGateway({}).invoke(task), /LOCAL_DEVELOPMENT_MODELS_DISABLED/);
   stage = "account_model_availability";
+  report.accountCatalogRequests = 1;
   const catalog = await fetch(`${PROBE_BASE_URL}/models`, {
     headers: { authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` },
     redirect: "error", signal: AbortSignal.timeout(15_000)
@@ -70,27 +93,29 @@ async function main() {
       claim() {
         writeFileSync(lockFile, JSON.stringify({ claimedAt: new Date().toISOString(), model: PROBE_MODEL }), { flag: "wx" });
         report.liveInferenceAttempts = 1;
+        report.totalInferenceAttemptsIncludingPrevious = report.previousInferenceAttempts + 1;
         save();
       },
       onResponse(metadata) { Object.assign(report, metadata); save(); }
     })
   });
   const result = await adapter.invoke(task, PROBE_MODEL); // Existing SAM provider, no gateway fallback/retries.
-  stage = "original_plan_validation";
+  stage = "plan_validation";
   // Retain only bounded diagnostic booleans, never raw response/error values.
   report.candidateShape = candidateShape(result.output);
   let candidate;
   try {
-    candidate = validateSyntheticPlan(result.output, () => {
-      report.originalStructureValidation = "PASS";
+    candidate = validateSyntheticPlan(result.output, () => {}, phase => {
+      if (phase in phaseField) report[phaseField[phase as keyof typeof phaseField]] = "PASS";
       save();
     });
-  } catch {
+  } catch (error) {
     report.candidateValidation = "FAIL";
-    if (report.originalStructureValidation === "PASS") report.syntheticContractValidation = "FAIL";
-    else report.originalStructureValidation = "FAIL";
+    const evidence = rejectionEvidence(error);
+    report.rejection = evidence ?? { phase: "unknown_local", code: "UNCLASSIFIED_VALIDATION_FAILURE" };
+    if (evidence && evidence.phase in phaseField) report[phaseField[evidence.phase as keyof typeof phaseField]] = "FAIL";
     save();
-    throw new Error("Plan rejected.");
+    throw error;
   }
   report.candidateValidation = "PASS";
   report.syntheticContractValidation = "PASS";
@@ -116,11 +141,22 @@ async function main() {
   report.status = "PASS";
   report.note = "Live proposal validated only; no plan persistence, execution, or verification. Direct test adapter evidence is in this report, not model_calls.";
 }
-main().catch(() => {
+main().catch(error => {
   report.status = report.liveInferenceAttempts ? "FAIL" : "BLOCKED";
+  const evidence = rejectionEvidence(error);
+  if (evidence) {
+    report.rejection = evidence;
+    if (evidence.phase in phaseField) report[phaseField[evidence.phase as keyof typeof phaseField]] = "FAIL";
+  }
   report.failureStage = stage; // No raw provider/DB errors or response body in diagnostics.
   process.exitCode = 1;
 }).finally(async () => {
+  if (report.actualCostUpperBoundUsd !== undefined) report.combinedUsageCostUpperBoundUsd =
+    report.previousUsageCostUpperBoundUsd + report.actualCostUpperBoundUsd;
+  try {
+    await assert.rejects(new ModelGateway({}).invoke(syntheticTask()), /LOCAL_DEVELOPMENT_MODELS_DISABLED/);
+    report.ordinaryExternalCallsBlocked = true;
+  } catch { report.ordinaryExternalCallsBlocked = false; report.status = "FAIL"; process.exitCode = 1; }
   save();
   console.log(JSON.stringify({ DEEPSEEK_PROBE_RESULT: report }));
   rmSync(temp, { recursive: true, force: true });

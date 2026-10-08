@@ -12,6 +12,8 @@ reason was not retained. Once the disposable environment and response were gone,
 identifying the rejecting check would have required another unauthorized inference.
 Do not claim a specific validator rejected a response when only a combined failure
 was captured.
+Acceptance of a later response after clarifying the contract does not establish
+which condition rejected the earlier discarded response.
 
 **How to apply:** Record each stage before proceeding, retain a durable one-shot
 claim through failures/timeouts, and report unknown diagnostics honestly. Do not

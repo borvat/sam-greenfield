@@ -30,15 +30,42 @@ export function syntheticTask(): ModelTask {
       contract: {
         format: "JSON object only; no markdown",
         assumptions: {}, constraints: { proposalOnly: true }, dependencies: {},
-        steps: "Exactly three steps in highest-to-lowest priority order. Each has only capabilityId='synthetic.office_task', params={task:'A'|'B'|'C'}, priority=3|2|1. Each task occurs once."
+        steps: "Exactly three steps ordered by priority: first 3, second 2, third 1. These are unique ranks, not the importance values from context. Each task A, B, C occurs once. Each step has ONLY capabilityId, params={task:one letter}, priority.",
+        expectedShape: {
+          assumptions: {}, constraints: { proposalOnly: true }, dependencies: {},
+          steps: [3, 2, 1].map(priority => ({
+            capabilityId: PROBE_CAPABILITY, params: { task: `TASK_AT_RANK_${priority}` }, priority
+          }))
+        },
+        placeholderRule: "Return this exact object shape. Replace each TASK_AT_RANK placeholder with one of A, B, C, choosing order from context. No placeholders, extra fields, explanations, or markdown."
       }
     }
   };
 }
 
-function deny(code: string): never { throw new Error(`SYNTHETIC_PROBE_${code}`); }
+export type ProbePhase = "original_structure" | "synthetic_contract" | "response_safety" | "provider_response";
+export class ProbeRejection extends Error {
+  constructor(readonly phase: ProbePhase, readonly code: string, readonly stepIndex?: number) {
+    super(`SYNTHETIC_PROBE_${code}`);
+  }
+}
+export function rejectionEvidence(error: unknown) {
+  return error instanceof ProbeRejection
+    ? { phase: error.phase, code: error.code, ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }) }
+    : null;
+}
+function deny(code: string): never { throw new ProbeRejection("provider_response", code); }
 function equal(a: unknown, b: unknown) { return JSON.stringify(a) === JSON.stringify(b); }
 
+export function assertSafeResponse(value: unknown) {
+  try { assertSafeScalar(value); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const code = message === "Local development denied: SECRET_VALUE" ? "SECRET_VALUE"
+      : message === "Local development denied: UNSAFE_VALUE" ? "UNSAFE_VALUE" : "SAFETY_CHECK_FAILED";
+    throw new ProbeRejection("response_safety", code);
+  }
+}
 export function preflight(task: ModelTask) {
   if (!equal(task, syntheticTask())) deny("UNAPPROVED_INPUT");
   const content = taskPrompt(task);
@@ -60,25 +87,44 @@ export function preflight(task: ModelTask) {
   };
 }
 
-export function validateSyntheticPlan(raw: unknown, originalValidated: () => void = () => {}) {
+export function validateSyntheticPlan(
+  raw: unknown, originalValidated: () => void = () => {},
+  phasePassed: (phase: ProbePhase) => void = () => {}
+) {
   // First apply SAM's original structural validator; then the stricter probe contract.
-  const candidate = validateCandidatePlan(raw);
+  let candidate;
+  try { candidate = validateCandidatePlan(raw); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message === "Planner output must be an object") throw new ProbeRejection("original_structure", "ORIGINAL_NON_OBJECT");
+    if (message === "Planner output requires non-empty steps") throw new ProbeRejection("original_structure", "ORIGINAL_NONEMPTY_STEPS");
+    const match = /^Planner step (\d+) missing capabilityId$/.exec(message);
+    if (match) throw new ProbeRejection("original_structure", "ORIGINAL_CAPABILITY_ID", Number(match[1]));
+    throw new ProbeRejection("original_structure", "ORIGINAL_VALIDATION_FAILED");
+  }
   originalValidated();
+  phasePassed("original_structure");
   const value = raw as any;
-  if (!value || Object.keys(value).sort().join(",") !== "assumptions,constraints,dependencies,steps" ||
-      !equal(value.assumptions, {}) || !equal(value.dependencies, {}) ||
-      !equal(value.constraints, { proposalOnly: true }) || candidate.steps.length !== 3) deny("PLAN_FIELDS");
+  const reject = (code: string, stepIndex?: number): never => { throw new ProbeRejection("synthetic_contract", code, stepIndex); };
+  if (Object.keys(value).sort().join(",") !== "assumptions,constraints,dependencies,steps") reject("PLAN_FIELDS_ROOT_KEYS");
+  if (!equal(value.assumptions, {})) reject("PLAN_FIELDS_ASSUMPTIONS");
+  if (!equal(value.dependencies, {})) reject("PLAN_FIELDS_DEPENDENCIES");
+  if (!equal(value.constraints, { proposalOnly: true })) reject("PLAN_FIELDS_CONSTRAINTS");
+  if (candidate.steps.length !== 3) reject("PLAN_FIELDS_STEP_COUNT");
   const seen = new Set<string>();
   for (const [index, step] of candidate.steps.entries()) {
     const source = value.steps[index];
-    if (Object.keys(source).sort().join(",") !== "capabilityId,params,priority" ||
-        step.capabilityId !== PROBE_CAPABILITY ||
-        Object.keys(step.params).join(",") !== "task" ||
-        !["A", "B", "C"].includes(String(step.params.task)) ||
-        seen.has(String(step.params.task)) || step.priority !== 3 - index) deny("PLAN_STEPS");
+    if (Object.keys(source).sort().join(",") !== "capabilityId,params,priority") reject("PLAN_STEPS_KEYS", index);
+    if (step.capabilityId !== PROBE_CAPABILITY) reject("PLAN_STEPS_CAPABILITY", index);
+    if (Object.keys(step.params).join(",") !== "task") reject("PLAN_STEPS_PARAMS", index);
+    if (!["A", "B", "C"].includes(String(step.params.task))) reject("PLAN_STEPS_TASK", index);
+    if (seen.has(String(step.params.task))) reject("PLAN_STEPS_DUPLICATE_TASK", index);
+    if (step.priority !== 3 - index) reject("PLAN_STEPS_RANK_SEQUENCE", index);
     seen.add(String(step.params.task));
   }
-  assertSafeScalar(JSON.stringify(candidate));
+  phasePassed("synthetic_contract");
+  assertSafeResponse(JSON.stringify(candidate));
+  phasePassed("response_safety");
   return candidate;
 }
 
@@ -91,6 +137,9 @@ export function candidateShape(raw: unknown) {
     extraRootFieldsPresent: value && typeof value === "object" ? Object.keys(value).some(key => !["assumptions", "constraints", "dependencies", "steps"].includes(key)) : false,
     stepCount: steps.length,
     proposalOnlyConstraint: equal(value?.constraints, { proposalOnly: true }),
+    emptyAssumptions: equal(value?.assumptions, {}),
+    emptyDependencies: equal(value?.dependencies, {}),
+    uniqueTaskLabels: steps.length === 3 && new Set(steps.map((step: any) => step?.params?.task)).size === 3,
     allCapabilitiesAllowed: steps.length > 0 && steps.every((step: any) => step?.capabilityId === PROBE_CAPABILITY),
     allParamsAllowed: steps.length > 0 && steps.every((step: any) =>
       step?.params && Object.keys(step.params).join(",") === "task" && ["A", "B", "C"].includes(step.params.task)),
@@ -151,8 +200,8 @@ export function boundedTransport(input: {
           result.choices?.[0]?.message?.tool_calls?.length) deny("RESPONSE_LIMITS");
       const content = result.choices?.[0]?.message?.content;
       if (typeof content !== "string" || content.length > 4000) deny("RESPONSE_CONTENT");
-      assertSafeScalar(content);
       if (typeof result.model !== "string" || !/^deepseek-(?:flash|v4(?:\.1)?-flash)(?:-[a-z0-9]+)*$/i.test(result.model)) deny("RESPONSE_MODEL");
+       assertSafeResponse(result.model);
       const cost = (usage.prompt_tokens * PRICES.input + usage.completion_tokens * PRICES.output) / 1_000_000;
       input.onResponse({
         httpStatus: response.status, reportedModel: result.model,
@@ -161,6 +210,8 @@ export function boundedTransport(input: {
         usage: { inputTokens: usage.prompt_tokens, outputTokens: usage.completion_tokens, reasoningTokens: reasoning },
         actualCostUpperBoundUsd: cost
       });
+       assertSafeResponse(content);
+       input.onResponse({ responseSafetyValidation: "PASS" });
       if (result.choices?.[0]?.finish_reason !== "stop") deny("INCOMPLETE_RESPONSE");
       return result;
     } finally { clearTimeout(timer); }
