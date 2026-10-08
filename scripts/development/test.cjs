@@ -15,7 +15,8 @@ const suites = [
   "tests/phase10/mcp_transport.ts",
   "tests/phase19/command_center.ts",
   "tests/development/data_boundaries.ts",
-  "tests/development/replit_safety.ts"
+  "tests/development/replit_safety.ts",
+  "tests/development/synthetic_probe.ts"
 ];
 
 async function main() {

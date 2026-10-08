@@ -2,3 +2,4 @@
 - [Data release consent](data-release-consent.md) — read-only access does not authorize disclosure; widen development data scope only after an explicit owner decision.
 - [Managed AI availability](managed-ai-availability.md) — missing credentials do not prove unavailability; investigate Replit-managed setup before requesting a personal provider key.
 - [Credential inspection](credential-inspection.md) — credential-named settings may be ordinary variables; report presence only, never their values.
+- [One-shot inference evidence](one-shot-inference-evidence.md) — retain safe, separate validation diagnostics before discarding a single approved response.
