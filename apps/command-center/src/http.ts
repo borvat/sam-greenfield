@@ -34,7 +34,15 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
 
       if(hosts.size>0&&!hosts.has(host(req))){json(res,403,{error:"host_not_allowed"});return}
-      if(req.method==="GET"&&req.url==="/"){res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");res.setHeader("cache-control","no-store");res.end(commandCenterHtml);return}
+      if(req.method==="GET"&&req.url==="/"){
+        const html=process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"
+          ? commandCenterHtml.replace("<body>",'<body data-development-safe="true">')
+              .replace("Owner view of goals, execution, verification and finance.",
+                "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
+          : commandCenterHtml;
+        res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
+        res.setHeader("cache-control","no-store");res.end(html);return;
+      }
       const origin=req.headers.origin;
       if(origin&&origins.size>0&&!origins.has(origin)){json(res,403,{error:"origin_not_allowed"});return}
       if(token&&!safeEqual(bearer(req),token)){json(res,401,{error:"unauthorized"});return}

@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.local/sam-dev/
+__pycache__/
+*.pyc

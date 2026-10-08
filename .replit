@@ -1,7 +1,75 @@
-modules = ["nodejs-20", "python-3.12", "bash"]
+modules = ["nodejs-20", "python-3.12", "bash", "postgresql-16"]
 
 [nix]
 channel = "stable-25_05"
 
 [agent]
 expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Command Center"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Development Worker"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Read-only MCP"
+
+[[workflows.workflow]]
+name = "SAM Command Center"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:command-center"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "SAM Development Worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:runtime"
+waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "SAM Read-only MCP"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:mcp"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080

@@ -15,6 +15,13 @@ export const commandCenterHtml=`<!doctype html>
 <body>
 <div class="shell">
   <div class="top"><div class="brand"><h1>SAM Executive Command Center</h1><p>Owner view of goals, execution, verification and finance.</p></div><div class="badge" id="status">Connecting…</div></div>
+  <div class="card form" id="authPanel" style="margin-bottom:16px">
+    <label for="bearerToken">Command Center bearer token</label>
+    <input id="bearerToken" type="password" autocomplete="off" placeholder="Enter your token from Replit Secrets"/>
+    <button class="btn" onclick="connect()">Connect</button>
+    <p class="muted">Authentication is required. The token is kept only in this browser session; never put it in a URL or chat.</p>
+    <div id="authError" class="err"></div>
+  </div>
   <div class="grid" id="metrics"></div>
   <div class="main">
     <div class="card">
@@ -37,30 +44,40 @@ export const commandCenterHtml=`<!doctype html>
   <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
-const token=localStorage.getItem("sam_cc_token")||prompt("Command Center token");
-if(token)localStorage.setItem("sam_cc_token",token);
+let token=sessionStorage.getItem("sam_cc_token")||"";
+async function connect(){
+  const value=document.getElementById("bearerToken").value.trim();
+  if(!value){document.getElementById("authError").textContent="Enter a bearer token.";return}
+  token=value;sessionStorage.setItem("sam_cc_token",token);
+  document.getElementById("bearerToken").value="";
+  document.getElementById("authError").textContent="";
+  await refresh();
+}
 async function api(path,options={}){
   const headers={...(options.headers||{}),Authorization:"Bearer "+token};
   if(options.body) headers["Content-Type"]="application/json";
   const r=await fetch(path,{...options,headers});
-  if(r.status===401){localStorage.removeItem("sam_cc_token");throw new Error("Unauthorized. Reload and enter the correct token.");}
+  if(r.status===401){sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;throw new Error("Unauthorized. Enter the correct bearer token.");}
   const body=await r.json();
   if(!r.ok) throw new Error(body.error||"Request failed");
   return body;
 }
 function metric(label,value){return '<div class="card metric"><div class="n">'+Number(value||0)+'</div><div class="l">'+label+'</div></div>'}
 async function refresh(){
+  if(!token){document.getElementById("status").textContent="AUTH REQUIRED";document.getElementById("authPanel").hidden=false;return}
   try{
     const [overview,goals,finance]=await Promise.all([api("/api/overview"),api("/api/goals"),api("/api/finance/latest")]);
-    document.getElementById("status").textContent="LIVE";
+    document.getElementById("authPanel").hidden=true;
+    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";
     const o=overview.data;
     document.getElementById("metrics").innerHTML=[
       metric("Active goals",o.active_goals),metric("Active work",o.active_work),metric("Waiting owner",o.waiting_owner),
       metric("Pending approvals",o.pending_approvals),metric("Unresolved side effects",o.unresolved_side_effects),metric("Failed goals",o.failed_goals)
     ].join("");
-    document.getElementById("goals").innerHTML=goals.data.map(g=>'<div class="goal" onclick="timeline(\''+g.id+'\')"><div class="row"><strong>'+escapeHtml(g.business_id+" · "+g.domain)+'</strong><span class="state">'+escapeHtml(g.state)+'</span></div><div style="margin-top:6px">'+escapeHtml(g.objective)+'</div><div class="muted">Priority '+g.priority+' · '+escapeHtml(g.authority_ceiling||"")+'</div></div>').join("")||'<div class="muted">No goals.</div>';
+    document.getElementById("goals").innerHTML=goals.data.map(g=>'<div class="goal" data-goal-id="'+escapeHtml(g.id)+'"><div class="row"><strong>'+escapeHtml(g.business_id+" · "+g.domain)+'</strong><span class="state">'+escapeHtml(g.state)+'</span></div><div style="margin-top:6px">'+escapeHtml(g.objective)+'</div><div class="muted">Priority '+g.priority+' · '+escapeHtml(g.authority_ceiling||"")+'</div></div>').join("")||'<div class="muted">No goals.</div>';
+    document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
-  }catch(e){document.getElementById("status").textContent="ERROR";document.getElementById("formError").textContent=e.message}
+  }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2)}catch(e){document.getElementById("timeline").textContent=e.message}}
