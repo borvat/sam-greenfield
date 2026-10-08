@@ -11,6 +11,7 @@
     "dev:mcp": "node scripts/development/run.cjs mcp",
     "dev:command-center": "node scripts/development/run.cjs command-center",
     "test:development": "node scripts/development/test.cjs",
+    "test:development:goal-cycle": "node scripts/development/goal-cycle.cjs --local-acceptance",
     "db:migrate": "node packages/db/src/migrate.js",
     "test:phase0": "python3 tests/phase0/phase0_acceptance.py",
     "start": "tsx apps/runtime/src/main.ts",

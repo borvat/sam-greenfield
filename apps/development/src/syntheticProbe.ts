@@ -11,6 +11,7 @@ export const OUTPUT_LIMIT = 512;
 // Official peak/cache-miss prices checked before the approved test, in USD/1M.
 export const PRICES = { input: 0.30, output: 1.20 };
 export const OBJECTIVE = "Prioritize exactly three fictional office tasks. Proposal only; do not perform any action.";
+export const CYCLE_OBJECTIVE = "Organize three fictional office tasks and record their priority internally in the isolated development database. No external actions.";
 
 export function syntheticTask(): ModelTask {
   return {
@@ -43,6 +44,15 @@ export function syntheticTask(): ModelTask {
   };
 }
 
+export function cycleSyntheticTask(): ModelTask {
+  const task = syntheticTask();
+  const input = task.input as any;
+  input.objective = CYCLE_OBJECTIVE;
+  input.capabilities[0].description = "Record a fictional task and its rank in the local development database only. No email, Drive, finance, legal action, or external execution.";
+  input.contract.plannerRule = "Only propose JSON. SAM independently authorizes execution. For these fictional deadlines, the required task order is B,A,C with ranks 3,2,1.";
+  return task;
+}
+
 export type ProbePhase = "original_structure" | "synthetic_contract" | "response_safety" | "provider_response";
 export class ProbeRejection extends Error {
   constructor(readonly phase: ProbePhase, readonly code: string, readonly stepIndex?: number) {
@@ -67,7 +77,7 @@ export function assertSafeResponse(value: unknown) {
   }
 }
 export function preflight(task: ModelTask) {
-  if (!equal(task, syntheticTask())) deny("UNAPPROVED_INPUT");
+  if (!equal(task, syntheticTask()) && !equal(task, cycleSyntheticTask())) deny("UNAPPROVED_INPUT");
   const content = taskPrompt(task);
   assertSafeScalar(content);
   if (/postgres(?:ql)?:\/\/|Bearer\s|-----BEGIN |(?:sk-|ghp_)[A-Za-z0-9_-]{8,}|[0-9a-f]{8}-[0-9a-f-]{27,}/i.test(content)) {
@@ -153,11 +163,12 @@ export function boundedTransport(input: {
   claim: () => void;
   onResponse: (metadata: Record<string, any>) => void;
   request?: typeof fetch;
+  variant?: "goal-cycle";
 }) {
   let spent = false;
   return async (url: string, init: RequestInit) => {
     if (spent) deny("ALREADY_ATTEMPTED");
-    const task = syntheticTask();
+    const task = input.variant === "goal-cycle" ? cycleSyntheticTask() : syntheticTask();
     const check = preflight(task);
     const expected = { model: PROBE_MODEL, messages: [{ role: "user", content: taskPrompt(task) }] };
     let body: any;

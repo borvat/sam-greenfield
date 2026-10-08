@@ -12,7 +12,7 @@ function developmentEnvironment(targetSchema = schema) {
       !process.env.REPLIT_DEV_DOMAIN) {
     throw new Error("Development commands require the editor workspace, not a deployment.");
   }
-  if (!/^sam_replit_(dev|test_[0-9]+)$/.test(targetSchema)) {
+  if (!/^sam_replit_(dev|goal_cycle|test_cycle|test_[0-9]+)$/.test(targetSchema)) {
     throw new Error("Invalid isolated development schema.");
   }
   if (!process.env.DATABASE_URL) throw new Error("The development DATABASE_URL is missing.");

@@ -3,23 +3,40 @@ import { recordModelCall } from "../../db/src/modelCalls";
 import { loadProviderRegistry } from "./registry";
 import { routeModel } from "./router";
 import { applyRecentFailureCircuitBreaker } from "./health";
-import { localDevelopment, denyDevelopment, LOCAL_MODEL_BLOCK } from "../../../apps/development/src/planningPolicy";
+import { localDevelopment } from "../../../apps/development/src/planningPolicy";
+import type { ProbePhase } from "../../../apps/development/src/syntheticProbe";
 import type { ModelProviderAdapter, ModelTask, ProviderResult } from "./types";
+import { cyclePlanningTask, consumeCycleTask, type DevelopmentCyclePermit } from "../../../apps/development/src/cyclePermit";
 
 export class ModelGateway {
-  constructor(private readonly adapters: Record<string, ModelProviderAdapter>) {}
+  constructor(
+    private readonly adapters: Record<string, ModelProviderAdapter>,
+    private readonly developmentPermit?: DevelopmentCyclePermit,
+    private readonly developmentDiagnostic?: (phase: ProbePhase) => void
+  ) {}
+
+  developmentPlanningTask(input: { goalId: string; objective: string; context: unknown }): ModelTask {
+    return cyclePlanningTask(this.developmentPermit, { goalId: input.goalId, objective: input.objective, context: input.context });
+  }
+
+  recordDevelopmentValidation(phase: ProbePhase) {
+    this.developmentDiagnostic?.(phase);
+  }
 
   async invoke(task: ModelTask): Promise<{
     providerId: string;
     result: ProviderResult;
     attempts: number;
   }> {
-    if (localDevelopment()) denyDevelopment(LOCAL_MODEL_BLOCK);
+    const restrictedDevelopment = localDevelopment();
+    if (restrictedDevelopment) task = consumeCycleTask(this.developmentPermit, task);
     const providers = await withTransaction(async (client) => {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);
     });
-    const candidates = routeModel(task, providers);
+    const candidates = routeModel(task, providers)
+      .filter(candidate => !restrictedDevelopment || candidate.providerId === "deepseek" && candidate.model === "deepseek-flash")
+      .slice(0, restrictedDevelopment ? 1 : undefined);
     if (candidates.length === 0) {
       throw new Error("No eligible model provider for task");
     }
@@ -96,7 +113,8 @@ export class ModelGateway {
           latencyMs: Date.now() - started,
           retryCount: i,
           success: false,
-          verificationResult: err instanceof Error ? err.message : "UNKNOWN_FAILURE",
+          verificationResult: restrictedDevelopment ? "DEVELOPMENT_PROVIDER_REJECTED" :
+            err instanceof Error ? err.message : "UNKNOWN_FAILURE",
           dataClassification: task.dataClassification
         }));
       }

@@ -1,0 +1,240 @@
+<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إثبات دورة هدف سام — تطوير معزول</title><style>body{font:16px/1.8 system-ui,sans-serif;background:#f5f6f8;color:#172435;margin:0}main{max-width:1000px;margin:auto;padding:28px}section,details{background:white;padding:22px;border:1px solid #dbe2eb;border-radius:10px;margin:16px 0}h1{font-size:27px}table{border-collapse:collapse;width:100%}td,th{padding:9px;border-bottom:1px solid #ddd;text-align:right}pre{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}.pass{color:#0c684b}</style><main><h1>إثبات دورة هدف سام في بيئة التطوير</h1><p class="pass">PASS — هدف اصطناعي داخلي مكتمل باستخدام تخطيط حي، وتنفيذ محلي وتحقق مستقل حقيقيين.</p><section><p>بدأ 2026-10-08T23:26:41.059Z وانتهى 2026-10-08T23:26:42.827Z. لم يُنشر إنتاج ولم تُربط حسابات الشركات.</p><table><tr><th>المرحلة</th><th>الدليل</th></tr><tr><td>التخطيط LIVE</td><td>deepseek-flash، طلب واحد HTTP 200، 507 إدخال و88 إخراج وصفر تفكير</td></tr><tr><td>التكلفة</td><td>تقدير محافظ 0.0002577 دولار، ليس فاتورة المزوّد</td></tr><tr><td>حفظ الخطة والعامل</td><td>خطة PostgreSQL واحدة، ثلاث تسليمات بعقود lease/fencing الأصلية إلى عملية تنفيذ منفصلة بلا مفتاح النموذج</td></tr><tr><td>النتيجة</td><td>ثلاثة سجلات مهام محلية فعلية B3 ثم A2 ثم C1، وثلاثة تحققات مستقلة مرتبطة ببصمات الخطة والتنفيذ</td></tr><tr><td>التدقيق</td><td>9 سجلات append-only، 14 حدثاً مرحّلاً، وصفر أحداث outbox معلقة</td></tr><tr><td>العزل</td><td>دور NOLOGIN/NOSUPERUSER/NOBYPASSRLS داخل مخطط تطوير منفصل فقط. صفر ذاكرة ومستخدمين وحقائق ومستندات مالية وآثار خارجية</td></tr></table></section><section><h2>حدود الإثبات</h2><p>الهدف يثبت تنظيم أولويات ثلاث مهام وهمية وتسجيلها داخل قاعدة التطوير؛ لا يثبت أداء أعمال مكتبية فعلية خارج النظام أو جاهزية الإنتاج. استدعاء النموذج هنا حي وليس fixture. اختبارات القبول المحلية السابقة استخدمت fixture معلناً للمزوّد ولم تُحتسب ضمن الإثبات النهائي. بقي التخطيط الخارجي العادي محظوراً.</p><p>اللوحة والعامل الدائم وMCP ما زالت في نطاق التطوير الآمن السابق. هذا الهدف محفوظ في مخطط منفصل ولا يظهر تلقائياً في لوحة الصيانة. اختبارات API بعد المصادقة نجحت؛ اللقطة البصرية المتاحة كانت لشاشة الدخول فقط.</p><p>GitHub main قُرئ فعلياً ولا يطابق النسخة المحلية؛ لم يحدث push أو force push. فحص الأسرار يغطي الملفات الحالية والمخرجات الآمنة وتاريخ إعداد .replit فقط، وليس كل تاريخ المستودع.</p></section><details><summary>proof</summary><pre>{
+  &quot;startedAt&quot;: &quot;2026-10-08T23:26:41.059Z&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;liveInferenceAttempts&quot;: 1,
+  &quot;providerMode&quot;: &quot;LIVE&quot;,
+  &quot;planning&quot;: &quot;PASS&quot;,
+  &quot;execution&quot;: &quot;PASS&quot;,
+  &quot;verification&quot;: &quot;PASS&quot;,
+  &quot;ordinaryExternalCallsBlocked&quot;: true,
+  &quot;nonBypassApplicationRole&quot;: true,
+  &quot;rlsCrossEntityReadDenied&quot;: true,
+  &quot;rlsCrossEntityInsertDenied&quot;: true,
+  &quot;goalId&quot;: &quot;05dc19a8-4183-42df-9355-735f9902e956&quot;,
+  &quot;preflight&quot;: {
+    &quot;syntheticOnly&quot;: true,
+    &quot;businessContextRead&quot;: false,
+    &quot;facts&quot;: 0,
+    &quot;memory&quot;: 0,
+    &quot;tasks&quot;: 3,
+    &quot;payloadBytes&quot;: 1958,
+    &quot;payloadSha256&quot;: &quot;591b827987e26142a2758580c47965eb520243101bb50ff4d17d661e9a81593c&quot;,
+    &quot;inputTokenUpperBound&quot;: 2214,
+    &quot;maxOutputTokens&quot;: 512,
+    &quot;reasoningEnabled&quot;: false,
+    &quot;costUpperBoundUsd&quot;: 0.0012786,
+    &quot;pricesPerMillionUsd&quot;: {
+      &quot;input&quot;: 0.3,
+      &quot;output&quot;: 1.2
+    }
+  },
+  &quot;transportAttempts&quot;: 1,
+  &quot;httpStatus&quot;: 200,
+  &quot;reportedModel&quot;: &quot;deepseek-flash&quot;,
+  &quot;responseIdSha256&quot;: &quot;f61068c7321313f43ba312477c02d05c23b0dad4441cc38b440e78972fbdcc35&quot;,
+  &quot;finishReason&quot;: &quot;stop&quot;,
+  &quot;usage&quot;: {
+    &quot;inputTokens&quot;: 507,
+    &quot;outputTokens&quot;: 88,
+    &quot;reasoningTokens&quot;: 0
+  },
+  &quot;actualCostUpperBoundUsd&quot;: 0.0002577,
+  &quot;responseSafetyValidation&quot;: &quot;PASS&quot;,
+  &quot;original_structure&quot;: &quot;PASS&quot;,
+  &quot;synthetic_contract&quot;: &quot;PASS&quot;,
+  &quot;response_safety&quot;: &quot;PASS&quot;,
+  &quot;secondPlanningCallDenied&quot;: true,
+  &quot;planId&quot;: &quot;1563c1a4-26d9-4c86-b333-2c911dfaf9f3&quot;,
+  &quot;planHash&quot;: &quot;8cfaea057df381c76ce77225fffd72f4023da208871628106c8cc443d0f15880&quot;,
+  &quot;authority&quot;: &quot;PASS&quot;,
+  &quot;workerExitCode&quot;: 0,
+  &quot;goalState&quot;: &quot;COMPLETED&quot;,
+  &quot;counts&quot;: {
+    &quot;plans&quot;: 1,
+    &quot;work_queue&quot;: 3,
+    &quot;executions&quot;: 3,
+    &quot;verifications&quot;: 3,
+    &quot;development_office_results&quot;: 3,
+    &quot;model_calls&quot;: 1,
+    &quot;side_effect_operations&quot;: 0,
+    &quot;audit_log&quot;: 9
+  },
+  &quot;artifacts&quot;: [
+    {
+      &quot;task&quot;: &quot;B&quot;,
+      &quot;priority&quot;: 3
+    },
+    {
+      &quot;task&quot;: &quot;A&quot;,
+      &quot;priority&quot;: 2
+    },
+    {
+      &quot;task&quot;: &quot;C&quot;,
+      &quot;priority&quot;: 1
+    }
+  ],
+  &quot;independentHashBindings&quot;: 3,
+  &quot;specialistHandoffs&quot;: 3,
+  &quot;auditAppendOnlyEnforced&quot;: true,
+  &quot;auditTransitions&quot;: [
+    {
+      &quot;from_state&quot;: &quot;NEW&quot;,
+      &quot;to_state&quot;: &quot;MODELING&quot;,
+      &quot;event_type&quot;: &quot;GOAL_STATE_CHANGED&quot;
+    },
+    {
+      &quot;from_state&quot;: &quot;MODELING&quot;,
+      &quot;to_state&quot;: &quot;PLANNING&quot;,
+      &quot;event_type&quot;: &quot;GOAL_STATE_CHANGED&quot;
+    },
+    {
+      &quot;from_state&quot;: &quot;PLANNING&quot;,
+      &quot;to_state&quot;: &quot;EXECUTING&quot;,
+      &quot;event_type&quot;: &quot;GOAL_STATE_CHANGED&quot;
+    },
+    {
+      &quot;from_state&quot;: &quot;EXECUTING&quot;,
+      &quot;to_state&quot;: &quot;VERIFYING&quot;,
+      &quot;event_type&quot;: &quot;GOAL_STATE_CHANGED&quot;
+    },
+    {
+      &quot;from_state&quot;: &quot;VERIFYING&quot;,
+      &quot;to_state&quot;: &quot;COMPLETED&quot;,
+      &quot;event_type&quot;: &quot;GOAL_STATE_CHANGED&quot;
+    }
+  ],
+  &quot;modelAuditRecorded&quot;: [
+    {
+      &quot;success&quot;: true,
+      &quot;retry_count&quot;: 0,
+      &quot;cost&quot;: 0.0002577
+    }
+  ],
+  &quot;auditRows&quot;: [
+    {
+      &quot;actor&quot;: &quot;development-goal-input&quot;,
+      &quot;action&quot;: &quot;GOAL_SUBMITTED&quot;,
+      &quot;result&quot;: &quot;NEW&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:41.089Z&quot;,
+      &quot;evidence_id&quot;: null
+    },
+    {
+      &quot;actor&quot;: &quot;original-brain-planner&quot;,
+      &quot;action&quot;: &quot;PLAN_ACCEPTED&quot;,
+      &quot;result&quot;: &quot;PERSISTED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.189Z&quot;,
+      &quot;evidence_id&quot;: null
+    },
+    {
+      &quot;actor&quot;: &quot;development-office@1.0.0&quot;,
+      &quot;action&quot;: &quot;LOCAL_CAPABILITY_EXECUTED&quot;,
+      &quot;result&quot;: &quot;EXECUTED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.558Z&quot;,
+      &quot;evidence_id&quot;: &quot;b42481cc-957f-4246-92a8-d2d484662694&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;development-office@1.0.0&quot;,
+      &quot;action&quot;: &quot;LOCAL_CAPABILITY_EXECUTED&quot;,
+      &quot;result&quot;: &quot;EXECUTED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.591Z&quot;,
+      &quot;evidence_id&quot;: &quot;f78cff35-ef7c-4257-aa25-3be0b3fd0f71&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;development-office@1.0.0&quot;,
+      &quot;action&quot;: &quot;LOCAL_CAPABILITY_EXECUTED&quot;,
+      &quot;result&quot;: &quot;EXECUTED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.628Z&quot;,
+      &quot;evidence_id&quot;: &quot;1f6ab427-4190-45d8-bedc-13b411f613b5&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;development-office-independent-db-verifier&quot;,
+      &quot;action&quot;: &quot;INDEPENDENT_VERIFICATION_RECORDED&quot;,
+      &quot;result&quot;: &quot;VERIFIED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.632Z&quot;,
+      &quot;evidence_id&quot;: &quot;4877b908-2129-48fe-b800-b25dab20eefe&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;development-office-independent-db-verifier&quot;,
+      &quot;action&quot;: &quot;INDEPENDENT_VERIFICATION_RECORDED&quot;,
+      &quot;result&quot;: &quot;VERIFIED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.647Z&quot;,
+      &quot;evidence_id&quot;: &quot;806e9b72-c7e0-4e20-a1a3-c931908f5d59&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;development-office-independent-db-verifier&quot;,
+      &quot;action&quot;: &quot;INDEPENDENT_VERIFICATION_RECORDED&quot;,
+      &quot;result&quot;: &quot;VERIFIED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.666Z&quot;,
+      &quot;evidence_id&quot;: &quot;52e1a9c7-4c35-485c-b4e1-d9170767e5e2&quot;
+    },
+    {
+      &quot;actor&quot;: &quot;independent-cycle-acceptance&quot;,
+      &quot;action&quot;: &quot;GOAL_COMPLETION_CONFIRMED&quot;,
+      &quot;result&quot;: &quot;COMPLETED&quot;,
+      &quot;timestamp&quot;: &quot;2026-10-08T23:26:42.815Z&quot;,
+      &quot;evidence_id&quot;: null
+    }
+  ],
+  &quot;fabricEvents&quot;: 14,
+  &quot;pendingOutbox&quot;: 0,
+  &quot;completedAt&quot;: &quot;2026-10-08T23:26:42.827Z&quot;,
+  &quot;persistentEvidenceSchema&quot;: &quot;sam_replit_goal_cycle&quot;,
+  &quot;adminIndependentCounts&quot;: {
+    &quot;goals&quot;: 1,
+    &quot;plans&quot;: 1,
+    &quot;executions&quot;: 3,
+    &quot;verifications&quot;: 3,
+    &quot;audit_log&quot;: 9,
+    &quot;model_calls&quot;: 1,
+    &quot;side_effect_operations&quot;: 0,
+    &quot;financial_documents&quot;: 0,
+    &quot;users&quot;: 0,
+    &quot;memory_records&quot;: 0,
+    &quot;world_facts&quot;: 0
+  }
+}</pre></details><details><summary>services</summary><pre>{
+  &quot;checkedAt&quot;: &quot;2026-10-08T23:28:39.853Z&quot;,
+  &quot;services&quot;: [
+    {
+      &quot;service&quot;: &quot;commandCenter&quot;,
+      &quot;http&quot;: 200,
+      &quot;status&quot;: &quot;ready&quot;
+    },
+    {
+      &quot;service&quot;: &quot;worker&quot;,
+      &quot;http&quot;: 200,
+      &quot;status&quot;: &quot;ready&quot;
+    },
+    {
+      &quot;service&quot;: &quot;mcp&quot;,
+      &quot;http&quot;: 200,
+      &quot;status&quot;: &quot;alive&quot;
+    }
+  ]
+}</pre></details><details><summary>git</summary><pre>{
+  &quot;checkedAt&quot;: &quot;2026-10-08T23:28:39.359Z&quot;,
+  &quot;branch&quot;: &quot;main&quot;,
+  &quot;localHead&quot;: &quot;759a23274755aafdb200056343f186a76c75d7bc&quot;,
+  &quot;noPush&quot;: true,
+  &quot;workingTreeDirty&quot;: true,
+  &quot;remoteMain&quot;: &quot;2ab95b7283f264429a211e0d9d48eef937281cb7&quot;,
+  &quot;remoteRead&quot;: &quot;PASS&quot;,
+  &quot;headMatchesRemote&quot;: false,
+  &quot;committedAhead&quot;: 7
+}</pre></details><details><summary>secrets</summary><pre>{
+  &quot;checkedAt&quot;: &quot;2026-10-08T23:28:39.920Z&quot;,
+  &quot;checkedFiles&quot;: 271,
+  &quot;currentSecretMatches&quot;: [],
+  &quot;potentialTokenLiterals&quot;: [],
+  &quot;trackedConfigHistoryCurrentSecretMatch&quot;: false,
+  &quot;trackedConfigHistoryPotentialKeyCount&quot;: 0,
+  &quot;scope&quot;: &quot;Working tree and safe JSON evidence; config history only, not a complete all-blob history audit&quot;,
+  &quot;valuesNeverPrinted&quot;: true
+}</pre></details><details><summary>regression</summary><pre>{
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;passedSuites&quot;: 11,
+  &quot;failedSuites&quot;: 0,
+  &quot;authenticatedUi&quot;: &quot;NOT_RUN&quot;,
+  &quot;goalCycle&quot;: &quot;BLOCKED_EXTERNAL_MODEL&quot;,
+  &quot;externalModelTest&quot;: &quot;NOT_RUN&quot;
+}</pre></details></main></html>

@@ -74,3 +74,35 @@ The workspace workflows are not an always-on production service. Closing the
 preview does not itself stop their processes, but workspace inactivity, stopping
 the workflow or environment suspension can. Guaranteed continuous operation needs
 a separately authorized always-on deployment; none is configured or published here.
+
+## Approved single-goal cycle, separate from the maintenance services
+
+The one-shot goal-cycle runner reuses the original catalog/brain, model registry and
+gateway, atomic plan persistence, specialist worker leases/fencing, tool execution,
+independent verifier, and goal state machine. It is not a replacement SAM.
+Its only capability records three fictional task/rank artifacts in PostgreSQL.
+The verifier independently queries these records and compares their expected ranks;
+it does not trust the executor's result/evidence. The execution worker is a separate
+process without model/OAuth credentials and stops after this goal.
+
+Use `npm run test:development:goal-cycle` for the local acceptance test. Its model
+response is explicitly a unit fixture, never evidence of a live provider call.
+The approved live runner requires `--approved-live-once`, claims a durable exclusive
+marker before its sole model request, and refuses to overwrite an existing evidence
+schema or role. It retains evidence in `sam_replit_goal_cycle` and safe JSON reports
+under `.local/sam-dev/`; the ordinary command center/MCP/worker still use their
+existing development schema and remain maintenance/read-only.
+
+The cycle uses a NOLOGIN, NOSUPERUSER, NOBYPASSRLS database role. Missing original
+operational-table policies are supplied only in this new schema, tied to one immutable
+goal/tenant scope. No global production policies are installed, RLS is never disabled,
+and financial/memory/user/side-effect access remains denied. Do not treat tests using
+the administrative database connection as proof that RLS was enforced.
+
+The in-process model permit accepts only the exact fictional cycle fixture, strips
+local entity/goal IDs from model input, consumes once, disables fallback, and never
+opens ordinary development planning. Provider output must pass the original validator,
+the stricter fictional-task contract and response safety checks before authority,
+plan persistence and delegation. The general regression summary is distinct from
+this separately approved goal-cycle evidence; it does not automatically expose
+the retained cycle schema through the dashboard or MCP.

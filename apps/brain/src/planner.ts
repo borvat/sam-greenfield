@@ -2,6 +2,7 @@ import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
 import { localDevelopment, sanitizeDevelopmentPlanningInput, denyDevelopment, LOCAL_MODEL_BLOCK } from "../../development/src/planningPolicy";
+import { validateSyntheticPlan } from "../../development/src/syntheticProbe";
 
 export interface CandidatePlan {
   assumptions: Record<string, unknown>;
@@ -52,9 +53,9 @@ export async function proposePlan(input: {
 }): Promise<PersistPlanInput> {
   if (localDevelopment()) {
     sanitizeDevelopmentPlanningInput(input);
-    denyDevelopment(LOCAL_MODEL_BLOCK);
+    if (typeof input.gateway.developmentPlanningTask !== "function") denyDevelopment(LOCAL_MODEL_BLOCK);
   }
-  const routed = await input.gateway.invoke({
+  const task = localDevelopment() ? input.gateway.developmentPlanningTask(input) : {
     task: "executive_planning",
     capability: "planning",
     dataClassification: input.dataClassification,
@@ -68,9 +69,12 @@ export async function proposePlan(input: {
         rule: "proposal_only_no_side_effects"
       }
     }
-  });
+  };
+  const routed = await input.gateway.invoke(task as import("../../../packages/model-gateway/src/types").ModelTask);
 
-  const candidate = validateCandidatePlan(routed.result.output);
+  const candidate = localDevelopment() ?
+    validateSyntheticPlan(routed.result.output, () => {}, phase => input.gateway.recordDevelopmentValidation(phase)) :
+    validateCandidatePlan(routed.result.output);
   return {
     goalId: input.goalId,
     assumptions: candidate.assumptions,

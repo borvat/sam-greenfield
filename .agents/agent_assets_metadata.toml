@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "-pnHicR2e1IQnq9iAJhf4"
+uri = "file://reports/sam-development-goal-audit.html"
+type = "html"
+title = "تقرير إثبات دورة هدف سام"
+description = "دليل التخطيط الحي والخطة والتنفيذ والتحقق وRLS، مع آخر حالة الخدمات وGit وفحص الأسرار وحدود الإثبات."
+logical_id = "399fd657-6845-4249-b340-adcac0581794"
+content_hash = "sha256:313f8eb121deb75c396eaf14ec89d43e9db33e6810222701016ef4ae5242e2fc"
+size = 13041
+mtime_ms = 1791502286135
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/399fd657-6845-4249-b340-adcac0581794/9691fbc6-9817-4add-bc8b-3f654a69db07"
+storage_version_token = "1791502287155002"
+content_type = "text/html"
