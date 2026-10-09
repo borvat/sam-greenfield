@@ -1,0 +1,133 @@
+{
+  "checkedAt": "2026-10-09T23:41:31.429Z",
+  "sourceBaseSha": "e35a0d597449630897aba7a91862429b53db681d",
+  "status": "PASS_LOCAL_LAUNCH_PREPARATION_BLOCKED_COST_DB_CREDENTIALS_PRODUCTION_ACCEPTANCE",
+  "publishingConfiguration": {
+    "target": "vm",
+    "run": [
+      "npm",
+      "run",
+      "start:release"
+    ],
+    "build": [
+      "sh",
+      "-c",
+      "npm ci && npm run typecheck"
+    ],
+    "configurationOnly": true,
+    "noStartupOrBuildMigrations": true
+  },
+  "platform": {
+    "additionalUrls": [],
+    "deploymentType": "",
+    "hasSuccessfulBuild": false,
+    "isDeployed": false,
+    "primaryUrl": "",
+    "success": true,
+    "visibility": ""
+  },
+  "productionSecrets": {
+    "SAM_COMMAND_CENTER_BEARER_TOKEN": false,
+    "SAM_RELEASE_DATABASE_URL": false
+  },
+  "productionSettingPresence": {
+    "SAM_DB_APP_ROLE": false,
+    "SAM_DB_SCHEMA": false,
+    "SAM_RELEASE_ORG_ID": false,
+    "SAM_COMMAND_CENTER_LEGAL_ENTITY_ID": false,
+    "SAM_COMMAND_CENTER_ALLOWED_HOSTS": false,
+    "SAM_COMMAND_CENTER_ALLOWED_ORIGINS": false,
+    "SAM_PRODUCTION_BUNDLE_MODULE": false,
+    "SAM_RELEASE_CAPABILITIES": false,
+    "SAM_RELEASE_APPROVED": false,
+    "SAM_DATABASE_TARGET": false,
+    "NODE_ENV": false
+  },
+  "database": {
+    "developmentMetadata": "connection_bypasses_rls,sam_goal_tables,non_bypass_login_roles\nt,5,0\n",
+    "productionReadSuccess": false,
+    "productionReadExit": 1,
+    "productionReadFailureDoesNotProveDatabaseAbsent": true,
+    "existingPrivilegesChanged": false,
+    "productionDdlPerformed": false
+  },
+  "localTests": {
+    "regressionSuites": 30,
+    "failures": 0,
+    "typecheck": "PASS",
+    "contractsRerunAfterAppUrlChange": "PASS",
+    "preflightNegativeCases": 115,
+    "localParameterRefusals": 12,
+    "nativeEnvelope": {
+      "status": "PASS",
+      "checkedAt": "2026-10-09T23:33:06.542Z",
+      "classification": "LOCAL_REAL_PROCESS_AND_POSTGRES_WITH_OWNER_PLAN_FIXTURE",
+      "externalModelCalls": 0,
+      "productionChanges": 0,
+      "proofs": [
+        "real PostgreSQL: independently correct mean=5 rejected for owner max=8 intent; not completed or learned",
+        "actual process SIGKILL during ACT after artifact commit before execution commit; real lease expiry, native recovery/delegation, stale fence denied; one artifact/execution; independent hashes and completion",
+        "single exposed local envelope with three actual native production-mode service processes; PostgreSQL non-owner/non-bypass RLS preflight, authenticated goals/UI HTML, protected tick/error status, no model keys, graceful stop; not published or visual-browser proof",
+        "real local connection-refused dependency probe: readiness 503 and ACT paused; PostgreSQL recovery restores readiness/ticks; private status denies anonymous access"
+      ]
+    },
+    "classification": "SYNTHETIC_INPUT_REAL_LOCAL_POSTGRES_NATIVE_SERVICES_NOT_PUBLISHED_ACCEPTANCE",
+    "logs": [
+      ".local/sam-dev/launch-regression.log",
+      ".local/sam-dev/launch-contracts-final.log",
+      ".local/sam-dev/launch-typecheck.log"
+    ]
+  },
+  "externalModelCalls": 0,
+  "providerReceiptsSinceTaskBaseline": 0,
+  "unexpiredModelAuthorizations": 0,
+  "newConnections": 0,
+  "businessDataAccess": 0,
+  "purchases": 0,
+  "publishPerformed": false,
+  "productionPreflightStatus": "BLOCKED",
+  "sourceSnapshotTiming": "Before final documentation commit; exact final SHA is Git HEAD",
+  "security": {
+    "rawCritical": 40,
+    "rawMedium": 0,
+    "privacy": 0,
+    "dependency": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0
+    },
+    "reviewedChangedFindings": [
+      {
+        "fingerprint": "9980f7ab360bb93ca4dcccaa08969d5f53b965c6bfe95ecfb4a31c90cdff7ed4",
+        "decision": "FALSE_POSITIVE_REVIEWED",
+        "path": "apps/development/src/localCapabilities.ts",
+        "line": 18,
+        "evidence": "Unchanged resolveValues query moved by import: literal SQL and $1/$2/$3 bindings for knowledge key, scoped entity and fact reference; original sandbox/provenance guards retained. Original injection/isolation regression passed."
+      },
+      {
+        "fingerprint": "ec55d4e9e8ab653050cf00d37aaa1cc1968a4b85ab1632af29597908faf4d58c",
+        "decision": "FALSE_POSITIVE_REVIEWED",
+        "path": "packages/shared/src/localMath.ts",
+        "line": 14,
+        "evidence": "Literal SELECT aggregate FROM unnest($1::double precision[]); values bound as one array. Release adapter accepts only 1..16 safe integers within +/-1000000, no identifiers/fragments. Development caller retains scoped reference resolution. Independent PostgreSQL checks and 12 adversarial/refused inputs passed; no suppression."
+      }
+    ]
+  },
+  "remaining": [
+    "account quote/credits and enforceable total spending stop policy",
+    "isolated pilot production DB with reviewed schema-only Publish diff; no dev data copy",
+    "nonowner nonbypass least-privilege app LOGIN and private app URL",
+    "fresh separate CC token, exact reserved HTTPS host/origin and pilot tenant",
+    "reviewed capability/verification-contract metadata and role/RLS negative tests",
+    "production backup/restore retention and safe restart/rollback proof",
+    "separate final Publish confirmation"
+  ],
+  "scopeLimits": [
+    "integer-only subset of existing local.calculate/local.statistics",
+    "No production model planner or verified-knowledge references",
+    "No model/business goal acceptance rerun; full start:release on production not performed",
+    "Offline checklist never authorizes Publish"
+  ]
+}

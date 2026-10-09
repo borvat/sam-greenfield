@@ -25,6 +25,17 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  const appOverride=validateRelease({...env,
+    DATABASE_URL:"postgresql://postgres@managed.invalid/managed?sslmode=verify-full",
+    SAM_RELEASE_DATABASE_URL:env.DATABASE_URL});
+  assert.equal(new URL(appOverride.databaseUrl).username,"sam_app");
+  assert.equal(new URL(appOverride.databaseUrl).hostname,"database.invalid");
+  for(const bad of ["","not-a-url","postgresql://postgres@database.invalid/release?sslmode=verify-full",
+    "postgresql://sam_app@database.invalid/release"]){
+    assert.throws(()=>validateRelease({...env,SAM_RELEASE_DATABASE_URL:bad}));
+  }
+  assert(!Object.hasOwn(childEnvironment({...env,SAM_RELEASE_DATABASE_URL:env.DATABASE_URL},appOverride,"worker"),
+    "SAM_RELEASE_DATABASE_URL"));
   assert.equal(config.leaseMaxAttempts,3);
   for(const bad of ["0","21","not-a-number","2.5"])
     assert.throws(()=>validateRelease({...env,SAM_WORK_LEASE_MAX_ATTEMPTS:bad}));

@@ -1,5 +1,8 @@
 # Safe Reserved VM pilot — proposal, NOT authorization
 
+Historical idle-profile proposal; see `LAUNCH-GATE.md` / `launch-evidence.json`
+for the newer production-path composition and current configuration/blockers.
+
 ## Current decision
 
 **PASS_LOCAL_PREPARATION / BLOCKED_PURCHASE_AND_PUBLISH.**

@@ -120,7 +120,7 @@ async function main(){
     finally{await loginSetup.end();}
     const appUrl=new URL(url);appUrl.username=config.role;appUrl.password="unit-only-disposable-database-fixture";
     const releaseConfig={root:process.cwd(),databaseUrl:appUrl.toString(),
-      bundle:path.join(process.cwd(),"tests/release/native_bundle.ts"),
+      bundle:path.join(process.cwd(),"apps/production/src/localReleaseBundleModule.ts"),
       capabilities:["local.calculate","local.statistics"],port:0,...await servicePorts(),
       shutdownMs:1000,restartLimit:1,enableMcp:true};
     const releaseEnv={SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:config.legalEntityId,

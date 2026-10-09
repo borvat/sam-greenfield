@@ -1,5 +1,6 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
+import {calculateLocal as calculate,independentLocalAggregates} from "../../../packages/shared/src/localMath";
 import { validateProductionBundle } from "../../production/src/bundle";
 import { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import { OpenAICompatibleChatAdapter } from "../../../packages/model-providers/src/openaiCompatible";
@@ -28,12 +29,6 @@ async function resolveValues(client:any,params:any,refs?:any[]){
     references.push({index:i,factId:r.rows[0].id,source:r.rows[0].source,verificationId:r.rows[0].evidence_id});
   }
   return {values,references};
-}
-function calculate(values:number[],op:string){
-  const sum=values.reduce((a,b)=>a+b,0);
-  const result=op==="sum"?sum:op==="mean"?sum/values.length:op==="min"?Math.min(...values):op==="max"?Math.max(...values):values.length;
-  if(!Number.isFinite(result))throw new Error("LOCAL_NONFINITE_RESULT");
-  return result;
 }
 async function boundedModelTransport(url:string,init:RequestInit,claimId:string){
   if(process.env.SAM_AUTONOMY_TEST_SESSION==="1")throw new Error("AUTONOMY_TEST_TRANSPORT_FORBIDDEN");
@@ -111,9 +106,7 @@ export function localCapabilityBundle(adapterOverride?:any){
         const row=rows.rows[0];
         const {values,references}=await resolveValues(client,input.execution.params,input.execution.evidence.knowledgeRefs);
         // Independent PostgreSQL aggregate, not the executor's calculation routine/result.
-        const numeric=(await client.query(`SELECT sum(v)::double precision AS sum,avg(v)::double precision AS mean,
-          min(v)::double precision AS min,max(v)::double precision AS max,count(*)::int AS count
-          FROM unnest($1::double precision[]) AS v`,[values])).rows[0];
+        const numeric=await independentLocalAggregates(client,values);
         const op=capabilityId==="local.calculate"?input.execution.params.operation:"mean";
         const expected=capabilityId==="local.calculate"?{operation:op,value:numeric[op]}:
           {operation:op,value:numeric.mean,count:numeric.count,min:numeric.min,max:numeric.max};

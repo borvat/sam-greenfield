@@ -1,3 +1,20 @@
+# Launch preparation: current SAST change review
+
+Latest raw scan: **40 Critical / 0 Medium**, rule
+`javascript.express.db.pg-express.pg-express`, engine version not exposed.
+38 fingerprints match the prior reviewed scan. The previous local-capability
+fingerprint was replaced after the import/line move, and the shared aggregate
+now has one additional finding. No scanner suppression or rule disablement.
+See `security-scanners.json` for exact current fingerprints and coordinates.
+
+| Changed site | Source-to-sink trace and decision |
+|---|---|
+| `apps/development/src/localCapabilities.ts:18` | Existing scoped knowledge resolution: decoded key, configured entity and optional fact UUID are `$1/$2/$3` values in literal SQL. Sandbox/RLS/provenance checks unchanged. Original injection/isolation suites passed. **FALSE_POSITIVE_REVIEWED**, position replacement. |
+| `packages/shared/src/localMath.ts:14` | Release numeric list is checked for safe integers, bounds/length and unknown fields; development keeps original scoped resolution. Independent algorithm uses literal `SELECT ... FROM unnest($1::double precision[])`, with `[values]` binding; no identifiers/fragments are constructed. Real PostgreSQL aggregates and 12 hostile/malformed parameter cases passed. **FALSE_POSITIVE_REVIEWED**, added finding. |
+
+Raw Critical findings persist; this review is not a clean scanner result or
+production authorization. Dependency/privacy scans: zero findings.
+
 # Security findings ledger — SAM Greenfield
 
 Baseline: `45294e263f497fb7a6e69e86264d0709756d5e16`, independently fetched

@@ -1,13 +1,29 @@
 {
-  "checkedAt": "2026-10-09T10:05:27.819Z",
-  "scanner": "Replit SAST via runSastScan; engine version not exposed",
-  "baselineCritical": 33,
-  "baselineMedium": 1,
-  "previousCritical": 37,
-  "incomplete": false,
-  "currentCritical": 39,
-  "currentMedium": 0,
-  "dependencySummary": {
+  "checkedAt": "2026-10-09T23:41:31.429Z",
+  "engine": "Replit SAST callback; engine version not exposed",
+  "critical": 40,
+  "medium": 0,
+  "rawScannerClean": false,
+  "priorUnchangedFingerprints": 38,
+  "replacedPriorFingerprints": 1,
+  "newQueryFindings": 1,
+  "reviewedChangedFindings": [
+    {
+      "fingerprint": "9980f7ab360bb93ca4dcccaa08969d5f53b965c6bfe95ecfb4a31c90cdff7ed4",
+      "decision": "FALSE_POSITIVE_REVIEWED",
+      "path": "apps/development/src/localCapabilities.ts",
+      "line": 18,
+      "evidence": "Unchanged resolveValues query moved by import: literal SQL and $1/$2/$3 bindings for knowledge key, scoped entity and fact reference; original sandbox/provenance guards retained. Original injection/isolation regression passed."
+    },
+    {
+      "fingerprint": "ec55d4e9e8ab653050cf00d37aaa1cc1968a4b85ab1632af29597908faf4d58c",
+      "decision": "FALSE_POSITIVE_REVIEWED",
+      "path": "packages/shared/src/localMath.ts",
+      "line": 14,
+      "evidence": "Literal SELECT aggregate FROM unnest($1::double precision[]); values bound as one array. Release adapter accepts only 1..16 safe integers within +/-1000000, no identifiers/fragments. Development caller retains scoped reference resolution. Independent PostgreSQL checks and 12 adversarial/refused inputs passed; no suppression."
+    }
+  ],
+  "dependency": {
     "critical": 0,
     "high": 0,
     "info": 0,
@@ -53,10 +69,10 @@
     },
     {
       "checkId": "javascript.express.db.pg-express.pg-express",
-      "fingerprint": "f7f3d964083f349721436acecf3cd1f15450ea3a754365eacd14630a6bbfea85",
+      "fingerprint": "9980f7ab360bb93ca4dcccaa08969d5f53b965c6bfe95ecfb4a31c90cdff7ed4",
       "severity": "CRITICAL",
       "path": "apps/development/src/localCapabilities.ts",
-      "line": 17
+      "line": 18
     },
     {
       "checkId": "javascript.express.db.pg-express.pg-express",
@@ -249,6 +265,13 @@
     },
     {
       "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "ec55d4e9e8ab653050cf00d37aaa1cc1968a4b85ab1632af29597908faf4d58c",
+      "severity": "CRITICAL",
+      "path": "packages/shared/src/localMath.ts",
+      "line": 14
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
       "fingerprint": "a1afe93e880dc9ce4fb5cef188abf690cf7fd73518dc2cf5a8b6b0b8c1957ade",
       "severity": "CRITICAL",
       "path": "scripts/development/autonomy-sessions.cjs",
@@ -289,8 +312,5 @@
       "path": "scripts/development/goal-cycle-rls.cjs",
       "line": 9
     }
-  ],
-  "ledger": "docs/release/SECURITY.md",
-  "suppressionAdded": false,
-  "pilotRetestFingerprintsUnchanged": true
+  ]
 }

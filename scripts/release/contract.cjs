@@ -19,7 +19,12 @@ function validateRelease(env){
   }
   if(env.SAM_DATABASE_TARGET!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
   for(const k of required)if(!env[k]?.trim())fail("RELEASE_MISSING_"+k);
-  let db;try{db=new URL(env.DATABASE_URL);}catch{fail("RELEASE_DATABASE_URL_INVALID");}
+  // Replit manages DATABASE_URL. An independently provisioned application LOGIN
+  // uses a separate secret, never a SET ROLE disguise or a managed-key overwrite.
+  // Absence preserves existing external deployment contracts; explicit empty
+  // override must fail rather than silently use an administrative connection.
+  const applicationUrl=env.SAM_RELEASE_DATABASE_URL===undefined?env.DATABASE_URL:env.SAM_RELEASE_DATABASE_URL;
+  let db;try{db=new URL(applicationUrl);}catch{fail("RELEASE_DATABASE_URL_INVALID");}
   if(!["postgres:","postgresql:"].includes(db.protocol)||!db.hostname||!db.pathname.slice(1)||
     !["require","verify-full"].includes(db.searchParams.get("sslmode")))fail("RELEASE_DATABASE_TLS_REQUIRED");
   for(const name of [env.SAM_DB_APP_ROLE,env.SAM_DB_SCHEMA]){
