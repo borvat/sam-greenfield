@@ -14,3 +14,14 @@ Persist model-authorization consumption before network transmission and never re
 **Why:** The owner authorizes bounded synthetic testing, not continuing access to company data or ordinary external model execution.
 
 **How to apply:** Keep ordinary external inference fail-closed, isolate synthetic scope, distinguish unit model fixtures from charged provider calls, and close the approved session after acceptance.
+
+Closed authorizations remain closed even if some calls were unused; a subsequent
+test needs a separate owner decision and must retain the prior consumption.
+
+**Why:** The owner explicitly requires a new authorization for a closed session,
+not extending or resetting the previous allowance.
+
+**How to apply:** Prepare any necessary session lifecycle repair before freezing
+the acceptance build. Record deliberate fault injection and process stop/restart
+as programmer interventions; prove recovery only for the state actually interrupted,
+not all possible crashes or autonomous process restarting.
