@@ -18,3 +18,7 @@ which condition rejected the earlier discarded response.
 **How to apply:** Record each stage before proceeding, retain a durable one-shot
 claim through failures/timeouts, and report unknown diagnostics honestly. Do not
 loosen the test contract or retry a provider call merely to produce a passing result.
+For parameter rejection, retain a safe subtype and counts/types of fields or
+values before discarding the response. A generic parameter error and response
+hash cannot distinguish an extra field from an invalid array; never reconstruct
+that distinction from the success of a later, clarified request.
