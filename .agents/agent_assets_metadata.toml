@@ -56,3 +56,17 @@ mtime_ms = 1791513126453
 storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/38e064d0-38a0-4ac0-a3f0-f4f4c13461f1/bf65ccbb-7e44-4adc-8f22-fcf51adbe02a"
 storage_version_token = "1791513181562880"
 content_type = "text/html"
+
+[[outputs]]
+id = "U7w7EPlZcSIga4f8JrBuF"
+uri = "file://.local/sam-dev/autonomy-frozen-acceptance-report.html"
+type = "html"
+title = "قبول استقلالية SAM على بناء مجمد — الأدلة والحدود"
+description = "هدفان اصطناعيان عبر المسار الأصلي؛ 3 طلبات DeepSeek حية، إعادة تخطيط وتعلم واستعادة مثبتة في VERIFYING. GitHub push متعطل عند اعتماد HTTPS؛ لا نشر."
+logical_id = "3feb0d2f-5c6c-4f5b-97f4-e614ec3492bc"
+content_hash = "sha256:9c52179354b0637d68afa791ae25066ad6958d7098b39e168e7e856ede6ada21"
+size = 12108
+mtime_ms = 1791515314447
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/3feb0d2f-5c6c-4f5b-97f4-e614ec3492bc/27025293-000e-4e43-b5c8-abd55e616195"
+storage_version_token = "1791515349764168"
+content_type = "text/html"
