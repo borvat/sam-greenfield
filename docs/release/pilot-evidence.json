@@ -1,0 +1,249 @@
+{
+  "status": "PASS_LOCAL_PREPARATION_BLOCKED_PRODUCTION_PURCHASE_AND_PUBLISH",
+  "assembledAt": "2026-10-09T10:05:27.819Z",
+  "nativeSourceChanges": 0,
+  "nativeCodeBaselineSha": "d1142ada9cb4dcdaf2afafe3d6b77aa1d8fbcf26",
+  "profile": {
+    "classification": "LOCAL_NATIVE_RELEASE_FACTORY_IDLE_SYNTHETIC_NOT_PRODUCTION_LOAD",
+    "checkedAt": "2026-10-09T09:52:04.489Z",
+    "sampleCount": 48,
+    "durationSeconds": 12.056205238,
+    "processCount": 4,
+    "parentIsTestHarness": true,
+    "postgresMemoryIncluded": false,
+    "startupSeconds": 1.597558686,
+    "startupCpuSeconds": 1.4699999999999998,
+    "steadyCpuSeconds": 0.5600000000000005,
+    "steadyAverageCpuCores": 0.04644910972773873,
+    "sampledPeakCpuCores": 0.4384482701890455,
+    "peakRssMiB": 406.96875,
+    "sumPerProcessMemoryHighWaterMiB": 431.8515625,
+    "cgroupCpuMax": "400000 100000",
+    "nodeVersion": "v20.20.0",
+    "workerTicksAdvanced": 12,
+    "workerErrors": 0,
+    "externalModelCalls": 0,
+    "externalBusinessCalls": 0,
+    "entrypointFullProductionStart": "NOT_RUN_NATIVE_GUARDS_PRESERVED",
+    "vmCapacityAcceptance": "NOT_PROVEN_NO_QUOTA_OR_BUSINESS_LOAD_TEST",
+    "nativeCodeBaselineSha": "d1142ada9cb4dcdaf2afafe3d6b77aa1d8fbcf26"
+  },
+  "preflight": {
+    "checkedAt": "2026-10-09T10:04:06.595Z",
+    "sourceSha": "d1142ada9cb4dcdaf2afafe3d6b77aa1d8fbcf26",
+    "remoteSha": "d1142ada9cb4dcdaf2afafe3d6b77aa1d8fbcf26",
+    "status": "BLOCKED",
+    "declarationsComplete": false,
+    "classification": "OFFLINE_CHECKLIST_NOT_INDEPENDENT_PRODUCTION_DB_PROOF",
+    "publishAuthorized": false,
+    "servicesStarted": 0,
+    "databaseConnections": 0,
+    "secretValuesPrinted": false,
+    "gates": [
+      {
+        "gate": "source_sha",
+        "status": "BLOCKED",
+        "reason": "OWNER_APPROVED_EXACT_SHA_REQUIRED"
+      },
+      {
+        "gate": "source_clean",
+        "status": "BLOCKED",
+        "reason": "CLEAN_TREE_REQUIRED"
+      },
+      {
+        "gate": "github_sync",
+        "status": "PASS",
+        "reason": "DIRECT_REMOTE_SHA_MATCH_REQUIRED"
+      },
+      {
+        "gate": "required_setting:DATABASE_URL",
+        "status": "PASS",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_DB_APP_ROLE",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_DB_SCHEMA",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_RELEASE_ORG_ID",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_COMMAND_CENTER_LEGAL_ENTITY_ID",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_COMMAND_CENTER_BEARER_TOKEN",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_COMMAND_CENTER_ALLOWED_HOSTS",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_COMMAND_CENTER_ALLOWED_ORIGINS",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_PRODUCTION_BUNDLE_MODULE",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "required_setting:SAM_RELEASE_CAPABILITIES",
+        "status": "BLOCKED",
+        "reason": "PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL"
+      },
+      {
+        "gate": "native_release_config",
+        "status": "BLOCKED",
+        "reason": "RELEASE_OWNER_APPROVAL_REQUIRED"
+      },
+      {
+        "gate": "evidence_schema",
+        "status": "PASS",
+        "reason": "UNKNOWN_EVIDENCE_FIELDS_REJECTED"
+      },
+      {
+        "gate": "db_identity",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "app_login_nonowner_nonbypass",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "migration_compatibility",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "tenant_rls_negative_tests",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "least_privilege_acl",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "single_public_port",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "host_origin",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "capability_allowlist",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "backup_restore",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "retention_rpo_rto",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "monitoring_stop_controls",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "spending_caps",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "security_review",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      },
+      {
+        "gate": "frozen_build_acceptance",
+        "status": "BLOCKED",
+        "reason": "RECENT_OWNER_REVIEWED_LIVE_EVIDENCE_FOR_EXACT_BUILD_REQUIRED"
+      }
+    ],
+    "limitation": "Evidence references/owner attestations are not proof. Even complete declarations remain BLOCKED until independent production verification is separately authorized and performed.",
+    "captureStage": "BEFORE_DOCUMENTATION_COMMIT",
+    "latestPostCommitPath": ".local/sam-dev/pilot-preflight-final.json"
+  },
+  "tests": {
+    "regressionSuites": 28,
+    "failures": 0,
+    "typecheck": "PASS",
+    "preflight": {
+      "test": "PRELAUNCH_EVIDENCE_GATE",
+      "status": "PASS",
+      "rejectedCases": 115,
+      "classification": "UNIT_SYNTHETIC_DECLARATIONS_NOT_PRODUCTION_PROOF",
+      "externalCalls": 0
+    },
+    "nativeEntrypointOwnerApprovalRefusal": "PASS_EXIT_1_RELEASE_OWNER_APPROVAL_REQUIRED",
+    "logs": [
+      ".local/sam-dev/pilot-profile-run.log",
+      ".local/sam-dev/pilot-regression.log",
+      ".local/sam-dev/pilot-typecheck.log"
+    ]
+  },
+  "security": {
+    "critical": 39,
+    "medium": 0,
+    "rawScannerClean": false,
+    "fingerprintsUnchanged": true,
+    "dependency": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0
+    },
+    "privacy": 0
+  },
+  "budget": {
+    "source": "https://docs.replit.com/billing/aug-cloud-billing-updates",
+    "consultedDate": "2026-10-09",
+    "vmCandidateVcpu": 0.5,
+    "vmCandidateGiB": 2,
+    "vmUsdPerHour": 0.0208,
+    "vmUsd24Hours": 0.4992,
+    "vmUsd730Hours": 15.184,
+    "dbUsdPerBilledComputeHour": 0.16,
+    "dbStorageUsdPerGiBMonth": 0.35,
+    "proposedModelCalls": 0,
+    "proposedModelBudgetUsd": 0,
+    "allInCapEstablished": false,
+    "accountCreditsAndEligibility": "NOT_INSPECTED",
+    "transferAndBackupCost": "UNKNOWN"
+  },
+  "externalModelCalls": 0,
+  "businessConnections": 0,
+  "permissionsChangedOnExistingServices": false,
+  "resourcesPurchased": false,
+  "publishPerformed": false,
+  "productionConnections": 0,
+  "fixtureCleanup": "PASS_EXISTING_REGRESSION_CLEANUP",
+  "ownerDecision": "HOSTING_QUOTE_PILOT_DURATION_TOTAL_BUDGET_AND_STOP_POLICY_REQUIRED_SEPARATELY"
+}

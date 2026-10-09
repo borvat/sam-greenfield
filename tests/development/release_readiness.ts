@@ -126,6 +126,8 @@ async function main(){
     const releaseEnv={SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:config.legalEntityId,
       SAM_COMMAND_CENTER_BEARER_TOKEN:fixtureToken,SAM_MCP_BEARER_TOKEN:"unit-native-mcp-different-fake-secret",
       SAM_COMMAND_CENTER_ALLOWED_HOSTS:"127.0.0.1",SAM_COMMAND_CENTER_ALLOWED_ORIGINS:"https://127.0.0.1",PATH:process.env.PATH};
+    const profile=process.argv.includes("--profile")?require("../release/profile.cjs"):null;
+    const profileBefore=profile?.snapshot([process.pid]);
     envelope=startSupervisor(releaseConfig,releaseEnv,
       [["worker","apps/runtime/src/main.ts"],["command-center","apps/command-center/src/main.ts"],["mcp","apps/mcp/src/main.ts"]]
       .map(([name,file])=>({name,command:process.execPath,args:["--import","tsx",file],
@@ -151,6 +153,12 @@ async function main(){
     assert.equal(monitor.components.length,3);assert(monitor.components.every((c:any)=>c.running));
     assert.equal(monitor.cost.authorizedBudgetUsd,0);
     assert(!JSON.stringify(monitor).includes(config.legalEntityId));
+    if(profile){
+      const receipt=await profile.measureIdle({supervisor:envelope,base:releaseBase,token:fixtureToken,before:profileBefore});
+      assert.equal((await admin.query("SELECT count(*)::int n FROM autonomy_model_claims")).rows[0].n,0);
+      writeFileSync(".local/sam-dev/release-profile.json",JSON.stringify(receipt,null,2));
+      console.log("LOCAL_RELEASE_PROFILE PASS "+JSON.stringify(receipt));
+    }
     assert.equal((await envelope.stop()).graceful,true);envelope=null;
     proofs.push("single exposed local envelope with three actual native production-mode service processes; PostgreSQL non-owner/non-bypass RLS preflight, authenticated goals/UI HTML, protected tick/error status, no model keys, graceful stop; not published or visual-browser proof");
     proofs.push("real local connection-refused dependency probe: readiness 503 and ACT paused; PostgreSQL recovery restores readiness/ticks; private status denies anonymous access");

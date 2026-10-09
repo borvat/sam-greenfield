@@ -58,3 +58,14 @@ Empty fixtures would have hidden this distinction.
 **How to apply:** Keep restoration integrity, fixture reader permissions and
 production authorization separate. Run compatibility readers in READ ONLY
 transactions; never start the worker merely to prove a quarantined restore.
+
+Use an idle native-envelope profile only to nominate a pilot size, not to approve
+production capacity or a hosting budget.
+
+**Why:** The safe fixture envelope runs with a warm test parent, different CPU
+quota and disabled planning/business providers. Those conditions omit the
+production workload and database billing effects.
+
+**How to apply:** Identify included processes, quota and excluded PostgreSQL
+memory; separate observed metrics, arithmetic sizing bounds and a future
+quota/load acceptance test. Database polling can defeat idle-based cost estimates.
