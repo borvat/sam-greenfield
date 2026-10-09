@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import {createServer,type Server} from "node:http";
+import {createServer,type Server,type RequestListener} from "node:http";
 import {pool} from "../../packages/db/src/client";
 import {startCommandCenterHttpServer} from "../../apps/command-center/src/http";
 import {runLiveGoldenChain} from "../../apps/acceptance/src/liveGoldenChain";
 
-async function listen(handler:Parameters<typeof createServer>[0]){
+async function listen(handler:RequestListener){
   const server=createServer(handler);
   await new Promise<void>((resolve,reject)=>{
     server.once("error",reject);

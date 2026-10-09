@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "checkedAt": "2026-10-09T04:00:53.230Z",
+  "checkedAt": "2026-10-09T04:57:40.713Z",
   "classification": "LOCAL_REAL_PROCESS_AND_POSTGRES_WITH_OWNER_PLAN_FIXTURE",
   "published": false,
   "productionChanges": 0,

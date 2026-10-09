@@ -115,7 +115,7 @@ export function validateSyntheticPlan(
   originalValidated();
   phasePassed("original_structure");
   const value = raw as any;
-  const reject = (code: string, stepIndex?: number): never => { throw new ProbeRejection("synthetic_contract", code, stepIndex); };
+  const reject: (code:string,stepIndex?:number)=>never = (code,stepIndex) => { throw new ProbeRejection("synthetic_contract", code, stepIndex); };
   if (Object.keys(value).sort().join(",") !== "assumptions,constraints,dependencies,steps") reject("PLAN_FIELDS_ROOT_KEYS");
   if (!equal(value.assumptions, {})) reject("PLAN_FIELDS_ASSUMPTIONS");
   if (!equal(value.dependencies, {})) reject("PLAN_FIELDS_DEPENDENCIES");
@@ -126,7 +126,7 @@ export function validateSyntheticPlan(
     const source = value.steps[index];
     if (Object.keys(source).sort().join(",") !== "capabilityId,params,priority") reject("PLAN_STEPS_KEYS", index);
     if (step.capabilityId !== PROBE_CAPABILITY) reject("PLAN_STEPS_CAPABILITY", index);
-    if (Object.keys(step.params).join(",") !== "task") reject("PLAN_STEPS_PARAMS", index);
+    if (!step.params || Object.keys(step.params).join(",") !== "task") reject("PLAN_STEPS_PARAMS", index);
     if (!["A", "B", "C"].includes(String(step.params.task))) reject("PLAN_STEPS_TASK", index);
     if (seen.has(String(step.params.task))) reject("PLAN_STEPS_DUPLICATE_TASK", index);
     if (step.priority !== 3 - index) reject("PLAN_STEPS_RANK_SEQUENCE", index);

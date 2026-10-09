@@ -30,6 +30,9 @@ const suites = [
   ,"tests/development/release_readiness.ts"
   ,"tests/release/provider_auth.ts"
   ,"tests/phase11/model_adapters.ts"
+  ,"tests/development/sql_injection.ts"
+  ,"tests/development/backup_restore.ts"
+  ,"tests/development/observability.ts"
 ];
 
 async function main() {

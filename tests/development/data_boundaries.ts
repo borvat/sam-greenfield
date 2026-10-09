@@ -30,7 +30,7 @@ async function main() {
       VALUES($1,$2,'development_probe',$3,'NEW','Local probe; not completed execution') RETURNING id,objective`,
     [`synthetic-boundary-${index}`, entity, `Synthetic local probe ${index}`])).rows[0]);
   }
-  const facts = [];
+  const facts: any[] = [];
   for (const [entity, value] of [[a, "synthetic allowed value"], [a, marker], [b, "OTHER_ENTITY_PRIVATE_DATA"]]) {
     facts.push((await pool.query(`INSERT INTO world_facts(entity_type,entity_id,domain,attribute,value,status,source,source_timestamp)
       VALUES('legal_entity',$1,'development_probe','probe',$2::jsonb,'VERIFIED','synthetic_test',now())

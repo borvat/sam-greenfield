@@ -1,0 +1,125 @@
+{
+  "checkedAt": "2026-10-09T05:08:48.599Z",
+  "classification": "DEVELOPMENT_ONLY_NO_NEW_LIVE_MODEL_OR_PRODUCTION",
+  "proofs": {
+    "sql-injection-evidence": {
+      "status": "PASS",
+      "classification": "REAL_POSTGRES_SYNTHETIC_ADVERSARIAL_NOT_LIVE_MODEL",
+      "checkedAt": "2026-10-09T04:57:43.298Z",
+      "cases": [
+        "authority_goal_and_approval_lookup",
+        "approval_consumption_bound_derived_update",
+        "memory_insert_and_bound_limit",
+        "world_model_bound_entity",
+        "queue_json_capability_and_idempotency_binding",
+        "lease_owner_and_fencing_function_static_sql",
+        "learning_execution_uuid_and_json_binding",
+        "event_insert_and_dedup",
+        "consumer_select_inbox_insert_and_processed_update",
+        "outbox_insert_and_limit_binding",
+        "model_call_binding_unknown_cost_is_null",
+        "circuit_breaker_and_private_health_count_static_queries",
+        "incident_actor_and_json_open_resolve_binding",
+        "tenant_set_config_literal_not_statement",
+        "uuid_payload_rejected_not_interpolated",
+        "limit_payload_rejected_not_executed",
+        "health_interval_payload_rejected",
+        "cycle_policy_ddl_closed_identifiers",
+        "autonomy_session_ddl_closed_uuid_and_scope",
+        "development_schema_allowlist",
+        "missing_database_url_fail_closed_in_all_modes"
+      ],
+      "caseCount": 21,
+      "observedQueries": 44,
+      "unsafeInterpolatedQueries": 0,
+      "externalCalls": 0,
+      "fixtureVerificationNotClaimedLive": true
+    },
+    "backup-restore-evidence": {
+      "status": "PASS",
+      "classification": "REAL_PG_DUMP_RESTORE_SYNTHETIC_ONLY_NOT_PRODUCTION",
+      "checkedAt": "2026-10-09T04:57:45.512Z",
+      "sourceDatabase": "sam_replit_restore_src_1791521863932",
+      "restoreDatabase": "sam_replit_restore_dst_1791521863932",
+      "tablesCompared": 23,
+      "dataHashesMatched": true,
+      "rlsMetadataMatched": true,
+      "actualNonOwnerNonBypassLogin": true,
+      "foreignAndMissingContextDenied": true,
+      "queueAndOutboxReadWriteDenied": true,
+      "pendingRowsPreservedWithoutExecution": true,
+      "restoredExecutionCount": 0,
+      "externalCalls": 0,
+      "elapsedMs": 1581,
+      "productionBackupRestore": "NOT_RUN",
+      "productionRpoRto": "NOT_ESTABLISHED",
+      "fixtureDatabasesDropped": 2,
+      "fixtureRoleDropped": true
+    },
+    "observability-evidence": {
+      "status": "PASS",
+      "classification": "REAL_POSTGRES_SCOPE_TEST_WITH_PROVIDER_USAGE_FIXTURES",
+      "checkedAt": "2026-10-09T04:57:47.127Z",
+      "foreignQueueAndProviderReceiptsExcluded": true,
+      "tenantMismatchDenied": true,
+      "reasoningNotDoubleCharged": true,
+      "unknownCostNotZero": true,
+      "localActionableAlertCodes": [
+        "WORKER_HEARTBEAT_STALE",
+        "ACT_STALLED",
+        "WORKER_DEPENDENCY_FAILURE",
+        "QUEUE_STUCK",
+        "LEASE_EXPIRED",
+        "WORK_FAILED",
+        "PROVIDER_AUTH_REJECTED",
+        "COST_UNKNOWN"
+      ],
+      "rawIdentifiersAndCanaryNotExposed": true,
+      "outboxWrites": 0,
+      "externalCalls": 0
+    },
+    "security-service-readiness": {
+      "checkedAt": "2026-10-09T05:03:55.457Z",
+      "externalModelCalls": 0,
+      "/livez": {
+        "anonymousStatus": 200
+      },
+      "/readyz": {
+        "anonymousStatus": 200
+      },
+      "/api/telemetry": {
+        "anonymousStatus": 401
+      },
+      "authorizedTelemetry": {
+        "status": 200,
+        "classification": "LOCAL_READ_ONLY_SCOPED_TELEMETRY",
+        "heartbeat": {
+          "startedAt": "2026-10-09T04:57:06.961Z",
+          "lastStartedAt": "2026-10-09T05:03:47.399Z",
+          "lastFinishedAt": "2026-10-09T05:03:47.423Z",
+          "ageSeconds": 8.442,
+          "ticks": 40,
+          "errors": 0,
+          "dependencyFailures": 0,
+          "inFlight": false,
+          "inFlightSeconds": 0
+        },
+        "ready": 0,
+        "failed": 0,
+        "expiredLeases": 0,
+        "alertCodes": [],
+        "providerRequests": 7,
+        "estimatedUpperUsd": 0.0021726,
+        "alertDelivery": "LOCAL_ONLY_NO_OUTBOX_OR_EXTERNAL_NOTIFICATION"
+      },
+      "worker": {
+        "/livez": 200,
+        "/readyz": 200
+      },
+      "mcp": {
+        "/livez": 200,
+        "/readyz": 404
+      }
+    }
+  }
+}

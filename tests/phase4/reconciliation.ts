@@ -37,7 +37,7 @@ async function main(){
     [{capabilityId:"p4_reconcile_send",authorityClass:"GREEN",sideEffect:true}],
     [{
       capabilityId:"p4_reconcile_send",
-      async execute(request){
+      async execute(request:any){
         sends+=1;
         return {
           providerReference:"provider-reconcile-1",
@@ -45,7 +45,7 @@ async function main(){
           evidence:{submission:true}
         };
       },
-      async reconcile(input){
+      async reconcile(input:any){
         reconciles+=1;
         assert.equal(input.providerReference,"provider-reconcile-1");
         assert.ok(input.idempotencyKey.startsWith("tool:"));

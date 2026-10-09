@@ -121,7 +121,8 @@ async function main() {
   );
   const facts = await withTransaction((client)=>loadVerifiedWorldModel(client,"legal_entity",g1.entityId));
   const health = facts.find((f:any)=>f.attribute==="health");
-  assert.equal(health?.value.v, "verified-new");
+  assert.ok(health && typeof health.value==="object" && health.value!==null && "v" in health.value);
+  assert.equal(health.value.v, "verified-new");
 
   console.log("PHASE1_KERNEL_SMOKE PASS");
   await pool.end();

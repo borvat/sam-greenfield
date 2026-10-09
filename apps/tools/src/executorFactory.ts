@@ -94,12 +94,13 @@ export function createToolExecutors(input:{
         );
       }
 
-      if(capability.authorityClass!=="GREEN"){
+      const approvalAuthority=capability.authorityClass;
+      if(approvalAuthority!=="GREEN"){
         await withTransaction((client)=>consumeApproval(client,{
           capabilityId,
           params,
           legalEntityId,
-          authorityClass:capability.authorityClass
+          authorityClass:approvalAuthority
         }));
       }
 

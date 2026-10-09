@@ -1,0 +1,284 @@
+{
+  "checkedAt": "2026-10-09T05:02:30.503Z",
+  "scanner": "Replit SAST via runSastScan; engine version not exposed",
+  "baselineCritical": 33,
+  "baselineMedium": 1,
+  "incomplete": false,
+  "currentCritical": 37,
+  "currentMedium": 0,
+  "dependencySummary": {
+    "critical": 0,
+    "high": 0,
+    "info": 0,
+    "low": 0,
+    "moderate": 0
+  },
+  "privacyFindings": 0,
+  "results": [
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "3e87cf5aca2406333a2afeee036d1e9e49ab3fd11a92edef0017ba8284029d39",
+      "severity": "CRITICAL",
+      "path": "apps/brain/src/authorityGuard.ts",
+      "line": 34
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "0b36dcf97cd670c1cc9c5a597058db1606880c80176de494c7d04de067ffd469",
+      "severity": "CRITICAL",
+      "path": "apps/brain/src/authorityGuard.ts",
+      "line": 69
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "0b9bb5cf9d6673d9101caf66f943fd1cdef2de5b428ab6ddb497d29af9c69eb9",
+      "severity": "CRITICAL",
+      "path": "apps/brain/src/learning.ts",
+      "line": 10
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "9211e678cc058cd784adc160fc66915c3e99de161b33775a905157d7319a49c7",
+      "severity": "CRITICAL",
+      "path": "apps/brain/src/memory.ts",
+      "line": 29
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "c571a893fd397cdbba95f2567e78c629780b4d78389d8d16dadd9a3397cc91a3",
+      "severity": "CRITICAL",
+      "path": "apps/brain/src/worldModel.ts",
+      "line": 19
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "f7f3d964083f349721436acecf3cd1f15450ea3a754365eacd14630a6bbfea85",
+      "severity": "CRITICAL",
+      "path": "apps/development/src/localCapabilities.ts",
+      "line": 17
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "909b835881a0cdb5d638258d524a48c927639ce101992321b6d035bce6a37b69",
+      "severity": "CRITICAL",
+      "path": "apps/development/src/planningPolicy.ts",
+      "line": 81
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "c7d734ba27c6e3cff53974010deafa87e2f93efa221a651f3931a81860b80fec",
+      "severity": "CRITICAL",
+      "path": "apps/development/src/planningPolicy.ts",
+      "line": 96
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "714f63281a23a150453eee66708de6064b51204c7e8e95b8a4cdeefbec361a35",
+      "severity": "CRITICAL",
+      "path": "apps/event-fabric/src/index.ts",
+      "line": 22
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "3fc40c4b7c1269bf20a6719b615310193abff770073a02d88d839f0476aa92c2",
+      "severity": "CRITICAL",
+      "path": "apps/event-fabric/src/index.ts",
+      "line": 42
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "457427c3aa597ab0687977f309f75ec94424763574a1aa951b6cd45d8ba5657f",
+      "severity": "CRITICAL",
+      "path": "apps/event-fabric/src/index.ts",
+      "line": 50
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "4206647e93abfbb637d76947ee3cd448656b25ed72248ea5fa8eca53fc76317c",
+      "severity": "CRITICAL",
+      "path": "apps/event-fabric/src/index.ts",
+      "line": 65
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "0b5df2462a38e8b36c0b0888fff8b327663753930a1fdcbea4e8e2f148ec8b55",
+      "severity": "CRITICAL",
+      "path": "apps/event-fabric/src/index.ts",
+      "line": 79
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "d32e1290b323c5313c424c8c8d53ed429f3cd2db20ad59272c103c09abe47bdb",
+      "severity": "CRITICAL",
+      "path": "apps/kernel/src/queue.ts",
+      "line": 18
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "57374134edac1452819db66fb3a81c89002e6ce70d072d22b139481bfa13f774",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/developmentTelemetry.ts",
+      "line": 8
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "a60b64a8732ee71ce156dda729bba79c6b0b27fd63ccea4f966023ae72fc801a",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/developmentTelemetry.ts",
+      "line": 15
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "926352de52a5a786a0f033a337cf3db82c06bd686bdf670d4c280795ce079881",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/developmentTelemetry.ts",
+      "line": 23
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "fba3aa7e0cd2a2dd278ab49c3c0c87c36469dac28a13efb9bbf85e87282d6e9e",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/developmentTelemetry.ts",
+      "line": 27
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "0da6be25d8199f621d39b01a415718ff26a3d64ce9668b4d040a2491cf2430ba",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/health.ts",
+      "line": 4
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "5a37f0cbbf4091afb86fff8b7d8d6678a4c7839885b35b7527aede5fe6eaa6e1",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/health.ts",
+      "line": 81
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "feba7cfa74ceb169376d6bc3ef84b5e15f8292a430821ee8d2ccf43ff1103496",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/incidents.ts",
+      "line": 8
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "e0994f687cda82c163ef40feee56923717da5fa6972fbbc16a677ed6c75ee914",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/incidents.ts",
+      "line": 50
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "54afdcf2afb36c33016ab8dc5df6970d33d11244711162393afe56e7ba6ff2c3",
+      "severity": "CRITICAL",
+      "path": "apps/supervisor/src/incidents.ts",
+      "line": 83
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "37899070f33995ae40958d0b0450126b52f6052f4eb2719697b2584982378161",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/approvals.ts",
+      "line": 15
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "92ce9a7c01a43159ab44242772f181c49a26485aa21a3facd4c7171382359d18",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/approvals.ts",
+      "line": 38
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "1208f1430089a2ce7bff8773595a5c5a4bde6908cc56b085c18c42c8c91ac7ae",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/client.ts",
+      "line": 32
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "17c03a627684b3e215eddc51f15ec888cee9e37cf7d2c0e5fcd2fb58befa67c1",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/fencing.ts",
+      "line": 8
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "25e840e04b93d6d7e68c053a0269fe10a84c92d7a25eef1d71815206732c1d5a",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/modelCalls.ts",
+      "line": 18
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "7c77b993e03cd4e0f8cb2d091f82e0e9de1aee9f938c52dc7b41c799ed3755ca",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/outbox.ts",
+      "line": 9
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "9b96255c44118725762864a0a9921244f8c786a2c758af5bc27e2be8c322c5f6",
+      "severity": "CRITICAL",
+      "path": "packages/db/src/outbox.ts",
+      "line": 32
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "778928ea41fab096f9a9a4e055cde8586246e76c0c635e831f49fe094b3883dd",
+      "severity": "CRITICAL",
+      "path": "packages/model-gateway/src/health.ts",
+      "line": 11
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "a1afe93e880dc9ce4fb5cef188abf690cf7fd73518dc2cf5a8b6b0b8c1957ade",
+      "severity": "CRITICAL",
+      "path": "scripts/development/autonomy-sessions.cjs",
+      "line": 13
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "4df2601cb9c4f7058cee0729467f6f62fd281d012c98fba5b0a8217156fa7d74",
+      "severity": "CRITICAL",
+      "path": "scripts/development/autonomy-sessions.cjs",
+      "line": 14
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "89e946ad652a8779b38b233b81b65b13850221bf874d076900651e92817aee34",
+      "severity": "CRITICAL",
+      "path": "scripts/development/autonomy-sessions.cjs",
+      "line": 17
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "0fb4c044b21d88fad6c472b761b80160f86fea3435959fb9d56040ac3d5a15d6",
+      "severity": "CRITICAL",
+      "path": "scripts/development/autonomy-sessions.cjs",
+      "line": 20
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "c4142c890280154c4059cfaa7db0c55d922a62050c7a1f9920df86c9a44db454",
+      "severity": "CRITICAL",
+      "path": "scripts/development/environment.cjs",
+      "line": 52
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "65e4a043b0661a39de79abe4442f1a9cf673261fd0d40895393ab5deb1c72636",
+      "severity": "CRITICAL",
+      "path": "scripts/development/goal-cycle-rls.cjs",
+      "line": 9
+    }
+  ],
+  "baselineSource": "45294e263f497fb7a6e69e86264d0709756d5e16",
+  "baselineIndividualReview": "docs/release/SECURITY.md: findings 01-34",
+  "manualReviewLedger": "docs/release/SECURITY.md",
+  "suppressionApplied": false,
+  "reviewedCriticalFalsePositives": 37,
+  "mediumFallbackRemoved": true
+}

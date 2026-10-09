@@ -23,7 +23,7 @@ export async function startRuntimeService(input:{
   dependencyProbe?:()=>Promise<unknown>;
 }):Promise<RuntimeService>{
   const gate=new ReadinessGate();
-  const counters={ticks:0,errors:0,dependencyFailures:0,lastStartedAt:null as string|null,lastFinishedAt:null as string|null};
+  const counters={startedAt:new Date().toISOString(),ticks:0,errors:0,dependencyFailures:0,lastStartedAt:null as string|null,lastFinishedAt:null as string|null};
   const server=createHealthServer(gate,()=>({...counters,inFlight:tickInFlight}));
 
   let stopped=false;

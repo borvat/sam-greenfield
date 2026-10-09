@@ -2,6 +2,7 @@ import {timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
+import {commandCenterDevelopmentTelemetry} from "./developmentTelemetry";
 import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
@@ -63,6 +64,12 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
 
       if(req.method==="GET"&&req.url==="/api/overview"){
         json(res,200,{ok:true,data:await commandCenterOverview(options.legalEntityId)});return;
+      }
+      if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
+        if(!token){json(res,401,{error:"unauthorized"});return;}
+        try{json(res,200,{ok:true,data:await commandCenterDevelopmentTelemetry(options.legalEntityId,token)});}
+        catch{json(res,503,{error:"telemetry_unavailable",details:"withheld"});}
+        return;
       }
       if(req.method==="GET"&&req.url?.startsWith("/api/goals?")||req.method==="GET"&&req.url==="/api/goals"){
         const u=new URL(req.url??"/api/goals","http://local");

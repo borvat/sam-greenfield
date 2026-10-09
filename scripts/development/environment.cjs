@@ -90,6 +90,9 @@ function serviceEnvironment(service, config = readConfig()) {
   if (!ccToken || !mcpToken) throw new Error("Development bearer secrets are missing.");
 
   if (service === "runtime") {
+    // Reuse the existing local owner's bearer for read-only counters, never create a key.
+    // The production envelope retains its separate runtime token contract.
+    env.SAM_RUNTIME_STATUS_BEARER_TOKEN = ccToken;
     env.PORT = "8080";
     env.SAM_WORKER_ID = "sam-replit-development";
     env.SAM_TICK_INTERVAL_MS = "1000";

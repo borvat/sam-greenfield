@@ -35,3 +35,15 @@ meet the requested goal, and a separate decision before production or new spendi
 **How to apply:** Report computational verification, goal acceptance, learning,
 and live-model/build provenance as distinct gates. Production backup/restore,
 monitoring cost coverage and unresolved scanner findings remain separate gates.
+
+Pin each isolated database connection's search path independently of the parent
+development process.
+
+**Why:** Inherited development connection options made a newly created restore
+database resolve the old development namespace while migrations had correctly
+populated public. A successful migration subprocess did not prove its reader's
+effective namespace.
+
+**How to apply:** Independently assert database/cluster identity and effective
+schema for dump/restore clients; do not reuse deployment or development options
+implicitly across targets.

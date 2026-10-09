@@ -7,3 +7,15 @@ Use a genuinely non-superuser, non-bypass, non-table-owner application role when
 **Why:** The imported operational tables could have RLS enabled without an applicable policy; administrative tests passed because they bypassed enforcement. The first non-bypass native planning attempt correctly stopped at the missing operational policy.
 
 **How to apply:** Inspect effective role privileges as well as policies. Keep policy additions tenant/goal-bound and limited to the explicitly approved development scope. Never disable RLS or silently install broad production policies merely to make a test pass. Preserve the original distinction between organization-scoped legal-entity metadata and legal-entity-scoped goals.
+
+A restrictive fixed-principal boundary is needed when quarantine must narrow
+existing permissive policies; adding another permissive scoped policy is not an
+AND restriction.
+
+**Why:** A restored synthetic database admitted a foreign tenant context under
+its pre-existing permissive policy despite an apparently scoped new quarantine
+policy. A real non-bypass LOGIN negative test exposed the OR combination.
+
+**How to apply:** Review policy combination semantics, test missing/foreign
+contexts using the restored application role, and separately deny queue/outbox
+access. Do not infer quarantine from a policy's presence or administrative tests.
