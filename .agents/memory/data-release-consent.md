@@ -20,13 +20,26 @@ authorization refactor to satisfy a narrower local data-release requirement.
 Adding a managed Google connection does not authorize account-wide enumeration,
 document content, writes, or forwarding retrieved data to a model. The development
 read proof is restricted to an explicitly selected non-company resource and
-approved metadata; do not treat its completion as permission for another resource.
+approved operations; do not treat its completion as permission for another resource.
 
-**Why:** The owner approved a personal, non-company metadata-only read while the
-existing OAuth grant included broader privileges. Narrow application behavior and
-narrow OAuth grants are different guarantees.
+**Why:** The owner initially approved a personal, non-company metadata-only read,
+then separately authorized text from the dedicated test document with an
+independently supplied known line. Neither approval authorized model disclosure
+or other resources. Narrow application behavior and narrow OAuth grants are
+different guarantees.
 
 **How to apply:** Keep the resource/field/method boundary independent of connection
 attachment. When model disclosure is not approved, an owner-declared plan can use
 the original validation, authority, persistence and worker paths; label it honestly
 as owner-planned, not model-planned. Local fixtures remain separate from live proof.
+
+Validate known content against an independently supplied owner reference, not a
+reference learned from the first response. A second matching content fingerprint
+proves consistency between reads, not correctness against a previously known value.
+
+**Why:** The owner required both a known-text check and independent live readback,
+not merely a successful export or two equal responses.
+
+**How to apply:** Bind the resource and expected reference to immutable development
+controls, perform fresh readback, and retain only safe fingerprints/counts in
+reports. Do not make retrieved text model context or log raw document content.

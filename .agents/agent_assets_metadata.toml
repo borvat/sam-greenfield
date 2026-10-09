@@ -28,3 +28,17 @@ mtime_ms = 1791505851836
 storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/31b56a5c-5893-4176-8c8f-201fa9f27755/21e7c0e3-32e5-456c-a11d-55c6906acbec"
 storage_version_token = "1791505938642590"
 content_type = "text/html"
+
+[[outputs]]
+id = "xN8K9vNazWAGWZ8P3ueOk"
+uri = "file://.local/sam-dev/drive-content-acceptance.html"
+type = "html"
+title = "SAM: دليل قبول قراءة النص الحية"
+description = "دليل منقح للطلبات الأربعة، مطابقة السطر والبصمات، الخطة والتنفيذ والتحقق المستقل في PostgreSQL. لا يحتوي نص المستند أو معرّفه أو أسراراً."
+logical_id = "80e82094-8748-4896-8735-50eee49bb05e"
+content_hash = "sha256:158b1d33ef4a730542e2ff9780946bc0d8f69b877ddde849941bf5bca40526c8"
+size = 4171
+mtime_ms = 1791508882090
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/80e82094-8748-4896-8735-50eee49bb05e/1a376486-3335-4088-bc90-9a797d0cde34"
+storage_version_token = "1791508943532518"
+content_type = "text/html"
