@@ -17,6 +17,7 @@ export async function runBrainReplanCycle(input: {
   maxCostUsd: number;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
+  availableCapabilities?: unknown[];
 }) {
   const goal = await withTransaction(async (client) => {
     await authorizeDevelopmentGoal(client, input.goalId);
@@ -48,6 +49,7 @@ export async function runBrainReplanCycle(input: {
     gateway:input.gateway,
     goalId:input.goalId,
     objective:goal.objective,
+    availableCapabilities:input.availableCapabilities,
     context:{
       ...context,
       replan_reason:input.reason

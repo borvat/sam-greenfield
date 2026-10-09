@@ -7,16 +7,18 @@ import { localDevelopment } from "../../../apps/development/src/planningPolicy";
 import type { ProbePhase } from "../../../apps/development/src/syntheticProbe";
 import type { ModelProviderAdapter, ModelTask, ProviderResult } from "./types";
 import { cyclePlanningTask, consumeCycleTask, type DevelopmentCyclePermit } from "../../../apps/development/src/cyclePermit";
+import { isAutonomyPermit,type AutonomyPermit } from "../../../apps/development/src/autonomyPermit";
 
 export class ModelGateway {
   constructor(
     private readonly adapters: Record<string, ModelProviderAdapter>,
-    private readonly developmentPermit?: DevelopmentCyclePermit,
+    private readonly developmentPermit?: DevelopmentCyclePermit|AutonomyPermit,
     private readonly developmentDiagnostic?: (phase: ProbePhase) => void
   ) {}
 
-  developmentPlanningTask(input: { goalId: string; objective: string; context: unknown }): ModelTask {
-    return cyclePlanningTask(this.developmentPermit, { goalId: input.goalId, objective: input.objective, context: input.context });
+  developmentPlanningTask(input: { goalId: string; objective: string; context: any;availableCapabilities?:any[] }): ModelTask {
+    return isAutonomyPermit(this.developmentPermit)?this.developmentPermit.planningTask(input):
+      cyclePlanningTask(this.developmentPermit as DevelopmentCyclePermit, { goalId: input.goalId, objective: input.objective, context: input.context });
   }
 
   recordDevelopmentValidation(phase: ProbePhase) {
@@ -29,7 +31,8 @@ export class ModelGateway {
     attempts: number;
   }> {
     const restrictedDevelopment = localDevelopment();
-    if (restrictedDevelopment) task = consumeCycleTask(this.developmentPermit, task);
+    if (restrictedDevelopment) task = isAutonomyPermit(this.developmentPermit)?await this.developmentPermit.consume(task):
+      consumeCycleTask(this.developmentPermit as DevelopmentCyclePermit, task);
     const providers = await withTransaction(async (client) => {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);

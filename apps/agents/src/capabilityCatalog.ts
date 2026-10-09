@@ -7,6 +7,8 @@ export interface CapabilityDefinition {
   authorityClass: AuthorityClass;
   specialistAgentId: string;
   specialistVersion: string;
+  description?: string;
+  parameters?: Record<string,unknown>;
 }
 
 export class CapabilityCatalog {
@@ -58,5 +60,12 @@ export class CapabilityCatalog {
       policies[item.capabilityId]=item.authorityClass;
     }
     return policies;
+  }
+
+  planningDescriptors(){
+    return [...this.definitions.values()].map(item=>({
+      capabilityId:item.capabilityId,authorityClass:item.authorityClass,
+      description:item.description??item.capabilityId,parameters:item.parameters??{}
+    }));
   }
 }

@@ -1,4 +1,6 @@
 import {withTransaction} from "../../../packages/db/src/client";
+import { autonomyEnabled } from "../../development/src/autonomyBoundary";
+import { assertSafeScalar } from "../../development/src/planningPolicy";
 
 export interface OwnerGoalInput{
   objective:string;
@@ -18,9 +20,9 @@ export async function commandCenterOverview(legalEntityId:string){
     const r=await client.query(`SELECT
       (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state NOT IN ('COMPLETED','CANCELLED','FAILED')) AS active_goals,
       (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state='WAITING_OWNER') AS waiting_owner,
-      (SELECT COUNT(*)::int FROM approvals WHERE legal_entity_id=$1 AND status='PENDING') AS pending_approvals,
+      ${autonomyEnabled()?"NULL::int":"(SELECT COUNT(*)::int FROM approvals WHERE legal_entity_id=$1 AND status='PENDING')"} AS pending_approvals,
       (SELECT COUNT(*)::int FROM work_queue w JOIN goals g ON g.id=w.goal_id WHERE g.company_scope=$1 AND w.status IN ('QUEUED','HANDBACK','LEASED','EXECUTING')) AS active_work,
-      (SELECT COUNT(*)::int FROM side_effect_operations WHERE legal_entity_id=$1 AND reconciliation_state='NEEDS_RECONCILIATION') AS unresolved_side_effects,
+      ${autonomyEnabled()?"NULL::int":"(SELECT COUNT(*)::int FROM side_effect_operations WHERE legal_entity_id=$1 AND reconciliation_state='NEEDS_RECONCILIATION')"} AS unresolved_side_effects,
       (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state='FAILED') AS failed_goals`,[legalEntityId]);
     return r.rows[0];
   });
@@ -48,7 +50,7 @@ export async function commandCenterGoalTimeline(legalEntityId:string,goalId:stri
       client.query(`SELECT v.* FROM verifications v JOIN executions e ON e.id=v.execution_id
         WHERE e.goal_id=$1 ORDER BY v.checked_at,v.id`,[goalId]),
       client.query("SELECT * FROM audit_log WHERE goal_id=$1 ORDER BY timestamp,id",[goalId]),
-      client.query("SELECT * FROM approvals WHERE goal_id=$1 AND legal_entity_id=$2 ORDER BY created_at,id",[goalId,legalEntityId])
+      autonomyEnabled()?Promise.resolve({rows:[]}):client.query("SELECT * FROM approvals WHERE goal_id=$1 AND legal_entity_id=$2 ORDER BY created_at,id",[goalId,legalEntityId])
     ]);
     return {
       goal:goal.rows[0],
@@ -57,12 +59,14 @@ export async function commandCenterGoalTimeline(legalEntityId:string,goalId:stri
       executions:executions.rows,
       verifications:verifications.rows,
       approvals:approvals.rows,
+      approvalsDisabled:autonomyEnabled(),
       audit:audit.rows
     };
   });
 }
 
 export async function commandCenterLatestFinanceBrief(legalEntityId:string){
+  if(autonomyEnabled())return null;
   return withTransaction(async client=>{
     const r=await client.query(`SELECT id,goal_id,after_ref,result,timestamp
       FROM audit_log
@@ -76,18 +80,19 @@ export async function commandCenterLatestFinanceBrief(legalEntityId:string){
 
 export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput){
   const objective=String(input.objective??"").trim();
+  if(autonomyEnabled()){assertSafeScalar(objective);if(legalEntityId!==process.env.SAM_DEV_LEGAL_ENTITY_ID)throw new Error("AUTONOMY_ENTITY");}
   if(objective.length<3||objective.length>2000) throw new Error("objective must be 3-2000 characters");
-  const domain=String(input.domain??"owner_command").trim();
+  const domain=autonomyEnabled()?"development_probe":String(input.domain??"owner_command").trim();
   if(!/^[a-zA-Z0-9_-]{1,80}$/.test(domain)) throw new Error("invalid domain");
-  const authority=input.authorityCeiling??"YELLOW";
+  const authority=autonomyEnabled()?"GREEN":input.authorityCeiling??"YELLOW";
   if(authority!=="GREEN"&&authority!=="YELLOW") throw new Error("authority ceiling must be GREEN or YELLOW");
   const priority=boundedPriority(input.priority);
 
   return withTransaction(async client=>{
-    const exists=await client.query("SELECT id FROM legal_entities WHERE id=$1 AND status='ACTIVE'",[legalEntityId]);
+    const exists=await client.query("SELECT id,org_id FROM legal_entities WHERE id=$1 AND status='ACTIVE'",[legalEntityId]);
     if(exists.rowCount!==1) throw new Error("configured legal entity is not active");
 
-    const next=await client.query("SELECT next_business_id('goal',NULL) AS business_id");
+    const next=await client.query("SELECT next_business_id('goal',$1::uuid) AS business_id",[autonomyEnabled()?exists.rows[0].org_id:null]);
     const inserted=await client.query(`INSERT INTO goals
       (business_id,company_scope,domain,objective,state,priority,authority_ceiling,completion_definition)
       VALUES($1,$2,$3,$4,'NEW',$5,$6,$7)

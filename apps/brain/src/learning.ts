@@ -18,7 +18,7 @@ async function requireVerifiedExecution(client:any,executionId:string){
           ORDER BY checked_at DESC,id DESC
           LIMIT 1
        ) v ON true
-      WHERE e.id=$1`,
+      WHERE e.id=$1 FOR UPDATE OF e`,
     [executionId]
   );
   if(res.rowCount!==1) throw new Error("Execution or verification not found");
@@ -39,11 +39,15 @@ export async function learnVerifiedWorldFact(input:{
   confidence?:number;
   sourceTimestamp?:Date;
   eventSeqRef?:number|null;
-}):Promise<string>{
-  return withTransaction(async(client)=>{
+},transactionClient?:any):Promise<string>{
+  const work=async(client:any)=>{
     const execution=await requireVerifiedExecution(client,input.executionId);
     const scope=input.scope ?? {};
     const now=input.sourceTimestamp ?? new Date();
+    const duplicate=await client.query(`SELECT id FROM world_facts WHERE source=$1
+      AND entity_type=$2 AND entity_id=$3 AND attribute=$4 AND scope=$5::jsonb AND value=$6::jsonb`,
+      [`verified_execution:${input.executionId}`,input.entityType,input.entityId,input.attribute,JSON.stringify(scope),JSON.stringify(input.value)]);
+    if(duplicate.rowCount)return duplicate.rows[0].id as string;
 
     const active=await client.query(
       `SELECT id,value
@@ -90,7 +94,8 @@ export async function learnVerifiedWorldFact(input:{
     }
 
     return factId;
-  });
+  };
+  return transactionClient?work(transactionClient):withTransaction(work);
 }
 
 export async function observeVerifiedMemory(input:{

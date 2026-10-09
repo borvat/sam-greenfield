@@ -3,6 +3,7 @@ import type { DataClassification } from "../../../packages/model-gateway/src/typ
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
 import { localDevelopment, sanitizeDevelopmentPlanningInput, denyDevelopment, LOCAL_MODEL_BLOCK } from "../../development/src/planningPolicy";
 import { validateSyntheticPlan } from "../../development/src/syntheticProbe";
+import { autonomyEnabled,validateAutonomyCandidate } from "../../development/src/autonomyBoundary";
 
 export interface CandidatePlan {
   assumptions: Record<string, unknown>;
@@ -50,6 +51,7 @@ export async function proposePlan(input: {
   dataClassification: DataClassification;
   maxCostUsd: number;
   preferredProviders?: string[];
+  availableCapabilities?: unknown[];
 }): Promise<PersistPlanInput> {
   if (localDevelopment()) {
     sanitizeDevelopmentPlanningInput(input);
@@ -63,7 +65,8 @@ export async function proposePlan(input: {
     preferredProviders: input.preferredProviders,
     input: {
       objective: input.objective,
-      context: input.context,
+    context: input.context,
+    capabilities:input.availableCapabilities??[],
       contract: {
         output: "CandidatePlan",
         rule: "proposal_only_no_side_effects"
@@ -72,7 +75,8 @@ export async function proposePlan(input: {
   };
   const routed = await input.gateway.invoke(task as import("../../../packages/model-gateway/src/types").ModelTask);
 
-  const candidate = localDevelopment() ?
+  if(autonomyEnabled())validateAutonomyCandidate(routed.result.output);
+  const candidate = localDevelopment() && !autonomyEnabled() ?
     validateSyntheticPlan(routed.result.output, () => {}, phase => input.gateway.recordDevelopmentValidation(phase)) :
     validateCandidatePlan(routed.result.output);
   return {

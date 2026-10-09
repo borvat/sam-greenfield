@@ -11,6 +11,11 @@ const suites = [
   "tests/phase2/authority_guard.ts",
   "tests/phase3/capability_catalog.ts",
   "tests/phase4/tool_gateway.ts",
+  "tests/phase5/final_acceptance.ts",
+  "tests/phase5/verified_learning.ts",
+  "tests/phase6/operational_supervision.ts",
+  "tests/phase6/policy_evaluation.ts",
+  "tests/phase9/production_wiring.ts",
   "tests/phase7/runtime_service.ts",
   "tests/phase10/mcp_transport.ts",
   "tests/phase13/drive_adapters.ts",
@@ -20,6 +25,7 @@ const suites = [
   "tests/development/synthetic_probe.ts",
   "tests/development/drive_read.ts",
   "tests/development/drive_content.ts"
+  ,"tests/development/autonomy.ts"
 ];
 
 async function main() {

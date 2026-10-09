@@ -5,3 +5,4 @@
 - [One-shot inference evidence](one-shot-inference-evidence.md) — retain safe, separate validation diagnostics before discarding a single approved response.
 - [RLS proof boundaries](rls-proof-boundaries.md) — administrative tests can hide missing policies; prove enforcement with a real non-bypass application role.
 - [GitHub write proof](github-write-proof.md) — healthy OAuth and automatic Git authentication descriptions are not proof that workspace pushes work.
+- [Autonomy evidence](autonomy-evidence.md) — use ordinary intake, a frozen build, verified provenance reuse and actual process recovery; fixtures are not LIVE proof.

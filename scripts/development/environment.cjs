@@ -12,7 +12,7 @@ function developmentEnvironment(targetSchema = schema) {
       !process.env.REPLIT_DEV_DOMAIN) {
     throw new Error("Development commands require the editor workspace, not a deployment.");
   }
-  if (!/^sam_replit_(dev|goal_cycle|drive_read|drive_content|test_cycle|test_drive_read|test_drive_content|test_[0-9]+)$/.test(targetSchema)) {
+  if (!/^sam_replit_(dev|autonomy|test_autonomy|goal_cycle|drive_read|drive_content|test_cycle|test_drive_read|test_drive_content|test_[0-9]+)$/.test(targetSchema)) {
     throw new Error("Invalid isolated development schema.");
   }
   if (!process.env.DATABASE_URL) throw new Error("The development DATABASE_URL is missing.");
@@ -74,6 +74,11 @@ async function checkDatabase(env, config) {
 
 function serviceEnvironment(service, config = readConfig()) {
   const env = developmentEnvironment(config.schema);
+  if(config.autonomy){
+    env.SAM_AUTONOMY_SANDBOX="1";
+    const options=`${env.PGOPTIONS} -c role=${config.role} -c app.current_org_id=${config.orgId} -c app.current_legal_entity_id=${config.legalEntityId}`;
+    env.PGOPTIONS=options;const url=new URL(env.DATABASE_URL);url.searchParams.set("options",options);env.DATABASE_URL=url.toString();
+  }
   env.SAM_DEV_LEGAL_ENTITY_ID = config.legalEntityId;
   env.SAM_DEV_PLANNING_POLICY_FILE = path.join(root, ".local/sam-dev/planning-policy.json");
   env.SAM_DEV_VALIDATION_FILE = path.join(root, ".local/sam-dev/validation.json");
@@ -89,6 +94,11 @@ function serviceEnvironment(service, config = readConfig()) {
     env.SAM_WORKER_ID = "sam-replit-development";
     env.SAM_TICK_INTERVAL_MS = "1000";
     env.SAM_COMPOSITION_MODULE = path.join(root, "apps/runtime/src/developmentCompositionModule.ts");
+    if(config.autonomy){
+      if(!process.env.DEEPSEEK_API_KEY)throw new Error("DEEPSEEK_API_KEY missing.");
+      env.DEEPSEEK_API_KEY=process.env.DEEPSEEK_API_KEY;
+      env.SAM_TICK_INTERVAL_MS="10000";
+    }
   } else if (service === "command-center") {
     env.SAM_COMMAND_CENTER_PORT = "5000";
     env.SAM_COMMAND_CENTER_HOST = "0.0.0.0";

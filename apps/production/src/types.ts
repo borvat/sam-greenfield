@@ -2,6 +2,7 @@ import type { CapabilityDefinition } from "../../agents/src/capabilityCatalog";
 import type { DataClassification,ModelProviderAdapter,ProviderConfig } from "../../../packages/model-gateway/src/types";
 import type { ToolAdapter,ToolDefinition } from "../../../packages/tool-gateway/src/types";
 import type { VerificationResult } from "../../kernel/src/verification";
+import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 
 export interface VerificationAdapter{
   capabilityId:string;
@@ -36,4 +37,11 @@ export interface ProductionBundle{
   dataClassification?:DataClassification;
   planningMaxCostUsd?:number;
   workerLeaseTtlSeconds?:number;
+  plannerGateway?:()=>ModelGateway;
+  deferVerification?:boolean;
+  replanPolicy?:{recoverableEvidenceReasons:string[]};
+  verifiedLearning?:{
+    capabilityIds:string[];
+    project:(execution:{capabilityId:string;result:Record<string,unknown>})=>{attribute:string;value:unknown}[];
+  };
 }

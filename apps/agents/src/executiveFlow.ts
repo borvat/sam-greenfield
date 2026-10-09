@@ -21,6 +21,7 @@ export async function runCatalogPlanningCycle(input:{
     maxCostUsd:input.maxCostUsd,
     preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
+    ,availableCapabilities:input.catalog.planningDescriptors()
   });
 }
 
@@ -41,6 +42,7 @@ export async function runCatalogReplanCycle(input:{
     maxCostUsd:input.maxCostUsd,
     preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
+    ,availableCapabilities:input.catalog.planningDescriptors()
   });
 }
 

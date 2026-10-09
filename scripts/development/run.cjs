@@ -5,7 +5,7 @@ async function main() {
   const service = process.argv[2];
   const config = readConfig();
   const env = serviceEnvironment(service, config);
-  await checkDatabase(env, config);
+  await checkDatabase(require("./environment.cjs").developmentEnvironment(config.schema), config);
   const entries = {
     runtime: "apps/runtime/src/main.ts",
     mcp: "apps/mcp/src/main.ts",

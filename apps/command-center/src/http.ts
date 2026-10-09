@@ -1,6 +1,7 @@
 import {timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
+import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
@@ -38,6 +39,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
         const html=process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"
           ? commandCenterHtml.replace("<body>",'<body data-development-safe="true">')
               .replace("Owner view of goals, execution, verification and finance.",
+                autonomyEnabled()?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled.":
                 "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
           : commandCenterHtml;
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
@@ -75,6 +77,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
       if(req.method==="POST"&&req.url==="/api/goals"){
         const body=await readJson(req);
+        if(autonomyEnabled()&&Object.keys(body).some(k=>!["objective","domain","priority","authority_ceiling"].includes(k)))throw new Error("AUTONOMY_INTAKE_FIELDS");
         const data=await createOwnerGoal(options.legalEntityId,{
           objective:body.objective,
           domain:body.domain,

@@ -1,3 +1,4 @@
+import { autonomyEnabled,authorizeSandboxGoal,sandboxContext,sandboxPlanningInput } from "./autonomyBoundary";
 import { readFileSync, existsSync } from "node:fs";
 
 export const LOCAL_MODEL_BLOCK = "LOCAL_DEVELOPMENT_MODELS_DISABLED";
@@ -73,6 +74,7 @@ export function developmentPlanningPolicy(): PlanningPolicy {
 
 export async function authorizeDevelopmentGoal(client: any, goalId: string) {
   if (!localDevelopment()) return;
+  if(autonomyEnabled())return authorizeSandboxGoal(client,goalId);
   const policy = developmentPlanningPolicy();
   const approved = policy.approvedGoals.find(goal => goal.id === goalId);
   if (!approved) denyDevelopment("GOAL_NOT_APPROVED");
@@ -87,6 +89,7 @@ export async function authorizeDevelopmentGoal(client: any, goalId: string) {
 }
 
 export async function assembleDevelopmentContext(client: any, entityType: string, entityId: string) {
+  if(autonomyEnabled())return sandboxContext(client,entityType,entityId);
   const policy = developmentPlanningPolicy();
   if (entityType !== "legal_entity" || entityId !== policy.legalEntityId) denyDevelopment("ENTITY_SCOPE");
   // Explicit record IDs AND entity/status constraints. No memory query at all.
@@ -109,6 +112,7 @@ export async function assembleDevelopmentContext(client: any, entityType: string
 export function sanitizeDevelopmentPlanningInput(input: {
   goalId: string; objective: string; context: any;
 }) {
+  if(autonomyEnabled())return sandboxPlanningInput(input);
   const policy = developmentPlanningPolicy();
   const goal = policy.approvedGoals.find(item => item.id === input.goalId);
   if (!goal || goal.objective !== input.objective) denyDevelopment("GOAL_NOT_APPROVED");
