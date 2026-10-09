@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "start:release": "node scripts/release/main.cjs",
     "dev:setup": "node scripts/development/setup.cjs",
     "dev:runtime": "node scripts/development/run.cjs runtime",
     "dev:mcp": "node scripts/development/run.cjs mcp",
@@ -24,7 +25,7 @@
     "@modelcontextprotocol/server": "2.3.1",
     "@replit/connectors-sdk": "^0.4.3",
     "pg": "8.13.1",
-    "tsx": "4.19.2",
+    "tsx": "^4.23.15",
     "zod": "4.2.1"
   },
   "devDependencies": {

@@ -11,6 +11,7 @@ export async function learnNextVerifiedExecution(bundle:ValidatedProductionBundl
       FROM executions e JOIN goals g ON g.id=e.goal_id
       JOIN verifications v ON v.execution_id=e.id
       WHERE v.result='VERIFIED' AND v.verifier<>e.actor
+        AND (g.completion_definition IS NULL OR g.completion_definition NOT LIKE 'sam.acceptance/v1:%' OR g.state='COMPLETED')
         AND e.plan_hash IS NOT NULL AND v.plan_hash=e.plan_hash AND v.execution_hash=e.execution_hash
         AND e.capability_id=ANY($1::text[])
         AND NOT EXISTS(SELECT 1 FROM world_facts f WHERE f.source='verified_execution:'||e.id::text)

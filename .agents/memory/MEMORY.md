@@ -6,3 +6,4 @@
 - [RLS proof boundaries](rls-proof-boundaries.md) — administrative tests can hide missing policies; prove enforcement with a real non-bypass application role.
 - [GitHub write proof](github-write-proof.md) — healthy OAuth and automatic Git authentication descriptions are not proof that workspace pushes work.
 - [Autonomy evidence](autonomy-evidence.md) — use ordinary intake, a frozen build, verified provenance reuse and actual process recovery; fixtures are not LIVE proof.
+- [Release readiness](release-readiness.md) — confirm native child startup and progress, allocate loopback ports, and separate arithmetic correctness from owner goal acceptance.

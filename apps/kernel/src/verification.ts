@@ -1,6 +1,7 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import { transitionGoal } from "./stateMachine";
+import { checkGoalAcceptance } from "./goalAcceptance";
 
 export type VerificationResult = "VERIFIED" | "FAILED" | "INCONCLUSIVE" | "NOT_OBSERVABLE";
 
@@ -85,10 +86,23 @@ export async function recordIndependentVerificationAtomic(input: {
         const total = Number(coverage.rows[0].total);
         const verified = Number(coverage.rows[0].verified);
         if (total > 0 && total === verified) {
+          const definition=await client.query("SELECT completion_definition FROM goals WHERE id=$1",[ex.goal_id]);
+          const verifiedResults=await client.query(
+            `SELECT e.capability_id,e.params,e.result FROM executions e
+             WHERE e.goal_id=$1 AND e.plan_id=$2 AND EXISTS
+               (SELECT 1 FROM verifications v WHERE v.execution_id=e.id AND v.result='VERIFIED')`,
+            [ex.goal_id,ex.plan_id]);
+          const acceptance=checkGoalAcceptance(definition.rows[0].completion_definition,verifiedResults.rows);
+          if(!acceptance.passed){
+            await transitionGoal(client,ex.goal_id,"VERIFYING","REPLANNING","goal_acceptance_failed",{
+              verification_id:verificationId,reason:acceptance.reason
+            });
+          }else{
           await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
             verification_id: verificationId,
             verified_executions: verified
           });
+          }
         }
       } else if (input.result === "FAILED") {
         await transitionGoal(client, ex.goal_id, "VERIFYING", "REPLANNING", "independent_verification_failed", {

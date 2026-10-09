@@ -26,6 +26,10 @@ const suites = [
   "tests/development/drive_read.ts",
   "tests/development/drive_content.ts"
   ,"tests/development/autonomy.ts"
+  ,"tests/release/contracts.ts"
+  ,"tests/development/release_readiness.ts"
+  ,"tests/release/provider_auth.ts"
+  ,"tests/phase11/model_adapters.ts"
 ];
 
 async function main() {

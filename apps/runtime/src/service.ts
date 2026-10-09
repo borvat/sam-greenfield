@@ -20,25 +20,34 @@ export async function startRuntimeService(input:{
   tickIntervalMs:number;
   composition:RuntimeComposition;
   supervisorActor?:string;
+  dependencyProbe?:()=>Promise<unknown>;
 }):Promise<RuntimeService>{
   const gate=new ReadinessGate();
-  const server=createHealthServer(gate);
+  const counters={ticks:0,errors:0,dependencyFailures:0,lastStartedAt:null as string|null,lastFinishedAt:null as string|null};
+  const server=createHealthServer(gate,()=>({...counters,inFlight:tickInFlight}));
 
   let stopped=false;
   let timer:NodeJS.Timeout|null=null;
   let tickInFlight=false;
 
   const tick=async()=>{
-    if(stopped||tickInFlight||!gate.snapshot().ready) return;
+    if(stopped||tickInFlight) return;
     tickInFlight=true;
+    counters.lastStartedAt=new Date().toISOString();
     try{
+      if(!await gate.refresh(input.dependencyProbe)){counters.dependencyFailures++;return;}
       await input.composition.runWorkTick();
       await runOperationalSupervisorTick({
         actor:input.supervisorActor ?? "operational-supervisor",
         ...input.composition.supervisorOptions
       });
+      counters.ticks++;
+    }catch(error){
+      counters.errors++;
+      throw error;
     }finally{
       tickInFlight=false;
+      counters.lastFinishedAt=new Date().toISOString();
     }
   };
 

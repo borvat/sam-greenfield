@@ -30,9 +30,9 @@ async function main(){
     if(stopping)return;stopping=true;
     process.stderr.write("SAM Command Center shutdown requested: "+signal+"\n");
     try{await service.close();await pool.end();process.exit(0)}
-    catch(err){process.stderr.write("SAM Command Center shutdown failed: "+(err instanceof Error?err.message:"unknown")+"\n");process.exit(1)}
+    catch(err){process.stderr.write("SAM Command Center shutdown failed: details withheld\n");process.exit(1)}
   };
   process.on("SIGTERM",()=>void stop("SIGTERM"));
   process.on("SIGINT",()=>void stop("SIGINT"));
 }
-main().catch(async err=>{process.stderr.write("SAM Command Center startup failed: "+(err instanceof Error?err.message:"unknown")+"\n");try{await pool.end()}catch{}process.exit(1)});
+main().catch(async err=>{process.stderr.write("SAM Command Center startup failed: details withheld\n");try{await pool.end()}catch{}process.exit(1)});

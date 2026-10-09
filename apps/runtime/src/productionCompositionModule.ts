@@ -9,6 +9,7 @@ import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
 import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
 
+export default (async()=>{
 const config=loadRuntimeConfig();
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
@@ -30,8 +31,9 @@ if(hasFinance){
   await syncVerificationContracts(FINANCE_RECONCILIATION_CONTRACTS);
 }
 
-export default createProductionComposition({
+return createProductionComposition({
   bundle,
   workerId:config.workerId,
   operationalTick:createFinanceOperationalTickFromEnv()
 });
+})();

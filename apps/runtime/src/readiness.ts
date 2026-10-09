@@ -41,8 +41,23 @@ export class ReadinessGate{
     }catch(err){
       this.state.recovering=false;
       this.state.ready=false;
-      this.state.startupError=err instanceof Error ? err.message : "startup failure";
-      throw err;
+      this.state.startupError="DEPENDENCY_UNAVAILABLE";
+      throw new Error("RUNTIME_DEPENDENCY_UNAVAILABLE");
+    }
+  }
+
+  async refresh(probe:()=>Promise<unknown>=()=>pool.query("SELECT 1")):Promise<boolean>{
+    if(this.state.shuttingDown)return false;
+    try{
+      await probe();
+      if(!this.state.ready)await recoverKernelAfterRestart();
+      this.state.ready=true;
+      this.state.startupError=null;
+      return true;
+    }catch{
+      this.state.ready=false;
+      this.state.startupError="DEPENDENCY_UNAVAILABLE";
+      return false;
     }
   }
 

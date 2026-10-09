@@ -7,6 +7,6 @@ export async function loadProductionBundle(
 ):Promise<ValidatedProductionBundle>{
   if(!modulePath.trim()) throw new Error("SAM_PRODUCTION_BUNDLE_MODULE is required");
   const mod=await import(pathToFileURL(modulePath).href);
-  const bundle=(mod.default??mod.bundle??mod) as ProductionBundle;
+  const bundle=await (mod.default?.default??mod.default??mod.bundle??mod) as ProductionBundle;
   return validateProductionBundle(bundle);
 }

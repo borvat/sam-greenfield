@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-09T04:00:53.230Z",
+  "classification": "LOCAL_REAL_PROCESS_AND_POSTGRES_WITH_OWNER_PLAN_FIXTURE",
+  "published": false,
+  "productionChanges": 0,
+  "externalModelCalls": 0,
+  "ownerPlanFixtures": 2,
+  "successfulExecutionRecords": 2,
+  "independentArithmeticVerificationRecords": 2,
+  "completedGoals": 1,
+  "ownerIntentRejectedGoals": 1,
+  "crashWindow": "AFTER_LOCAL_ARTIFACT_COMMIT_BEFORE_EXECUTION_RECORD",
+  "recoveredGoalArtifactCount": 1,
+  "recoveredGoalExecutionCount": 1,
+  "staleFenceRejected": true,
+  "nativeServiceProcesses": 3,
+  "nativeWorkerSnapshot": {
+    "ticks": 1,
+    "errors": 0,
+    "dependencyFailures": 0
+  },
+  "nativeApplicationLoginMatchesEffectiveRole": true,
+  "databaseFault": "LOCAL_TCP_CONNECTION_REFUSAL_NOT_PRODUCTION_CLUSTER_OUTAGE",
+  "providerAuthentication": "LOCAL_HTTP_ERROR_FIXTURES_NOT_LIVE_PROVIDER_AUTH",
+  "source": "tests/development/release_readiness.ts",
+  "runtimeReceipt": ".local/sam-dev/release-native-faults.json"
+}

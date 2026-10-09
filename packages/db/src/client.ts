@@ -1,6 +1,9 @@
 
 import { Pool } from 'pg';
 
+if(process.env.NODE_ENV==="production"&&!process.env.DATABASE_URL){
+  throw new Error("DATABASE_URL_REQUIRED_IN_PRODUCTION");
+}
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/sam_greenfield'
 });

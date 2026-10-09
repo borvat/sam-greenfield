@@ -1,5 +1,13 @@
 import type { ModelTask,ProviderResult } from "../../model-gateway/src/types";
 
+export class ProviderHttpError extends Error{
+  readonly code:string;
+  constructor(readonly status:number){
+    const code=status===401?"PROVIDER_AUTH_REJECTED":status===403?"PROVIDER_ACCESS_REJECTED":
+      status===429?"PROVIDER_RATE_LIMITED":status>=500?"PROVIDER_UNAVAILABLE":"PROVIDER_HTTP_REJECTED";
+    super(`${code}: HTTP ${status}`);this.name="ProviderHttpError";this.code=code;
+  }
+}
 export function taskPrompt(task:ModelTask):string{
   return JSON.stringify({
     instruction:"Return only the best answer for this task. If the input requests a structured contract, return valid JSON only.",
@@ -32,12 +40,9 @@ export async function fetchJson(
     let body:any={};
     try{ body=text?JSON.parse(text):{}; }catch{ body={raw:text}; }
     if(!response.ok){
-      const message=
-        body?.error?.message ??
-        body?.message ??
-        body?.raw ??
-        `HTTP ${response.status}`;
-      throw new Error(`Provider HTTP ${response.status}: ${String(message).slice(0,500)}`);
+      // An upstream body can echo credentials, prompts, or documents. Preserve
+      // the useful status classification, never propagate its arbitrary text.
+      throw new ProviderHttpError(response.status);
     }
     return body;
   }finally{

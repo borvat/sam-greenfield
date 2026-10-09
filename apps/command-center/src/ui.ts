@@ -35,6 +35,8 @@ export const commandCenterHtml=`<!doctype html>
         <input id="domain" value="owner_command" placeholder="domain"/>
         <select id="authority"><option>YELLOW</option><option>GREEN</option></select>
         <input id="priority" type="number" min="0" max="100" value="70"/>
+        <label for="acceptance">Optional owner acceptance contract (JSON; required by release profile)</label>
+        <textarea id="acceptance" placeholder='{"version":1,"constraints":[{"capabilityId":"local.calculate","params":{"operation":"max"},"result":{"field":"value","equals":8}}]}'></textarea>
         <button class="btn" onclick="createGoal()">Create Goal</button>
         <div id="formError" class="err"></div>
       </div>
@@ -85,6 +87,8 @@ async function createGoal(){
   const error=document.getElementById("formError");error.textContent="";
   try{
     const body={objective:document.getElementById("objective").value,domain:document.getElementById("domain").value,authority_ceiling:document.getElementById("authority").value,priority:Number(document.getElementById("priority").value)};
+    const acceptance=document.getElementById("acceptance").value.trim();
+    if(acceptance)body.acceptance_contract=JSON.parse(acceptance);
     const x=await api("/api/goals",{method:"POST",body:JSON.stringify(body)});
     document.getElementById("objective").value="";
     await refresh();await timeline(x.data.id);

@@ -1,12 +1,14 @@
 import {withTransaction} from "../../../packages/db/src/client";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import { assertSafeScalar } from "../../development/src/planningPolicy";
+import { encodeGoalAcceptance } from "../../kernel/src/goalAcceptance";
 
 export interface OwnerGoalInput{
   objective:string;
   domain?:string;
   priority?:number;
   authorityCeiling?:"GREEN"|"YELLOW";
+  acceptanceContract?:unknown;
 }
 
 function boundedPriority(value:unknown):number{
@@ -92,6 +94,13 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput)
   const authority=autonomyEnabled()?"GREEN":input.authorityCeiling??"YELLOW";
   if(authority!=="GREEN"&&authority!=="YELLOW") throw new Error("authority ceiling must be GREEN or YELLOW");
   const priority=boundedPriority(input.priority);
+  if(process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==="1"&&input.acceptanceContract===undefined){
+    throw new Error("GOAL_CONTRACT_REQUIRED");
+  }
+  // The isolated autonomy intake deliberately retains its existing field boundary.
+  if(autonomyEnabled()&&input.acceptanceContract!==undefined)throw new Error("AUTONOMY_INTAKE_FIELDS");
+  const completion=input.acceptanceContract===undefined?
+    "Owner goal must complete with independently verified evidence.":encodeGoalAcceptance(input.acceptanceContract);
 
   return withTransaction(async client=>{
     const exists=await client.query("SELECT id,org_id FROM legal_entities WHERE id=$1 AND status='ACTIVE'",[legalEntityId]);
@@ -102,7 +111,7 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput)
       (business_id,company_scope,domain,objective,state,priority,authority_ceiling,completion_definition)
       VALUES($1,$2,$3,$4,'NEW',$5,$6,$7)
       RETURNING id,business_id,company_scope,domain,objective,state,priority,authority_ceiling,created_at,updated_at`,
-      [next.rows[0].business_id,legalEntityId,domain,objective,priority,authority,"Owner goal must complete with independently verified evidence."]
+      [next.rows[0].business_id,legalEntityId,domain,objective,priority,authority,completion]
     );
     const goal=inserted.rows[0];
     await client.query(`INSERT INTO audit_log

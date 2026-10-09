@@ -6,6 +6,7 @@ import type { ValidatedProductionBundle } from "./bundle";
 import { planNextNewGoal } from "./planner";
 import { verifyNextExecution } from "./verifier";
 import { learnNextVerifiedExecution } from "./learning";
+import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
 
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
@@ -21,6 +22,7 @@ export function createProductionComposition(input:{
 
   return {
     async runWorkTick(){
+      const recovery=await recoverKernelAfterRestart();
       const reconciliation=hasSideEffects?await reconcilePendingSideEffects({
         tools:input.bundle.tools,
         limit:25
@@ -38,7 +40,7 @@ export function createProductionComposition(input:{
       const learning=earlyLearning??await learnNextVerifiedExecution(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {reconciliation,planning,execution,verification,learning,operational};
+      return {recovery,reconciliation,planning,execution,verification,learning,operational};
     }
   };
 }

@@ -84,7 +84,8 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
           objective:body.objective,
           domain:body.domain,
           priority:body.priority,
-          authorityCeiling:body.authority_ceiling
+          authorityCeiling:body.authority_ceiling,
+          acceptanceContract:body.acceptance_contract
         });
         json(res,201,{ok:true,data});return;
       }
