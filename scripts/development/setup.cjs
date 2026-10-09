@@ -6,6 +6,13 @@ const {
 } = require("./environment.cjs");
 
 async function main() {
+  if(process.argv.includes("--repair-autonomy-sessions")||process.argv.includes("--new-autonomy-session")){
+    const {readConfig}=require("./environment.cjs");
+    const {prepareSessions}=require("./autonomy-sessions.cjs");
+    const result=await prepareSessions(readConfig(),{open:process.argv.includes("--new-autonomy-session"),
+      ownerAuthorized:process.argv.includes("--owner-authorized")});
+    console.log(JSON.stringify({action:"AUTONOMY_SESSION_PREPARATION",...result}));return;
+  }
   if(process.argv.includes("--autonomy")){await setupAutonomy(false);return;}
   const env = developmentEnvironment();
   const client = databaseClient(env);
@@ -141,6 +148,7 @@ async function setupAutonomy(test=false){
     config={databaseName:(await client.query("SELECT current_database() n")).rows[0].n,schema,legalEntityId:entity,orgId:org,role,autonomy:true};
   }finally{await client.end();}
   if(!test){fs.writeFileSync(configPath,JSON.stringify(config,null,2),{mode:0o600});console.log("AUTONOMY_SETUP PASS: isolated synthetic schema; 4 persistent claims; no external actions.");}
+  await require("./autonomy-sessions.cjs").prepareSessions(config);
   return config;
 }
 module.exports={setupAutonomy};

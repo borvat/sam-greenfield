@@ -40,7 +40,9 @@ export async function assertSandbox(client:any){
 }
 export async function authorizeSandboxGoal(client:any,id:string){
   await assertSandbox(client);
-  const r=await client.query("SELECT objective FROM goals WHERE id=$1 AND company_scope=$2 AND domain='development_probe' AND authority_ceiling='GREEN'",[id,process.env.SAM_DEV_LEGAL_ENTITY_ID]);
+  const r=await client.query(`SELECT g.objective FROM goals g JOIN autonomy_session s ON s.session_id=g.autonomy_session_id
+    WHERE g.id=$1 AND g.company_scope=$2 AND g.domain='development_probe' AND g.authority_ceiling='GREEN'
+      AND s.legal_entity_id=g.company_scope AND s.expires_at>now()`,[id,process.env.SAM_DEV_LEGAL_ENTITY_ID]);
   if(r.rowCount!==1)denyDevelopment("AUTONOMY_GOAL_SCOPE");
   assertSafeScalar(r.rows[0].objective);
 }

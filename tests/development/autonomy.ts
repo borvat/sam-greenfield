@@ -118,6 +118,27 @@ async function main(){
       assert.equal(calls,3);
     }finally{await runtime.stop();}
     proofs.push("ordinary runtime service and supervisor operate under restricted role; excluded external metrics are null, not fabricated zero");
+    const {prepareSessions}=require("../../scripts/development/autonomy-sessions.cjs");
+    const oldSession=(await pool.query("SELECT session_id FROM autonomy_session")).rows[0].session_id;
+    await assert.rejects(()=>prepareSessions(config,{open:true}));
+    await assert.rejects(()=>prepareSessions(config,{open:true,ownerAuthorized:true}));
+    await admin.query("UPDATE autonomy_session SET expires_at=LEAST(expires_at,now()) WHERE session_id=$1",[oldSession]);
+    const renewed=await prepareSessions(config,{open:true,ownerAuthorized:true});
+    assert.equal(renewed.privilegesUnchanged,true);
+    assert.equal((await pool.query("SELECT count(*)::int n FROM autonomy_model_claims WHERE session_id=$1",[oldSession])).rows[0].n,4);
+    await assert.rejects(()=>pool.query("INSERT INTO autonomy_model_claims(goal_id,input_hash) VALUES($1,'old-session-denied')",[first]));
+    const thirdResponse=await fetch(base+"/api/goals",{method:"POST",headers:{authorization:"Bearer unit-only-not-live","content-type":"application/json"},
+      body:JSON.stringify({objective:"another synthetic local numeric goal",domain:"development_probe",authority_ceiling:"GREEN"})});
+    assert.equal(thirdResponse.status,201);
+    const third=(await thirdResponse.json() as any).data.id;
+    assert.equal((await pool.query("SELECT autonomy_session_id FROM goals WHERE id=$1",[third])).rows[0].autonomy_session_id,renewed.session.session_id);
+    await assert.rejects(()=>pool.query("UPDATE goals SET autonomy_session_id=$1 WHERE id=$2",[oldSession,third]));
+    await assert.rejects(()=>pool.query("INSERT INTO autonomy_model_claims(goal_id,input_hash,session_id) VALUES($1,'forged-session',$2)",[third,oldSession]));
+    for(let n=0;n<4;n++)await pool.query("INSERT INTO autonomy_model_claims(goal_id,input_hash) VALUES($1,$2)",[third,`unit-new-${n}`]);
+    await assert.rejects(()=>pool.query("INSERT INTO autonomy_model_claims(goal_id,input_hash) VALUES($1,'new-over-budget')",[third]));
+    assert.equal((await pool.query("SELECT count(*)::int n FROM autonomy_model_claims")).rows[0].n,8);
+    await assert.rejects(()=>pool.query("INSERT INTO autonomy_session(org_id,legal_entity_id,max_calls,max_total_usd,expires_at) VALUES($1,$2,4,.25,now())",[config.orgId,config.legalEntityId]));
+    proofs.push("new owner-authorized session preserves old four claims; separate budget and goal binding; unchanged ACL; expired/forged/mutable bindings denied");
     console.log(JSON.stringify({status:"PASS",evidence:"UNIT_FIXTURES_NOT_LIVE",assertionGroups:proofs,modelFixtureCalls:calls,liveCalls:0}));
   }finally{
     if(server)await server.close();if(pool)await pool.end();
