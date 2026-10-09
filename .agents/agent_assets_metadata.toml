@@ -42,3 +42,17 @@ mtime_ms = 1791508882090
 storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/80e82094-8748-4896-8735-50eee49bb05e/1a376486-3335-4088-bc90-9a797d0cde34"
 storage_version_token = "1791508943532518"
 content_type = "text/html"
+
+[[outputs]]
+id = "Z1iNrhtAyyuzIBSsCZlTK"
+uri = "file://.local/sam-dev/autonomy-acceptance-report.html"
+type = "html"
+title = "تقرير قبول استقلالية SAM — النتائج والأدلة"
+description = "الدورتان الحيتان، الطلبات الأربعة، التحقق والتعلم، بوابة البناء المجمد الفاشلة وعائق GitHub، دون أسرار."
+logical_id = "38e064d0-38a0-4ac0-a3f0-f4f4c13461f1"
+content_hash = "sha256:f90443f1ed3db244ba335e388b1eecc1ed1c41a3d761a48d446f24f46a9f15e3"
+size = 15064
+mtime_ms = 1791513126453
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/38e064d0-38a0-4ac0-a3f0-f4f4c13461f1/bf65ccbb-7e44-4adc-8f22-fcf51adbe02a"
+storage_version_token = "1791513181562880"
+content_type = "text/html"
