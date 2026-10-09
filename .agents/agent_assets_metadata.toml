@@ -70,3 +70,17 @@ mtime_ms = 1791515314447
 storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/3feb0d2f-5c6c-4f5b-97f4-e614ec3492bc/27025293-000e-4e43-b5c8-abd55e616195"
 storage_version_token = "1791515349764168"
 content_type = "text/html"
+
+[[outputs]]
+id = "YJJR31T9Cg35JZtmNw6rJ"
+uri = "file://.local/sam-dev/release-readiness.html"
+type = "html"
+title = "SAM Greenfield — حزمة جاهزية الإصدار"
+description = "تقرير عربي ببوابات PASS/FAIL، أدلة الاختبارات المحلية، حدود LIVE وfixtures، حالة GitHub، وخطة PostgreSQL والأسرار والمراقبة والاستعادة والتراجع. لم يُنشر المشروع."
+logical_id = "e3021b14-16dd-48d0-b353-3db40e1afa11"
+content_hash = "sha256:3f7074cbc19696fe06d1c6749b113319939cff5a3f8b4514fa794c5f4eec6528"
+size = 14799
+mtime_ms = 1791519076042
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/e3021b14-16dd-48d0-b353-3db40e1afa11/4c47d1c6-e654-4c75-be30-c2fe645bb993"
+storage_version_token = "1791519099963748"
+content_type = "text/html"
