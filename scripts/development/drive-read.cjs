@@ -4,19 +4,24 @@ const { spawnSync } = require("node:child_process");
 const { root, developmentEnvironment, databaseClient, assertDevelopmentIdentity } = require("./environment.cjs");
 const { installCycleRls } = require("./goal-cycle-rls.cjs");
 const { createHash } = require("node:crypto");
-const unit = process.argv[2] === "--local-acceptance";
-const schema = unit ? "sam_replit_test_drive_read" : "sam_replit_drive_read";
-const role = unit ? "sam_drive_read_test_app" : "sam_drive_read_app";
-const approvalFile = path.join(root, ".local/sam-dev/drive-read-approval.json");
-const marker = path.join(root, ".local/sam-dev/drive-read-used.json");
-const reportFile = path.join(root, `.local/sam-dev/drive-read-${unit ? "local-acceptance" : "report"}.json`);
+const content = ["--local-content-acceptance","--approved-content-read-only-once"].includes(process.argv[2]);
+const unit = ["--local-acceptance","--local-content-acceptance"].includes(process.argv[2]);
+const prefix = content ? "drive-content" : "drive-read";
+const schema = `sam_replit_${unit?"test_":""}${content?"drive_content":"drive_read"}`;
+const role = `sam_${content?"drive_content":"drive_read"}_${unit?"test_app":"app"}`;
+const approvalFile = path.join(root, `.local/sam-dev/${prefix}-approval.json`);
+const marker = path.join(root, `.local/sam-dev/${prefix}-used.json`);
+const reportFile = path.join(root, `.local/sam-dev/${prefix}-${unit ? "local-acceptance" : "report"}.json`);
 let stage="approval",createdSchema=false,createdRole=false;
 async function main() {
-  if (!unit && process.argv[2] !== "--approved-read-only-once") throw new Error("APPROVAL_REQUIRED");
+  if (!unit && process.argv[2] !== (content?"--approved-content-read-only-once":"--approved-read-only-once")) throw new Error("APPROVAL_REQUIRED");
   const approval = unit ? {fileId:"fixture-personal-document-001",consent:true,nonCompanyAccount:true,metadataOnly:true} :
     JSON.parse(fs.readFileSync(approvalFile,"utf8"));
-  if (approval.consent !== true || approval.nonCompanyAccount !== true || approval.metadataOnly !== true ||
+  if(content&&unit)Object.assign(approval,{contentOnly:true,expectedTitle:"SAM TEST READ ONLY - October 2026",expectedLine:"SAM integration test - October 2026"});
+  if (approval.consent !== true || approval.nonCompanyAccount !== true || (content?approval.contentOnly!==true:approval.metadataOnly!==true) ||
       !/^[A-Za-z0-9_-]{10,200}$/.test(approval.fileId)) throw new Error("INVALID_OWNER_SCOPE");
+  if(content && (approval.expectedTitle!=="SAM TEST READ ONLY - October 2026" ||
+      typeof approval.expectedLine!=="string" || !approval.expectedLine.trim() || approval.expectedLine.length>400))throw new Error("CONTENT_REFERENCE_REQUIRED");
   if (!unit && ((fs.statSync(approvalFile).mode & 0o077) !== 0 || fs.existsSync(marker))) throw new Error("PRIVATE_SCOPE_OR_ONE_SHOT_REQUIRED");
   const admin=databaseClient(developmentEnvironment());
   await admin.connect();
@@ -34,25 +39,32 @@ async function main() {
     const entity=(await admin.query("INSERT INTO legal_entities(org_id,name) VALUES($1,'Development-only personal resource scope') RETURNING id",[org])).rows[0].id;
     const foreignOrg=(await admin.query("INSERT INTO organizations(name) VALUES('Isolation test sentinel') RETURNING id")).rows[0].id;
     const foreign=(await admin.query("INSERT INTO legal_entities(org_id,name) VALUES($1,'Foreign isolation sentinel') RETURNING id",[foreignOrg])).rows[0].id;
-    const objective="Confirm the owner-approved personal Google document exists and record permitted metadata with independent readback. No content, search, writes, or model disclosure.";
+    const objective=content
+      ? "Read only the approved dedicated personal test document's plain text; confirm the owner's known test line and independently compare fresh content. No model disclosure, other resources, or mutations."
+      : "Confirm the owner-approved personal Google document exists and record permitted metadata with independent readback. No content, search, writes, or model disclosure.";
     const goal=(await admin.query(`INSERT INTO goals(business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
-      VALUES('personal-read-only-development',$1,'development_probe',$2,'NEW','GREEN','Approved document id and type independently confirmed without content or mutations') RETURNING id`,[entity,objective])).rows[0].id;
+      VALUES('personal-read-only-development',$1,'development_probe',$2,'NEW','GREEN',$3) RETURNING id`,[entity,objective,
+        content?"Owner-known line matched and full plain-text fingerprint independently confirmed without mutations":"Approved document id and type independently confirmed without content or mutations"])).rows[0].id;
     await admin.query(`INSERT INTO audit_log(actor,goal_id,action,source,authority_class,result)
       VALUES('owner-read-request',$1,'GOAL_SUBMITTED','private_read_scope','GREEN','NEW')`,[goal]);
     await admin.query(`CREATE TABLE development_cycle_scope(
       goal_id UUID PRIMARY KEY REFERENCES goals(id),entity_id UUID NOT NULL REFERENCES legal_entities(id),
-      org_id UUID NOT NULL REFERENCES organizations(id),resource_hash TEXT NOT NULL);
+      org_id UUID NOT NULL REFERENCES organizations(id),resource_hash TEXT NOT NULL,approval_hash TEXT);
       ALTER TABLE development_cycle_scope ENABLE ROW LEVEL SECURITY;
       ALTER TABLE development_cycle_scope FORCE ROW LEVEL SECURITY;
       CREATE POLICY immutable_cycle_tenant ON development_cycle_scope FOR SELECT
       USING(entity_id=current_legal_entity_id() AND org_id=current_org_id())`);
-    await admin.query("INSERT INTO development_cycle_scope VALUES($1,$2,$3,$4)",
-      [goal,entity,org,createHash("sha256").update(JSON.stringify(approval.fileId)).digest("hex")]);
+    const contentScope={fileId:approval.fileId,expectedTitle:approval.expectedTitle,expectedLine:approval.expectedLine};
+    await admin.query("INSERT INTO development_cycle_scope VALUES($1,$2,$3,$4,$5)",
+      [goal,entity,org,createHash("sha256").update(JSON.stringify(approval.fileId)).digest("hex"),
+        content?createHash("sha256").update(JSON.stringify({expectedLine:contentScope.expectedLine,expectedTitle:contentScope.expectedTitle,fileId:contentScope.fileId})).digest("hex"):null]);
     stage="original_verification_contract";
     await admin.query(`INSERT INTO verification_contracts(capability_id,description,verification_method,
       required_evidence_fields,independent_query_template,must_not_trust_execution_result)
-      VALUES('drive_get_metadata','Fresh restricted Google metadata readback','api_readback',
-      '{"provider_file_id":"string","method":"string"}','{"method":"drive_file_get","content":false}',true)`);
+      VALUES($1,$2,'api_readback',$3::jsonb,$4::jsonb,true)`,[
+        content?"drive_read_test_text":"drive_get_metadata",content?"Fresh restricted plain-text export and owner reference match":"Fresh restricted Google metadata readback",
+        JSON.stringify(content?{contentHash:"string",method:"string"}:{provider_file_id:"string",method:"string"}),
+        JSON.stringify({method:content?"drive_plain_text_export":"drive_file_get",content})]);
     await admin.query("UPDATE model_providers SET health='DOWN'");
     stage="non_bypass_role";
     await admin.query(`CREATE ROLE ${role} NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
@@ -69,6 +81,7 @@ async function main() {
     const url=new URL(env.DATABASE_URL);url.searchParams.set("options",options);env.DATABASE_URL=url.toString();
     env.SAM_DEV_LEGAL_ENTITY_ID=entity;env.SAM_CYCLE_FOREIGN_ENTITY=foreign;env.SAM_CYCLE_GOAL_ID=goal;
     env.SAM_DRIVE_READ_UNIT_TEST=unit?"1":"0";
+    env.SAM_DRIVE_CONTENT_MODE=content?"1":"0";
     env.SAM_DRIVE_READ_APPROVAL_FILE=approvalFile;
     // Only platform identity context needed by the official managed proxy.
     // No Google refresh tokens, model keys, app bearers or corporate settings.

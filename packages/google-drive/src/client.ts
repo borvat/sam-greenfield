@@ -9,6 +9,7 @@ export class GoogleDriveApiClient{
   } | {
     // Scoped authenticated transport; original OAuth clients retain their behavior.
     readOnlyRequest:(path:string)=>Promise<any>;
+    readOnlyTextRequest?:(path:string)=>Promise<string>;
   }){}
 
   private async request(path:string,init:RequestInit={}):Promise<any>{
@@ -44,6 +45,14 @@ export class GoogleDriveApiClient{
     return this.request(
       `/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,parents,trashed,modifiedTime,webViewLink`
     );
+  }
+
+  exportPlainText(fileId:string):Promise<string>{
+    // Opt-in scoped transport only; existing OAuth clients and writes are unchanged.
+    if (!("readOnlyRequest" in this.options) || !this.options.readOnlyTextRequest) {
+      throw new Error("SCOPED_DRIVE_TEXT_TRANSPORT_REQUIRED");
+    }
+    return this.options.readOnlyTextRequest(`/files/${encodeURIComponent(fileId)}/export?mimeType=text%2Fplain`);
   }
 
   async search(input:{

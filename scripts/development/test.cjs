@@ -18,7 +18,8 @@ const suites = [
   "tests/development/data_boundaries.ts",
   "tests/development/replit_safety.ts",
   "tests/development/synthetic_probe.ts",
-  "tests/development/drive_read.ts"
+  "tests/development/drive_read.ts",
+  "tests/development/drive_content.ts"
 ];
 
 async function main() {

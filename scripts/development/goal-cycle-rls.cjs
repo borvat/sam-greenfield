@@ -1,7 +1,8 @@
 // Only installed in a newly-created isolated cycle schema, never as a global migration.
 async function installCycleRls(client, role) {
-  if (!/^sam_(goal_cycle|drive_read)_(app|test_app)$/.test(role)) throw new Error("Invalid cycle role.");
-  const driveRead = role.startsWith("sam_drive_read_");
+  if (!/^sam_(goal_cycle|drive_read|drive_content)_(app|test_app)$/.test(role)) throw new Error("Invalid cycle role.");
+  const driveRead = role.startsWith("sam_drive_");
+  const capability = role.startsWith("sam_drive_content_") ? "drive_read_test_text" : driveRead ? "drive_get_metadata" : "synthetic.office_task";
   const scope = "(SELECT goal_id FROM development_cycle_scope)";
   const tenant = "EXISTS(SELECT 1 FROM development_cycle_scope)";
   const policy = async (table, expression, command = "ALL", restrictive = false) => {
@@ -26,7 +27,7 @@ async function installCycleRls(client, role) {
     await policy("model_calls", `${tenant} AND task='executive_planning' AND provider='deepseek'
       AND model ~ '^deepseek-(flash|v4([.]1)?-flash)(-[a-z0-9]+)*$' AND data_classification='PUBLIC'`);
   }
-  await policy("verification_contracts", `${tenant} AND capability_id='${driveRead ? "drive_get_metadata" : "synthetic.office_task"}'`, "SELECT");
+  await policy("verification_contracts", `${tenant} AND capability_id='${capability}'`, "SELECT");
   // Memory, financial tables, users, approvals, side effects, and arbitrary events stay denied.
 }
 module.exports = { installCycleRls };
