@@ -7,7 +7,8 @@ export interface HealthSnapshot {
   staleActiveGoals: number;
   staleVerifications: number;
   oldPendingOutbox: number;
-  unresolvedSideEffects: number;
+  unresolvedSideEffects: number|null;
+  excludedMetrics?:string[];
   downProviders: number;
   recentModelCalls: number;
   recentModelFailures: number;

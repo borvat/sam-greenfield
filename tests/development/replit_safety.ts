@@ -27,6 +27,20 @@ async function forbiddenHost() {
 
 async function main() {
   const config = dev.readConfig();
+  if(config.autonomy){
+    // Never submit the maintenance fixture to an approved LIVE model session.
+    const cc=dev.serviceEnvironment("command-center",config);
+    const mc=dev.serviceEnvironment("mcp",config);
+    for(const env of [cc,mc])assert(!Object.keys(env).some(k=>/^(DEEPSEEK_|OPENAI_|GOOGLE_)/.test(k)));
+    assert.equal((await json("/api/overview")).status,401);
+    assert.equal((await json("/api/overview",cc.SAM_COMMAND_CENTER_BEARER_TOKEN)).status,200);
+    const goals=await json("/api/goals",cc.SAM_COMMAND_CENTER_BEARER_TOKEN);
+    assert.equal(goals.status,200);
+    assert(goals.body.data.every((g:any)=>g.domain==="development_probe"&&g.authority_ceiling==="GREEN"));
+    assert.equal((await fetch("http://127.0.0.1:8080/readyz")).status,200);
+    console.log("DEVELOPMENT_AUTONOMY_SERVICES PASS: authenticated read-only smoke; no fixture goal submission or model credential forwarding to dashboard/MCP.");
+    return;
+  }
   const ccEnv = dev.serviceEnvironment("command-center", config);
   const mcpEnv = dev.serviceEnvironment("mcp", config);
   const runtimeEnv = dev.serviceEnvironment("runtime", config);

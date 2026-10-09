@@ -15,6 +15,7 @@ const autonomy=autonomyEnabled()?createProductionComposition({
   bundle:localCapabilityBundle(),workerId:process.env.SAM_WORKER_ID??"sam-autonomy"
 }):null;
 const composition: RuntimeComposition = {
+  supervisorOptions:autonomy?{monitorSideEffects:false}:undefined,
   async runWorkTick() {
     const recovered = await recoverKernelAfterRestart();
     const autonomous=autonomy?await autonomy.runWorkTick():null;

@@ -45,6 +45,11 @@ async function main(){
       assert.equal(r.status,201,`UNIT_INTAKE: ${body.error??"unknown"}`);return body.data.id;
     };
     assert.equal((await fetch(base+"/api/goals")).status,401);proofs.push("authenticated normal intake");
+    for(const body of [{objective:"rejected authority",authority_ceiling:"RED"},
+      {objective:"rejected domain",domain:"finance"},{objective:"rejected fields",company_scope:config.legalEntityId}]){
+      assert.equal((await fetch(base+"/api/goals",{method:"POST",headers:{authorization:"Bearer unit-only-not-live","content-type":"application/json"},
+        body:JSON.stringify(body)})).status,400);
+    }
     const first=await submit("Synthetic fixture: sum 2, 5 and 9");
     const {transitionGoalAtomic}=await import("../../apps/kernel/src/stateMachine");
     await transitionGoalAtomic(first,"NEW","MODELING","unit_restart_during_observation");
@@ -95,6 +100,19 @@ async function main(){
     await assert.rejects(()=>pool.query("INSERT INTO autonomy_model_claims(goal_id,input_hash) VALUES($1,'unit-over-budget')",[second]));
     await assert.rejects(()=>pool.query("DELETE FROM autonomy_model_claims"));
     proofs.push("four-call persistent append-only budget cannot reset");
+    const {runOperationalSupervisorTick}=await import("../../apps/supervisor/src/runtime");
+    const health=await runOperationalSupervisorTick({monitorSideEffects:false});
+    assert.equal(health.snapshot.unresolvedSideEffects,null);
+    assert.equal(health.ownerBrief.coverage,"PARTIAL");
+    const {startRuntimeService}=await import("../../apps/runtime/src/service");
+    const runtime=await startRuntimeService({port:0,host:"127.0.0.1",tickIntervalMs:50,
+      composition:{...worker,supervisorOptions:{monitorSideEffects:false}}});
+    try{
+      await new Promise(r=>setTimeout(r,250));
+      assert.equal((await fetch(`http://127.0.0.1:${(runtime.server.address() as any).port}/readyz`)).status,200);
+      assert.equal(calls,3);
+    }finally{await runtime.stop();}
+    proofs.push("ordinary runtime service and supervisor operate under restricted role; excluded external metrics are null, not fabricated zero");
     console.log(JSON.stringify({status:"PASS",evidence:"UNIT_FIXTURES_NOT_LIVE",assertionGroups:proofs,modelFixtureCalls:calls,liveCalls:0}));
   }finally{
     if(server)await server.close();if(pool)await pool.end();

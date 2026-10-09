@@ -80,7 +80,12 @@ export async function commandCenterLatestFinanceBrief(legalEntityId:string){
 
 export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput){
   const objective=String(input.objective??"").trim();
-  if(autonomyEnabled()){assertSafeScalar(objective);if(legalEntityId!==process.env.SAM_DEV_LEGAL_ENTITY_ID)throw new Error("AUTONOMY_ENTITY");}
+  if(autonomyEnabled()){
+    assertSafeScalar(objective);
+    if(legalEntityId!==process.env.SAM_DEV_LEGAL_ENTITY_ID)throw new Error("AUTONOMY_ENTITY");
+    if(input.authorityCeiling!==undefined&&input.authorityCeiling!=="GREEN")throw new Error("AUTONOMY_AUTHORITY");
+    if(input.domain!==undefined&&input.domain!=="development_probe")throw new Error("AUTONOMY_DOMAIN");
+  }
   if(objective.length<3||objective.length>2000) throw new Error("objective must be 3-2000 characters");
   const domain=autonomyEnabled()?"development_probe":String(input.domain??"owner_command").trim();
   if(!/^[a-zA-Z0-9_-]{1,80}$/.test(domain)) throw new Error("invalid domain");

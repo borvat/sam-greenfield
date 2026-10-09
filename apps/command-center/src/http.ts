@@ -42,8 +42,10 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
                 autonomyEnabled()?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled.":
                 "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
           : commandCenterHtml;
+        const scopedHtml=autonomyEnabled()?html.replace('<input id="domain" value="owner_command"','<input id="domain" value="development_probe" readonly')
+          .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>'):html;
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
-        res.setHeader("cache-control","no-store");res.end(html);return;
+        res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }
       const origin=req.headers.origin;
       if(origin&&origins.size>0&&!origins.has(origin)){json(res,403,{error:"origin_not_allowed"});return}

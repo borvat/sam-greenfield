@@ -5,6 +5,7 @@ import { runOperationalSupervisorTick } from "../../supervisor/src/runtime";
 
 export interface RuntimeComposition {
   runWorkTick():Promise<unknown>;
+  supervisorOptions?:{monitorSideEffects?:boolean};
 }
 
 export interface RuntimeService {
@@ -33,7 +34,8 @@ export async function startRuntimeService(input:{
     try{
       await input.composition.runWorkTick();
       await runOperationalSupervisorTick({
-        actor:input.supervisorActor ?? "operational-supervisor"
+        actor:input.supervisorActor ?? "operational-supervisor",
+        ...input.composition.supervisorOptions
       });
     }finally{
       tickInFlight=false;
