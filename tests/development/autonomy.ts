@@ -75,6 +75,11 @@ async function main(){
     assert.equal((await fetch(base+"/api/overview",{headers:{authorization:"Bearer unit-only-not-live"}})).status,200);
     assert.equal((await fetch(base+`/api/goals/${second}/timeline`,{headers:{authorization:"Bearer unit-only-not-live"}})).status,200);
     assert.equal((await learnNextVerifiedExecution(bundle)).processed,false);
+    const {relayOutboxUntilEmpty}=await import("../../apps/kernel/src/outboxRelay");
+    const {processNextKernelEventAtomic}=await import("../../apps/kernel/src/eventConsumer");
+    await relayOutboxUntilEmpty(100);
+    let consumed=0;while(consumed<100&&(await processNextKernelEventAtomic()).processed)consumed++;
+    assert(consumed>0);proofs.push("scoped real outbox/inbox relay and kernel event consumer");
     assert.equal((await admin.query("SELECT count(*)::int n FROM world_facts")).rows[0].n,2);
     proofs.push("restart continuation, independent verification, idempotent provenance learning, later goal resolves learned fact");
     const serialized=JSON.stringify(prompts);assert(!serialized.includes(first));assert(!serialized.includes(config.legalEntityId));assert(!serialized.includes("unit-only-not-live"));

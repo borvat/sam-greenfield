@@ -131,6 +131,7 @@ async function setupAutonomy(test=false){
       OR aggregate_type='execution' AND EXISTS(SELECT 1 FROM executions e WHERE e.id=aggregate_id)
       OR aggregate_type='verification' AND EXISTS(SELECT 1 FROM verifications v WHERE v.id=aggregate_id)`);
     await policy("event_fabric_events","source='outbox' AND EXISTS(SELECT 1 FROM outbox_events o WHERE o.id=outbox_ref)");
+    await policy("inbox_events","consumer_id='kernel_runtime' AND EXISTS(SELECT 1 FROM event_fabric_events e WHERE e.event_seq=inbox_events.event_seq AND e.dedup_key=inbox_events.dedup_key)");
     await client.query(`INSERT INTO model_providers(provider_id,models,capabilities,privacy_class_allowed,health,cost_per_1k_input,cost_per_1k_output)
       VALUES('deepseek','["deepseek-flash"]','["planning"]','["PUBLIC"]','HEALTHY',0.0003,0.0012)`);
     for(const cap of ["local.calculate","local.statistics"])await client.query(`INSERT INTO verification_contracts
