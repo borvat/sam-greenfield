@@ -47,3 +47,14 @@ effective namespace.
 **How to apply:** Independently assert database/cluster identity and effective
 schema for dump/restore clients; do not reuse deployment or development options
 implicitly across targets.
+
+Restore usability must be checked with nonempty audit/receipt records and the
+actual restricted reader, not only matching administrative dump inventories.
+
+**Why:** An isolated restore preserved all rows and policies, yet the native
+non-bypass reader could see no audit records under the inherited policy set.
+Empty fixtures would have hidden this distinction.
+
+**How to apply:** Keep restoration integrity, fixture reader permissions and
+production authorization separate. Run compatibility readers in READ ONLY
+transactions; never start the worker merely to prove a quarantined restore.

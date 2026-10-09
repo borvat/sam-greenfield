@@ -3,6 +3,15 @@ name: Autonomy evidence
 description: Acceptance boundaries for SAM autonomy and synthetic live-model authorization.
 ---
 
+Fault scenarios should use independent authorized sandboxes rather than raising
+intake limits solely to fit a larger test batch.
+
+**Why:** Batching local scenarios exhausted the sandbox intake guard before
+the fault being tested; increasing that guard would weaken the evidence.
+
+**How to apply:** Preserve the ordinary guard and separate scenario fixtures.
+Distinguish frozen-build LIVE acceptance from local fault-injection coverage.
+
 Use ordinary authenticated goal intake and the same frozen implementation across novel goals. Do not replace acceptance with a case-specific workflow, preset plan, canned model answer, or health check.
 
 **Why:** The owner requires Executive Agent evidence; prior successful native goal and Drive experiments proved useful components but used fixed objectives or owner-declared plans.

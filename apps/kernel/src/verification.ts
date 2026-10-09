@@ -36,6 +36,25 @@ export async function recordIndependentVerificationAtomic(input: {
       throw new Error("Independent verification evidence is required");
     }
 
+    // The execution row is locked above. Concurrent independent readers must
+    // not append two verifications while another step still keeps the goal in
+    // VERIFYING. Only an identical, still-independent receipt is reusable.
+    const prior = await client.query(
+      `SELECT id,
+              verifier=$2 AND contract_id=$3 AND result=$4
+              AND independent_evidence=$5::jsonb
+              AND plan_hash=$6 AND execution_hash=$7 AS identical
+         FROM verifications
+        WHERE execution_id=$1
+        ORDER BY id LIMIT 1`,
+      [input.executionId,input.verifier,input.contractId,input.result,
+        JSON.stringify(input.independentEvidence),ex.plan_hash,ex.execution_hash]
+    );
+    if (prior.rowCount) {
+      if (!prior.rows[0].identical) throw new Error("VERIFICATION_RECEIPT_CONFLICT");
+      return prior.rows[0].id as string;
+    }
+
     if (ex.goal_id) {
       const goal = await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
       if (goal.rowCount !== 1) throw new Error("Goal not found for execution");

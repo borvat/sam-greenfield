@@ -66,6 +66,7 @@ function validateRelease(env){
     workerPort:0,commandPort:0,mcpPort:0,
     shutdownMs:int(env.SAM_SHUTDOWN_GRACE_MS,100,120000,15000),
     restartLimit:int(env.SAM_RELEASE_RESTART_LIMIT,0,10,3),
+    leaseMaxAttempts:int(env.SAM_WORK_LEASE_MAX_ATTEMPTS,1,20,3),
     enableMcp:env.SAM_RELEASE_ENABLE_MCP==="1"
   };
 }
@@ -78,6 +79,7 @@ function childEnvironment(env,config,service){
     NODE_ENV:"production",DATABASE_URL:config.databaseUrl,
     SAM_REQUIRE_GOAL_ACCEPTANCE:"1",SAM_WORKER_ID:"sam-release-worker",
     SAM_SHUTDOWN_GRACE_MS:String(config.shutdownMs),
+    SAM_WORK_LEASE_MAX_ATTEMPTS:String(config.leaseMaxAttempts??3),
     SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID,
     SAM_COMMAND_CENTER_ALLOWED_HOSTS:env.SAM_COMMAND_CENTER_ALLOWED_HOSTS,
     SAM_COMMAND_CENTER_ALLOWED_ORIGINS:env.SAM_COMMAND_CENTER_ALLOWED_ORIGINS,

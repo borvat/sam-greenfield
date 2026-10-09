@@ -1,10 +1,11 @@
 {
-  "checkedAt": "2026-10-09T05:02:30.503Z",
+  "checkedAt": "2026-10-09T05:43:43.892Z",
   "scanner": "Replit SAST via runSastScan; engine version not exposed",
   "baselineCritical": 33,
   "baselineMedium": 1,
+  "previousCritical": 37,
   "incomplete": false,
-  "currentCritical": 37,
+  "currentCritical": 39,
   "currentMedium": 0,
   "dependencySummary": {
     "critical": 0,
@@ -105,6 +106,20 @@
       "severity": "CRITICAL",
       "path": "apps/event-fabric/src/index.ts",
       "line": 79
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "fa8288d6fdde50c196894051ac0f1efed98e55eb03828fc0f8a2eab521f11315",
+      "severity": "CRITICAL",
+      "path": "apps/kernel/src/leaseBudget.ts",
+      "line": 17
+    },
+    {
+      "checkId": "javascript.express.db.pg-express.pg-express",
+      "fingerprint": "6702dc9e78753895e3dbd762fc9a64b492f5ea22923124dbe23b0a3ddb5b5d91",
+      "severity": "CRITICAL",
+      "path": "apps/kernel/src/leaseBudget.ts",
+      "line": 24
     },
     {
       "checkId": "javascript.express.db.pg-express.pg-express",
@@ -275,10 +290,6 @@
       "line": 9
     }
   ],
-  "baselineSource": "45294e263f497fb7a6e69e86264d0709756d5e16",
-  "baselineIndividualReview": "docs/release/SECURITY.md: findings 01-34",
-  "manualReviewLedger": "docs/release/SECURITY.md",
-  "suppressionApplied": false,
-  "reviewedCriticalFalsePositives": 37,
-  "mediumFallbackRemoved": true
+  "ledger": "docs/release/SECURITY.md",
+  "suppressionAdded": false
 }

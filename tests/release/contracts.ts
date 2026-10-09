@@ -25,6 +25,9 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  assert.equal(config.leaseMaxAttempts,3);
+  for(const bad of ["0","21","not-a-number","2.5"])
+    assert.throws(()=>validateRelease({...env,SAM_WORK_LEASE_MAX_ATTEMPTS:bad}));
   for(const patch of [
     {SAM_RELEASE_APPROVED:"0"},{REPLIT_DEV_DOMAIN:"editor.invalid"},{SAM_DB_APP_ROLE:"postgres"},
     {DATABASE_URL:"postgresql://privileged_owner@database.invalid/release?sslmode=verify-full"},

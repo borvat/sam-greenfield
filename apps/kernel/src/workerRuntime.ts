@@ -1,6 +1,7 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "./execution";
+import {leaseAttemptLimit,stopExhaustedLease} from "./leaseBudget";
 
 export interface ClaimedWork {
   queueId: string;
@@ -19,9 +20,10 @@ export async function claimNextWorkAtomic(
   owner: string,
   ttlSeconds: number
 ): Promise<ClaimedWork | null> {
+  const limit=leaseAttemptLimit();
   return withTransaction(async (client) => {
     const candidate = await client.query(
-      `SELECT id
+      `SELECT id,goal_id,attempt,fencing_token
          FROM work_queue
         WHERE status IN ('QUEUED','HANDBACK')
           AND (due_at IS NULL OR due_at <= now())
@@ -30,6 +32,9 @@ export async function claimNextWorkAtomic(
         LIMIT 1`
     );
     if (candidate.rowCount === 0) return null;
+    if(limit!==null&&Number(candidate.rows[0].attempt)>=limit){
+      await stopExhaustedLease(client,candidate.rows[0]);return null;
+    }
 
     const queueId = candidate.rows[0].id as string;
     const fencingToken = await acquireLease(client, queueId, owner, ttlSeconds);

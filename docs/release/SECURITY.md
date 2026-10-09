@@ -79,6 +79,28 @@ Dependency audit: no critical/high/moderate findings. Privacy scan: no findings.
 
 ## Executed evidence and limits
 
+### Local readiness extension — 2026-10-09
+
+The 37 previously reviewed Critical findings remain visible. The new scan has
+**39 Critical / 0 Medium**, incomplete=false; no suppression was added.
+The two additional findings use the same rule
+`javascript.express.db.pg-express.pg-express`:
+
+| Location | Fingerprint | Source → sink / disposition |
+|---|---|---|
+| `apps/kernel/src/leaseBudget.ts:17` | `fa8288d6fdde50c196894051ac0f1efed98e55eb03828fc0f8a2eab521f11315` | Typed PoolClient from native transactions; work identifier/fence from a locked PostgreSQL queue row. Constant UPDATE, `$1/$2` binding, status guard, RETURNING authoritative goal_id. Zero updated rows abort before goal/outbox changes. **Reviewed false positive for SQL injection.** |
+| `apps/kernel/src/leaseBudget.ts:24` | `6702dc9e78753895e3dbd762fc9a64b492f5ea22923124dbe23b0a3ddb5b5d91` | goal_id comes from the successful UPDATE RETURNING, not the caller-supplied goal_id. Constant SELECT with `$1`, under the same transaction/RLS and row lock. **Reviewed false positive for SQL injection.** |
+
+`fault_matrix.ts` checks two adversarial bound parameters against the real
+database (invalid UUID / bigint SQL payloads → 22P02), stale-budget fencing
+rejection, unchanged goal before valid exhaustion, exactly one exhaustion event,
+and no execution after the attempt limit. This is additional to the 21 original
+SQL-injection cases / 44 observed native-helper queries.
+
+This is **manual source-to-sink closure, not a clean raw scanner result**.
+Engine version is not exposed. Dependency audit: zero findings at all levels;
+privacy scan: zero findings. See `security-scanners.json` for the fresh snapshot.
+
 - `npm run test:development`: 27 suites passed; `npm run typecheck`: passed.
 - SQL injection: 21 cases / 44 observed real PostgreSQL helper queries; hostile
   text remained bound, typed inputs rejected; no additional SQL statement or

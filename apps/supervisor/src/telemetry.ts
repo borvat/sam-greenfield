@@ -14,18 +14,21 @@ function safeTime(s:unknown):string|null{
 }
 function count(n:unknown):number{return typeof n==="number"&&Number.isSafeInteger(n)&&n>=0?n:0;}
 export function projectHeartbeat(raw:WorkerHeartbeat,now=Date.now()){
-  const lastFinishedAt=safeTime(raw.lastFinishedAt),lastStartedAt=safeTime(raw.lastStartedAt),startedAt=safeTime(raw.startedAt);
+  const times=[raw.lastFinishedAt,raw.lastStartedAt,raw.startedAt].map(s=>safeTime(s));
+  const clockInvalid=times.some(s=>s!==null&&Date.parse(s)>now+5000);
+  const [lastFinishedAt,lastStartedAt,startedAt]=times.map(s=>s!==null&&Date.parse(s)<=now+5000?s:null);
   const timestamp=lastFinishedAt??startedAt;
-  const ageSeconds=timestamp?Math.max(0,(now-Date.parse(timestamp))/1000):null;
-  return {startedAt,lastStartedAt,lastFinishedAt,ageSeconds,ticks:count(raw.ticks),errors:count(raw.errors),
+  const ageSeconds=!clockInvalid&&timestamp?Math.max(0,(now-Date.parse(timestamp))/1000):null;
+  return {startedAt,lastStartedAt,lastFinishedAt,ageSeconds,clockInvalid,ticks:count(raw.ticks),errors:count(raw.errors),
     dependencyFailures:count(raw.dependencyFailures),inFlight:raw.inFlight===true,
     inFlightSeconds:raw.inFlight===true&&lastStartedAt?Math.max(0,(now-Date.parse(lastStartedAt))/1000):0};
 }
 export function estimateScopedUsage(rows:{model:string;input_tokens:number|null;output_tokens:number|null;reasoning_tokens:number|null;http_status:number}[]){
-  let inputTokens=0,outputTokens=0,reasoningTokens=0,unknownUsage=0,unpriced=0,authRejected=0,rateLimited=0,estimate=0;
+  let inputTokens=0,outputTokens=0,reasoningTokens=0,unknownUsage=0,unpriced=0,authRejected=0,rateLimited=0,unavailable=0,estimate=0;
   for(const row of rows){
     if(row.http_status===401||row.http_status===403)authRejected++;
     if(row.http_status===429)rateLimited++;
+    if(row.http_status>=500&&row.http_status<=599)unavailable++;
     if(!Number.isSafeInteger(row.input_tokens)||!Number.isSafeInteger(row.output_tokens)||
       row.input_tokens===null||row.output_tokens===null||row.input_tokens<0||row.output_tokens<0){unknownUsage++;continue;}
     inputTokens+=row.input_tokens;outputTokens+=row.output_tokens;
@@ -35,7 +38,7 @@ export function estimateScopedUsage(rows:{model:string;input_tokens:number|null;
     estimate+=(row.input_tokens*FLASH_PEAK_TARIFF.inputPerMillionUsd+row.output_tokens*FLASH_PEAK_TARIFF.outputPerMillionUsd)/1e6;
   }
   return {requests:rows.length,inputTokens,outputTokens,reasoningTokens,unknownUsage,unpriced,
-    authRejected,rateLimited,estimatedUpperUsd:unknownUsage||unpriced?null:Number(estimate.toFixed(9)),
+    authRejected,rateLimited,unavailable,estimatedUpperUsd:unknownUsage||unpriced?null:Number(estimate.toFixed(9)),
     knownPortionEstimatedUpperUsd:Number(estimate.toFixed(9)),billedUsd:null,tariff:FLASH_PEAK_TARIFF};
 }
 export function localAlerts(input:{
@@ -46,6 +49,7 @@ export function localAlerts(input:{
   const add=(code:string,severity:LocalAlert["severity"],action:string)=>alerts.push({code,severity,action});
   if(input.heartbeat.ageSeconds===null||input.heartbeat.ageSeconds>limits.heartbeatSeconds)
     add("WORKER_HEARTBEAT_STALE","ERROR","Check the worker process and dependency readiness; do not replay work blindly.");
+  if(input.heartbeat.clockInvalid)add("WORKER_CLOCK_INVALID","ERROR","Check clock skew; future timestamps do not prove worker readiness.");
   if(input.heartbeat.inFlightSeconds>limits.maxActSeconds)
     add("ACT_STALLED","ERROR","Inspect the bounded operation deadline and lease; preserve fencing before recovery.");
   if(input.heartbeat.dependencyFailures>0)add("WORKER_DEPENDENCY_FAILURE","WARN","Inspect database readiness and the last safe failure code.");
@@ -57,6 +61,7 @@ export function localAlerts(input:{
   if(!input.provider)add("PROVIDER_USAGE_NOT_AVAILABLE","WARN","Install an approved scoped receipt contract before enabling a provider.");
   if(input.provider?.authRejected)add("PROVIDER_AUTH_REJECTED","ERROR","Check the credential through the secrets UI; do not retry a paid request automatically.");
   if(input.provider?.rateLimited)add("PROVIDER_RATE_LIMITED","WARN","Review limits and authorization before any new request.");
+  if(input.provider?.unavailable)add("PROVIDER_UNAVAILABLE","ERROR","Check provider health; do not issue an automatic paid retry.");
   if(input.provider&&(input.provider.unknownUsage||input.provider.unpriced))
     add("COST_UNKNOWN","WARN","Verify token receipts and official tariff; missing cost is not zero.");
   if(input.receiptsTruncated)add("USAGE_WINDOW_TRUNCATED","WARN","Reconcile the complete scoped ledger before relying on the cost total.");

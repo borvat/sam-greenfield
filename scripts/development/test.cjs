@@ -33,6 +33,7 @@ const suites = [
   ,"tests/development/sql_injection.ts"
   ,"tests/development/backup_restore.ts"
   ,"tests/development/observability.ts"
+  ,"tests/development/fault_matrix.ts"
 ];
 
 async function main() {

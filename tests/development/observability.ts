@@ -22,6 +22,17 @@ async function main(){
   for(const code of ["WORKER_HEARTBEAT_STALE","ACT_STALLED","WORKER_DEPENDENCY_FAILURE","QUEUE_STUCK","WORK_FAILED","LEASE_EXPIRED","PROVIDER_AUTH_REJECTED","COST_UNKNOWN"])
     assert.ok(alerts.some(a=>a.code===code));
   assert.ok(alerts.every(a=>a.action.length>10));
+  assert.equal(projectHeartbeat({...valid,lastFinishedAt:new Date(Date.now()+3600000).toISOString()}).ageSeconds,null,
+    "FUTURE_HEARTBEAT_MUST_NOT_APPEAR_HEALTHY");
+  const edgeUsage=estimateScopedUsage([
+    {model:"deepseek-flash",input_tokens:null,output_tokens:null,reasoning_tokens:null,http_status:503},
+    {model:canary,input_tokens:100,output_tokens:20,reasoning_tokens:7,http_status:429}
+  ]);
+  assert.equal(edgeUsage.estimatedUpperUsd,null);
+  const edgeAlerts=localAlerts({heartbeat:projected,ready:0,oldestReadySeconds:0,failed:0,expiredLeases:0,provider:edgeUsage});
+  for(const code of ["PROVIDER_UNAVAILABLE","PROVIDER_RATE_LIMITED","COST_UNKNOWN"])
+    assert.ok(edgeAlerts.some(a=>a.code===code));
+  assert.equal(JSON.stringify(edgeAlerts).includes(canary),false);
   const client=await pool.connect();
   try{
     await client.query("BEGIN");
@@ -68,11 +79,33 @@ async function main(){
     await setTenantContext(client,{orgId:orgs[1].id,legalEntityId:other});
     await assert.rejects(()=>captureDevelopmentTelemetry(client,own,valid),/TELEMETRY_ROLE_OR_TENANT_DENIED/);
     await client.query("RESET ROLE");
+    await setTenantContext(client,{orgId:orgs[0].id,legalEntityId:own});
+    await client.query(`WITH seed AS (SELECT goal_id,session_id FROM autonomy_model_claims WHERE goal_id=$1 LIMIT 1),
+      added AS (INSERT INTO autonomy_model_claims
+        SELECT gen_random_uuid(),goal_id,session_id FROM seed CROSS JOIN generate_series(1,999) RETURNING id)
+      INSERT INTO autonomy_provider_receipts SELECT id,'deepseek-flash',200,100,20,7,now() FROM added`,[goals[0].id]);
+    await client.query(`SET LOCAL ROLE ${role}`);
+    const full=await captureDevelopmentTelemetry(client,own,valid);
+    assert.equal(full.provider?.requests,1000);assert.equal(full.receiptsTruncated,false);
+    assert.equal(full.provider?.estimatedUpperUsd,0.054);
+    await client.query("RESET ROLE");
+    const extra=randomUUID();
+    await client.query(`INSERT INTO autonomy_model_claims SELECT $1,goal_id,session_id FROM autonomy_model_claims WHERE goal_id=$2 LIMIT 1`,[extra,goals[0].id]);
+    await client.query("INSERT INTO autonomy_provider_receipts VALUES($1,'deepseek-flash',200,100,20,7,now())",[extra]);
+    await client.query(`SET LOCAL ROLE ${role}`);
+    const overflow=await captureDevelopmentTelemetry(client,own,valid);
+    assert.equal(overflow.provider?.requests,1000);assert.equal(overflow.receiptsTruncated,true);
+    assert.equal(overflow.provider?.estimatedUpperUsd,null);
+    assert.ok(overflow.alerts.some(a=>a.code==="USAGE_WINDOW_TRUNCATED"));
+    assert.equal(JSON.stringify(overflow).includes(canary),false);
+    await client.query("RESET ROLE");
     assert.equal((await client.query("SELECT count(*)::int n FROM outbox_events")).rows[0].n,0);
     await client.query("ROLLBACK");
     const receipt={status:"PASS",classification:"REAL_POSTGRES_SCOPE_TEST_WITH_PROVIDER_USAGE_FIXTURES",
       checkedAt:new Date().toISOString(),foreignQueueAndProviderReceiptsExcluded:true,tenantMismatchDenied:true,
       reasoningNotDoubleCharged:true,unknownCostNotZero:true,localActionableAlertCodes:alerts.map(a=>a.code),
+      futureHeartbeatRejected:true,receiptBoundaryCounts:[1000,1001],truncatedTotalUnknownNotZero:true,
+      provider503And429AlertedWithFixtures:true,fixtureProviderRequestsNotLiveCalls:true,
       rawIdentifiersAndCanaryNotExposed:true,outboxWrites:0,externalCalls:0};
     writeFileSync(".local/sam-dev/observability-evidence.json",JSON.stringify(receipt,null,2));
     console.log(JSON.stringify({test:"OBSERVABILITY",status:"PASS",externalCalls:0}));
