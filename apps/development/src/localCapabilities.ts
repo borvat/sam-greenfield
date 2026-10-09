@@ -65,6 +65,8 @@ async function boundedModelTransport(url:string,init:RequestInit,claimId:string)
   return parsed;
 }
 export function localCapabilityBundle(adapterOverride?:any){
+  const valuesSchema={type:"array",minItems:1,maxItems:16,items:{type:["number","string"],
+    minimum:-1000000,maximum:1000000,pattern:"^knowledge:local_(sum|mean|min|max|count)$"}};
   const adapter=adapterOverride??{providerId:"deepseek",async invoke(task:any,model:string){
     const claimId=autonomyClaimId(task);
     return new OpenAICompatibleChatAdapter("deepseek",{apiKey:process.env.DEEPSEEK_API_KEY??"",baseUrl:"https://api.deepseek.com",
@@ -76,8 +78,9 @@ export function localCapabilityBundle(adapterOverride?:any){
     capabilities:LOCAL_CAPABILITIES.map(capabilityId=>({capabilityId,authorityClass:"GREEN" as const,
       specialistAgentId:"autonomy-local",specialistVersion:"1.0.0",
       description:capabilityId==="local.calculate"?"Calculate one aggregate on a local numeric list. No external effects.":"Compute count, mean, min and max locally. No external effects.",
-      parameters:capabilityId==="local.calculate"?{operation:"sum|mean|min|max|count",values:"1..16 numbers or knowledge:local_OPERATION referencing a supplied verified fact"}:
-        {values:"1..16 numbers or knowledge:local_OPERATION referencing a supplied verified fact"}})),
+      parameters:{type:"object",additionalProperties:false,
+        required:capabilityId==="local.calculate"?["operation","values"]:["values"],
+        properties:capabilityId==="local.calculate"?{operation:{type:"string",enum:["sum","mean","min","max","count"]},values:valuesSchema}:{values:valuesSchema}}})),
     toolDefinitions:LOCAL_CAPABILITIES.map(capabilityId=>({capabilityId,authorityClass:"GREEN" as const,sideEffect:false})),
     toolAdapters:LOCAL_CAPABILITIES.map(capabilityId=>({capabilityId,async execute(request:any){
       localParameters(capabilityId,request.params);

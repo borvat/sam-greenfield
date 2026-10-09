@@ -52,7 +52,11 @@ export async function startRuntimeService(input:{
     });
   });
 
-  timer=setInterval(()=>{ void tick(); },input.tickIntervalMs);
+  timer=setInterval(()=>{ void tick().catch(()=>{
+    // Goal/model guards still fail closed. A refused proposal must not kill
+    // unrelated kernel maintenance or log a provider response/credential.
+    console.error(JSON.stringify({service:"sam-runtime",event:"WORK_TICK_FAILED",details:"withheld",continuation:"next_bounded_tick"}));
+  }); },input.tickIntervalMs);
   timer.unref?.();
 
   return {
