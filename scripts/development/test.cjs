@@ -13,10 +13,12 @@ const suites = [
   "tests/phase4/tool_gateway.ts",
   "tests/phase7/runtime_service.ts",
   "tests/phase10/mcp_transport.ts",
+  "tests/phase13/drive_adapters.ts",
   "tests/phase19/command_center.ts",
   "tests/development/data_boundaries.ts",
   "tests/development/replit_safety.ts",
-  "tests/development/synthetic_probe.ts"
+  "tests/development/synthetic_probe.ts",
+  "tests/development/drive_read.ts"
 ];
 
 async function main() {

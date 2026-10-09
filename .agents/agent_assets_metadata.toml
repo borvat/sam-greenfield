@@ -14,3 +14,17 @@ mtime_ms = 1791502286135
 storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/399fd657-6845-4249-b340-adcac0581794/9691fbc6-9817-4add-bc8b-3f654a69db07"
 storage_version_token = "1791502287155002"
 content_type = "text/html"
+
+[[outputs]]
+id = "8vhWuPn0zeM0WLi6zRrVY"
+uri = "file://.local/sam-dev/drive-read-report.html"
+type = "html"
+title = "دليل SAM: دورة قراءة Drive الحية"
+description = "تقرير عربي منقح: طلبا GET حيان، حفظ الخطة والتنفيذ والتحقق المستقل، حدود القراءة وسجل التدقيق؛ دون رابط المورد أو أسرار."
+logical_id = "31b56a5c-5893-4176-8c8f-201fa9f27755"
+content_hash = "sha256:25ee889dce4f7d338a5d4e40aaad95a1890f41267a5f4b7fe428740f5779362c"
+size = 6133
+mtime_ms = 1791505851836
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/31b56a5c-5893-4176-8c8f-201fa9f27755/21e7c0e3-32e5-456c-a11d-55c6906acbec"
+storage_version_token = "1791505938642590"
+content_type = "text/html"

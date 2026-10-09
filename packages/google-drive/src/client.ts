@@ -6,9 +6,18 @@ export class GoogleDriveApiClient{
     tokens:AccessTokenProvider;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+  } | {
+    // Scoped authenticated transport; original OAuth clients retain their behavior.
+    readOnlyRequest:(path:string)=>Promise<any>;
   }){}
 
   private async request(path:string,init:RequestInit={}):Promise<any>{
+    if ("readOnlyRequest" in this.options) {
+      if ((init.method ?? "GET") !== "GET" || init.body !== undefined || init.headers !== undefined) {
+        throw new Error("READ_ONLY_DRIVE_METHOD_DENIED");
+      }
+      return this.options.readOnlyRequest(path);
+    }
     const token=await this.options.tokens.getAccessToken();
     const fetchImpl=this.options.fetchImpl??fetch;
     const response=await fetchImpl(
