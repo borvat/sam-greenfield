@@ -1,24 +1,33 @@
-// One real-DEVELOPMENT-PG acceptance case; only the model is a local HTTP mock.
-// This is not the production launcher or live-provider acceptance.
+// Real-DEVELOPMENT-PG acceptance; offline model by default. Live requires explicit
+// --approved-live-once, a fresh reviewed price file and an unconsumed durable claim.
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {randomBytes,randomUUID} from "node:crypto";
 import {spawn} from "node:child_process";
 import {createServer} from "node:http";
-import {writeFileSync} from "node:fs";
+import {existsSync,readFileSync,writeFileSync} from "node:fs";
 import {Client} from "pg";
+import {assertOneShotInput,assertPriceReview,createOneShotTransport,liveClaimFile,oneShotObjective,
+  oneShotPrice} from "./oneShotTransport";
 const require=createRequire(import.meta.url);
 const dev=require("../../scripts/development/environment.cjs");
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 let stage="development_identity";
-const output=".local/sam-dev/synthetic-pilot-postgres-acceptance.json";
+const live=process.argv[2]==="--approved-live-once";
+const oneShot=live||process.argv[2]==="--one-shot-offline";
+const output=live?".local/sam-dev/synthetic-pilot-live-acceptance.json":
+  ".local/sam-dev/synthetic-pilot-postgres-acceptance.json";
 
 async function child(){
   const allowedPort=process.env.SAM_TEST_MODEL_PORT!;
+  const liveChild=process.env.SAM_TEST_LIVE_PLAN==="1"&&process.argv[3]==="plan";
+  if(liveChild)assertPriceReview();
+  const objective=JSON.parse(process.env.SAM_TEST_OBJECTIVE!);
   const originalFetch=globalThis.fetch;
   globalThis.fetch=(async(input:any,init:any)=>{
     const u=new URL(typeof input==="string"?input:input.url??input.toString());
-    if(u.hostname!=="127.0.0.1")throw new Error("TEST_OUTBOUND_DENIED");
+    if(u.hostname!=="127.0.0.1"&&!(liveChild&&u.href==="https://api.deepseek.com/chat/completions"&&
+      init?.method==="POST"&&init.redirect==="error"))throw new Error("TEST_OUTBOUND_DENIED");
     return originalFetch(input,init);
   }) as typeof fetch;
   const {pool}=await import("../../packages/db/src/client");
@@ -27,10 +36,15 @@ async function child(){
   const {fetchJson}=await import("../../packages/model-providers/src/common");
   const {createSyntheticPilotBundle}=await import("../../apps/production/src/syntheticPilotBundleModule");
   const {validateProductionBundle}=await import("../../apps/production/src/bundle");
-  const bundle=validateProductionBundle(createSyntheticPilotBundle(async(_url,init,timeout)=>
-    fetchJson(`http://127.0.0.1:${allowedPort}/mock`,init,timeout)));
+  const transport=liveChild?createOneShotTransport(liveClaimFile,process.env.SAM_PILOT_RUN_ID!):
+    async(_url:string,init:RequestInit,timeout?:number)=>{
+      if(process.env.SAM_PILOT_MAX_REQUESTS==="1")assertOneShotInput(_url,init);
+      return fetchJson(`http://127.0.0.1:${allowedPort}/mock`,init,timeout);
+    };
+  const bundle=validateProductionBundle(createSyntheticPilotBundle(transport));
   await assertReleaseDatabaseSafety(pool);
   await assertPilotLedgerPrivileges(pool);
+  console.log(JSON.stringify({phase:"RESTRICTED_DATABASE_READY"}));
   const mode=process.argv[3];
   try{
     if(mode==="plan"){
@@ -44,10 +58,10 @@ async function child(){
         assert.equal((await fetch(base+"/api/goals")).status,401);
         const response=await fetch(base+"/api/goals",{method:"POST",headers:{
           authorization:"Bearer synthetic-acceptance-owner-not-real","content-type":"application/json"},
-          body:JSON.stringify({objective:JSON.stringify({synthetic:true,operation:"sum",values:[7,-4,19]}),
+          body:JSON.stringify({objective:JSON.stringify(objective),
             domain:"release_synthetic",authority_ceiling:"GREEN",acceptance_contract:{
               version:1,constraints:[{capabilityId:"local.calculate",params:{operation:"sum"},
-                result:{field:"value",equals:22}}]}})});
+                result:{field:"value",equals:objective.values.reduce((a:number,b:number)=>a+b,0)}}]}})});
         const body=await response.json() as any;
         if(response.status!==201){
           const safe=/business_id_sequences/.test(body.error??"")?"INTAKE_BUSINESS_ID_RLS":
@@ -94,18 +108,20 @@ async function child(){
         "UPDATE model_calls SET task='reset'","TRUNCATE model_calls","CREATE TABLE forbidden_test(id int)"]){
         await assert.rejects(()=>pool.query(sql),(error:any)=>error.code==="42501");negative++;
       }
-      // Reserve a second attempt with an unknown outcome, without any HTTP call.
-      const failed=createSyntheticPilotBundle(async()=>{throw new Error("SYNTHETIC_TRANSPORT_INTERRUPTED");});
-      const {proposePlan}=await import("../../apps/brain/src/planner");
-      await assert.rejects(()=>proposePlan({gateway:failed.plannerGateway!(),goalId:id,
-        objective:JSON.stringify({synthetic:true,operation:"sum",values:[7,-4,19]}),
-        context:{entityType:"legal_entity",entityId:process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID,facts:[],memory:[]},
-        dataClassification:"PUBLIC",maxCostUsd:0.25}),/PILOT_MODEL_ATTEMPT_REJECTED/);
+      if(process.env.SAM_PILOT_MAX_REQUESTS==="2"){
+        // Offline legacy case: second reservation, unknown outcome, no HTTP.
+        const failed=createSyntheticPilotBundle(async()=>{throw new Error("SYNTHETIC_TRANSPORT_INTERRUPTED");});
+        const {proposePlan}=await import("../../apps/brain/src/planner");
+        await assert.rejects(()=>proposePlan({gateway:failed.plannerGateway!(),goalId:id,
+          objective:JSON.stringify(objective),
+          context:{entityType:"legal_entity",entityId:process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID,facts:[],memory:[]},
+          dataClassification:"PUBLIC",maxCostUsd:0.25}),/PILOT_MODEL_ATTEMPT_REJECTED/);
+      }
       console.log(JSON.stringify({phase:"COMPLETED",negativeCases:negative}));
     }else if(mode==="budget"){
       const {proposePlan}=await import("../../apps/brain/src/planner");
       await assert.rejects(()=>proposePlan({gateway:bundle.raw.plannerGateway!(),
-        goalId:process.env.SAM_TEST_GOAL_ID!,objective:JSON.stringify({synthetic:true,operation:"sum",values:[7,-4,19]}),
+        goalId:process.env.SAM_TEST_GOAL_ID!,objective:JSON.stringify(objective),
         context:{entityType:"legal_entity",entityId:process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID,facts:[],memory:[]},
         dataClassification:"PUBLIC",maxCostUsd:0.25}),/PILOT_RUN_BUDGET_EXHAUSTED/);
       console.log(JSON.stringify({phase:"BUDGET_RESTART_REFUSED"}));
@@ -114,6 +130,13 @@ async function child(){
 }
 
 async function parent(){
+  if(process.argv[2]&&!["--approved-live-once","--one-shot-offline"].includes(process.argv[2]))
+    throw new Error("TEST_APPROVAL_FLAG_INVALID");
+  if(live){
+    if(existsSync(liveClaimFile))throw new Error("ONE_SHOT_ALREADY_CONSUMED");
+    assertPriceReview();
+    if(!process.env.DEEPSEEK_API_KEY?.trim())throw new Error("LIVE_CREDENTIAL_MISSING");
+  }
   const base=dev.developmentEnvironment();
   const raw=new URL(base.DATABASE_URL);
   if(raw.hostname!=="helium"||raw.pathname!=="/heliumdb"||
@@ -128,9 +151,10 @@ async function parent(){
   let schemaCreated=false,roleCreated=false,modelCalls=0,processKilled=false;
   let modelServer:ReturnType<typeof createServer>|undefined;
   const active=new Set<ReturnType<typeof spawn>>();
-  const report:any={classification:"REAL_DEVELOPMENT_POSTGRES_LOCAL_MOCK_MODEL_NOT_NEON_NOT_PUBLISHED",
+  const report:any={classification:live?"REAL_DEVELOPMENT_POSTGRES_ONE_SHOT_DEEPSEEK_NOT_NEON_NOT_PUBLISHED":
+    "REAL_DEVELOPMENT_POSTGRES_LOCAL_MOCK_MODEL_NOT_NEON_NOT_PUBLISHED",
     status:"BLOCKED",sourceSha:require("node:child_process").execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),
-    realProviderCalls:0,paidModelCostUsd:0,productionEnvelopeTls:"BLOCKED_NOT_VERIFY_FULL",
+    realProviderCalls:0,paidModelCostUsd:live?null:0,productionEnvelopeTls:"BLOCKED_NOT_VERIFY_FULL",
     gates:{},cleanup:{schema:false,role:false}};
   const launch=(env:Record<string,string>,mode:string)=>{
     const p=spawn(process.execPath,["--import","tsx","tests/release/synthetic_pilot_postgres.ts","--child",mode],{
@@ -203,7 +227,8 @@ async function parent(){
     }
     await admin.query(`GRANT UPDATE(tokens,success,verification_result) ON model_calls TO ${role}`);
     await admin.query(`INSERT INTO model_providers(provider_id,models,capabilities,privacy_class_allowed,health,cost_per_1k_input,cost_per_1k_output)
-      VALUES('deepseek','["deepseek-flash"]','["planning"]','["PUBLIC"]','HEALTHY',0.001,0.002)`);
+      VALUES('deepseek','["deepseek-flash"]','["planning"]','["PUBLIC"]','HEALTHY',$1,$2)`,
+      oneShot?[oneShotPrice.input,oneShotPrice.output]:[0.001,0.002]);
     for(const capability of ["local.calculate","local.statistics"])
       await admin.query(`INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template,must_not_trust_execution_result)
         VALUES($1,'Synthetic independent SQL aggregate','db_query','{"resultHash":"string","sqlReadback":"boolean"}','{"local":true,"independent":true}',true)`,[capability]);
@@ -241,17 +266,28 @@ async function parent(){
       SAM_RELEASE_CAPABILITIES:"local.calculate,local.statistics",DEEPSEEK_API_KEY:"synthetic-mock-not-a-provider-key",
       SAM_PILOT_RUN_ID:run,SAM_PILOT_EXPIRES_AT:new Date(Date.now()+600000).toISOString(),
       SAM_PILOT_PRICE_REVIEWED_AT:new Date().toISOString(),SAM_PILOT_INPUT_USD_PER_1K:"0.001",SAM_PILOT_OUTPUT_USD_PER_1K:"0.002",
-      SAM_PILOT_MAX_REQUESTS:"2",SAM_PILOT_MAX_COST_USD:"0.25",
+      SAM_PILOT_MAX_REQUESTS:oneShot?"1":"2",SAM_PILOT_MAX_COST_USD:oneShot?"0.01":"0.25",
       SAM_RELEASE_ORG_ID:org,SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,
       SAM_COMMAND_CENTER_ALLOWED_HOSTS:"127.0.0.1",SAM_TEST_OTHER_ORG:otherOrg,
       SAM_TEST_OTHER_ENTITY:otherEntity,SAM_TEST_SIBLING_ENTITY:sibling,
       SAM_TEST_MODEL_PORT:String((modelServer.address() as any).port)});
+    if(oneShot){
+      childEnv.SAM_PILOT_INPUT_USD_PER_1K=String(oneShotPrice.input);
+      childEnv.SAM_PILOT_OUTPUT_USD_PER_1K=String(oneShotPrice.output);
+    }
+    childEnv.SAM_TEST_OBJECTIVE=JSON.stringify(oneShot?oneShotObjective:
+      {synthetic:true,operation:"sum",values:[7,-4,19]});
+    if(live){
+      childEnv.SAM_TEST_LIVE_PLAN="1";
+      childEnv.DEEPSEEK_API_KEY=process.env.DEEPSEEK_API_KEY!;
+    }
     stage="authenticated_intake_and_persisted_planning";
     const first=launch(childEnv,"plan");
     let text="",diagnostic="";
     first.stdout!.on("data",part=>text+=part.toString());
     first.stderr!.on("data",part=>diagnostic+=part.toString());
     for(let n=0;n<300&&!text.includes("PLAN_COMMITTED")&&first.exitCode===null;n++)await wait(50);
+    if(text.includes("RESTRICTED_DATABASE_READY"))report.gates.realRestrictedLogin="PASS";
     if(!text.includes("PLAN_COMMITTED")){
       if(diagnostic.includes("INTAKE_BUSINESS_ID_RLS"))throw new Error("INTAKE_BUSINESS_ID_RLS");
       throw new Error("TEST_PLANNING_BLOCKED");
@@ -260,6 +296,8 @@ async function parent(){
     const exited=new Promise(resolve=>first.once("exit",resolve));first.kill("SIGKILL");await exited;processKilled=true;
     report.gates.authenticatedIntake="PASS";report.gates.persistedPlan="PASS";report.gates.killAfterPlanCommit="PASS";
     stage="worker_restart_act_verify";
+    delete childEnv.SAM_TEST_LIVE_PLAN;
+    childEnv.DEEPSEEK_API_KEY="synthetic-mock-not-a-provider-key";
     childEnv.SAM_TEST_GOAL_ID=goalId;
     const completed=await waitChild(launch(childEnv,"act"));
     assert(completed.includes("COMPLETED"));
@@ -282,7 +320,8 @@ async function parent(){
     assert.equal(counts.goal_state,"COMPLETED");assert.equal(counts.plans,1);assert.equal(counts.executions,1);
     assert.equal(counts.verifications,1);assert.equal(counts.independent_hash_bound_verifications,1);
     assert(counts.audits>0&&counts.verification_receipts>0);
-    assert.equal(counts.model_reservations,2);assert.equal(counts.validated_model_proposals,1);assert.equal(modelCalls,1);
+    assert.equal(counts.model_reservations,oneShot?1:2);assert.equal(counts.validated_model_proposals,1);
+    assert.equal(modelCalls,live?0:1);
     report.counts=counts;report.mockHttpCalls=modelCalls;report.processKilled=processKilled;
     report.gates.realRestrictedLogin="PASS";report.gates.realRlsNegativeChecks="PASS";
     report.gates.workerExecution="PASS";report.gates.independentPgVerification="PASS";
@@ -303,6 +342,39 @@ async function parent(){
     modelServer?.closeAllConnections();
     if(modelServer)await new Promise<void>(resolve=>modelServer!.close(()=>resolve()));
     report.capturedAt=new Date().toISOString();
+    if(live&&existsSync(liveClaimFile)){
+      try{
+        const evidence=JSON.parse(readFileSync(liveClaimFile,"utf8"));
+        report.liveEvidence=evidence;
+        report.realProviderRequestsAttempted=evidence.requestsAttempted;
+        report.realProviderCalls=evidence.responseReceived?1:null;
+        report.estimatedPeakCacheMissCostUsd=evidence.estimatedPeakCacheMissCostUsd??null;
+      }catch{
+        report.liveEvidence="INCOMPLETE_CLAIM_STILL_CONSUMED";
+        report.realProviderRequestsAttempted=1;report.realProviderCalls=null;
+      }
+    }
+    if(schemaCreated){
+      try{
+        report.modelLedger=(await admin.query(`SELECT tokens,success,cost AS reserved_cost_usd,
+          verification_result FROM ${schema}.model_calls ORDER BY created_at`)).rows.map((row:any)=>({
+            tokens:row.tokens,success:row.success,reservedCostUsd:row.reserved_cost_usd,
+            diagnostic:JSON.parse(row.verification_result)}));
+      }catch{report.modelLedgerUnavailable=true;}
+      if(!report.counts){
+        try{
+          const row=(await admin.query(`SELECT g.state AS goal_state,
+            (SELECT count(*)::int FROM ${schema}.plans WHERE goal_id=g.id) AS plans,
+            (SELECT count(*)::int FROM ${schema}.work_queue WHERE goal_id=g.id) AS delegated,
+            (SELECT count(*)::int FROM ${schema}.executions WHERE goal_id=g.id) AS executions,
+            (SELECT count(*)::int FROM ${schema}.verifications v JOIN ${schema}.executions e
+              ON e.id=v.execution_id WHERE e.goal_id=g.id) AS verifications,
+            (SELECT count(*)::int FROM ${schema}.audit_log WHERE goal_id=g.id) AS audits
+            FROM ${schema}.goals g WHERE g.company_scope=$1 LIMIT 1`,[entity])).rows[0];
+          if(row){report.counts=row;report.gates.authenticatedIntake="PASS";}
+        }catch{report.partialCountsUnavailable=true;}
+      }
+    }
     writeFileSync(output,JSON.stringify(report,null,2));
     try{
       if(schemaCreated){
