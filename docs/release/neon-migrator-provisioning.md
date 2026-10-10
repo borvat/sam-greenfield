@@ -151,13 +151,29 @@ but does not guarantee that internal/provider audit hooks never see it.
 
 Before transmitting the password, read-only pg_settings checks require bind
 parameter logging/error parameters disabled, ordinary/duration/parse logging
-disabled, and reject known active pgAudit/auto_explain logging. Missing/mismatched
-settings yield SERVER_LOGGING_REVIEW_REQUIRED. The helper never changes logging,
+disabled, `log_min_error_statement=panic`, `log_error_verbosity=terse`, and reject
+known active pgAudit/auto_explain logging. Missing, null, unreadable, duplicate
+or mismatched settings yield SERVER_LOGGING_REVIEW_REQUIRED before creating the
+password function or invoking it. The helper never changes logging,
 grants SET privileges, disables audit, or escalates to bypass this guard.
 Neon may not permit the owner to configure these settings: if so, this path
 remains BLOCKED. Settings observed in one session do not prove control over
 provider/internal/proxy/third-party logging or subsequent configuration changes.
 Owner review of provider logging, retention and access is still mandatory.
+
+PostgreSQL 18 documents PANIC as effectively disabling ordinary failing-statement
+logging and TERSE as excluding DETAIL, HINT, QUERY and CONTEXT from error logs.
+These are deliberately restrictive admission criteria, not guarantees: PANIC
+events, message text itself, auditing hooks, telemetry and provider internals
+can still expose sensitive information. The PostgreSQL defaults ERROR/DEFAULT
+are refused. Do not change settings merely to bypass the guard.
+
+Neon's current HIPAA security documentation explicitly warns that pgAudit can
+record plaintext role passwords. Its Console/API field redaction is a separate
+audit surface and does not prove SQL/internal log redaction. HIPAA/Scale settings
+are not evidence of this Free project's configuration. The monitor-logs page's
+three-day retention applies to Functions/Object Storage, not database/internal
+credential logs.
 
 No password/connection string is printed for copying or written to disk.
 The migrator authentication uses the supplied password in memory. Future
@@ -242,3 +258,41 @@ The base source commit was `801b283726fb3a25092ecd49c84f09bea9a682f5`.
 
 The standard credential-dependent full regression runner was deliberately not
 used. Final test counts are in the accompanying task report.
+
+## Error-logging guard follow-up evidence and next owner action
+
+On source base `e4e79bb78e36df3510eda6ac8f6098704e7a4e09`, 27 helper/isolation/
+private PostgreSQL tests passed. New coverage rejects every ordinary error
+severity, DEFAULT/VERBOSE verbosity, absent/null/malformed/duplicate values and
+setting-query failures without emitting raw error content or executing the
+password function. No provider settings are changed.
+
+The private PostgreSQL 16.10 fixture reads real pg_settings, refuses defaults,
+admits PANIC/TERSE, and demonstrates actual server logs: ERROR/VERBOSE exposes
+harmless synthetic SQL/detail/hint/context probes; PANIC/TERSE omits those fields
+but STILL emits the error message. Only this disposable fixture changes
+transaction-local settings; its logs are not printed and are deleted at cleanup.
+This is not PG18/Neon acceptance and not a proof of zero internal logging.
+
+The next owner action is a metadata-only SELECT in the already authenticated
+Neon SQL Editor, with no passwords or ALTER/SET:
+
+```sql
+SELECT name, setting, context
+FROM pg_settings
+WHERE name = ANY (ARRAY[
+  'log_parameter_max_length', 'log_parameter_max_length_on_error',
+  'log_statement', 'log_min_duration_statement', 'log_min_duration_sample',
+  'debug_print_parse', 'debug_print_rewritten', 'debug_print_plan',
+  'log_min_error_statement', 'log_error_verbosity',
+  'pgaudit.log', 'pgaudit.log_parameter', 'auto_explain.log_min_duration'
+]::text[])
+ORDER BY name;
+```
+
+Share only these non-credential rows. Missing required rows/null values remain
+blocked. Do not reset a password, grant privileges, disable audit, invoke --apply
+or input real credentials. Separately establish provider log handling/retention;
+observed SQL settings alone cannot close that risk.
+
+Additional source: [Neon HIPAA security and audit logging](https://neon.com/docs/security/hipaa).

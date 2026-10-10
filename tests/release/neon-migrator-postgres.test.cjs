@@ -4,13 +4,13 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { spawnSync, spawn } = require("node:child_process");
-const { mkdtempSync, rmSync } = require("node:fs");
+const { mkdtempSync, rmSync, readFileSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const net = require("node:net");
 const { once } = require("node:events");
 const { Client } = require("pg");
-const { PASSWORD_FUNCTION_SQL, disable } = require("../../scripts/provisioning/neon-migrator.cjs");
+const { PASSWORD_FUNCTION_SQL, disable, LOGGING_POLICY, loggingPreflight } = require("../../scripts/provisioning/neon-migrator.cjs");
 
 function tool(name, args) {
   const result = spawnSync(name, args, {
@@ -53,6 +53,64 @@ test("real local PostgreSQL quotes adversarial passwords and preserves restricte
       JOIN pg_roles r ON r.oid=m.roleid JOIN pg_roles u ON u.oid=m.member
       WHERE r.rolname=$1 AND u.rolname=current_user`, ["sam_pilot_migrator"])).rows;
     assert.equal(membership[0]?.admin_option, true);
+    // Actual pg_settings and server logging in this private PG16 fixture.
+    // No production/provider settings are changed. Changes are transaction-local.
+    const rejectedLogging = error => error.safeCode === "SERVER_LOGGING_REVIEW_REQUIRED";
+    await assert.rejects(() => loggingPreflight(root), rejectedLogging);
+    await root.query("BEGIN");
+    for (const [name, setting] of Object.entries(LOGGING_POLICY))
+      await root.query("SELECT set_config($1,$2,true)", [name, setting]);
+    await loggingPreflight(root);
+    for (const [name, value] of [["log_min_error_statement", "error"],
+      ["log_error_verbosity", "default"], ["log_error_verbosity", "verbose"]]) {
+      await root.query("SELECT set_config($1,$2,true)", [name, value]);
+      await assert.rejects(() => loggingPreflight(root), rejectedLogging);
+      await root.query("SELECT set_config($1,$2,true)", [name, LOGGING_POLICY[name]]);
+    }
+    await root.query("ROLLBACK");
+    assert.equal((await root.query("SELECT rolcanlogin FROM pg_roles WHERE rolname=$1",
+      ["sam_pilot_migrator"])).rows[0].rolcanlogin, false);
+
+    // Harmless synthetic error probes—not passwords—show the logging distinction.
+    // Log content is only inspected in memory and never printed or retained.
+    const logPath = join(dir, "postgres.log");
+    const probes = [
+      { safe: false, message: "SYNTHETIC_UNSAFE_ERROR",
+        queryMarker: "SYNTHETIC_UNSAFE_QUERY_MARKER",
+        detail: "SYNTHETIC_UNSAFE_DETAIL", hint: "SYNTHETIC_UNSAFE_HINT",
+        sql: `DO $$ BEGIN RAISE EXCEPTION USING MESSAGE='SYNTHETIC_UNSAFE_ERROR',
+          DETAIL='SYNTHETIC_UNSAFE_DETAIL',HINT='SYNTHETIC_UNSAFE_HINT'; END $$;
+          -- SYNTHETIC_UNSAFE_QUERY_MARKER` },
+      { safe: true, message: "SYNTHETIC_SAFE_ERROR",
+        queryMarker: "SYNTHETIC_SAFE_QUERY_MARKER",
+        detail: "SYNTHETIC_SAFE_DETAIL", hint: "SYNTHETIC_SAFE_HINT",
+        sql: `DO $$ BEGIN RAISE EXCEPTION USING MESSAGE='SYNTHETIC_SAFE_ERROR',
+          DETAIL='SYNTHETIC_SAFE_DETAIL',HINT='SYNTHETIC_SAFE_HINT'; END $$;
+          -- SYNTHETIC_SAFE_QUERY_MARKER` }
+    ];
+    for (const probe of probes) {
+      await root.query("BEGIN");
+      for (const [name, value] of Object.entries(LOGGING_POLICY))
+        await root.query("SELECT set_config($1,$2,true)", [name, value]);
+      if (!probe.safe) {
+        await root.query("SELECT set_config($1,$2,true)", ["log_min_error_statement", "error"]);
+        await root.query("SELECT set_config($1,$2,true)", ["log_error_verbosity", "verbose"]);
+        await assert.rejects(() => loggingPreflight(root), rejectedLogging);
+      } else await loggingPreflight(root);
+      const offset = readFileSync(logPath).length;
+      await assert.rejects(() => root.query(probe.sql), error => error.code === "P0001");
+      await root.query("ROLLBACK");
+      let segment = "";
+      for (let i = 0; i < 30; i++) {
+        segment = readFileSync(logPath).subarray(offset).toString("utf8");
+        if (segment.includes(probe.message)) break;
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      assert.equal(segment.includes(probe.message), true, "Synthetic error was not observed");
+      for (const marker of [probe.queryMarker, probe.detail, probe.hint])
+        assert.equal(segment.includes(marker), !probe.safe, "Local error logging contract failed");
+      assert.equal(segment.includes("CONTEXT:"), !probe.safe, "Local context logging contract failed");
+    }
     const payloads = [
       "synthetic-password-32-characters'); DROP ROLE sam_pilot_app; --",
       "synthetic-quote-'double\"-backslash\\-dollar$$-Unicode-\u03bb-password",

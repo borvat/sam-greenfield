@@ -71,6 +71,7 @@ function fixture(options = {}) {
           else if (sql.includes("count(*)::int AS active")) rows = [{ active: options.activeSessions ?? 0 }];
           else if (sql.includes("current_schema()")) rows = [{ schema: options.searchPath ?? "sam_pilot",
             read_only: options.readOnly ?? "on", idle_timeout: "15s", query_timeout: "5s" }];
+          if (sql.includes("FROM pg_settings")) options.changeLogging?.(rows);
           return { rows };
         }
       };
@@ -226,6 +227,48 @@ test("individual parameter/error/debug/audit logging risks fail before any passw
     const f = await execute({ extensionLogging: [{ name, setting }] });
     assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
   }
+});
+test("failing-statement/error-context settings reject every non-approved severity/verbosity", async () => {
+  const cases = [
+    ...["debug5", "debug4", "debug3", "debug2", "debug1", "info", "notice", "warning",
+      "error", "log", "fatal"].map(value => ({ log_min_error_statement: value })),
+    ...["default", "verbose", "unknown", "TERSE"].map(value => ({ log_error_verbosity: value }))
+  ];
+  for (const logOverrides of cases) {
+    const f = await execute({ logOverrides });
+    assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
+    assert.equal(f.result.recovery, "ROLLED_BACK");
+    assert.ok(!f.calls.some(call => call.sql === PASSWORD_FUNCTION_SQL ||
+      call.sql.includes("SELECT pg_temp.sam_set")));
+  }
+});
+test("missing, unreadable, malformed or ambiguous error settings fail closed without raw output", async () => {
+  for (const name of ["log_min_error_statement", "log_error_verbosity"]) {
+    for (const variant of ["missing", null, undefined, 0, password, "duplicate"]) {
+      const f = await execute({ changeLogging(rows) {
+        const index = rows.findIndex(row => row.name === name);
+        if (variant === "missing") rows.splice(index, 1);
+        else if (variant === "duplicate") rows.push({ ...rows[index] });
+        else rows[index].setting = variant;
+      } });
+      assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
+      assert.ok(!f.calls.some(call => call.sql === PASSWORD_FUNCTION_SQL));
+    }
+  }
+  const failedRead = await execute({ failSql: sql => sql.includes("FROM pg_settings") });
+  assert.equal(failedRead.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
+  assert.ok(!failedRead.calls.some(call => call.sql === PASSWORD_FUNCTION_SQL));
+});
+test("approved error settings are inspected read-only and never auto-configured", async () => {
+  assert.equal(LOGGING_POLICY.log_min_error_statement, "panic");
+  assert.equal(LOGGING_POLICY.log_error_verbosity, "terse");
+  const f = await execute();
+  assert.equal(f.result.status, "PASS");
+  const loggingCalls = f.calls.filter(call => call.sql.includes("FROM pg_settings"));
+  assert.equal(loggingCalls.length, 1);
+  assert.ok(loggingCalls[0].params[0].includes("log_min_error_statement"));
+  assert.ok(loggingCalls[0].params[0].includes("log_error_verbosity"));
+  assert.ok(!f.calls.some(call => /set_config|ALTER SYSTEM|SET(?: LOCAL)? log_/i.test(call.sql)));
 });
 test("uncertain COMMIT and failed compensation report remote state unknown", async () => {
   const f = await execute({ failSql: sql => sql === "COMMIT" || sql.startsWith("ALTER ROLE") });

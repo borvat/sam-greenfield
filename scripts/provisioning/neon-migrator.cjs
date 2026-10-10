@@ -139,8 +139,31 @@ const LOGGING_SQL = `SELECT name,setting FROM pg_settings WHERE name=ANY($1::tex
 const LOGGING_POLICY = {
   log_parameter_max_length: "0", log_parameter_max_length_on_error: "0",
   log_statement: "none", log_min_duration_statement: "-1", log_min_duration_sample: "-1",
-  debug_print_parse: "off", debug_print_rewritten: "off", debug_print_plan: "off"
+  debug_print_parse: "off", debug_print_rewritten: "off", debug_print_plan: "off",
+  // PG18: PANIC suppresses ordinary failing-statement logging; TERSE excludes
+  // DETAIL/HINT/QUERY/CONTEXT. Neither guarantees provider/internal redaction.
+  log_min_error_statement: "panic", log_error_verbosity: "terse"
 };
+async function loggingPreflight(client) {
+  try {
+    const rows = (await client.query(
+      LOGGING_SQL, [[...Object.keys(LOGGING_POLICY), "pgaudit.log", "pgaudit.log_parameter",
+        "auto_explain.log_min_duration"]]
+    )).rows;
+    if (!Array.isArray(rows) || new Set(rows.map(row => row.name)).size !== rows.length)
+      deny("SERVER_LOGGING_REVIEW_REQUIRED");
+    const logging = Object.fromEntries(rows.map(row => [row.name, row.setting]));
+    if (Object.entries(LOGGING_POLICY).some(([name, value]) => logging[name] !== value) ||
+        (logging["pgaudit.log"] !== undefined && !["", "none"].includes(logging["pgaudit.log"])) ||
+        (logging["pgaudit.log_parameter"] !== undefined && logging["pgaudit.log_parameter"] !== "off") ||
+        (logging["auto_explain.log_min_duration"] !== undefined && logging["auto_explain.log_min_duration"] !== "-1"))
+      deny("SERVER_LOGGING_REVIEW_REQUIRED");
+  } catch {
+    // Unreadable settings/permission failures are not permission to proceed.
+    // Never relay driver messages, which may contain SQL or credentials.
+    deny("SERVER_LOGGING_REVIEW_REQUIRED");
+  }
+}
 async function preflight(client) {
   await administrator(client);
   roles((await client.query(ROLES_SQL, [ROLE, APP, SCHEMA])).rows, false);
@@ -152,15 +175,7 @@ async function preflight(client) {
       extension[0].schema !== "public" || extension[0].owner !== OWNER ||
       extension[0].core_uuid !== true)
     deny("EXTENSION_PRECONDITIONS_DENIED");
-  const logging = Object.fromEntries((await client.query(
-    LOGGING_SQL, [[...Object.keys(LOGGING_POLICY), "pgaudit.log", "pgaudit.log_parameter",
-      "auto_explain.log_min_duration"]]
-  )).rows.map(row => [row.name, row.setting]));
-  if (Object.entries(LOGGING_POLICY).some(([name, value]) => logging[name] !== value) ||
-      (logging["pgaudit.log"] !== undefined && !["", "none"].includes(logging["pgaudit.log"])) ||
-      (logging["pgaudit.log_parameter"] !== undefined && logging["pgaudit.log_parameter"] !== "off") ||
-      (logging["auto_explain.log_min_duration"] !== undefined && logging["auto_explain.log_min_duration"] !== "-1"))
-    deny("SERVER_LOGGING_REVIEW_REQUIRED");
+  await loggingPreflight(client);
 }
 
 // SQL utility commands cannot use PASSWORD $1 directly. The password is bound
@@ -315,7 +330,7 @@ async function run(argv, dependencies = {}) {
   }
 }
 
-module.exports = { run, PASSWORD_FUNCTION_SQL, DISABLE_SQL, LOGGING_POLICY, argumentsFor, disable };
+module.exports = { run, PASSWORD_FUNCTION_SQL, DISABLE_SQL, LOGGING_POLICY, argumentsFor, disable, loggingPreflight };
 if (require.main === module) {
   const argv = process.argv.slice(2);
   const { isolatedInputs } = require("./neon-migrator-once.cjs");
