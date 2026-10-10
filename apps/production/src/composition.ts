@@ -7,16 +7,26 @@ import { planNextNewGoal } from "./planner";
 import { verifyNextExecution } from "./verifier";
 import { learnNextVerifiedExecution } from "./learning";
 import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
+import {withTransaction} from "../../../packages/db/src/client";
+import {pilotEnabled,authorizePilotGoal,assertPilotStep} from "./syntheticPilotScope";
 
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
   operationalTick?:()=>Promise<unknown>;
 }):RuntimeComposition{
-  const executors=createToolExecutors({
+  const ordinaryExecutors=createToolExecutors({
     catalog:input.bundle.catalog,
     tools:input.bundle.tools
   });
+  const executors=Object.fromEntries(Object.entries(ordinaryExecutors).map(([id,execute])=>[id,async(work:Parameters<typeof execute>[0])=>{
+    if(pilotEnabled()){
+      if(!work.goalId)throw new Error("PILOT_GOAL_SCOPE_DENIED");
+      const objective=await withTransaction(client=>authorizePilotGoal(client,work.goalId!));
+      assertPilotStep(objective,work.capabilityId,work.params);
+    }
+    return execute(work);
+  }]));
   const ttl=input.bundle.raw.workerLeaseTtlSeconds??60;
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);
 

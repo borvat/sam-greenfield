@@ -8,6 +8,7 @@ import { persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
 import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
+import {pilotEnabled,authorizePilotGoal} from "../../production/src/syntheticPilotScope";
 
 export async function runBrainReplanCycle(input: {
   gateway: ModelGateway;
@@ -20,6 +21,7 @@ export async function runBrainReplanCycle(input: {
   availableCapabilities?: unknown[];
 }) {
   const goal = await withTransaction(async (client) => {
+    if(pilotEnabled())await authorizePilotGoal(client,input.goalId);
     await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
       "SELECT id,objective,state,company_scope FROM goals WHERE id=$1",

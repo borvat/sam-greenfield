@@ -7,6 +7,7 @@ import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authori
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
 import { assembleContext } from "./contextAssembler";
+import {pilotEnabled,authorizePilotGoal} from "../../production/src/syntheticPilotScope";
 
 export async function runBrainPlanningCycle(input: {
   gateway: ModelGateway;
@@ -18,6 +19,7 @@ export async function runBrainPlanningCycle(input: {
   availableCapabilities?: unknown[];
 }) {
   const goal = await withTransaction(async (client) => {
+    if(pilotEnabled())await authorizePilotGoal(client,input.goalId);
     await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
       "SELECT id,objective,state,company_scope,replan_reason FROM goals WHERE id=$1",

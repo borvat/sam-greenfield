@@ -1,6 +1,7 @@
 const path=require("node:path");
 const {isIP}=require("node:net");
 const root=path.resolve(__dirname,"../..");
+const {syntheticPilot,bundlePath}=require("./synthetic-pilot.cjs");
 const required=[
   "DATABASE_URL","SAM_DB_APP_ROLE","SAM_DB_SCHEMA","SAM_RELEASE_ORG_ID",
   "SAM_COMMAND_CENTER_LEGAL_ENTITY_ID","SAM_COMMAND_CENTER_BEARER_TOKEN",
@@ -70,6 +71,8 @@ function validateRelease(env){
   const capabilities=env.SAM_RELEASE_CAPABILITIES.split(",").map(x=>x.trim());
   if(capabilities.some(c=>!c||!/^[a-zA-Z0-9_.-]{1,80}$/.test(c)||
     /finance|legal|gmail_send|drive_(create|update|delete|write)/i.test(c)))fail("RELEASE_CAPABILITY_FORBIDDEN");
+  const pilot=syntheticPilot(env);
+  if(!pilot&&bundle===path.join(root,bundlePath))fail("RELEASE_SYNTHETIC_PILOT_CONFIGURATION_REQUIRED");
   if(env.SAM_RELEASE_ENABLE_MCP==="1"){
     // An authenticated read-only surface is optional; no write dispatcher is forwarded.
     if(!env.SAM_MCP_BEARER_TOKEN||env.SAM_MCP_BEARER_TOKEN.length<32||
@@ -116,6 +119,14 @@ function childEnvironment(env,config,service){
       SAM_TICK_INTERVAL_MS:"1000"
     });
     // No provider/OAuth keys: the default release envelope has no such consent.
+    if(syntheticPilot(env)){
+      for(const key of ["SAM_RELEASE_SYNTHETIC_PLANNER","SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED",
+        "SAM_PILOT_RUN_ID","SAM_PILOT_EXPIRES_AT","SAM_PILOT_PRICE_REVIEWED_AT",
+        "SAM_PILOT_INPUT_USD_PER_1K","SAM_PILOT_OUTPUT_USD_PER_1K",
+        "SAM_PILOT_MAX_REQUESTS","SAM_PILOT_MAX_COST_USD","SAM_RELEASE_ORG_ID",
+        "SAM_DATABASE_TARGET","SAM_RELEASE_APPROVED","SAM_PRODUCTION_BUNDLE_MODULE",
+        "DEEPSEEK_API_KEY"])child[key]=env[key];
+    }
   }else if(service==="command-center"){
     child.SAM_COMMAND_CENTER_BEARER_TOKEN=env.SAM_COMMAND_CENTER_BEARER_TOKEN;
   }else if(service==="mcp"){

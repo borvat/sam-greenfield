@@ -34,3 +34,13 @@ authorizing local-only hardening.
 **How to apply:** A later execution decision must address provider audit policy,
 the bounded crash window/session cleanup, and credential isolation—not just
 the presence of a password or a passing local test.
+
+Prioritize the fastest practical safe synthetic-only SAM pilot over further
+custom credential-bootstrap tools or repeated owner SQL experiments.
+
+**Why:** The owner explicitly redirected the project after the Neon password
+bootstrap path became blocked.
+
+**How to apply:** Reuse the existing agent, migration runner and release kernel.
+Prepare bounded synthetic planning locally; external credentials, role changes,
+live model spending and Publish still require separate explicit decisions.
