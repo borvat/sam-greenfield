@@ -12,3 +12,14 @@ explicitly excluding Neon account/database provisioning and paid resources.
 
 **How to apply:** Before external database setup, obtain a separate scoped owner
 decision; do not infer approval from successful local tests or a preferred vendor.
+
+The owner has since reported manually creating the isolated Neon pilot and
+approved implementing/testing a standalone credential helper locally only.
+That approval does not permit reading/requesting real secrets, connecting to
+Neon, enabling remote LOGIN, or running remote migrations.
+
+**Why:** The owner explicitly separated local helper preparation from external
+credential provisioning and authentication.
+
+**How to apply:** Obtain a new scoped decision before applying the helper,
+including the approved endpoint and provider-side credential-audit risk.
