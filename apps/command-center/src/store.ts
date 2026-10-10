@@ -106,7 +106,8 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput)
     const exists=await client.query("SELECT id,org_id FROM legal_entities WHERE id=$1 AND status='ACTIVE'",[legalEntityId]);
     if(exists.rowCount!==1) throw new Error("configured legal entity is not active");
 
-    const next=await client.query("SELECT next_business_id('goal',$1::uuid) AS business_id",[autonomyEnabled()?exists.rows[0].org_id:null]);
+    const scopedId=autonomyEnabled()||process.env.SAM_RELEASE_SYNTHETIC_PLANNER==="1";
+    const next=await client.query("SELECT next_business_id('goal',$1::uuid) AS business_id",[scopedId?exists.rows[0].org_id:null]);
     const inserted=await client.query(`INSERT INTO goals
       (business_id,company_scope,domain,objective,state,priority,authority_ceiling,completion_definition)
       VALUES($1,$2,$3,$4,'NEW',$5,$6,$7)

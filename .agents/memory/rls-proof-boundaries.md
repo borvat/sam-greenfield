@@ -19,3 +19,13 @@ policy. A real non-bypass LOGIN negative test exposed the OR combination.
 **How to apply:** Review policy combination semantics, test missing/foreign
 contexts using the restored application role, and separately deny queue/outbox
 access. Do not infer quarantine from a policy's presence or administrative tests.
+
+Treat identifier allocation as part of tenant enforcement, and exercise
+ordinary authenticated intake under the same restricted principal as execution.
+
+**Why:** Planner-only mocks missed an intake request for a global identifier
+sequence; the real restricted LOGIN correctly refused it before any model call.
+
+**How to apply:** Include intake in real-database acceptance. Scope allocations
+to the already validated entity rather than granting access to global sequences
+to make a pilot pass.
