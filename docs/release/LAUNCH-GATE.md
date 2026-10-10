@@ -1,6 +1,9 @@
 # SAM Greenfield — one launch decision gate
 
 **PASS_LOCAL_PREPARATION / BLOCKED_PUBLISH_AND_UNKNOWN_SPEND.**
+Local Setup Mode is now implemented and tested; see `SETUP-MODE.md` and
+`setup-evidence.json`. The template leaves it OFF. It does not remove this gate
+or grant Publish/production activation.
 No Publish, paid resource, production DDL, grant to an existing service, company connection or model
 request was performed. The platform reports no active deployment and no service
 URL. `launch-evidence.json` contains the current observations.

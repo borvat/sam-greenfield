@@ -2,6 +2,10 @@
 
 ## القرار
 
+**Setup Mode المحلي:** `SETUP-MODE.md` و`setup-evidence.json`.
+31 مجموعة regression ناجحة؛ وضع التهيئة لا يبدأ العامل أو DB أو أي أعمال،
+ويعرض liveness فقط مع readiness=503. لا Publish أو قاعدة production أو سقف فوترة مثبت.
+
 **آخر تحضير إطلاق:** `LAUNCH-GATE.md` و`launch-evidence.json`.
 إعداد Reserved VM محفوظ دون Publish، وbundle حساب محلي إنتاجي جاهز.
 30 مجموعة regression ناجحة؛ SAST خام 40 Critical مع توثيق مراجعة المواضع المتغيرة.

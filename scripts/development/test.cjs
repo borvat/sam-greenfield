@@ -36,6 +36,7 @@ const suites = [
   ,"tests/development/fault_matrix.ts"
   ,"tests/release/prelaunch.ts"
   ,"tests/release/local_bundle.ts"
+  ,"tests/release/setup.ts"
 ];
 
 async function main() {

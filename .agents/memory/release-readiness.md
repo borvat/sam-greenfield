@@ -69,3 +69,15 @@ production workload and database billing effects.
 **How to apply:** Identify included processes, quota and excluded PostgreSQL
 memory; separate observed metrics, arithmetic sizing bounds and a future
 quota/load acceptance test. Database polling can defeat idle-based cost estimates.
+
+Separate provisioning liveness from executive readiness. A setup status page must
+not load business runtime or be treated as production/goal acceptance.
+
+**Why:** Replit provisions managed production databases during Publish, while
+the normal SAM runtime cannot safely start before restricted identity and RLS
+are proven. A status-only bootstrap resolves startup ordering without bypassing
+executive guards; it does not resolve the owner's total hosting-budget gate.
+
+**How to apply:** Never enable a worker, DB reader or business API merely to pass
+publishing health. Keep activation independently approved, report readiness
+blocked, and do not equate process shutdown with stopping platform billing.

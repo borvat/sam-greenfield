@@ -1,8 +1,21 @@
 const path=require("node:path");
-const {validateRelease,childEnvironment}=require("./contract.cjs");
-const {startSupervisor}=require("./supervisor.cjs");
-const {servicePorts}=require("./ports.cjs");
+const {setupModeEnabled,validateSetup,startSetup}=require("./setup.cjs");
 async function main(){
+  if(setupModeEnabled(process.env)){
+    const config=validateSetup(process.env);
+    if(process.argv.includes("--validate-only")){
+      console.log("RELEASE_SETUP_CONTRACT PASS; executive activation remains blocked.");
+      return;
+    }
+    const setup=startSetup(config);await setup.ready;
+    console.log("RELEASE_SETUP_LISTENING; executive disabled; billing cap not enforced.");
+    const stop=async()=>{await setup.stop();process.exit(0);};
+    process.once("SIGTERM",()=>void stop());process.once("SIGINT",()=>void stop());
+    return;
+  }
+  const {validateRelease,childEnvironment}=require("./contract.cjs");
+  const {startSupervisor}=require("./supervisor.cjs");
+  const {servicePorts}=require("./ports.cjs");
   const config=validateRelease(process.env);
   if(process.argv.includes("--validate-only")){
     console.log("RELEASE_CONFIG_CONTRACT PASS; no connection, service, migration or publish performed.");
