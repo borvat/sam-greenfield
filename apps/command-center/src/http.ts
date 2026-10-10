@@ -43,8 +43,23 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
                 autonomyEnabled()?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled.":
                 "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
           : commandCenterHtml;
-        const scopedHtml=autonomyEnabled()?html.replace('<input id="domain" value="owner_command"','<input id="domain" value="development_probe" readonly')
+        const syntheticRelease=process.env.SAM_RELEASE_SYNTHETIC_PLANNER==="1";
+        let scopedHtml=autonomyEnabled()||syntheticRelease?html.replace('<input id="domain" value="owner_command"',
+          `<input id="domain" value="${syntheticRelease?"release_synthetic":"development_probe"}" readonly`)
           .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>'):html;
+        if(syntheticRelease){
+          scopedHtml=scopedHtml
+            .replace("Owner view of goals, execution, verification and finance.",
+              "Synthetic pilot: bounded planning, local tools and independent verification. Finance and external operations disabled.")
+            .replace("Example: Review current bol sales and accounting differences and produce a verified owner brief.",
+              '{"synthetic":true,"operation":"max","values":[2,8,5]}'.replaceAll('"',"&quot;"))
+            .replace("Optional owner acceptance contract (JSON; required by release profile)",
+              "Required owner acceptance contract (JSON; verified independently)")
+            .replace('id="acceptance" placeholder=', 'id="acceptance" required placeholder=')
+            .replace("Number(value||0)",'(value==null?"DISABLED":Number(value||0))')
+            .replace('"LIVE"','"SYNTHETIC PILOT · CONNECTED"')
+            .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
+        }
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }

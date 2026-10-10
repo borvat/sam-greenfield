@@ -20,7 +20,12 @@ function validateRelease(env){
     fail("RELEASE_DEVELOPMENT_ENV_FORBIDDEN");
   }
   if(env.SAM_DATABASE_TARGET!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
-  for(const k of required)if(!env[k]?.trim())fail("RELEASE_MISSING_"+k);
+  for(const k of required){
+    // A dedicated application URI must not require provisioning a second,
+    // managed database merely to satisfy an unused variable.
+    if(k==="DATABASE_URL"&&env.SAM_RELEASE_DATABASE_URL!==undefined)continue;
+    if(!env[k]?.trim())fail("RELEASE_MISSING_"+k);
+  }
   // Replit manages DATABASE_URL. An independently provisioned application LOGIN
   // uses a separate secret, never a SET ROLE disguise or a managed-key overwrite.
   // Absence preserves existing external deployment contracts; explicit empty
@@ -111,6 +116,11 @@ function childEnvironment(env,config,service){
     SAM_RUNTIME_HOST:"127.0.0.1",PORT:String(config.workerPort),
     SAM_RUNTIME_STATUS_BEARER_TOKEN:env.SAM_COMMAND_CENTER_BEARER_TOKEN
   });
+  if(service==="command-center"&&syntheticPilot(env)){
+    // Intake and read views need the validated scope marker, not provider keys
+    // or the worker's model-call authorization.
+    child.SAM_RELEASE_SYNTHETIC_PLANNER="1";
+  }
   if(service==="worker"){
     Object.assign(child,{
       SAM_COMPOSITION_MODULE:path.join(config.root,"apps/runtime/src/releaseCompositionModule.ts"),

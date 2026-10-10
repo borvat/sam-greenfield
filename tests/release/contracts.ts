@@ -40,6 +40,11 @@ async function main(){
     SAM_RELEASE_DATABASE_URL:env.DATABASE_URL});
   assert.equal(new URL(appOverride.databaseUrl).username,"sam_app");
   assert.equal(new URL(appOverride.databaseUrl).hostname,"database.invalid");
+  const externalOnly=validateRelease({...env,DATABASE_URL:undefined,SAM_RELEASE_DATABASE_URL:env.DATABASE_URL});
+  assert.equal(new URL(externalOnly.databaseUrl).username,"sam_app");
+  assert.equal(childEnvironment(env,externalOnly,"worker").DATABASE_URL,externalOnly.databaseUrl);
+  assert.throws(()=>validateRelease({...env,DATABASE_URL:undefined}),/RELEASE_MISSING_DATABASE_URL/);
+  assert.throws(()=>validateRelease({...env,DATABASE_URL:undefined,SAM_RELEASE_DATABASE_URL:""}));
   for(const bad of ["","not-a-url","postgresql://postgres@database.invalid/release?sslmode=verify-full",
     "postgresql://sam_app@database.invalid/release"]){
     assert.throws(()=>validateRelease({...env,SAM_RELEASE_DATABASE_URL:bad}));
