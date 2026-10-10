@@ -37,17 +37,25 @@ const suites = [
   ,"tests/release/prelaunch.ts"
   ,"tests/release/local_bundle.ts"
   ,"tests/release/setup.ts"
+  ,"tests/release/postgres_tls.ts"
+  ,"tests/development/postgres_compatibility.ts"
 ];
 
 async function main() {
-  const requested = process.argv[2];
+  const requested = process.argv.slice(2).find(x=>!x.startsWith("--"));
+  if(process.argv.slice(2).some(x=>x.startsWith("--")&&x!=="--isolated-services"))
+    throw new Error("Unknown regression option.");
   if (requested && !suites.includes(requested)) throw new Error("Unknown regression suite.");
   const selected = requested ? suites.filter(suite => suite === requested) : suites;
   const admin = databaseClient(developmentEnvironment());
   await admin.connect();
   let passed = 0;
+  let integration;
   try {
     await assertDevelopmentIdentity(admin);
+    if(process.argv.includes("--isolated-services")){
+      integration=await require("../../tests/release/regression_services.cjs").startRegressionServices(admin);
+    }
     for (let index = 0; index < selected.length; index++) {
       const schema = `sam_replit_test_${Date.now()}${index}`;
       // CREATE without IF NOT EXISTS ensures we only clean up a schema created by this run.
@@ -111,6 +119,7 @@ async function main() {
     }
     throw error;
   } finally {
+    await integration?.stop();
     await admin.end();
   }
 }

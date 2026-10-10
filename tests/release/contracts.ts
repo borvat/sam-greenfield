@@ -25,6 +25,16 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  for(const suffix of ["?sslmode=require","?sslmode=no-verify","?sslmode=verify-ca",
+    "?sslmode=verify-full&sslmode=no-verify","?sslmode=verify-full&ssl=false",
+    "?sslmode=verify-full&user=postgres","?sslmode=verify-full&host=other.invalid"]){
+    assert.throws(()=>validateRelease({...env,DATABASE_URL:"postgresql://sam_app@database.invalid/release"+suffix}));
+  }
+  assert.throws(()=>validateRelease({...env,NODE_TLS_REJECT_UNAUTHORIZED:"0"}));
+  assert.throws(()=>validateRelease({...env,DATABASE_URL:"postgresql://sam_app@127.0.0.1/release?sslmode=verify-full"}),/RELEASE_DATABASE_TLS_DNS_HOST_REQUIRED/);
+  for(const mode of ["transaction","session","unknown"])
+    assert.throws(()=>validateRelease({...env,SAM_DB_CONNECTION_MODE:mode}),/RELEASE_DATABASE_POOLING_FORBIDDEN/);
+  assert.equal(new URL(validateRelease({...env,SAM_DB_CONNECTION_MODE:"direct"}).databaseUrl).hostname,"database.invalid");
   const appOverride=validateRelease({...env,
     DATABASE_URL:"postgresql://postgres@managed.invalid/managed?sslmode=verify-full",
     SAM_RELEASE_DATABASE_URL:env.DATABASE_URL});

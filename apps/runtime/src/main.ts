@@ -54,6 +54,7 @@ async function main(){
 
 main().catch(async(err)=>{
   const codes=new Set(["RELEASE_APPLICATION_LOGIN_REQUIRED","RELEASE_APPLICATION_ROLE_UNSAFE","RELEASE_APPLICATION_TABLE_OWNER_FORBIDDEN",
+    "RELEASE_PRIVILEGED_ROLE_MEMBERSHIP_FORBIDDEN","RELEASE_APPLICATION_DDL_FORBIDDEN",
     "RELEASE_RLS_REQUIRED","RELEASE_UNAPPROVED_CAPABILITY_OR_MODEL","RUNTIME_DEPENDENCY_UNAVAILABLE"]);
   const type=["TransformError","TypeError","SyntaxError","Error"].includes(err?.name)?err.name:"Error";
   const cause=err?.message==="Composition module must export runWorkTick()"?"COMPOSITION_EXPORT_INVALID":

@@ -1,5 +1,15 @@
 {
-  "checkedAt": "2026-10-10T00:38:23.843Z",
+  "checkedAt": "2026-10-10T18:35:08.593Z",
+  "compatibilityPreparationRecheck": {
+    "critical": 40,
+    "medium": 0,
+    "newFingerprints": 0,
+    "removedFingerprints": 0,
+    "baseline": "All 40 fingerprints match the prior individually reviewed ledger. Scanner itself is NOT clean.",
+    "manualNewGuardReview": "packages/db/src/releaseSafety.ts: all query texts fixed; table-name and privileged-role lists use $1::text[]; no request data, identifiers or URL fragments interpolated. Role/DDL/ownership/RLS negative tests use real PostgreSQL.",
+    "dependencyVulnerabilities": 0,
+    "privacyFindings": 0
+  },
   "engine": "Replit SAST callback; engine version not exposed",
   "critical": 40,
   "medium": 0,

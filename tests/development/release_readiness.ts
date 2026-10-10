@@ -116,7 +116,12 @@ async function main(){
     assert(config.schema.startsWith("sam_replit_test_"));
     const adminUrl=new URL(url);adminUrl.searchParams.delete("options");
     const loginSetup=new Pool({connectionString:adminUrl.toString()});
-    try{await loginSetup.query(`ALTER ROLE "${config.role}" LOGIN PASSWORD 'unit-only-disposable-database-fixture'`);}
+    try{
+      await loginSetup.query(`ALTER ROLE "${config.role}" LOGIN PASSWORD 'unit-only-disposable-database-fixture'`);
+      // The broad development fixture is not a least-privilege release role.
+      // Narrow only this disposable fixture before exercising native admission.
+      await loginSetup.query(`REVOKE TRUNCATE, TRIGGER ON ALL TABLES IN SCHEMA "${config.schema}" FROM "${config.role}"`);
+    }
     finally{await loginSetup.end();}
     const appUrl=new URL(url);appUrl.username=config.role;appUrl.password="unit-only-disposable-database-fixture";
     const releaseConfig={root:process.cwd(),databaseUrl:appUrl.toString(),

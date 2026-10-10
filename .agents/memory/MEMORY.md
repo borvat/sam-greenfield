@@ -8,3 +8,4 @@
 - [Autonomy evidence](autonomy-evidence.md) — use ordinary intake, a frozen build, verified provenance reuse and actual process recovery; fixtures are not LIVE proof.
 - [Release readiness](release-readiness.md) — confirm native child startup and progress, allocate loopback ports, and separate arithmetic correctness from owner goal acceptance.
 - [Pilot budget boundary](pilot-budget-boundary.md) — the 24-hour pilot now targets $10, not a guaranteed cap or permission to purchase, Publish or auto-top-up.
+- [Database candidate consent](database-candidate-consent.md) — Neon is preferred conditionally; local compatibility approval is not external provisioning or spending consent.

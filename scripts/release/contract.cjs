@@ -1,4 +1,5 @@
 const path=require("node:path");
+const {isIP}=require("node:net");
 const root=path.resolve(__dirname,"../..");
 const required=[
   "DATABASE_URL","SAM_DB_APP_ROLE","SAM_DB_SCHEMA","SAM_RELEASE_ORG_ID",
@@ -26,7 +27,22 @@ function validateRelease(env){
   const applicationUrl=env.SAM_RELEASE_DATABASE_URL===undefined?env.DATABASE_URL:env.SAM_RELEASE_DATABASE_URL;
   let db;try{db=new URL(applicationUrl);}catch{fail("RELEASE_DATABASE_URL_INVALID");}
   if(!["postgres:","postgresql:"].includes(db.protocol)||!db.hostname||!db.pathname.slice(1)||
-    !["require","verify-full"].includes(db.searchParams.get("sslmode")))fail("RELEASE_DATABASE_TLS_REQUIRED");
+    db.searchParams.get("sslmode")!=="verify-full")fail("RELEASE_DATABASE_TLS_REQUIRED");
+  // pg's TLS SNI/identity path is hostname-based. Do not allow an IP literal
+  // to fall through to its default "localhost" certificate identity.
+  if(isIP(db.hostname.replace(/^\[|\]$/g,"")))fail("RELEASE_DATABASE_TLS_DNS_HOST_REQUIRED");
+  // Transport/account query overrides can disagree with the URL identity checked
+  // below. Preserve standard PostgreSQL URLs, but require one unambiguous target.
+  for(const key of db.searchParams.keys()){
+    if(db.searchParams.getAll(key).length!==1)fail("RELEASE_DATABASE_OPTION_AMBIGUOUS");
+  }
+  for(const key of ["host","hostaddr","port","user","password","dbname","database","ssl"]){
+    if(db.searchParams.has(key))fail("RELEASE_DATABASE_OPTION_OVERRIDE_FORBIDDEN");
+  }
+  if(env.NODE_TLS_REJECT_UNAUTHORIZED==="0")fail("RELEASE_DATABASE_TLS_REQUIRED");
+  // Provider-neutral operator declaration. Endpoint/session behavior still needs
+  // independent provisioning evidence; a declaration is not a network proof.
+  if((env.SAM_DB_CONNECTION_MODE??"direct")!=="direct")fail("RELEASE_DATABASE_POOLING_FORBIDDEN");
   for(const name of [env.SAM_DB_APP_ROLE,env.SAM_DB_SCHEMA]){
     if(!/^[a-z_][a-z0-9_]{0,62}$/.test(name))fail("RELEASE_DATABASE_IDENTIFIER_INVALID");
   }
