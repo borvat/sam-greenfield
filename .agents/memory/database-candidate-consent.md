@@ -23,3 +23,14 @@ credential provisioning and authentication.
 
 **How to apply:** Obtain a new scoped decision before applying the helper,
 including the approved endpoint and provider-side credential-audit risk.
+
+The owner requires provider logging risk, interrupted credential commits and
+shared-project secret exposure to be reviewed before later live authentication.
+Local hardening approval is not acceptance of these residual risks.
+
+**Why:** The owner explicitly identified these three security gates before
+authorizing local-only hardening.
+
+**How to apply:** A later execution decision must address provider audit policy,
+the bounded crash window/session cleanup, and credential isolation—not just
+the presence of a password or a passing local test.

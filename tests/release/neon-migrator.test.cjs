@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { run, PASSWORD_FUNCTION_SQL } = require("../../scripts/provisioning/neon-migrator.cjs");
+const { run, PASSWORD_FUNCTION_SQL, LOGGING_POLICY, DISABLE_SQL } = require("../../scripts/provisioning/neon-migrator.cjs");
 const host = "ep-synthetic-pilot.eu-central-1.aws.neon.tech";
 const apply = ["--apply", `--host=${host}`, "--ack-provider-audit-risk"];
 const password = "synthetic-only-password-32-characters'); DROP ROLE sam_pilot_app; --";
@@ -10,6 +10,8 @@ const url = `postgresql://neondb_owner:synthetic-admin-only@${host}/neondb?sslmo
 function roleRows(enabled) {
   return ["sam_pilot_app", "sam_pilot_migrator"].map(name => ({
     name, login: name === "sam_pilot_migrator" && enabled, inherit: false,
+    connection_limit: name === "sam_pilot_migrator" && enabled ? 1 : -1,
+    config_empty: !enabled, expires_soon: enabled,
     superuser: false, createdb: false, createrole: false, replication: false,
     bypassrls: false, parent_membership: false, database_create: false,
     database_connect: true, schema_usage: true,
@@ -41,7 +43,7 @@ function fixture(options = {}) {
           calls.push({ sql, params, user: config.user });
           if (options.failSql?.(sql, isAdmin)) throw new Error(`${url} ${password}`);
           if (sql === "SELECT pg_temp.sam_set_migrator_password($1::text)") enabled = true;
-          if (sql === "ALTER ROLE sam_pilot_migrator NOLOGIN PASSWORD NULL") enabled = false;
+          if (sql === DISABLE_SQL) enabled = false;
           let rows = [];
           if (sql.includes("AS locked")) rows = [{ locked: options.locked ?? true }];
           else if (sql.includes("AS migration_admin")) rows = [{
@@ -49,7 +51,8 @@ function fixture(options = {}) {
             current_role: options.currentRole ?? config.user,
             session_role: options.sessionRole ?? config.user,
             version: options.version ?? 180000,
-            can_manage_roles: options.canManage ?? true, migration_admin: options.adminOption ?? true
+            can_manage_roles: options.canManage ?? true, migration_admin: options.adminOption ?? true,
+            can_signal: options.canSignal ?? true
           }];
           else if (sql.includes("ORDER BY r.rolname")) {
             rows = roleRows(enabled);
@@ -61,7 +64,13 @@ function fixture(options = {}) {
             version: options.extensionVersion ?? "1.4", schema: options.extensionSchema ?? "public",
             owner: options.extensionOwner ?? "neondb_owner", core_uuid: true
           }];
-          else if (sql.includes("current_schema()")) rows = [{ schema: options.searchPath ?? "sam_pilot" }];
+          else if (sql.includes("FROM pg_settings")) rows = Object.entries(LOGGING_POLICY)
+            .map(([name, setting]) => ({ name,
+              setting: options.unsafeLogging ? "-1" : (options.logOverrides?.[name] ?? setting) }))
+            .concat(options.extensionLogging || []);
+          else if (sql.includes("count(*)::int AS active")) rows = [{ active: options.activeSessions ?? 0 }];
+          else if (sql.includes("current_schema()")) rows = [{ schema: options.searchPath ?? "sam_pilot",
+            read_only: options.readOnly ?? "on", idle_timeout: "15s", query_timeout: "5s" }];
           return { rows };
         }
       };
@@ -131,10 +140,14 @@ test("successful mocked provisioning binds injection payload, pins TLS and authe
   assert.deepEqual(write.params, [password]);
   assert.ok(f.calls.every(call => !call.sql.includes(password)));
   assert.match(PASSWORD_FUNCTION_SQL, /SECURITY INVOKER SET search_path=pg_catalog/);
-  assert.match(PASSWORD_FUNCTION_SQL, /format\('ALTER ROLE %I LOGIN PASSWORD %L', 'sam_pilot_migrator', p_password\)/);
+  assert.match(PASSWORD_FUNCTION_SQL, /format\('ALTER ROLE %I LOGIN PASSWORD %L CONNECTION LIMIT 1 VALID UNTIL %L'/);
+  assert.match(PASSWORD_FUNCTION_SQL, /interval '120 seconds'/);
+  assert.match(PASSWORD_FUNCTION_SQL, /CREDENTIAL_CHANGE_REJECTED/);
   assert.ok(f.calls.some(call => call.sql.startsWith("DROP FUNCTION pg_temp.")));
   assert.ok(f.calls.every(call => !/ALTER ROLE sam_pilot_app|GRANT |CREATE ROLE|CREATE EXTENSION/i.test(call.sql)));
   assert.equal(f.result.migrationsRun, false);
+  assert.equal(f.result.code, "MIGRATOR_AUTHENTICATED_AND_CLOSED");
+  assert.ok(f.calls.some(call => call.sql === DISABLE_SQL));
 });
 test("raw provider/TLS errors and close errors never reach output", async () => {
   const f = await execute({ connectFailure: "neondb_owner", closeFailure: true });
@@ -145,7 +158,7 @@ test("identity, ADMIN option, schema and extension preconditions fail without mu
   for (const options of [
     { database: "other" }, { currentRole: "other" }, { sessionRole: "other" },
     { version: 170000 }, { version: 190000 }, { version: "180000" },
-    { adminOption: false }, { canManage: false },
+    { adminOption: false }, { canManage: false }, { canSignal: false }, { unsafeLogging: true },
     { schemaOwner: "neondb_owner" }, { empty: false }, { extensionMissing: true },
     { extensionVersion: "1.3" }, { extensionSchema: "sam_pilot" }, { extensionOwner: "other" },
     { locked: false }
@@ -176,10 +189,42 @@ test("transaction failure rolls back without retrying the password call", async 
   assert.equal(f.configs.length, 1);
 });
 test("failed authentication/search_path disables migrator; never claims PASS", async () => {
-  for (const options of [{ connectFailure: "sam_pilot_migrator" }, { searchPath: "public" }]) {
+  for (const options of [{ connectFailure: "sam_pilot_migrator" }, { searchPath: "public" }, { readOnly: "off" }]) {
     const f = await execute(options);
     assert.equal(f.result.status, "FAIL"); assert.equal(f.result.recovery, "MIGRATOR_DISABLED");
-    assert.ok(f.calls.some(call => call.sql === "ALTER ROLE sam_pilot_migrator NOLOGIN PASSWORD NULL"));
+    assert.ok(f.calls.some(call => call.sql === DISABLE_SQL));
+  }
+});
+test("reconciliation reads no migration password and applies only closed-role cleanup", async () => {
+  const f = fixture();
+  f.deps.readSecret = key => {
+    assert.equal(key, "SAM_PILOT_PROVISIONER_DATABASE_URL"); return url;
+  };
+  const result = await run(["--reconcile", `--host=${host}`, "--ack-provider-audit-risk"], f.deps);
+  assert.equal(result.code, "MIGRATOR_RECONCILED_CLOSED");
+  assert.ok(f.calls.some(call => call.sql === DISABLE_SQL));
+  assert.ok(!f.calls.some(call => call.sql === PASSWORD_FUNCTION_SQL));
+});
+test("uncleared sessions cannot produce a closed PASS", async () => {
+  const f = await execute({ activeSessions: 1 });
+  assert.equal(f.result.status, "FAIL");
+  assert.equal(f.result.recovery, "REMOTE_STATE_UNKNOWN");
+});
+test("invalid logging policy blocks password transmission, not just successful output", async () => {
+  const f = await execute({ unsafeLogging: true });
+  assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
+  assert.ok(!f.calls.some(call => call.sql.includes("SELECT pg_temp.sam_set")));
+});
+test("individual parameter/error/debug/audit logging risks fail before any password call", async () => {
+  for (const key of Object.keys(LOGGING_POLICY)) {
+    const f = await execute({ logOverrides: { [key]: "unsafe" } });
+    assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
+    assert.ok(!f.calls.some(call => call.sql.includes("SELECT pg_temp.sam_set")));
+  }
+  for (const [name, setting] of [["pgaudit.log", "all"], ["pgaudit.log_parameter", "on"],
+    ["auto_explain.log_min_duration", "0"]]) {
+    const f = await execute({ extensionLogging: [{ name, setting }] });
+    assert.equal(f.result.code, "SERVER_LOGGING_REVIEW_REQUIRED");
   }
 });
 test("uncertain COMMIT and failed compensation report remote state unknown", async () => {

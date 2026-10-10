@@ -3,14 +3,14 @@
 // cluster. Not a Neon/PG18/full-helper acceptance test; no existing DB/secret.
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
+const { spawnSync, spawn } = require("node:child_process");
 const { mkdtempSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const net = require("node:net");
 const { once } = require("node:events");
 const { Client } = require("pg");
-const { PASSWORD_FUNCTION_SQL } = require("../../scripts/provisioning/neon-migrator.cjs");
+const { PASSWORD_FUNCTION_SQL, disable } = require("../../scripts/provisioning/neon-migrator.cjs");
 
 function tool(name, args) {
   const result = spawnSync(name, args, {
@@ -42,6 +42,7 @@ test("real local PostgreSQL quotes adversarial passwords and preserves restricte
     root = new Client({ ...base, host: dir, user: "local_fixture_admin" });
     await root.connect();
     await root.query("CREATE ROLE neondb_owner LOGIN CREATEROLE NOSUPERUSER NOBYPASSRLS");
+    await root.query("GRANT pg_signal_backend TO neondb_owner");
     admin = new Client({ ...base, host: dir, user: "neondb_owner" });
     await admin.connect();
     await admin.query(`CREATE ROLE sam_pilot_migrator NOLOGIN NOINHERIT NOSUPERUSER
@@ -68,6 +69,9 @@ test("real local PostgreSQL quotes adversarial passwords and preserves restricte
       });
       try {
         await login.connect();
+        assert.equal((await login.query("SHOW default_transaction_read_only")).rows[0].default_transaction_read_only, "on");
+        await assert.rejects(() => login.query("CREATE TABLE local_should_not_exist(id int)"),
+          error => error.code === "25006");
         const row = (await login.query("SELECT current_user AS role, session_user AS session")).rows[0];
         assert.equal(row.role, "sam_pilot_migrator");
         assert.equal(row.session, row.role);
@@ -89,6 +93,9 @@ test("real local PostgreSQL quotes adversarial passwords and preserves restricte
     await root.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
       CREATE SCHEMA sam_pilot AUTHORIZATION sam_pilot_migrator;
       GRANT USAGE ON SCHEMA sam_pilot TO sam_pilot_app`);
+    // Only this synthetic regression fixture explicitly removes the advisory
+    // read-only default; normal helper authentication NEVER runs migrations.
+    await admin.query("ALTER ROLE sam_pilot_migrator RESET ALL");
     const url = new URL(`postgresql://sam_pilot_migrator@127.0.0.1:${tcpPort}/postgres`);
     url.password = payloads[payloads.length - 1];
     url.searchParams.set("sslmode", "disable"); // Loopback fixture only, not helper configuration.
@@ -118,6 +125,58 @@ test("real local PostgreSQL quotes adversarial passwords and preserves restricte
     assert.equal((await admin.query(
       "SELECT to_regprocedure('pg_temp.sam_set_migrator_password(text)') AS helper"
     )).rows[0].helper, null);
+    // Genuine process death after credential commit; IPC carries synthetic data
+    // only. No task/runtime changes or credentials in argv/environment.
+    const child = spawn(process.execPath, ["-e", `
+      const {Client}=require('pg');
+      const {PASSWORD_FUNCTION_SQL}=require('./scripts/provisioning/neon-migrator.cjs');
+      process.once('message',async data=>{
+        try {
+          const client=new Client(data.config);await client.connect();
+          await client.query('BEGIN');await client.query(PASSWORD_FUNCTION_SQL);
+          await client.query('SELECT pg_temp.sam_set_migrator_password($1::text)',[data.password]);
+          await client.query('DROP FUNCTION pg_temp.sam_set_migrator_password(text)');
+          await client.query('COMMIT');process.send({phase:'COMMITTED'});
+        } catch {process.exit(1);}
+      });
+    `], { env: { LANG: "C" }, stdio: ["ignore", "ignore", "ignore", "ipc"] });
+    try {
+      const committed = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          child.kill("SIGKILL"); reject(new Error("LOCAL_CRASH_FIXTURE_TIMEOUT"));
+        }, 10000);
+        child.once("message", message => { clearTimeout(timeout); resolve(message); });
+        child.once("exit", () => { clearTimeout(timeout); reject(new Error("LOCAL_CRASH_FIXTURE_EXITED")); });
+      });
+      child.send({ config: { ...base, host: dir, user: "neondb_owner" }, password: payloads[0] });
+      const message = await committed;
+      assert.equal(message.phase, "COMMITTED");
+      const exited = once(child, "exit"); child.kill("SIGKILL"); await exited;
+      const state = (await admin.query(`SELECT rolcanlogin,rolconnlimit,
+        rolvaliduntil > now() AND rolvaliduntil <= now()+interval '121 seconds' AS bounded
+        FROM pg_roles WHERE rolname=$1`, ["sam_pilot_migrator"])).rows[0];
+      assert.equal(state.rolcanlogin, true); assert.equal(state.rolconnlimit, 1);
+      assert.equal(state.bounded, true); // Crash is contained, NOT automatically reconciled.
+      const existing = new Client({ ...base, host: "127.0.0.1", user: "sam_pilot_migrator", password: payloads[0] });
+      existing.on("error", () => {});
+      try {
+        await existing.connect();
+        await admin.query("ALTER ROLE sam_pilot_migrator VALID UNTIL 'epoch'");
+        assert.equal((await existing.query("SELECT 1 AS alive")).rows[0].alive, 1);
+        // Expiry alone does NOT terminate this existing authenticated session.
+        const expired = new Client({ ...base, host: "127.0.0.1",
+          user: "sam_pilot_migrator", password: payloads[0] });
+        try { await assert.rejects(() => expired.connect(), error => error.code === "28P01"); }
+        finally { await expired.end(); }
+        await disable(admin);
+        const final = (await admin.query(`SELECT rolcanlogin,rolconnlimit,
+          rolvaliduntil < now() AS expired FROM pg_roles WHERE rolname=$1`,
+          ["sam_pilot_migrator"])).rows[0];
+        assert.deepEqual(final, { rolcanlogin: false, rolconnlimit: 0, expired: true });
+        const rejected = new Client({ ...base, host: "127.0.0.1", user: "sam_pilot_migrator", password: payloads[0] });
+        try { await assert.rejects(() => rejected.connect()); } finally { await rejected.end(); }
+      } finally { await existing.end().catch(() => {}); }
+    } finally { if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL"); }
   } finally {
     await admin?.end(); await root?.end();
     try { if (started) tool("pg_ctl", ["-D", data, "-m", "immediate", "-w", "stop"]); }
