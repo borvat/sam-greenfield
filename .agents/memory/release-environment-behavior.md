@@ -1,6 +1,6 @@
 ---
 name: Release environment tooling
-description: Production configuration readback and temporary preview port side effects.
+description: Production configuration, platform metadata and publishing schema-restore quirks.
 ---
 
 Production nonsecret environment edits through Replit's environment API can
@@ -53,3 +53,17 @@ exercised the protocol successfully.
 
 **How to apply:** Do not interpret a fetch-specific Host override failure as
 evidence that MCP protocol initialization itself is broken.
+
+Role-targeted RLS policies can fail Replit's publishing schema preparation even
+when the referenced application role exists in development.
+
+**Why:** A publishing attempt failed during pg_restore because its restore target
+lacked a custom application role referenced by development RLS policies. This
+occurred before application compilation; the previous deployment remained active.
+
+**How to apply:** Distinguish this schema-restore failure from runtime DB login
+or OAuth failures. Check source policy dependencies read-only. Do not replace
+role-targeted policies with unconditional PUBLIC policies: restrictive and
+permissive policies require different permission-equivalent treatment. Existing
+development policy changes need explicit scope approval; never bypass the managed
+production migration flow with startup DDL or administrative worker credentials.

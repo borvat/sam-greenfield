@@ -10,4 +10,4 @@
 - [Pilot budget boundary](pilot-budget-boundary.md) — the 24-hour pilot now targets $10, not a guaranteed cap or permission to purchase, Publish or auto-top-up.
 - [Database candidate consent](database-candidate-consent.md) — Replit-managed DB is now preferred if compatible; provisioning, secret use and spending still need separate consent.
 - [Interaction architecture](interaction-architecture.md) — ChatGPT via existing MCP is the sole conversation surface; keep Replit SAM and GitHub, without a separate app chat.
-- [Release environment tooling](release-environment-behavior.md) — verify production gates separately from wizard drafts; remove automatic mappings from temporary visual fixtures.
+- [Release environment tooling](release-environment-behavior.md) — published metadata and RLS schema-restore quirks; distinguish wizard drafts from effective configuration.
