@@ -15,13 +15,14 @@ function int(v,min,max,fallback){
   const n=Number(v);if(!Number.isInteger(n)||n<min||n>max)fail("RELEASE_INTEGER_INVALID");
   return n;
 }
-function validateRelease(env){
-  if(env.NODE_ENV!=="production"||env.SAM_RELEASE_APPROVED!=="1")fail("RELEASE_OWNER_APPROVAL_REQUIRED");
+function validateReleaseDatabase(env){
+  if(env.NODE_ENV!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
   if(env.REPLIT_DEV_DOMAIN||env.SAM_DEVELOPMENT_SAFE_MODE==="1"||env.SAM_AUTONOMY_SANDBOX==="1"){
     fail("RELEASE_DEVELOPMENT_ENV_FORBIDDEN");
   }
   if(env.SAM_DATABASE_TARGET!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
-  for(const k of required){
+  for(const k of ["DATABASE_URL","SAM_DB_APP_ROLE","SAM_DB_SCHEMA",
+    "SAM_RELEASE_ORG_ID","SAM_COMMAND_CENTER_LEGAL_ENTITY_ID"]){
     // A dedicated application URI must not require provisioning a second,
     // managed database merely to satisfy an unused variable.
     if(k==="DATABASE_URL"&&env.SAM_RELEASE_DATABASE_URL!==undefined)continue;
@@ -33,6 +34,16 @@ function validateRelease(env){
   // override must fail rather than silently use an administrative connection.
   const applicationUrl=env.SAM_RELEASE_DATABASE_URL===undefined?env.DATABASE_URL:env.SAM_RELEASE_DATABASE_URL;
   let db;try{db=new URL(applicationUrl);}catch{fail("RELEASE_DATABASE_URL_INVALID");}
+  const source=env.SAM_DB_CONNECTION_SOURCE??"independent";
+  if(!["independent","replit_managed"].includes(source))fail("RELEASE_DATABASE_SOURCE_INVALID");
+  // Managed URLs commonly request encryption only. Upgrade the actual pg
+  // connection, never treat "require" as proof of certificate verification.
+  // Account identity, nonowner/RLS admission and certificate validation remain
+  // mandatory. This switch is not evidence of provider/account compatibility.
+  if(source==="replit_managed"&&db.searchParams.getAll("sslmode").length===1&&
+    db.searchParams.get("sslmode")==="require"){
+    db.searchParams.set("sslmode","verify-full");
+  }
   if(!["postgres:","postgresql:"].includes(db.protocol)||!db.hostname||!db.pathname.slice(1)||
     db.searchParams.get("sslmode")!=="verify-full")fail("RELEASE_DATABASE_TLS_REQUIRED");
   // pg's TLS SNI/identity path is hostname-based. Do not allow an IP literal
@@ -60,6 +71,20 @@ function validateRelease(env){
   for(const k of ["SAM_RELEASE_ORG_ID","SAM_COMMAND_CENTER_LEGAL_ENTITY_ID"]){
     if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(env[k]))fail("RELEASE_TENANT_INVALID");
   }
+  // Same connection contract for read-only admission and real execution.
+  const options=`-c role=${env.SAM_DB_APP_ROLE} -c search_path=${env.SAM_DB_SCHEMA},pg_catalog`+
+    ` -c app.current_org_id=${env.SAM_RELEASE_ORG_ID}`+
+    ` -c app.current_legal_entity_id=${env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID}`;
+  db.searchParams.set("options",options);
+  return {databaseUrl:db.href};
+}
+function validateRelease(env){
+  if(env.NODE_ENV!=="production"||env.SAM_RELEASE_APPROVED!=="1")fail("RELEASE_OWNER_APPROVAL_REQUIRED");
+  for(const k of required){
+    if(k==="DATABASE_URL"&&env.SAM_RELEASE_DATABASE_URL!==undefined)continue;
+    if(!env[k]?.trim())fail("RELEASE_MISSING_"+k);
+  }
+  const {databaseUrl}=validateReleaseDatabase(env);
   if(env.SAM_COMMAND_CENTER_BEARER_TOKEN.length<32)fail("RELEASE_BEARER_TOO_SHORT");
   const hosts=env.SAM_COMMAND_CENTER_ALLOWED_HOSTS.split(",").map(x=>x.trim());
   if(hosts.some(h=>!h||h==="*"||!/^([a-z0-9-]+\.)*[a-z0-9-]+$/i.test(h))){
@@ -90,14 +115,8 @@ function validateRelease(env){
     }else if(!env.SAM_MCP_BEARER_TOKEN||env.SAM_MCP_BEARER_TOKEN.length<32||
       env.SAM_MCP_BEARER_TOKEN===env.SAM_COMMAND_CENTER_BEARER_TOKEN)fail("RELEASE_DISTINCT_MCP_TOKEN_REQUIRED");
   }
-  // Strip inherited connection options; the owner-approved production role/tenant
-  // replaces them, not an editor/admin role or development search_path.
-  const options=`-c role=${env.SAM_DB_APP_ROLE} -c search_path=${env.SAM_DB_SCHEMA},pg_catalog`+
-    ` -c app.current_org_id=${env.SAM_RELEASE_ORG_ID}`+
-    ` -c app.current_legal_entity_id=${env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID}`;
-  db.searchParams.set("options",options);
   return {
-    root,databaseUrl:db.href,bundle,capabilities,
+    root,databaseUrl,bundle,capabilities,
     port:int(env.PORT,1,65535,5000),
     workerPort:0,commandPort:0,mcpPort:0,
     shutdownMs:int(env.SAM_SHUTDOWN_GRACE_MS,100,120000,15000),
@@ -166,4 +185,4 @@ function childEnvironment(env,config,service){
   }
   return child;
 }
-module.exports={validateRelease,childEnvironment};
+module.exports={validateRelease,validateReleaseDatabase,childEnvironment};

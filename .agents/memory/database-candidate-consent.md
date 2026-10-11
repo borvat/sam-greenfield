@@ -7,6 +7,18 @@ Neon is the owner's preferred PostgreSQL candidate only if fully compatible with
 SAM Greenfield. Local compatibility preparation does not authorize provisioning
 an external account/database, purchases or Publish. Preserve provider neutrality.
 
+The owner subsequently directed using Replit-managed PostgreSQL if feasible,
+without hand-entered database passwords. Prioritize this integrated release path
+over further Neon credential-bootstrap experiments.
+
+**Why:** The owner explicitly requested finishing the existing SAM release while
+preserving nonowner runtime LOGIN, verified TLS and tenant RLS.
+
+**How to apply:** Automatic managed credentials are not proof of a restricted
+runtime identity. Keep launch blocked until actual account/TLS/RLS admission is
+proved; do not read real secrets, provision paid resources or Publish without
+separate explicit authorization.
+
 **Why:** The owner approved this candidate and local preparation on 2026-10-10,
 explicitly excluding Neon account/database provisioning and paid resources.
 

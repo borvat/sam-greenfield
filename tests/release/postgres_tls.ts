@@ -7,6 +7,8 @@ import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {once} from "node:events";
 import {Client} from "pg";
+import {createRequire} from "node:module";
+const {validateReleaseDatabase}=createRequire(import.meta.url)("../../scripts/release/contract.cjs");
 
 async function main(){
   const dir=mkdtempSync(join(tmpdir(),"sam-tls-fixture-"));
@@ -41,9 +43,16 @@ async function main(){
       });
       server.listen(0,"localhost");await once(server,"listening");
       const port=(server.address() as any).port;
-      const url=new URL(`postgresql://synthetic_app@localhost:${port}/synthetic?sslmode=verify-full`);
+      const url=new URL(`postgresql://synthetic_app@localhost:${port}/synthetic?sslmode=require`);
       if(trusted)url.searchParams.set("sslrootcert",join(dir,name+".crt"));
-      const client=new Client({connectionString:url.toString(),connectionTimeoutMillis:2000});
+      const config=validateReleaseDatabase({
+        NODE_ENV:"production",SAM_DATABASE_TARGET:"production",
+        DATABASE_URL:url.toString(),SAM_DB_CONNECTION_SOURCE:"replit_managed",
+        SAM_DB_APP_ROLE:"synthetic_app",SAM_DB_SCHEMA:"synthetic",
+        SAM_RELEASE_ORG_ID:"11111111-1111-1111-1111-111111111111",
+        SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:"22222222-2222-2222-2222-222222222222"
+      });
+      const client=new Client({connectionString:config.databaseUrl,connectionTimeoutMillis:2000});
       try{
         await assert.rejects(()=>client.connect(),(e:any)=>name==="good"&&trusted?
           e.message==="TLS_VERIFIED_FIXTURE_ONLY":

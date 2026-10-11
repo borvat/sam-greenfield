@@ -8,6 +8,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "start:release": "node scripts/release/main.cjs",
+    "release:check-db": "node --import tsx scripts/release/database-check.ts",
     "dev:setup": "node scripts/development/setup.cjs",
     "dev:runtime": "node scripts/development/run.cjs runtime",
     "dev:mcp": "node scripts/development/run.cjs mcp",

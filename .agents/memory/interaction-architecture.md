@@ -4,8 +4,9 @@ description: Owner's chosen surfaces and scope for the synthetic SAM pilot.
 ---
 
 ChatGPT is SAM's only user-facing conversation surface, through the existing MCP
-bridge. Keep the existing Greenfield runtime on Replit, Neon as the pilot database
-and GitHub as the source. Do not build an independent app chat UI or a new agent.
+bridge. Keep the existing Greenfield runtime on Replit and GitHub as the source.
+The owner now prioritizes Replit-managed PostgreSQL if safely compatible, instead
+of requiring Neon. Do not build an independent app chat UI or a new agent.
 
 **Why:** The owner explicitly selected this architecture and requested the minimum
 safe integration rather than another dashboard or replacement implementation.

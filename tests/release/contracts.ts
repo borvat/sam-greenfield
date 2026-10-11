@@ -25,6 +25,18 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  const managed=validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"replit_managed",
+    DATABASE_URL:env.DATABASE_URL.replace("verify-full","require")});
+  assert.equal(new URL(managed.databaseUrl).searchParams.get("sslmode"),"verify-full");
+  assert.equal(new URL(managed.databaseUrl).username,"sam_app");
+  for(const mode of ["disable","allow","prefer","no-verify","verify-ca"])
+    assert.throws(()=>validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"replit_managed",
+      DATABASE_URL:env.DATABASE_URL.replace("verify-full",mode)}));
+  assert.throws(()=>validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"unknown"}));
+  assert.throws(()=>validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"replit_managed",
+    DATABASE_URL:env.DATABASE_URL.replace("verify-full","require")+"&sslmode=require"}));
+  assert.throws(()=>validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"replit_managed",
+    SAM_RELEASE_DATABASE_URL:""}));
   for(const suffix of ["?sslmode=require","?sslmode=no-verify","?sslmode=verify-ca",
     "?sslmode=verify-full&sslmode=no-verify","?sslmode=verify-full&ssl=false",
     "?sslmode=verify-full&user=postgres","?sslmode=verify-full&host=other.invalid"]){

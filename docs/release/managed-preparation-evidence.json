@@ -1,0 +1,33 @@
+{
+  "classification": "LOCAL_PREPARATION_NOT_PRODUCTION_ACCEPTANCE",
+  "baseCommit": "d8bec50e8d46a30359bac1b215fbd80c487a9740",
+  "checks": {
+    "typecheck": "PASS",
+    "databaseCheckSyntheticCases": {"status": "PASS", "cases": 14},
+    "releaseContracts": "PASS",
+    "prelaunchRefusalCases": {"status": "PASS", "cases": 115},
+    "managedTlsRealPgLoopback": {
+      "status": "PASS",
+      "cases": 3,
+      "verified": ["managed require upgraded to verify-full", "matching trusted certificate", "untrusted certificate rejected", "wrong hostname rejected"],
+      "providerCertificateTested": false
+    },
+    "mcpProtocolAndAuth": {"status": "PASS", "checks": 124, "classification": "LOCAL_PROTOCOL_AND_UNIT_MOCK_SQL"},
+    "diffWhitespace": "PASS"
+  },
+  "productionRestrictedLogin": "UNPROVEN_NO_AUTHORIZED_PRODUCTION_CONNECTION",
+  "productionTlsAndRls": "UNPROVEN",
+  "productionSchemaAndPolicies": "UNPROVISIONED_NOT_AUTOMATICALLY_ASSUMED",
+  "newGoalAcceptancePerformed": false,
+  "liveModelCalls": 0,
+  "neonDatabaseConnections": 0,
+  "productionDatabaseConnections": 0,
+  "actualSecretsReadOrRequested": false,
+  "paidResourcesCreated": false,
+  "publishPerformed": false,
+  "sast": {
+    "rescanPerformed": false,
+    "previousRawCriticalCount": 40,
+    "productionSecurityCleanClaim": false
+  }
+}

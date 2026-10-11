@@ -39,6 +39,13 @@ for(const patch of [{approvedSourceSha:null},{source:{...base.source,clean:false
 }
 assert.equal(JSON.stringify(evaluate(base)).includes(env.SAM_COMMAND_CENTER_BEARER_TOKEN),false);
 assert.equal(JSON.stringify(evaluate(base)).includes(env.DATABASE_URL),false);
+const independent=evaluate({...base,env:{...env,DATABASE_URL:undefined,
+  SAM_RELEASE_DATABASE_URL:env.DATABASE_URL}});
+assert.equal(independent.gates.find((g:any)=>g.gate==="required_setting:DATABASE_URL").status,"PASS");
+assert.equal(independent.gates.find((g:any)=>g.gate==="native_release_config").status,"PASS");
+assert.equal(independent.publishAuthorized,false);
+const emptyOverride=evaluate({...base,env:{...env,SAM_RELEASE_DATABASE_URL:""}});
+assert.equal(emptyOverride.gates.find((g:any)=>g.gate==="required_setting:DATABASE_URL").status,"BLOCKED");
 for(const key of settings){
   const result=evaluate({...base,env:{...env,[key]:undefined}});
   assert.equal(result.status,"BLOCKED");assert.equal(result.declarationsComplete,false);rejected++;

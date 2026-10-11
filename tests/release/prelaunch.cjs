@@ -19,8 +19,11 @@ function evaluate({env,source,records,approvedSourceSha,now=Date.now()}){
   add("source_sha",/^[0-9a-f]{40}$/.test(source.sha)&&source.sha===approvedSourceSha,"OWNER_APPROVED_EXACT_SHA_REQUIRED");
   add("source_clean",source.clean===true,"CLEAN_TREE_REQUIRED");
   add("github_sync",source.remoteSha===source.sha,"DIRECT_REMOTE_SHA_MATCH_REQUIRED");
-  for(const key of settings)
-    add("required_setting:"+key,typeof env[key]==="string"&&env[key].trim().length>0,"PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL");
+  for(const key of settings){
+    const value=key==="DATABASE_URL"&&env.SAM_RELEASE_DATABASE_URL!==undefined?
+      env.SAM_RELEASE_DATABASE_URL:env[key];
+    add("required_setting:"+key,typeof value==="string"&&value.trim().length>0,"PRESENCE_ONLY_NOT_PRODUCTION_TARGET_APPROVAL");
+  }
   let nativeCode="PASS";
   try{validateRelease(env);}catch(e){
     nativeCode=/^RELEASE_[A-Z0-9_]+$/.test(e.message)?e.message:"RELEASE_CONFIG_REFUSED";
