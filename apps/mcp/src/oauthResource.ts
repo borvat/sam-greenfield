@@ -3,6 +3,7 @@ import {createHash,verify,type KeyObject} from "node:crypto";
 import {createRequire} from "node:module";
 
 export const syntheticScopes=["sam:synthetic:read","sam:synthetic:submit"] as const;
+export const executiveScopes=["sam:read","sam:submit"] as const;
 const oidcIdentityScopes=["openid","profile","email","offline_access"] as const;
 export interface SyntheticPrincipal {
   orgId:string; entityId:string; runId:string; actor:string; scopes:readonly string[]; expiresAt:number; maxGoals:number;
@@ -10,6 +11,7 @@ export interface SyntheticPrincipal {
 export interface OAuthResourceConfig {
   resource:string; issuer:string; claimNamespace:string; subject:string; clientId:string;
   orgId:string; entityId:string; runId:string; keys:Map<string,KeyObject>; deadline:number; maxGoals:number;
+  executive?:boolean;
 }
 export const oauthRequest=new AsyncLocalStorage<SyntheticPrincipal>();
 const {oauthResourceConfig:configure}=createRequire(import.meta.url)("../../../scripts/release/mcp-oauth.cjs");
@@ -38,15 +40,16 @@ export function authenticateOAuth(token:string,config:OAuthResourceConfig,now=Ma
     if(claims.iss!==config.issuer||claims.sub!==config.subject||claims.client_id!==config.clientId||
       claims[config.claimNamespace+"/org_id"]!==config.orgId||
       claims[config.claimNamespace+"/legal_entity_id"]!==config.entityId||
-      claims[config.claimNamespace+"/pilot_run_id"]!==config.runId)return deny();
+      (!config.executive&&claims[config.claimNamespace+"/pilot_run_id"]!==config.runId))return deny();
     if(!Number.isSafeInteger(claims.exp)||!Number.isSafeInteger(claims.iat)||
       claims.exp<=now||claims.iat>now||claims.exp<=claims.iat||claims.exp-claims.iat>3600||
       (claims.nbf!==undefined&&(!Number.isSafeInteger(claims.nbf)||claims.nbf>now)))return deny();
     if(typeof claims.scope!=="string")return deny();
     const presentedScopes=claims.scope.split(" ");
-    const scopes=presentedScopes.filter((s:string)=>syntheticScopes.includes(s as typeof syntheticScopes[number]));
+    const allowed:readonly string[]=config.executive?executiveScopes:syntheticScopes;
+    const scopes=presentedScopes.filter((s:string)=>allowed.includes(s));
     if(scopes.length<1||new Set(presentedScopes).size!==presentedScopes.length||
-      presentedScopes.some((s:string)=>!syntheticScopes.includes(s as typeof syntheticScopes[number])&&
+      presentedScopes.some((s:string)=>!allowed.includes(s)&&
         !oidcIdentityScopes.includes(s as typeof oidcIdentityScopes[number])))return deny();
     const actor="mcp:"+createHash("sha256").update(JSON.stringify([
       config.issuer,config.subject,config.orgId,config.entityId,config.runId])).digest("hex");
@@ -55,12 +58,12 @@ export function authenticateOAuth(token:string,config:OAuthResourceConfig,now=Ma
       expiresAt:Math.min(claims.exp*1000,config.deadline),maxGoals:config.maxGoals};
   }catch{return deny();}
 }
-export function requirePrincipal(scope:typeof syntheticScopes[number]){
+export function requirePrincipal(scope:typeof syntheticScopes[number]|typeof executiveScopes[number]){
   const principal=oauthRequest.getStore();
   if(!principal||principal.expiresAt<=Date.now()||!principal.scopes.includes(scope))throw new Error("MCP_ACCESS_DENIED");
   return principal;
 }
 export function protectedResourceMetadata(config:OAuthResourceConfig){
   return {resource:config.resource,authorization_servers:[config.issuer],
-    scopes_supported:syntheticScopes,bearer_methods_supported:["header"]};
+    scopes_supported:config.executive?executiveScopes:syntheticScopes,bearer_methods_supported:["header"]};
 }

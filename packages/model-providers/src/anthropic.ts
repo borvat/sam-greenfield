@@ -22,7 +22,7 @@ export class AnthropicMessagesAdapter implements ModelProviderAdapter{
         },
         body:JSON.stringify({
           model,
-          max_tokens:this.options.maxTokens??4096,
+          max_tokens:task.maxOutputTokens??this.options.maxTokens??4096,
           messages:[{role:"user",content:taskPrompt(task)}]
         })
       },

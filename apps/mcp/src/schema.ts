@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-type JsonSchema={
+export type JsonSchema={
   type?:string;
   enum?:unknown[];
   properties?:Record<string,JsonSchema>;
@@ -9,6 +9,10 @@ type JsonSchema={
   additionalProperties?:boolean|JsonSchema;
   minimum?:number;
   maximum?:number;
+  minItems?:number;
+  maxItems?:number;
+  minLength?:number;
+  maxLength?:number;
 };
 
 function valueSchema(schema:JsonSchema):z.ZodTypeAny{
@@ -20,8 +24,12 @@ function valueSchema(schema:JsonSchema):z.ZodTypeAny{
   }
 
   switch(schema.type){
-    case "string":
-      return z.string();
+    case "string":{
+      let result=z.string();
+      if(typeof schema.minLength==="number")result=result.min(schema.minLength);
+      if(typeof schema.maxLength==="number")result=result.max(schema.maxLength);
+      return result;
+    }
     case "integer":{
       let result=z.number().int();
       if(typeof schema.minimum==="number") result=result.min(schema.minimum);
@@ -36,8 +44,12 @@ function valueSchema(schema:JsonSchema):z.ZodTypeAny{
     }
     case "boolean":
       return z.boolean();
-    case "array":
-      return z.array(schema.items?valueSchema(schema.items):z.unknown());
+    case "array":{
+      let result=z.array(schema.items?valueSchema(schema.items):z.unknown());
+      if(typeof schema.minItems==="number")result=result.min(schema.minItems);
+      if(typeof schema.maxItems==="number")result=result.max(schema.maxItems);
+      return result;
+    }
     case "object":{
       if(schema.properties){
         return objectSchema(schema);

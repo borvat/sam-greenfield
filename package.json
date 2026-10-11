@@ -21,7 +21,10 @@
     "start": "tsx apps/runtime/src/main.ts",
     "start:mcp": "tsx apps/mcp/src/main.ts",
     "start:command-center": "tsx apps/command-center/src/main.ts",
-    "live:acceptance": "tsx apps/acceptance/src/main.ts"
+    "live:acceptance": "tsx apps/acceptance/src/main.ts",
+    "start:direct": "node scripts/direct/main.cjs",
+    "direct:provision": "node scripts/direct/provision-once.cjs",
+    "test:direct": "node tests/direct/production_acceptance.cjs"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",

@@ -12,6 +12,7 @@ export interface VerificationAdapter{
       capabilityId:string;
       params:Record<string,unknown>;
       evidence:Record<string,unknown>;
+      result?:Record<string,unknown>;
       operationKeyRef:string|null;
     };
     contract:{

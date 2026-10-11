@@ -8,6 +8,8 @@ export interface ModelTask {
   maxCostUsd?: number;
   preferredProviders?: string[];
   requiredModels?: string[];
+  // Optional request bound; existing callers retain their previous behavior.
+  maxOutputTokens?: number;
 }
 
 export interface ProviderConfig {

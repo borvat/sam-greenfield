@@ -3,7 +3,7 @@ export const ACCEPTANCE_PREFIX="sam.acceptance/v1:";
 type Scalar=string|number|boolean|null;
 export interface GoalAcceptance{
   version:1;
-  constraints:{capabilityId:string;params:Record<string,Scalar>;result:{field:string;equals:Scalar}}[];
+  constraints:{capabilityId:string;params:Record<string,Scalar>;result:{field:string;equals?:Scalar;exists?:true}}[];
 }
 function scalar(v:unknown):v is Scalar{
   return v===null||typeof v==="boolean"||(typeof v==="number"&&Number.isFinite(v))||
@@ -20,8 +20,10 @@ export function validateGoalAcceptance(v:any):GoalAcceptance{
       !/^[a-zA-Z0-9_.-]{1,80}$/.test(c.capabilityId)||!keys(c.params,Object.keys(c.params??{}))||
       Object.keys(c.params).length>16||Object.entries(c.params).some(([k,x])=>
         !/^[a-zA-Z0-9_]{1,80}$/.test(k)||!scalar(x))||
-      !keys(c.result,["field","equals"])||!/^([a-zA-Z][a-zA-Z0-9_]{0,79})$/.test(c.result.field??"")||
-      ["constructor","prototype","__proto__"].includes(c.result.field)||!scalar(c.result.equals)){
+      !keys(c.result,["field","equals","exists"])||!/^([a-zA-Z][a-zA-Z0-9_]{0,79})$/.test(c.result.field??"")||
+      ["constructor","prototype","__proto__"].includes(c.result.field)||
+      !((Object.hasOwn(c.result,"equals")&&!Object.hasOwn(c.result,"exists")&&scalar(c.result.equals))||
+        (!Object.hasOwn(c.result,"equals")&&c.result.exists===true))){
       throw new Error("GOAL_CONTRACT_INVALID");
     }
   }
@@ -39,7 +41,7 @@ export function checkGoalAcceptance(definition:string|null,executions:any[]):{pa
     const contract=validateGoalAcceptance(JSON.parse(definition.slice(ACCEPTANCE_PREFIX.length)));
     const passed=contract.constraints.every(c=>executions.some(e=>
       e.capability_id===c.capabilityId&&Object.entries(c.params).every(([k,v])=>e.params?.[k]===v)&&
-      Object.hasOwn(e.result??{},c.result.field)&&e.result[c.result.field]===c.result.equals));
+      Object.hasOwn(e.result??{},c.result.field)&&(c.result.exists===true||e.result[c.result.field]===c.result.equals)));
     return {passed,reason:passed?"GOAL_CONTRACT_MATCH":"GOAL_INTENT_MISMATCH"};
   }catch{return {passed:false,reason:"GOAL_CONTRACT_INVALID"};}
 }

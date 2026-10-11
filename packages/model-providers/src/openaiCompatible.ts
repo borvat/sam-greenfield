@@ -26,6 +26,7 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
         },
         body:JSON.stringify({
           model,
+          ...(task.maxOutputTokens?{max_tokens:task.maxOutputTokens}:{}),
           messages:[{
             role:"user",
             content:taskPrompt(task)

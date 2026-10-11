@@ -2,7 +2,7 @@
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const {spawnSync}=require("node:child_process");
-const source=fs.readFileSync(".replit","utf8");
+const source=fs.readFileSync("deploy/legacy/replit.toml","utf8");
 const deployment=source.split("[deployment]")[1]?.split(/\n\[/)[0];
 assert.ok(deployment);
 const command=JSON.parse(deployment.match(/^build\s*=\s*(.+)$/m)[1]);

@@ -31,6 +31,7 @@ export class OpenAIResponsesAdapter implements ModelProviderAdapter{
         },
         body:JSON.stringify({
           model,
+          ...(task.maxOutputTokens?{max_output_tokens:task.maxOutputTokens}:{}),
           input:taskPrompt(task)
         })
       },

@@ -20,6 +20,7 @@ export class GoogleGeminiAdapter implements ModelProviderAdapter{
           "content-type":"application/json"
         },
         body:JSON.stringify({
+          ...(task.maxOutputTokens?{generationConfig:{maxOutputTokens:task.maxOutputTokens}}:{}),
           contents:[{
             role:"user",
             parts:[{text:taskPrompt(task)}]

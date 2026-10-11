@@ -24,7 +24,7 @@ export async function runBrainReplanCycle(input: {
     if(pilotEnabled())await authorizePilotGoal(client,input.goalId);
     await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
-      "SELECT id,objective,state,company_scope FROM goals WHERE id=$1",
+      `SELECT id,objective,state,company_scope${process.env.SAM_EXECUTIVE_MCP==="1"?",completion_definition":""} FROM goals WHERE id=$1`,
       [input.goalId]
     );
     if (res.rowCount !== 1) throw new Error("Goal not found");
@@ -54,7 +54,8 @@ export async function runBrainReplanCycle(input: {
     availableCapabilities:input.availableCapabilities,
     context:{
       ...context,
-      replan_reason:input.reason
+      replan_reason:input.reason,
+      ...(process.env.SAM_EXECUTIVE_MCP==="1"?{owner_acceptance:goal.completion_definition}: {})
     },
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,

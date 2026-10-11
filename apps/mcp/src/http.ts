@@ -4,7 +4,7 @@ import { createMcpHandler } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { ChatGPTToolRegistry } from "../../chatgpt-tools/src/registry";
 import { buildSamMcpServer } from "./server";
-import {authenticateOAuth,oauthRequest,protectedResourceMetadata,syntheticScopes,type OAuthResourceConfig} from "./oauthResource";
+import {authenticateOAuth,oauthRequest,protectedResourceMetadata,syntheticScopes,executiveScopes,type OAuthResourceConfig} from "./oauthResource";
 
 function csv(values:string[]|string|undefined):string[]{
   if(Array.isArray(values)) return values.map((v)=>v.trim()).filter(Boolean);
@@ -46,6 +46,7 @@ export interface McpHttpServerOptions{
   oauth?:OAuthResourceConfig;
   allowedHosts?:string[]|string;
   allowedOrigins?:string[]|string;
+  readiness?:()=>Promise<boolean>;
 }
 
 export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
@@ -55,8 +56,10 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
   const allowedHosts=new Set(csv(options.allowedHosts).map((v)=>v.toLowerCase()));
   const allowedOrigins=new Set(csv(options.allowedOrigins));
   const expectedToken=options.bearerToken??"";
-  if(options.oauth&&(expectedToken||options.surface.definitions().map(t=>t.name).join(",")!==
-    "sam_get_goal_result,sam_get_goal_status,sam_submit_synthetic_goal")){
+  const names=options.surface.definitions().map(t=>t.name).join(",");
+  if(options.oauth&&(expectedToken||names!==(options.oauth.executive?
+    "sam_capabilities,sam_get_goal_result,sam_get_goal_status,sam_submit_goal":
+    "sam_get_goal_result,sam_get_goal_status,sam_submit_synthetic_goal"))){
     throw new Error("MCP_SYNTHETIC_SURFACE_REQUIRED");
   }
 
@@ -64,7 +67,8 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
     ()=>buildSamMcpServer({
       surface:options.surface,
       actor:options.actor,
-      syntheticOnly:Boolean(options.oauth)
+      syntheticOnly:Boolean(options.oauth&&!options.oauth.executive),
+      executive:Boolean(options.oauth?.executive)
     })
   );
   const nodeHandler=toNodeHandler(handler);
@@ -88,6 +92,13 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
       return;
     }
 
+    if(options.readiness&&req.method==="GET"&&(req.url==="/readyz"||req.url==="/")){
+      void options.readiness().then(ready=>{
+        res.writeHead(ready?200:503,{"content-type":"application/json","cache-control":"no-store"});
+        res.end(JSON.stringify({service:"sam-executive",ready}));
+      }).catch(()=>deny(res,503,"dependency_unavailable"));return;
+    }
+
     if(options.oauth&&req.method==="GET"&&
       ["/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"].includes(req.url??"")){
       res.setHeader("content-type","application/json");
@@ -102,7 +113,7 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
         oauthRequest.run(principal,()=>{void nodeHandler(req,res);});
       }catch{
         const metadata=new URL("/.well-known/oauth-protected-resource/mcp",options.oauth.resource).href;
-        res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="${syntheticScopes.join(" ")}"`+
+        res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="${(options.oauth.executive?executiveScopes:syntheticScopes).join(" ")}"`+
           (bearer(req)?', error="invalid_token"':""));
         res.setHeader("cache-control","no-store");
         deny(res,401,"unauthorized");

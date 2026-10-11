@@ -1,0 +1,110 @@
+modules = ["nodejs-20", "python-3.12", "bash", "postgresql-16"]
+
+[nix]
+channel = "stable-25_05"
+
+[agent]
+expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Command Center"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Development Worker"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SAM Read-only MCP"
+
+[[workflows.workflow]]
+name = "SAM Command Center"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:command-center"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "SAM Development Worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:runtime"
+waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "SAM Read-only MCP"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:mcp"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[userenv]
+
+[userenv.shared]
+
+[userenv.production]
+NODE_ENV = "production"
+SAM_DATABASE_TARGET = "production"
+SAM_DB_CONNECTION_MODE = "direct"
+SAM_DB_CONNECTION_SOURCE = "replit_managed"
+SAM_DB_SCHEMA = "sam"
+SAM_MCP_OAUTH_APPROVED = "0"
+SAM_MCP_SYNTHETIC_TOOLS = "1"
+SAM_PILOT_MAX_COST_USD = "0.01"
+SAM_PILOT_MAX_REQUESTS = "1"
+SAM_PRODUCTION_BUNDLE_MODULE = "apps/production/src/syntheticPilotBundleModule.ts"
+SAM_RELEASE_APPROVED = "0"
+SAM_RELEASE_CAPABILITIES = "local.calculate,local.statistics"
+SAM_RELEASE_ENABLE_MCP = "1"
+SAM_RELEASE_SETUP_LOCAL = "0"
+SAM_RELEASE_SETUP_MODE = "1"
+SAM_RELEASE_SYNTHETIC_PLANNER = "1"
+SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED = "0"
+SAM_MCP_OAUTH_RESOURCE = "https://sam-greenfield.replit.app/mcp"
+SAM_MCP_OAUTH_ISSUER = "https://dev-izt2dymhavtig3p5.eu.auth0.com/"
+SAM_COMMAND_CENTER_ALLOWED_HOSTS = "sam-greenfield.replit.app"
+SAM_COMMAND_CENTER_ALLOWED_ORIGINS = "https://sam-greenfield.replit.app"
+SAM_MCP_OAUTH_CLAIM_NAMESPACE = "https://sam-greenfield.replit.app/sam"
+SAM_MCP_OAUTH_PUBLIC_JWKS = "{\"keys\":[{\"kty\":\"RSA\",\"use\":\"sig\",\"n\":\"leNG0t5cCVFNHLE5IliJvYYcl9FtbUWJIcfI0G77yd5SanmMfX-hSagobGgKv8Z4_ndW6Xmk4ZXjkF_ZEKTm7pP5zXqfgFetS8LYkc057-ub32Vpmm-bcWMMIhQ9AK7esiPQ0x1ljsze6ztd_dDoEXH34X2jW__Y1KEAaGhj3clXUZ_frlKJ-P7qYLF8RqOrOM7pi-oPqDHZEXjnBNVOfi5-vvTzYJkOBdsH8QXammtlgCrXvfELr4J7BkM892x1sAqNgUtyecLYm7tbwlBKj6389Lrd-dpOwx6lGFdjqZdB_TV_YvaqMIm5iI2Umlk2F6kQwkY-UT2QG5bEbLyfBw\",\"e\":\"AQAB\",\"kid\":\"trG4eb1mthFy4uVgrxUib\",\"x5t\":\"xGEpFjbMG3wzL3uV8s16MvvTtho\",\"x5c\":[\"MIIDHTCCAgWgAwIBAgIJW6DI2LHT9SFTMA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNVBAMTIWRldi1penQyZHltaGF2dGlnM3A1LmV1LmF1dGgwLmNvbTAeFw0yNjEwMTEwMDU3MDJaFw00MDA2MTkwMDU3MDJaMCwxKjAoBgNVBAMTIWRldi1penQyZHltaGF2dGlnM3A1LmV1LmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJXjRtLeXAlRTRyxOSJYib2GHJfRbW1FiSHHyNBu+8neUmp5jH1/oUmoKGxoCr/GeP53Vul5pOGV45Bf2RCk5u6T+c16n4BXrUvC2JHNOe/rm99laZpvm3FjDCIUPQCu3rIj0NMdZY7M3us7Xf3Q6BFx9+F9o1v/2NShAGhoY93JV1Gf365Sifj+6mCxfEajqzjO6YvqD6gx2RF45wTVTn4ufr7082CZDgXbB/EF2pprZYAq173xC6+CewZDPPdsdbAKjYFLcnnC2Ju7W8JQSo+t/PS63fnaTsMepRhXY6mXQf01f2L2qjCJuYiNlJpZNhepEMJGPlE9kBuWxGy8nwcCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUVEXea7qGvhs005C6Vv3eWMof0EwwDgYDVR0PAQH/BAQDAgKEMA0GCSqGSIb3DQEBCwUAA4IBAQA0BUuoCWnL+GlhjubFHZQDaQXQtrAbaSiapMlbh98O+5xX8d6S2QPjuHoy+f46Sr9vkL17w2vtTLrfeHSExwNEt92ffB2PZsi8hxoSzjtdYif2wK6ytGznBF4KvfZier9Q9vHISOC54W1ww58pVcbQ9YehlTdrpdBOzpKkBwYPDHXycNrCKcBKFQTjmtWPDW957wNQvZtMKw43J8w1JXaLke8EYArA6RjJqLJ9PjACT6K3EwImdh2UZqkpEkXk+EC15utbWcUzEIeVCM2+mtaF7hyUFxGjqRW3i3kG245m+h5ifNcqmNE3at8XlTA+qFkKpKwez+wwc9dscOGuFRV/\"],\"alg\":\"RS256\"},{\"kty\":\"RSA\",\"use\":\"sig\",\"n\":\"oJtDVD9xrAqD1VocO9EKHqPzR4e2GSQqKgerKLwFrQWBeWZiMeX9hhIb_7Ogu1eYupueU0fRWKazgyDElrDQQ-FPiDdKNH7xuqAafE7X1q8mgH3z1zHgRywhRKXEz8HFKBhhauI7QtQH6jpxVIavzh28R9JBgiijFfvo1gRa2ubLEcfajjbLGqiAqSuunOurS2zOZd9OU0fWwfcLr_StFL_g5d6A8R_-GcnzX5TwDZHxbE3AtIsPmvSZ2RvkMM1MTtvVd9gntHEHxDJljTQDhWem5C3WdnHS8lpEQ-DwR_XK1IEP_LJGwtYsEOyLmdEg43IOCUdgx5UmbvoNONBg0Q\",\"e\":\"AQAB\",\"kid\":\"WmyUFtq-xfqiy9_M9swfu\",\"x5t\":\"4iQscQ2UZZ0jzC6pz23QU6n8FUo\",\"x5c\":[\"MIIDHTCCAgWgAwIBAgIJSPIzaXhyBCxGMA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNVBAMTIWRldi1penQyZHltaGF2dGlnM3A1LmV1LmF1dGgwLmNvbTAeFw0yNjEwMTEwMDU3MDJaFw00MDA2MTkwMDU3MDJaMCwxKjAoBgNVBAMTIWRldi1penQyZHltaGF2dGlnM3A1LmV1LmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKCbQ1Q/cawKg9VaHDvRCh6j80eHthkkKioHqyi8Ba0FgXlmYjHl/YYSG/+zoLtXmLqbnlNH0Vims4MgxJaw0EPhT4g3SjR+8bqgGnxO19avJoB989cx4EcsIUSlxM/BxSgYYWriO0LUB+o6cVSGr84dvEfSQYIooxX76NYEWtrmyxHH2o42yxqogKkrrpzrq0tszmXfTlNH1sH3C6/0rRS/4OXegPEf/hnJ81+U8A2R8WxNwLSLD5r0mdkb5DDNTE7b1XfYJ7RxB8QyZY00A4VnpuQt1nZx0vJaREPg8Ef1ytSBD/yyRsLWLBDsi5nRIONyDglHYMeVJm76DTjQYNECAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUg7HqRnTcLR99ry6RPRE2odR2hKYwDgYDVR0PAQH/BAQDAgKEMA0GCSqGSIb3DQEBCwUAA4IBAQBoNbF0WdPmwHoxfNVhbx2wFGLMAnjRrEtSUtIcRJ3EBwmsmOhy0mf0uvo37CzcsBA7HxynDn2uFisZK45JylDijTujBV0QdT6F5/ER6lgiGI5iyOasyoRhbNJKcs8YmT5m3tT9MJctYeYroVL/FIF+HPOgHYAAZiBId3GpvB8xlgRrCMZbHlIijrj7mm7EMqG9oQ9mZMu8+Pu44ILu5MT3w2Gw3VTI4BseWKjS/kx9b9X79ywvyUZZy6N2kGTwXW2ODQtIK7KaKeIVx8mtdIrU/HWoy86MyheyygzQemGqes4Lu5Vy+dEMwOeJxqkmY4Xv7o2gg3rm2sb4UcYh7Iis\"],\"alg\":\"RS256\"}]}"
+
+[deployment]
+deploymentTarget = "vm"
+run = ["env", "NODE_ENV=production", "npm", "run", "start:release"]
+build = ["sh", "-c", "npm ci --include=dev && npm run typecheck"]
+ignorePorts = false
