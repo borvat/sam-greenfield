@@ -5,7 +5,7 @@ import {once} from "node:events";
 import {spawn,spawnSync} from "node:child_process";
 import {readFileSync,existsSync} from "node:fs";
 const require=createRequire(import.meta.url);
-const {setupModeEnabled,validateSetup}=require("../../scripts/release/setup.cjs");
+const {setupModeEnabled,validateSetup,startSetup}=require("../../scripts/release/setup.cjs");
 const pause=(n:number)=>new Promise(r=>setTimeout(r,n));
 async function main(){
   const env={NODE_ENV:"test",SAM_RELEASE_SETUP_MODE:"1",SAM_RELEASE_SETUP_LOCAL:"1",
@@ -31,8 +31,22 @@ async function main(){
   const allocation=createServer();allocation.listen(0,"127.0.0.1");await once(allocation,"listening");
   const port=(allocation.address() as any).port;await new Promise<void>(r=>allocation.close(()=>r()));
   const marker="synthetic-setup-sensitive-sentinel-not-a-credential";
+  const resource="https://sam.fixture.example/mcp",issuer="https://sam-fixture.eu.auth0.com/";
+  for(const patch of [
+    {SAM_MCP_OAUTH_RESOURCE:"http://sam.fixture.example/mcp"},
+    {SAM_MCP_OAUTH_RESOURCE:resource+"?token="+marker},
+    {SAM_MCP_OAUTH_RESOURCE:"https://sam.fixture.example/"},
+    {SAM_MCP_OAUTH_RESOURCE:"https://sam.fixture.example/\nmcp"},
+    {SAM_MCP_OAUTH_ISSUER:"https://sam.fixture.example/"},
+    {SAM_MCP_OAUTH_ISSUER:"https://sam-fixture.eu.auth0.com/authorize"},
+    {SAM_MCP_OAUTH_ISSUER:"https://user:password@sam-fixture.eu.auth0.com/"},
+    {SAM_MCP_OAUTH_ISSUER:""}
+  ])assert.throws(()=>validateSetup({...env,SAM_MCP_OAUTH_RESOURCE:resource,SAM_MCP_OAUTH_ISSUER:issuer,...patch}),
+    /RELEASE_SETUP_OAUTH_DISCOVERY_INVALID/);
+  assert.equal(validateSetup({...env,SAM_MCP_OAUTH_RESOURCE:resource}).oauthDiscovery,null);
   const child=spawn(process.execPath,["--require","./tests/release/setup_guard.cjs","scripts/release/main.cjs"],{
-    env:{...process.env,...env,PORT:String(port),
+    env:{PATH:process.env.PATH,...env,PORT:String(port),
+      SAM_MCP_OAUTH_RESOURCE:resource,SAM_MCP_OAUTH_ISSUER:issuer,
       DATABASE_URL:`postgresql://fixture@127.0.0.1:${deniedPort}/unused`,
       SAM_RELEASE_DATABASE_URL:marker,SAM_COMMAND_CENTER_BEARER_TOKEN:marker,
       DEEPSEEK_API_KEY:marker,OPENAI_API_KEY:marker,GOOGLE_REFRESH_TOKEN:marker,
@@ -62,11 +76,32 @@ async function main(){
     for(const method of ["POST","PUT","PATCH","DELETE","OPTIONS"]){
       assert.equal((await fetch(base+"/",{method,body:marker})).status,405);
     }
-    for(const path of ["/api/goals","/api/overview","/mcp","/_sam/status","/memory","/users",
+    for(const path of ["/api/goals","/api/overview","/_sam/status","/memory","/users",
       "/livez?secret="+marker,"/"+marker,"/api%2Fgoals"]){
       const response=await fetch(base+path,{headers:{authorization:"Bearer "+marker}});
       assert.equal(response.status,404);assert(!(await response.text()).includes(marker));
     }
+    for(const path of ["/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"]){
+      const response=await fetch(base+path,{headers:{host:"attacker.example"}});
+      assert.equal(response.status,200);
+      const metadata=await response.json() as any;
+      assert.equal(metadata.resource,resource);
+      assert.deepEqual(metadata.authorization_servers,[issuer]);
+      assert.deepEqual(metadata.scopes_supported,["sam:synthetic:read","sam:synthetic:submit"]);
+      assert.deepEqual(metadata.bearer_methods_supported,["header"]);
+      assert.equal((await fetch(base+path,{method:"HEAD"})).status,200);
+      assert.equal((await fetch(base+path,{method:"POST",body:marker})).status,405);
+    }
+    for(const method of ["GET","HEAD","POST","DELETE","PUT","OPTIONS"]){
+      const response=await fetch(base+"/mcp",{method,headers:{authorization:"Bearer "+marker},
+        ...(method==="POST"?{body:JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/list"})}:{})});
+      assert.equal(response.status,401);
+      assert.equal(response.headers.get("www-authenticate"),
+        `Bearer resource_metadata="https://sam.fixture.example/.well-known/oauth-protected-resource/mcp", scope="sam:synthetic:read sam:synthetic:submit"`);
+      assert(!(await response.text()).includes(marker));
+    }
+    assert.equal((await fetch(base+"/.well-known/oauth-authorization-server")).status,404);
+    assert.equal((await fetch(base+"/.well-known/openid-configuration")).status,404);
     const childList=`/proc/${child.pid}/task/${child.pid}/children`;
     if(existsSync(childList))assert.equal(readFileSync(childList,"utf8").trim(),"");
     assert.equal(connections,0);
@@ -77,6 +112,16 @@ async function main(){
     if(child.exitCode===null){child.kill("SIGKILL");await exit;}
     await new Promise<void>(r=>tripwire.close(()=>r()));
   }
+  const incomplete=startSetup(validateSetup({...env,PORT:String(port),SAM_MCP_OAUTH_RESOURCE:resource}));
+  await incomplete.ready;
+  try{
+    for(const path of ["/mcp","/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"]){
+      const response=await fetch(`http://127.0.0.1:${port}`+path);
+      assert.equal(response.status,503);
+      assert.equal((await response.json() as any).error,"OAUTH_DISCOVERY_NOT_CONFIGURED");
+      assert.equal(response.headers.get("www-authenticate"),null);
+    }
+  }finally{await incomplete.stop();}
   const normal=spawnSync(process.execPath,["scripts/release/main.cjs","--validate-only"],{
     env:{NODE_ENV:"production",SAM_RELEASE_APPROVED:"0",SAM_RELEASE_SETUP_MODE:"0"},encoding:"utf8"});
   assert.equal(normal.status,1);assert.match(normal.stderr,/RELEASE_OWNER_APPROVAL_REQUIRED/);
@@ -101,6 +146,6 @@ async function main(){
   const checkOnly=spawnSync(process.execPath,["--require","./tests/release/setup_guard.cjs",
     "scripts/release/main.cjs","--validate-only"],{env,encoding:"utf8"});
   assert.equal(checkOnly.status,0);assert(!checkOnly.stdout.includes("LISTENING"));
-  console.log("SETUP_MODE PASS: 16 configuration refusals; native loopback HTTP, denied business routes/methods, no forbidden modules, outbound or child calls, zero DB-tripwire connections, withheld sentinels, SIGTERM stop; ordinary release remains blocked. Classification=LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE.");
+  console.log("SETUP_MODE PASS: 24 configuration refusals; two RFC9728 metadata routes; six protected MCP method challenges; missing issuer returns 503; no fake AS; native HTTP, no forbidden modules/outbound/children; zero DB-tripwire connections; sentinels withheld; readiness503/SIGTERM; ordinary release unchanged. Classification=LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE.");
 }
 main().catch(()=>{console.error("SETUP_MODE FAIL (details withheld)");process.exitCode=1;});

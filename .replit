@@ -96,9 +96,10 @@ SAM_RELEASE_SETUP_LOCAL = "0"
 SAM_RELEASE_SETUP_MODE = "1"
 SAM_RELEASE_SYNTHETIC_PLANNER = "1"
 SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED = "0"
+SAM_MCP_OAUTH_RESOURCE = "https://sam-greenfield.replit.app/mcp"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["npm", "run", "start:release"]
+run = ["env", "NODE_ENV=production", "npm", "run", "start:release"]
 build = ["sh", "-c", "npm ci --include=dev && npm run typecheck"]
 ignorePorts = false

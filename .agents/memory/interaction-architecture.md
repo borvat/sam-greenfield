@@ -17,6 +17,15 @@ data or actions; preserve internal/original SAM behavior outside the experiment.
 Local preparation does not authorize external OAuth provisioning, Neon changes,
 paid model calls or publishing.
 
+The owner's ChatGPT custom-MCP admin flow requires standard OAuth discovery and
+does not accept manual authorization/token endpoint configuration.
+
+**Why:** The owner encountered an explicit discovery-required error in that UI.
+
+**How to apply:** Repair public resource discovery and link the real Auth0 issuer;
+do not tell the owner to bypass discovery with a bearer or manual-endpoint setup.
+Publishing metadata alone does not authorize SAM tools, database access or workers.
+
 The owner selected Auth0 Free for the ChatGPT OAuth authorization server, rather
 than creating a new authentication system.
 

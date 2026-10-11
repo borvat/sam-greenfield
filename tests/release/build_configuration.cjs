@@ -7,7 +7,8 @@ const deployment=source.split("[deployment]")[1]?.split(/\n\[/)[0];
 assert.ok(deployment);
 const command=JSON.parse(deployment.match(/^build\s*=\s*(.+)$/m)[1]);
 assert.deepEqual(command,["sh","-c","npm ci --include=dev && npm run typecheck"]);
-assert.match(deployment,/^run\s*=\s*\["npm", "run", "start:release"\]/m);
+assert.deepEqual(JSON.parse(deployment.match(/^run\s*=\s*(.+)$/m)[1]),
+  ["env","NODE_ENV=production","npm","run","start:release"]);
 const pkg=JSON.parse(fs.readFileSync("package.json","utf8"));
 assert.ok(pkg.devDependencies.typescript);
 assert.ok(pkg.dependencies.tsx); // Existing runtime TS loader remains available.
@@ -20,4 +21,11 @@ const npm=spawnSync("npm",["config","get","include","--include=dev"],{
 });
 assert.equal(npm.status,0);
 assert.equal(npm.stdout.trim(),"dev");
-console.log("BUILD_CONFIGURATION_PASS: explicit build dev dependencies despite production/omit; runtime unchanged; no install/network.");
+const launch=spawnSync("env",["NODE_ENV=production","npm","run","start:release","--","--validate-only"],{
+  env:{PATH:process.env.PATH,NODE_ENV:"development",SAM_RELEASE_SETUP_MODE:"1",
+    SAM_RELEASE_SETUP_LOCAL:"0",SAM_RELEASE_APPROVED:"0"},
+  encoding:"utf8"
+});
+assert.equal(launch.status,0);
+assert.match(launch.stdout,/RELEASE_SETUP_CONTRACT PASS/);
+console.log("BUILD_CONFIGURATION_PASS: explicit build dev dependencies; production launch pins NODE_ENV; executive disabled; no install/network.");

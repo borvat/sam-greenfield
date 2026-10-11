@@ -1,0 +1,38 @@
+{
+  "liveCheckTimeUtc": "2026-10-11T02:45:47.602127+00:00",
+  "liveBaseUrlFromPlatform": "https://sam-greenfield.replit.app",
+  "platformHasSuccessfulBuild": true,
+  "liveObservedStatus": {
+    "/.well-known/oauth-protected-resource": 502,
+    "/.well-known/oauth-protected-resource/mcp": 502,
+    "/mcp": 502,
+    "/readyz": 502
+  },
+  "runtimeLogEvidence": [
+    "RELEASE_SETUP_PRODUCTION_CONTEXT_REQUIRED",
+    "crash loop detected"
+  ],
+  "specificFailedEnvironmentCondition": "NOT_PROVEN_ORIGINAL_ERROR_COMBINED_MULTIPLE_CHECKS",
+  "localVerification": {
+    "classification": "LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE",
+    "setupTest": "PASS",
+    "configurationRefusals": 24,
+    "metadataHttpRoutes": 2,
+    "mcpHttpMethodsAlways401": 6,
+    "missingIssuer503": "PASS",
+    "noFakeLocalAuthorizationServer": "PASS",
+    "readyz503": "PASS",
+    "outboundAndChildProcessTripwires": "PASS",
+    "databaseTripwireConnections": 0,
+    "withheldSyntheticSentinels": "PASS",
+    "sigterm": "PASS",
+    "productionLaunchAndBuildConfiguration": "PASS",
+    "typecheck": "PASS",
+    "diffCheck": "PASS"
+  },
+  "actualAuth0Issuer": "NOT_SUPPLIED",
+  "actualAuth0ConsentAndTokenAcceptance": "NOT_TESTED",
+  "publicationPerformedByAgent": false,
+  "newPaidResourcesOrProviderCalls": false,
+  "postFixDeployedEndpointSuccess": "NOT_PROVEN_REQUIRES_OWNER_CONFIG_AND_REPUBLISH"
+}
