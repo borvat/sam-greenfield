@@ -34,3 +34,15 @@ than creating a new authentication system.
 **How to apply:** Keep provider provisioning and Neon credential/role changes
 separately owner-gated. Approval for local OAuth compatibility preparation is not
 approval to create an Auth0 account, connect Neon, Publish or spend.
+
+«رابط MCP واحد، ربط واحد داخل ChatGPT، وسام التنفيذي يشتغل بأدواته وصلاحياته
+الحقيقية. بدون لوحات محادثة جديدة، وبدون تحميلك تفاصيل التنفيذ».
+الاتصال التشخيصي المحدود ليس سام الكامل ولا معيار قبول للنتيجة النهائية.
+
+**Why:** The owner explicitly rejected adopting the diagnostic connection as
+full SAM, while allowing the already-running local preparation to finish.
+
+**How to apply:** Keep optional diagnostics disabled unless separately approved;
+do not ask the owner to adopt them as the final integration. Final acceptance
+requires the authenticated existing executive and actual permitted goal flow,
+without treating this direction as approval for paid resources or company access.

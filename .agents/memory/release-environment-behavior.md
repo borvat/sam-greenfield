@@ -44,3 +44,12 @@ the variable would be absent in production.
 classification, not absence of the development URL. Never stamp the indicator
 into user configuration; offline configuration lint is not deployment proof.
 This does not authorize loosening executive database or identity admission.
+
+Use native Node HTTP requests for synthetic pinned-Host transport tests.
+
+**Why:** Workspace fetch-based requests with a synthetic Host override failed
+the endpoint guard; native HTTP requests delivered the intended Host and
+exercised the protocol successfully.
+
+**How to apply:** Do not interpret a fetch-specific Host override failure as
+evidence that MCP protocol initialization itself is broken.

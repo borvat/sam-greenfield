@@ -3,11 +3,14 @@ const http=require("node:http");
 const {setupOAuthDiscovery}=require("./setup-oauth-discovery.cjs");
 function fail(code){throw new Error(code);}
 function setupModeEnabled(env){
-  for(const key of ["SAM_RELEASE_SETUP_MODE","SAM_RELEASE_SETUP_LOCAL"]){
+  for(const key of ["SAM_RELEASE_SETUP_MODE","SAM_RELEASE_SETUP_LOCAL","SAM_RELEASE_SETUP_DIAGNOSTIC_MCP"]){
     if(env[key]!==undefined&&!["0","1"].includes(env[key]))fail("RELEASE_SETUP_FLAG_INVALID");
   }
   if(env.SAM_RELEASE_SETUP_LOCAL==="1"&&env.SAM_RELEASE_SETUP_MODE!=="1"){
     fail("RELEASE_SETUP_LOCAL_WITHOUT_MODE");
+  }
+  if(env.SAM_RELEASE_SETUP_DIAGNOSTIC_MCP==="1"&&env.SAM_RELEASE_SETUP_MODE!=="1"){
+    fail("RELEASE_SETUP_DIAGNOSTIC_REQUIRES_SETUP");
   }
   return env.SAM_RELEASE_SETUP_MODE==="1";
 }
@@ -28,7 +31,11 @@ function validateSetupConfiguration(env){
   if(!/^[0-9]+$/.test(String(env.PORT??5000))||!Number.isSafeInteger(port)||port<1||port>65535){
     fail("RELEASE_SETUP_PORT_INVALID");
   }
-  return {port,host:local?"127.0.0.1":"0.0.0.0",oauthDiscovery:setupOAuthDiscovery(env)};
+  const diagnosticMcp=env.SAM_RELEASE_SETUP_DIAGNOSTIC_MCP==="1";
+  const diagnosticResource=diagnosticMcp?
+    require("./setup-diagnostic-mcp.cjs").validateDiagnosticResource(env.SAM_MCP_OAUTH_RESOURCE):null;
+  return {port,host:local?"127.0.0.1":"0.0.0.0",diagnosticMcp,diagnosticResource,
+    oauthDiscovery:diagnosticMcp?null:setupOAuthDiscovery(env)};
 }
 function validateSetup(env){
   const config=validateSetupConfiguration(env);
@@ -58,7 +65,10 @@ h1{font-size:30px}strong{color:#f6c969}small{color:#b7c4ce}
 <p>يلزم إثبات هوية قاعدة مستقلة وصلاحياتها وRLS والاستعادة، ثم تفويض تشغيل مستقل.</p>
 <small>هذا الوضع لا يوقف فوترة الاستضافة ولا يفرض سقف إنفاق تلقائياً.</small></main></html>`;
 function startSetup(config){
+  const diagnostic=config.diagnosticMcp?
+    require("./setup-diagnostic-mcp.cjs").createDiagnosticMcp(config.diagnosticResource):null;
   const setupStatus=JSON.stringify({...JSON.parse(status),
+    diagnosticMcp:diagnostic?"PUBLIC_STATIC_ONLY":"DISABLED",
     oauthDiscovery:config.oauthDiscovery?"PUBLIC_METADATA_ONLY":"NOT_CONFIGURED"});
   const server=http.createServer({maxHeaderSize:8192},(req,res)=>{
     res.setHeader("cache-control","no-store");
@@ -66,6 +76,7 @@ function startSetup(config){
     res.setHeader("content-security-policy","default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
     res.setHeader("referrer-policy","no-referrer");
     if(req.url==="/mcp"){
+      if(diagnostic){void diagnostic.handle(req,res);return;}
       // Never validate/accept a token or instantiate an MCP handler in Setup.
       req.resume();
       if(config.oauthDiscovery)res.setHeader("www-authenticate",config.oauthDiscovery.challenge);
@@ -78,6 +89,7 @@ function startSetup(config){
       res.writeHead(405,{"allow":"GET, HEAD","connection":"close"});res.end();return;
     }
     if(["/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"].includes(req.url)){
+      if(diagnostic){res.writeHead(404,{"content-type":"application/json"});res.end('{"error":"DIAGNOSTIC_NOAUTH"}');return;}
       res.writeHead(config.oauthDiscovery?200:503,{"content-type":"application/json"});
       res.end(req.method==="HEAD"?"":JSON.stringify(config.oauthDiscovery?.metadata??
         {error:"OAUTH_DISCOVERY_NOT_CONFIGURED"}));return;
@@ -99,7 +111,7 @@ function startSetup(config){
   function stop(){
     if(!stopping)stopping=new Promise(resolve=>{
       server.close(resolve);server.closeAllConnections();
-    });
+    }).then(()=>diagnostic?.close());
     return stopping;
   }
   return {ready,stop};
