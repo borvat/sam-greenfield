@@ -1,0 +1,35 @@
+{
+  "baseCommit": "5079bb0ef14186e0d927f0bb1f07c6761bcb3485",
+  "classification": "LOCAL_PREPARATION_NOT_PUBLISHED_ACCEPTANCE",
+  "productionNonsecretSettings": {
+    "count": 17,
+    "appliedWithProductionEnvironmentApi": true,
+    "readBackConfirmed": true,
+    "trackedIn": ".replit:userenv.production",
+    "ownerUnsavedPublishingDraftInspected": false
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "preparationNegativeCases": {"status": "PASS", "cases": 8},
+    "setupConfigurationRefusals": {"status": "PASS", "cases": 16},
+    "setupNativeHttpAndNoDbNoOutboundNoChildren": "PASS",
+    "mcpProtocolAuthAndDiscovery": {"status": "PASS", "checks": 124},
+    "setupVisualLoopbackWithClearedEnvironment": "PASS",
+    "temporaryVisualServerStopped": true
+  },
+  "deploymentConfiguration": {
+    "target": "vm",
+    "run": ["npm", "run", "start:release"],
+    "build": ["sh", "-c", "npm ci && npm run typecheck"],
+    "vmSize": "OWNER_REPORTED_0.5_VCPU_2GB_NOT_API_VERIFIED",
+    "copyDevelopmentData": "OWNER_REPORTED_OFF_NOT_DRAFT_API_VERIFIED"
+  },
+  "productionSchemaLoginTlsRlsSeed": "NOT_PROVISIONED_OR_PROVED",
+  "auth0ServerAndConnector": "NOT_CONFIGURED_OR_LIVE_TESTED",
+  "finalResourceUrl": "NOT_RESERVED",
+  "actualSecretsReadOrGenerated": false,
+  "neonConnections": 0,
+  "paidModelCalls": 0,
+  "paidResourcesCreated": false,
+  "publishPerformed": false
+}

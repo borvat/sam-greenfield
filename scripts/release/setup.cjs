@@ -42,7 +42,7 @@ h1{font-size:30px}strong{color:#f6c969}small{color:#b7c4ce}
 <h1>سام غير مفعّل</h1><p><strong>وضع تهيئة مغلق — ليس تشغيل سام التنفيذي.</strong></p>
 <p>العامل ولوحة الأعمال والنماذج والعمليات الخارجية معطّلة. لا اتصال بقاعدة البيانات من هذا الوضع.</p>
 <p>يلزم إثبات هوية قاعدة مستقلة وصلاحياتها وRLS والاستعادة، ثم تفويض تشغيل مستقل.</p>
-<small>هذا الوضع لا يوقف فوترة الاستضافة ولا يفرض سقف إنفاق $5.</small></main></html>`;
+<small>هذا الوضع لا يوقف فوترة الاستضافة ولا يفرض سقف إنفاق تلقائياً.</small></main></html>`;
 function startSetup(config){
   const server=http.createServer({maxHeaderSize:8192},(req,res)=>{
     res.setHeader("cache-control","no-store");
