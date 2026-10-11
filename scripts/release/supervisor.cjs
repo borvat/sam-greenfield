@@ -64,7 +64,7 @@ function startSupervisor(config,env,children,{spawnChild=spawn}={}){
       if([...state.values()].some(e=>!e.child||e.exhausted)){res.writeHead(503);res.end();return;}
       proxy(req,res,config.workerPort,"/readyz");return;
     }
-    if(req.url==="/_sam/status"){
+    if(req.url==="/_sam/status"&&!config.mcpOnly){
       if(req.method!=="GET"||!authorized(req,env.SAM_COMMAND_CENTER_BEARER_TOKEN)){
         res.writeHead(401);res.end();return;
       }
@@ -87,10 +87,12 @@ function startSupervisor(config,env,children,{spawnChild=spawn}={}){
         cost:{status:"EXTERNAL_MODEL_DISABLED",authorizedBudgetUsd:0,recordedCostUsd:null,
           reason:"LIVE_COST_MONITOR_REQUIRES_APPROVED_TENANT_BOUND_LEDGER"}}));return;
     }
-    if(req.url==="/mcp"||req.url?.startsWith("/mcp/")){
+    if(req.url==="/mcp"||req.url?.startsWith("/mcp/")||
+      (config.mcpOnly&&["/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"].includes(req.url))){
       if(!config.enableMcp){res.writeHead(404);res.end();return;}
       proxy(req,res,config.mcpPort);return;
     }
+    if(config.mcpOnly){res.writeHead(404);res.end();return;}
     proxy(req,res,config.commandPort);
   });
   const ready=new Promise((resolve,reject)=>{

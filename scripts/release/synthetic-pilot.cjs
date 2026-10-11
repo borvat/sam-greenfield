@@ -18,7 +18,9 @@ function syntheticPilot(env,now=Date.now()){
     cost>0.25||!Number.isInteger(requests)||requests<1||requests>4||
     path.normalize(env.SAM_PRODUCTION_BUNDLE_MODULE??"")!==bundlePath||
     env.SAM_RELEASE_CAPABILITIES!=="local.calculate,local.statistics"||
-    !env.DEEPSEEK_API_KEY?.trim()||env.SAM_RELEASE_ENABLE_MCP==="1")deny();
+    !env.DEEPSEEK_API_KEY?.trim()||
+    (env.SAM_RELEASE_ENABLE_MCP==="1"&&
+      (env.SAM_MCP_SYNTHETIC_TOOLS!=="1"||env.SAM_MCP_OAUTH_APPROVED!=="1")))deny();
   return {runId:env.SAM_PILOT_RUN_ID,expiry,input,output,requests,cost};
 }
 module.exports={syntheticPilot,bundlePath};

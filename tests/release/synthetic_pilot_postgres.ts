@@ -14,8 +14,10 @@ const dev=require("../../scripts/development/environment.cjs");
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 let stage="development_identity";
 const live=process.argv[2]==="--approved-live-once";
+const mcpOffline=process.env.SAM_TEST_MCP_OFFLINE==="1";
+if(mcpOffline&&live)throw new Error("MCP_TEST_EXTERNAL_MODEL_FORBIDDEN");
 const oneShot=live||process.argv[2]==="--one-shot-offline";
-const output=live?".local/sam-dev/synthetic-pilot-live-acceptance.json":
+const output=mcpOffline?".local/sam-dev/mcp-synthetic-postgres-acceptance.json":live?".local/sam-dev/synthetic-pilot-live-acceptance.json":
   ".local/sam-dev/synthetic-pilot-postgres-acceptance.json";
 
 async function child(){
@@ -52,7 +54,30 @@ async function child(){
       const intake=await startCommandCenterHttpServer({
         legalEntityId:process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID!,
         port:0,host:"127.0.0.1",bearerToken:"synthetic-acceptance-owner-not-real"});
+      const {syntheticMcpClient,decodeMcp}=await import("./mcp_synthetic");
+      const mcp=mcpOffline?await syntheticMcpClient(process.env):undefined;
       try{
+        let goalId:string;
+        if(mcp){
+          const input={request_id:randomUUID(),operation:"sum",values:objective.values,
+            expected_result:objective.values.reduce((a:number,b:number)=>a+b,0)};
+          const replies=await Promise.all([1,2].map(()=>mcp.client.callTool({
+            name:"sam_submit_synthetic_goal",arguments:input})));
+          const created=replies.map(decodeMcp);
+          assert(created.every(r=>r.ok));
+          assert.equal(created[0].data.goal_id,created[1].data.goal_id);
+          assert.equal(created.filter(r=>r.data.replayed).length,1);
+          goalId=created[0].data.goal_id;
+          assert.equal((await pool.query("SELECT count(*)::int n FROM goals")).rows[0].n,1);
+          assert.equal((await pool.query("SELECT count(*)::int n FROM audit_log WHERE action='OWNER_GOAL_CREATED'")).rows[0].n,1);
+          assert((await mcp.client.callTool({name:"sam_submit_synthetic_goal",
+            arguments:{...input,expected_result:123456}})).isError);
+          assert((await mcp.client.callTool({name:"sam_get_goal_result",arguments:{goal_id:randomUUID()}})).isError);
+          assert((await mcp.client.callTool({name:"sam_execute",arguments:{}})).isError);
+          const state=decodeMcp(await mcp.client.callTool({name:"sam_get_goal_status",arguments:{goal_id:goalId}}));
+          assert.equal(state.data.state,"NEW");
+          console.log(JSON.stringify({phase:"MCP_OAUTH_INTAKE_REPLAY_NEGATIVES_PROVEN"}));
+        }else{
         const port=(intake.server.address() as any).port;
         const base=`http://127.0.0.1:${port}`;
         assert.equal((await fetch(base+"/api/goals")).status,401);
@@ -68,13 +93,14 @@ async function child(){
             /row-level security/.test(body.error??"")?"INTAKE_RLS":"INTAKE_REJECTED";
           throw new Error(safe);
         }
-        const goalId=body.data.id;
+        goalId=body.data.id;
+        }
         const {planNextNewGoal}=await import("../../apps/production/src/planner");
         const planned=await planNextNewGoal(bundle);
         assert.equal(planned.goalId,goalId);
         assert.equal((await pool.query("SELECT state FROM goals WHERE id=$1",[goalId])).rows[0].state,"EXECUTING");
         console.log(JSON.stringify({phase:"PLAN_COMMITTED",goalId}));
-      }finally{await intake.close();}
+      }finally{if(mcp)await mcp.close();await intake.close();}
       // Parent SIGKILLs this real process after the durable plan checkpoint.
       await new Promise(()=>{});
     }else if(mode==="act"){
@@ -88,6 +114,17 @@ async function child(){
       assert.equal((await pool.query("SELECT state FROM goals WHERE id=$1",[id])).rows[0].state,"COMPLETED");
       const before=(await pool.query("SELECT count(*)::int n FROM executions WHERE goal_id=$1",[id])).rows[0].n;
       await worker.runWorkTick();
+      if(mcpOffline){
+        const {syntheticMcpClient,decodeMcp}=await import("./mcp_synthetic");
+        const mcp=await syntheticMcpClient(process.env);
+        try{
+          const result=decodeMcp(await mcp.client.callTool({name:"sam_get_goal_result",arguments:{goal_id:id}}));
+          assert.equal(result.ok,true);assert.equal(result.data.verified,true);
+          assert.equal(result.data.value,objective.values.reduce((a:number,b:number)=>a+b,0));
+          assert.equal((await pool.query("SELECT count(*)::int n FROM executions WHERE goal_id=$1",[id])).rows[0].n,before);
+          console.log(JSON.stringify({phase:"MCP_INDEPENDENT_RESULT_AFTER_RESTART_PROVEN"}));
+        }finally{await mcp.close();}
+      }
       assert.equal((await pool.query("SELECT count(*)::int n FROM executions WHERE goal_id=$1",[id])).rows[0].n,before);
       let negative=0;
       const client=await pool.connect();
@@ -151,11 +188,15 @@ async function parent(){
   let schemaCreated=false,roleCreated=false,modelCalls=0,processKilled=false;
   let modelServer:ReturnType<typeof createServer>|undefined;
   const active=new Set<ReturnType<typeof spawn>>();
-  const report:any={classification:live?"REAL_DEVELOPMENT_POSTGRES_ONE_SHOT_DEEPSEEK_NOT_NEON_NOT_PUBLISHED":
+  const report:any={classification:mcpOffline?"REAL_DEVELOPMENT_POSTGRES_LOCAL_MCP_SIGNED_TOKENS_MOCK_MODEL_NOT_CHATGPT_NOT_NEON_NOT_PUBLISHED":
+    live?"REAL_DEVELOPMENT_POSTGRES_ONE_SHOT_DEEPSEEK_NOT_NEON_NOT_PUBLISHED":
     "REAL_DEVELOPMENT_POSTGRES_LOCAL_MOCK_MODEL_NOT_NEON_NOT_PUBLISHED",
     status:"BLOCKED",sourceSha:require("node:child_process").execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),
     realProviderCalls:0,paidModelCostUsd:live?null:0,productionEnvelopeTls:"BLOCKED_NOT_VERIFY_FULL",
     gates:{},cleanup:{schema:false,role:false}};
+  if(mcpOffline)report.mcp={externalOAuthFlow:"NOT_CONFIGURED",localProtocol:"SIGNED_SYNTHETIC_ACCESS_TOKENS",
+    tests:["concurrent_idempotent_intake","conflicting_replay_refused","unowned_goal_refused",
+      "generic_execute_refused","persisted_result_after_process_restart"]};
   const launch=(env:Record<string,string>,mode:string)=>{
     const p=spawn(process.execPath,["--import","tsx","tests/release/synthetic_pilot_postgres.ts","--child",mode],{
       env,cwd:dev.root,stdio:["ignore","pipe","pipe"]});
@@ -270,7 +311,7 @@ async function parent(){
       SAM_RELEASE_ORG_ID:org,SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,
       SAM_COMMAND_CENTER_ALLOWED_HOSTS:"127.0.0.1",SAM_TEST_OTHER_ORG:otherOrg,
       SAM_TEST_OTHER_ENTITY:otherEntity,SAM_TEST_SIBLING_ENTITY:sibling,
-      SAM_TEST_MODEL_PORT:String((modelServer.address() as any).port)});
+      SAM_TEST_MODEL_PORT:String((modelServer.address() as any).port),SAM_TEST_MCP_OFFLINE:mcpOffline?"1":"0"});
     if(oneShot){
       childEnv.SAM_PILOT_INPUT_USD_PER_1K=String(oneShotPrice.input);
       childEnv.SAM_PILOT_OUTPUT_USD_PER_1K=String(oneShotPrice.output);

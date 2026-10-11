@@ -5,6 +5,8 @@ import { pool } from "../../../packages/db/src/client";
 import { startMcpHttpServer } from "./http";
 import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
 import {createReleaseReadSurface} from "./releaseReadSurface";
+import {oauthResourceConfig} from "./oauthResource";
+import {createSyntheticGoalSurface,admitSyntheticMcpDatabase} from "./syntheticGoalSurface";
 
 function positiveInt(name:string,value:string|undefined,fallback:number):number{
   if(!value) return fallback;
@@ -15,13 +17,15 @@ function positiveInt(name:string,value:string|undefined,fallback:number):number{
 
 async function main(){
   const production=process.env.NODE_ENV==="production";
+  const synthetic=process.env.SAM_MCP_SYNTHETIC_TOOLS==="1";
+  const oauth=synthetic?oauthResourceConfig(process.env):undefined;
   const token=process.env.SAM_MCP_BEARER_TOKEN?.trim()??"";
   const allowedHosts=process.env.SAM_MCP_ALLOWED_HOSTS?.trim()??"";
   const allowedOrigins=process.env.SAM_MCP_ALLOWED_ORIGINS?.trim()??"";
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
   if(localDevelopment() && bundlePath) denyDevelopment("PRODUCTION_BUNDLE_NOT_ALLOWED");
 
-  if(production&&!token){
+  if(production&&!token&&!oauth){
     throw new Error("SAM_MCP_BEARER_TOKEN is required in production");
   }
   if(production&&!allowedHosts){
@@ -29,18 +33,20 @@ async function main(){
   }
 
   const releaseReadOnly=process.env.SAM_MCP_RELEASE_READ_ONLY==="1";
-  if(releaseReadOnly&&bundlePath)throw new Error("RELEASE_MCP_DISPATCHER_FORBIDDEN");
+  if((releaseReadOnly||synthetic)&&bundlePath)throw new Error("RELEASE_MCP_DISPATCHER_FORBIDDEN");
+  if(synthetic)await admitSyntheticMcpDatabase();
   const dispatcher=bundlePath
     ? createKernelProductionDispatcher(await loadProductionBundle(bundlePath))
     : undefined;
 
-  const surface=releaseReadOnly?createReleaseReadSurface():createChatGPTToolSurface({dispatcher});
+  const surface=synthetic?createSyntheticGoalSurface():releaseReadOnly?createReleaseReadSurface():createChatGPTToolSurface({dispatcher});
   const service=await startMcpHttpServer({
     surface,
     actor:process.env.SAM_MCP_ACTOR?.trim()||"chatgpt-mcp",
     port:positiveInt("SAM_MCP_PORT",process.env.SAM_MCP_PORT,8081),
     host:process.env.SAM_MCP_HOST?.trim()||"0.0.0.0",
-    bearerToken:token||undefined,
+    bearerToken:oauth?undefined:token||undefined,
+    oauth,
     allowedHosts,
     allowedOrigins
   });

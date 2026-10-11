@@ -2,6 +2,7 @@ const path=require("node:path");
 const {isIP}=require("node:net");
 const root=path.resolve(__dirname,"../..");
 const {syntheticPilot,bundlePath}=require("./synthetic-pilot.cjs");
+const {oauthResourceConfig}=require("./mcp-oauth.cjs");
 const required=[
   "DATABASE_URL","SAM_DB_APP_ROLE","SAM_DB_SCHEMA","SAM_RELEASE_ORG_ID",
   "SAM_COMMAND_CENTER_LEGAL_ENTITY_ID","SAM_COMMAND_CENTER_BEARER_TOKEN",
@@ -77,10 +78,16 @@ function validateRelease(env){
   if(capabilities.some(c=>!c||!/^[a-zA-Z0-9_.-]{1,80}$/.test(c)||
     /finance|legal|gmail_send|drive_(create|update|delete|write)/i.test(c)))fail("RELEASE_CAPABILITY_FORBIDDEN");
   const pilot=syntheticPilot(env);
+  if(env.SAM_MCP_SYNTHETIC_TOOLS==="1"&&env.SAM_RELEASE_ENABLE_MCP!=="1")
+    fail("RELEASE_CHATGPT_MCP_REQUIRED");
   if(!pilot&&bundle===path.join(root,bundlePath))fail("RELEASE_SYNTHETIC_PILOT_CONFIGURATION_REQUIRED");
   if(env.SAM_RELEASE_ENABLE_MCP==="1"){
-    // An authenticated read-only surface is optional; no write dispatcher is forwarded.
-    if(!env.SAM_MCP_BEARER_TOKEN||env.SAM_MCP_BEARER_TOKEN.length<32||
+    if(pilot){
+      if(env.SAM_MCP_SYNTHETIC_TOOLS!=="1")fail("RELEASE_SYNTHETIC_MCP_REQUIRED");
+      oauthResourceConfig(env);
+    }else if(env.SAM_MCP_SYNTHETIC_TOOLS==="1"){
+      fail("RELEASE_SYNTHETIC_PILOT_CONFIGURATION_REQUIRED");
+    }else if(!env.SAM_MCP_BEARER_TOKEN||env.SAM_MCP_BEARER_TOKEN.length<32||
       env.SAM_MCP_BEARER_TOKEN===env.SAM_COMMAND_CENTER_BEARER_TOKEN)fail("RELEASE_DISTINCT_MCP_TOKEN_REQUIRED");
   }
   // Strip inherited connection options; the owner-approved production role/tenant
@@ -96,7 +103,8 @@ function validateRelease(env){
     shutdownMs:int(env.SAM_SHUTDOWN_GRACE_MS,100,120000,15000),
     restartLimit:int(env.SAM_RELEASE_RESTART_LIMIT,0,10,3),
     leaseMaxAttempts:int(env.SAM_WORK_LEASE_MAX_ATTEMPTS,1,20,3),
-    enableMcp:env.SAM_RELEASE_ENABLE_MCP==="1"
+    enableMcp:env.SAM_RELEASE_ENABLE_MCP==="1",
+    mcpOnly:Boolean(pilot)
   };
 }
 function childEnvironment(env,config,service){
@@ -146,6 +154,14 @@ function childEnvironment(env,config,service){
     child.SAM_MCP_ALLOWED_ORIGINS=env.SAM_COMMAND_CENTER_ALLOWED_ORIGINS;
     child.SAM_MCP_HOST="127.0.0.1";child.SAM_MCP_PORT=String(config.mcpPort);
     child.SAM_MCP_RELEASE_READ_ONLY="1";
+    if(config.mcpOnly&&config.enableMcp){
+      delete child.SAM_MCP_BEARER_TOKEN;
+      child.SAM_RELEASE_SYNTHETIC_PLANNER="1";
+      for(const key of ["SAM_MCP_SYNTHETIC_TOOLS","SAM_MCP_OAUTH_APPROVED","SAM_MCP_OAUTH_RESOURCE",
+        "SAM_MCP_OAUTH_ISSUER","SAM_MCP_OAUTH_SUBJECT","SAM_MCP_OAUTH_CLIENT_ID","SAM_MCP_OAUTH_PUBLIC_JWKS",
+        "SAM_RELEASE_ORG_ID","SAM_PILOT_RUN_ID","SAM_PILOT_EXPIRES_AT","SAM_PILOT_MAX_REQUESTS","SAM_RELEASE_APPROVED","SAM_DATABASE_TARGET",
+        "SAM_DB_APP_ROLE","SAM_DB_SCHEMA"])child[key]=env[key];
+    }
     // Deliberately no SAM_PRODUCTION_BUNDLE_MODULE / mutation dispatcher.
   }
   return child;
