@@ -1,0 +1,15 @@
+"use strict";
+const assert=require("node:assert/strict");
+const {compare}=require("../../scripts/release/compare-schema-inventories.cjs");
+const dev={target:"development",identity:{db:"heliumdb"},schemaExists:true,tables:[{name:"goals",kind:"r",rls:true,force_rls:false},{name:"plans",kind:"r",rls:true,force_rls:false}]};
+const prod={target:"production",identity:{db:"neondb"},schemaExists:false,tables:[]};
+assert.equal(compare(dev,prod).status,"PRODUCTION_SCHEMA_MISSING");
+assert.deepEqual(compare(dev,prod).missing,["goals","plans"]);
+const match={...prod,schemaExists:true,tables:dev.tables};
+assert.equal(compare(dev,match).status,"TABLE_NAMES_AND_RLS_MATCH_ONLY");
+const changed={...match,tables:[{...dev.tables[0],rls:false},dev.tables[1]]};
+assert.equal(compare(dev,changed).status,"SCHEMA_INVENTORY_DIFFERENT");
+assert.deepEqual(compare(dev,changed).changed,["goals"]);
+assert.throws(()=>compare(dev,{...prod,target:"development"}),/TARGET_LABEL_MISMATCH/);
+assert.throws(()=>compare({...dev,tables:[dev.tables[0],dev.tables[0]]},prod),/INVALID_OR_DUPLICATE_TABLE/);
+console.log("SAM schema compare unit assertions passed (synthetic fixtures only)");
