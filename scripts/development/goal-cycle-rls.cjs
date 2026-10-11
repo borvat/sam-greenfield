@@ -5,9 +5,15 @@ async function installCycleRls(client, role) {
   const capability = role.startsWith("sam_drive_content_") ? "drive_read_test_text" : driveRead ? "drive_get_metadata" : "synthetic.office_task";
   const scope = "(SELECT goal_id FROM development_cycle_scope)";
   const tenant = "EXISTS(SELECT 1 FROM development_cycle_scope)";
+  const {portablePolicy,identifier}=require("./portable-rls.cjs");
+  const schema=(await client.query("SELECT current_schema() AS schema")).rows[0].schema;
+  identifier(schema);
+  if(!schema.startsWith("sam_replit_"))throw new Error("Invalid development cycle schema.");
   const policy = async (table, expression, command = "ALL", restrictive = false) => {
     await client.query(`CREATE POLICY cycle_scope ON ${table} ${restrictive ? "AS RESTRICTIVE" : ""}
-      FOR ${command} TO ${role} USING (${expression}) ${command === "ALL" ? `WITH CHECK (${expression})` : ""}`);
+      FOR ${command} TO ${role} USING (${expression}) ${command === "ALL" ? `WITH CHECK (${expression})` : ""};`+
+      portablePolicy({schema,table,policy:"cycle_scope",roles:[role],permissive:!restrictive,
+        command:command==="ALL"?"*":"r",using:expression,check:command==="ALL"?expression:null}).sql);
   };
   await policy("goals", `id=${scope}`, "ALL", true);
   for (const table of ["plans", "work_queue", "executions", "audit_log"]) {

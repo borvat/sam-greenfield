@@ -118,9 +118,17 @@ async function setupAutonomy(test=false){
       await client.query(`GRANT ${readOnly?"SELECT":insertOnly?"SELECT,INSERT":"SELECT,INSERT,UPDATE"} ON ${schema}.${t} TO ${role}`);
     }
     const policy=async(table,expr,readOnly=false,restrictive=false)=>{
+      const {portablePolicy}=require("./portable-rls.cjs");
+      const tableName=table.includes(".")?table.split(".").at(-1):table;
+      // Apply the same portable, role-bound predicate for future isolated
+      // autonomy schemas. Existing schemas are repaired separately by consent.
+      const qualify=expr.replace(/\bFROM (goals|autonomy_model_claims|outbox_events|work_queue|executions|verifications|event_fabric_events)\b/g,
+        (_,name)=>`FROM ${schema}.${name}`);
       await client.query(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;
         CREATE POLICY autonomy_scope ON ${table} ${restrictive?"AS RESTRICTIVE":""} FOR ${readOnly?"SELECT":"ALL"} TO ${role}
-        USING(${expr}) ${readOnly?"":`WITH CHECK(${expr})`}`);
+        USING(${expr}) ${readOnly?"":`WITH CHECK(${expr})`};`+
+        portablePolicy({schema,table:tableName,policy:"autonomy_scope",permissive:!restrictive,
+          command:readOnly?"r":"*",roles:[role],using:qualify,check:readOnly?null:qualify}).sql);
     };
     await policy("goals",`company_scope='${entity}' AND domain='development_probe' AND authority_ceiling='GREEN'`,false,true);
     await policy("business_id_sequences",`entity_type='goal' AND org_scope_id='${org}'`);
