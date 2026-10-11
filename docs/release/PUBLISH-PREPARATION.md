@@ -10,6 +10,12 @@ Reproduce the exact public profile without reading secrets:
 `npm run release:prepare -- --print-env`.
 Check its closed contract offline: `npm run release:prepare`.
 
+The build command is `npm ci --include=dev && npm run typecheck`. Production
+environment variables also affect build-time npm installation; plain `npm ci`
+omits TypeScript and test/type dependencies when `NODE_ENV=production`. Keep
+production mode and install build dependencies explicitly; do not weaken runtime
+guards or move development tooling into application dependencies to mask this.
+
 ## What this will serve, only after an authorized deployment
 
 Existing `start:release` enters Setup Mode first. `/` and `/livez` return 200;

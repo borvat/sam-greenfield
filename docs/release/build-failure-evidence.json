@@ -1,0 +1,17 @@
+{
+  "failedBuildId": "76eb863f-e8a2-4c11-9fae-66584be16bf0",
+  "timeCreated": "2026-10-11T02:13:02.579Z",
+  "platformStatus": "failed",
+  "failurePhase": "build",
+  "failureMessage": "Build command failed. Check the Logs tab for more details.",
+  "observedError": "sh: 1: tsc: not found",
+  "typeScriptDependency": "devDependencies",
+  "cause": "Production-mode npm ci omitted required build development dependencies",
+  "configuredFix": ["sh", "-c", "npm ci --include=dev && npm run typecheck"],
+  "runtimeCommandUnchanged": ["npm", "run", "start:release"],
+  "machineReportedByPlatform": {"vcpu": "0.5", "memory": "2", "slug": "e2-small"},
+  "productionPublishRetriedByAgent": false,
+  "providerCallsOrDatabaseChanges": false,
+  "nextPublishSuccess": "NOT_PROVEN",
+  "successfulLiveDeploymentClaim": false
+}

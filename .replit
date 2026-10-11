@@ -100,4 +100,5 @@ SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED = "0"
 [deployment]
 deploymentTarget = "vm"
 run = ["npm", "run", "start:release"]
-build = ["sh", "-c", "npm ci && npm run typecheck"]
+build = ["sh", "-c", "npm ci --include=dev && npm run typecheck"]
+ignorePorts = false

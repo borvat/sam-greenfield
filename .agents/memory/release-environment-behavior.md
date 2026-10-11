@@ -22,3 +22,13 @@ configuration edit.
 
 **How to apply:** Stop the temporary fixture and remove only its newly introduced
 mapping; preserve all existing service mappings.
+
+Production environment values also affect the publishing build, not only startup.
+An earlier platform package installation does not guarantee development packages
+survive a subsequent custom `npm ci`.
+
+**Why:** Publishing completed its initial package installation but the build's
+clean install omitted TypeScript under production mode and failed before startup.
+
+**How to apply:** Install required build-time development dependencies explicitly
+in the build command. Keep runtime production mode and security gates unchanged.
