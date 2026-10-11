@@ -79,7 +79,9 @@ function validateReleaseDatabase(env){
     if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(env[k]))fail("RELEASE_TENANT_INVALID");
   }
   // Same connection contract for read-only admission and real execution.
-  const options=`-c role=${env.SAM_DB_APP_ROLE} -c search_path=${env.SAM_DB_SCHEMA},pg_catalog`+
+  // An omitted pg_temp is implicitly searched FIRST for relations. Place it
+  // explicitly last so temporary tables cannot shadow the trusted SAM schema.
+  const options=`-c role=${env.SAM_DB_APP_ROLE} -c search_path=${env.SAM_DB_SCHEMA},pg_catalog,pg_temp`+
     ` -c app.current_org_id=${env.SAM_RELEASE_ORG_ID}`+
     ` -c app.current_legal_entity_id=${env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID}`;
   db.searchParams.set("options",options);

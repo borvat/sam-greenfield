@@ -232,3 +232,50 @@ Next bounded release sequence:
 
 Local checks rerun at 13:54 UTC: 6/6 migration safety tests, source/Action/
 closed-setup checks and typecheck PASS. Historical migration files untouched.
+
+## Executive code review follow-up — trusted relation lookup
+
+Reviewed the existing release DB admission, connection contract and secured MCP;
+no replacement bridge or runtime was introduced. Review branch already on
+GitHub at `34e855279ca294c819d5c085e741f4b396a05a5c`, main still at the
+original base; owner reports draft PR 4. Diagnostic PR 3 remains unmerged.
+
+Found and corrected a concrete release connection defect: omitting `pg_temp`
+from search_path implicitly gives temporary relations precedence. The canonical
+runtime/admission path is now `sam,pg_catalog,pg_temp` (configured SAM schema
+first), applied identically to all existing release children; incoming URI
+options cannot override it. No schema/data/grant/function changes are required.
+
+Actual heliumdb transaction, entirely rolled back:
+- temporary empty work_queue shadows sam.work_queue under old path: true;
+- corrected path resolves sam.work_queue: true;
+- current_schema remains sam, so original admission scope is preserved: true.
+
+This is real PostgreSQL name-resolution evidence, not non-owner RLS or
+production-runtime acceptance. Original migration SQL/hashes remain untouched.
+
+Verification of this correction:
+- Release contract/process tests PASS, including hostile URI search_path
+  replacement and identical canonical options for all three release children.
+- Existing MCP test PASS: 124 checks; actual loopback Streamable HTTP protocol
+  and signed synthetic credentials, deliberately mocked SQL. No external calls.
+- Actual local pg TLS negotiation PASS; mismatched/untrusted certificates
+  rejected. Server startup fixture is not production DB authentication.
+- Database admission tests PASS: 14 local cases; no provider/DB compatibility
+  claim. Typecheck and diff checks PASS.
+- Fresh LIVE protected-resource discovery and Auth0 OIDC metadata both 200;
+  /mcp remains 401 SETUP_MCP_DISABLED, /readyz remains 503. No authorization-
+  code login, production goal execution or readiness 200 is claimed.
+- Production read replica still reports sam absent and proposed restricted
+  sam_runtime LOGIN absent. No backup/restore API was available in this session;
+  the owner's last screenshot is not promoted to completed-backup evidence.
+- Existing development dashboard still renders its authentication gate; the
+  signed-in UI was not verified. No new UI was created or exposed.
+
+No affected release workflow exists locally to restart; current development
+services are unchanged. This correction is not active in the published build
+and does not authorize republishing. The earliest unavoidable external action
+is platform correction of native custom-schema migration scope, with an
+approved isolated restore method before any production change. Existing
+backlog already tracks schema parity and registered Auth0 authorization;
+no duplicate implementation tasks are introduced.
