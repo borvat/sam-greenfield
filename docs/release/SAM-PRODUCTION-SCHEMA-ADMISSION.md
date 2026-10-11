@@ -36,3 +36,9 @@ No production DDL, COPY, restore, or publishing until:
 - Do not create a second SAM/MCP app or enable unverified executive execution.
 
 This document is a decision aid, **not** an executed repair or evidence that Replit supports non-public schema publishing.
+
+## Replit official migration mechanism research (2026-10-11)
+- Replit engineering describes deploy-time schema introspection of both databases, diff generation and validation using a temporary Neon branch, rather than direct copying of development rows: https://frontier.replit.com/production-databases-automated-migrations/
+- Replit's announcement says Dev and Production data are isolated, and detected schema changes are proposed during deployment: https://replit.com/blog/introducing-a-safer-way-to-vibe-code-with-replit-databases
+- Neither source explicitly promises coverage of custom PostgreSQL namespace `sam`. Since direct catalog query proved the namespace absent while managed schema diff returned `hasDiff=false`, do **not** infer non-public-schema support.
+- Next action: obtain a platform-specific answer or validate *read-only* underlying introspection scope before deciding between Replit migration and independently reviewed one-time scoped production migration. Do not append `db:push` blindly to a build command or re-publish to experiment.
