@@ -32,3 +32,15 @@ clean install omitted TypeScript under production mode and failed before startup
 
 **How to apply:** Install required build-time development dependencies explicitly
 in the build command. Keep runtime production mode and security gates unchanged.
+
+Development-domain metadata can be present in a published Reserved VM. Its
+presence alone is not proof that a process is running in development.
+
+**Why:** Actual published logs rejected that injected metadata and entered a
+crash loop, despite publication succeeding; a documentation summary had suggested
+the variable would be absent in production.
+
+**How to apply:** Use Replit's documented deployment indicator for runtime
+classification, not absence of the development URL. Never stamp the indicator
+into user configuration; offline configuration lint is not deployment proof.
+This does not authorize loosening executive database or identity admission.

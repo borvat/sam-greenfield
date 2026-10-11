@@ -13,17 +13,30 @@ async function main(){
   assert.equal(setupModeEnabled({}),false);
   assert.equal(setupModeEnabled({SAM_RELEASE_SETUP_MODE:"0"}),false);
   assert.equal(validateSetup(env).host,"127.0.0.1");
-  assert.equal(validateSetup({...env,NODE_ENV:"production",SAM_RELEASE_SETUP_LOCAL:"0"}).host,"0.0.0.0");
+  const production={...env,NODE_ENV:"production",SAM_RELEASE_SETUP_LOCAL:"0",
+    REPLIT_DEPLOYMENT:"1",REPLIT_DEV_DOMAIN:"synthetic-fixture.replit.dev"};
+  assert.equal(validateSetup(production).host,"0.0.0.0");
+  let configurationRefusals=0;
   const invalid=[
     {SAM_RELEASE_SETUP_MODE:"true"},{SAM_RELEASE_SETUP_MODE:""},{SAM_RELEASE_SETUP_MODE:"0"},
     {SAM_RELEASE_SETUP_LOCAL:"true"},{SAM_RELEASE_APPROVED:"1"},{SAM_RELEASE_APPROVED:undefined},
     {NODE_ENV:"production"},{NODE_ENV:"development"},
     {SAM_RELEASE_SETUP_LOCAL:"0"},{PORT:"0"},{PORT:"65536"},{PORT:"1e3"},{PORT:"5011x"}
   ];
-  for(const patch of invalid)assert.throws(()=>validateSetup({...env,...patch}));
-  for(const patch of [{REPLIT_DEV_DOMAIN:"fixture.invalid"},{SAM_DEVELOPMENT_SAFE_MODE:"1"},{SAM_AUTONOMY_SANDBOX:"1"}]){
-    assert.throws(()=>validateSetup({...env,NODE_ENV:"production",SAM_RELEASE_SETUP_LOCAL:"0",...patch}));
+  for(const patch of invalid){
+    assert.throws(()=>validateSetup({...env,...patch}));configurationRefusals++;
   }
+  for(const patch of [
+    {REPLIT_DEPLOYMENT:undefined},{REPLIT_DEPLOYMENT:"0"},{REPLIT_DEPLOYMENT:""},
+    {REPLIT_DEPLOYMENT:"true"},{REPLIT_DEPLOYMENT:1},
+    {NODE_ENV:"development"},{NODE_ENV:"test"},{NODE_ENV:undefined},
+    {SAM_DEVELOPMENT_SAFE_MODE:"1"},{SAM_DEVELOPMENT_SAFE_MODE:"true"},
+    {SAM_AUTONOMY_SANDBOX:"1"},{SAM_AUTONOMY_SANDBOX:"true"},
+    {SAM_RELEASE_SETUP_LOCAL:"1"},{SAM_RELEASE_APPROVED:"1"}
+  ]){
+    assert.throws(()=>validateSetup({...production,...patch}));configurationRefusals++;
+  }
+  assert.throws(()=>validateSetup({...env,REPLIT_DEPLOYMENT:"1"}));configurationRefusals++;
   let connections=0;
   const tripwire=createServer(socket=>{connections++;socket.destroy();});
   tripwire.listen(0,"127.0.0.1");await once(tripwire,"listening");
@@ -41,11 +54,13 @@ async function main(){
     {SAM_MCP_OAUTH_ISSUER:"https://sam-fixture.eu.auth0.com/authorize"},
     {SAM_MCP_OAUTH_ISSUER:"https://user:password@sam-fixture.eu.auth0.com/"},
     {SAM_MCP_OAUTH_ISSUER:""}
-  ])assert.throws(()=>validateSetup({...env,SAM_MCP_OAUTH_RESOURCE:resource,SAM_MCP_OAUTH_ISSUER:issuer,...patch}),
-    /RELEASE_SETUP_OAUTH_DISCOVERY_INVALID/);
+  ]){
+    assert.throws(()=>validateSetup({...env,SAM_MCP_OAUTH_RESOURCE:resource,SAM_MCP_OAUTH_ISSUER:issuer,...patch}),
+      /RELEASE_SETUP_OAUTH_DISCOVERY_INVALID/);configurationRefusals++;
+  }
   assert.equal(validateSetup({...env,SAM_MCP_OAUTH_RESOURCE:resource}).oauthDiscovery,null);
   const child=spawn(process.execPath,["--require","./tests/release/setup_guard.cjs","scripts/release/main.cjs"],{
-    env:{PATH:process.env.PATH,...env,PORT:String(port),
+    env:{PATH:process.env.PATH,...production,PORT:String(port),
       SAM_MCP_OAUTH_RESOURCE:resource,SAM_MCP_OAUTH_ISSUER:issuer,
       DATABASE_URL:`postgresql://fixture@127.0.0.1:${deniedPort}/unused`,
       SAM_RELEASE_DATABASE_URL:marker,SAM_COMMAND_CENTER_BEARER_TOKEN:marker,
@@ -146,6 +161,6 @@ async function main(){
   const checkOnly=spawnSync(process.execPath,["--require","./tests/release/setup_guard.cjs",
     "scripts/release/main.cjs","--validate-only"],{env,encoding:"utf8"});
   assert.equal(checkOnly.status,0);assert(!checkOnly.stdout.includes("LISTENING"));
-  console.log("SETUP_MODE PASS: 24 configuration refusals; two RFC9728 metadata routes; six protected MCP method challenges; missing issuer returns 503; no fake AS; native HTTP, no forbidden modules/outbound/children; zero DB-tripwire connections; sentinels withheld; readiness503/SIGTERM; ordinary release unchanged. Classification=LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE.");
+  console.log(`SETUP_MODE PASS: ${configurationRefusals} configuration refusals; published-context fixture accepts dev-domain metadata only with deployment marker1; two RFC9728 metadata routes; six protected MCP method challenges; missing issuer503; no fake AS; native HTTP, no forbidden modules/outbound/children; zero DB-tripwire connections; sentinels withheld; readiness503/SIGTERM; ordinary release unchanged. Classification=LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE.`);
 }
 main().catch(()=>{console.error("SETUP_MODE FAIL (details withheld)");process.exitCode=1;});

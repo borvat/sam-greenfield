@@ -1,5 +1,5 @@
 // Offline, nonsecret preparation. No process.env, database, providers or writes.
-const {validateSetup}=require("./setup.cjs");
+const {validateSetupConfiguration}=require("./setup.cjs");
 const values=Object.freeze({
   NODE_ENV:"production",
   SAM_RELEASE_APPROVED:"0",
@@ -20,7 +20,11 @@ const values=Object.freeze({
   SAM_PILOT_MAX_COST_USD:"0.01"
 });
 function report(config=values){
-  validateSetup(config);
+  // Offline preparation must not manufacture the platform's runtime marker.
+  if(["REPLIT_DEPLOYMENT","REPLIT_DEV_DOMAIN"].some(key=>Object.hasOwn(config,key))){
+    throw new Error("RELEASE_PREPARATION_MANAGED_MARKER_FORBIDDEN");
+  }
+  const setup=validateSetupConfiguration(config);
   if(config.SAM_MCP_OAUTH_APPROVED!=="0"||
     config.SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED!=="0"){
     throw new Error("RELEASE_PREPARATION_ACTIVATION_FORBIDDEN");
@@ -31,10 +35,11 @@ function report(config=values){
   return {
     status:"SETUP_CONFIGURATION_READY_EXECUTIVE_BLOCKED",
     classification:"OFFLINE_CONFIGURATION_NOT_DEPLOYMENT_OR_DB_PROOF",
-    setup:{port:validateSetup(config).port,rootStatus:200,readyStatus:503},
+    setup:{port:setup.port,rootStatus:200,readyStatus:503},
+    runtimeContext:"NOT_VERIFIED_REQUIRES_PLATFORM_REPLIT_DEPLOYMENT_1",
     executiveWorker:false,databaseConnections:0,modelCalls:0,
     businessActions:false,publishAuthorized:false,
-    oauthDiscovery:"ACTIVE_MCP_ONLY_NOT_ADVERTISED_BY_SETUP",
+    oauthDiscovery:setup.oauthDiscovery?"PUBLIC_METADATA_ONLY":"NOT_CONFIGURED",
     missingExternalEvidence:[
       "ACTUAL_RESTRICTED_PRODUCTION_LOGIN_TLS_RLS_SCHEMA_AND_SYNTHETIC_SEED",
       "FINAL_RESERVED_HTTPS_RESOURCE",

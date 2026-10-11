@@ -58,6 +58,30 @@
     "discoveryChallengePresent": false
   },
   "actualAuth0ConsentAndTokenAcceptance": "NOT_TESTED",
+  "setupDeploymentGuardCorrection": {
+    "observedLiveFailureCode": "RELEASE_SETUP_DEV_DOMAIN_FORBIDDEN",
+    "runtimeIndicator": "REPLIT_DEPLOYMENT must equal string 1 supplied by platform",
+    "productionModeAlsoRequired": true,
+    "developmentDomainPresenceAloneIsNotDevelopment": true,
+    "localTestModeForbiddenInMarkedDeployment": true,
+    "missingMalformedMarkerOrDevelopmentFlagsRefused": true,
+    "platformMarkerNotWrittenToUserConfigurationOrLaunchCommand": true,
+    "offlinePreparationSeparatedFromRuntimeAdmission": true,
+    "configurationRefusalsTested": 36,
+    "nativeHttpWithProductionMarkerAndDevelopmentDomainMetadata": {
+      "rootResourceMetadata": 200,
+      "mcpResourceMetadata": 200,
+      "mcpChallenge": 401,
+      "readiness": 503
+    },
+    "outboundDbChildTripwires": "PASS",
+    "databaseTripwireConnections": 0,
+    "typecheck": "PASS",
+    "buildAndOfflinePreparationRegression": "PASS",
+    "executiveReleaseAdmissionUnchanged": true,
+    "classification": "LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE",
+    "liveAfterCorrection": "NOT_PROVEN_REQUIRES_OWNER_REPUBLISH"
+  },
   "publicationPerformedByAgent": false,
   "newPaidResourcesOrProviderCalls": false,
   "postFixDeployedEndpointSuccess": "NOT_PROVEN_REQUIRES_OWNER_REPUBLISH"

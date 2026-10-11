@@ -23,7 +23,8 @@ assert.equal(npm.status,0);
 assert.equal(npm.stdout.trim(),"dev");
 const launch=spawnSync("env",["NODE_ENV=production","npm","run","start:release","--","--validate-only"],{
   env:{PATH:process.env.PATH,NODE_ENV:"development",SAM_RELEASE_SETUP_MODE:"1",
-    SAM_RELEASE_SETUP_LOCAL:"0",SAM_RELEASE_APPROVED:"0"},
+    SAM_RELEASE_SETUP_LOCAL:"0",SAM_RELEASE_APPROVED:"0",REPLIT_DEPLOYMENT:"1",
+    REPLIT_DEV_DOMAIN:"synthetic-build-fixture.replit.dev"},
   encoding:"utf8"
 });
 assert.equal(launch.status,0);

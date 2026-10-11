@@ -32,10 +32,21 @@ a crash loop. The original compound check did not identify which runtime
 environment condition failed. Public configuration readback is not proof of
 the environment in the already-published snapshot.
 
-The prepared launch explicitly pins `NODE_ENV=production`. Setup's original
-development-domain/safe-mode/sandbox guards remain in place, now with distinct
-safe failure codes. A later crash with one of those codes must be resolved in
-the actual Publishing environment, not by disabling the guard.
+The launch pins `NODE_ENV=production`. Subsequent published logs identified
+`RELEASE_SETUP_DEV_DOMAIN_FORBIDDEN`: Replit injected development-domain metadata
+into the published VM. Setup now requires the documented platform marker
+`REPLIT_DEPLOYMENT=1` plus production mode; development-domain metadata alone
+does not classify the runtime. Missing/malformed marker, development mode and
+development safe-mode/sandbox flags remain fail-closed.
+
+Do **not** set `REPLIT_DEPLOYMENT` yourself in Secrets, `.replit` or the launch
+command. Replit must supply it. Offline preparation lints configuration separately
+and explicitly does not prove or manufacture deployment identity. Local test
+mode cannot run in a marked deployment. This correction applies only to closed
+Setup; executive release/database/identity admission rules are unchanged.
+
+Source for the platform marker:
+https://docs.replit.com/core-concepts/project-editor/app-setup/secrets
 
 ## Owner publication and later activation are separate gates
 

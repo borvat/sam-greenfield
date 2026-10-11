@@ -11,7 +11,8 @@ function setupModeEnabled(env){
   }
   return env.SAM_RELEASE_SETUP_MODE==="1";
 }
-function validateSetup(env){
+// Pure configuration lint; does not attest the environment in which it runs.
+function validateSetupConfiguration(env){
   if(!setupModeEnabled(env)||env.SAM_RELEASE_APPROVED!=="0"){
     fail("RELEASE_SETUP_EXECUTIVE_APPROVAL_FORBIDDEN");
   }
@@ -20,15 +21,25 @@ function validateSetup(env){
     if(env.NODE_ENV!=="test")fail("RELEASE_SETUP_LOCAL_TEST_REQUIRED");
   }else{
     if(env.NODE_ENV!=="production")fail("RELEASE_SETUP_PRODUCTION_CONTEXT_REQUIRED");
-    if(env.REPLIT_DEV_DOMAIN)fail("RELEASE_SETUP_DEV_DOMAIN_FORBIDDEN");
-    if(env.SAM_DEVELOPMENT_SAFE_MODE==="1")fail("RELEASE_SETUP_DEV_SAFE_MODE_FORBIDDEN");
-    if(env.SAM_AUTONOMY_SANDBOX==="1")fail("RELEASE_SETUP_DEV_SANDBOX_FORBIDDEN");
+    if(![undefined,"0"].includes(env.SAM_DEVELOPMENT_SAFE_MODE))fail("RELEASE_SETUP_DEV_SAFE_MODE_FORBIDDEN");
+    if(![undefined,"0"].includes(env.SAM_AUTONOMY_SANDBOX))fail("RELEASE_SETUP_DEV_SANDBOX_FORBIDDEN");
   }
   const port=env.PORT===undefined?5000:Number(env.PORT);
   if(!/^[0-9]+$/.test(String(env.PORT??5000))||!Number.isSafeInteger(port)||port<1||port>65535){
     fail("RELEASE_SETUP_PORT_INVALID");
   }
   return {port,host:local?"127.0.0.1":"0.0.0.0",oauthDiscovery:setupOAuthDiscovery(env)};
+}
+function validateSetup(env){
+  const config=validateSetupConfiguration(env);
+  if(env.SAM_RELEASE_SETUP_LOCAL==="1"){
+    if(![undefined,"0"].includes(env.REPLIT_DEPLOYMENT))fail("RELEASE_SETUP_LOCAL_TEST_REQUIRED");
+  }else if(env.REPLIT_DEPLOYMENT!=="1"){
+    fail("RELEASE_SETUP_DEPLOYMENT_MARKER_REQUIRED");
+  }
+  // REPLIT_DEV_DOMAIN may also be injected into a published VM. It is metadata,
+  // not a development-mode attestation. No worker/DB/tool approvals change.
+  return config;
 }
 const status=JSON.stringify({
   mode:"SETUP",ready:false,executiveActivationAuthorized:false,
@@ -93,4 +104,4 @@ function startSetup(config){
   }
   return {ready,stop};
 }
-module.exports={setupModeEnabled,validateSetup,startSetup};
+module.exports={setupModeEnabled,validateSetupConfiguration,validateSetup,startSetup};

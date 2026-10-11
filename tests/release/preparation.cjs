@@ -11,6 +11,9 @@ assert.equal(result.executiveWorker,false);
 assert.equal(result.databaseConnections,0);
 assert.equal(result.modelCalls,0);
 assert.equal(result.publishAuthorized,false);
+assert.equal(result.runtimeContext,"NOT_VERIFIED_REQUIRES_PLATFORM_REPLIT_DEPLOYMENT_1");
+assert.throws(()=>report({...values,REPLIT_DEPLOYMENT:"1"}));
+assert.equal(Object.hasOwn(values,"REPLIT_DEPLOYMENT"),false);
 for(const [key,value] of [
   ["SAM_RELEASE_APPROVED","1"],["SAM_RELEASE_SETUP_MODE","0"],
   ["SAM_MCP_OAUTH_APPROVED","1"],["SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED","1"],
