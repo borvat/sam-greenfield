@@ -79,3 +79,12 @@ loop preserved the same coverage without either failure.
 **How to apply:** Check file byte length and read budgets, avoid routing large
 SQL through shell-output previews, and keep one transactional batch below the
 process argument limit. Never split a transaction across tool calls.
+
+A successful empty managed schema diff is not proof of production schema parity.
+
+**Why:** The managed diff reported no changes while independent development and
+production catalog checks disagreed about the application's schema.
+
+**How to apply:** Confirm actual source and target catalog presence independently.
+Treat the disagreement as a mapping/visibility blocker, not permission to run
+production DDL or a reason to assume custom-schema support is unavailable.
