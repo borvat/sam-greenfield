@@ -17,8 +17,15 @@ function int(v,min,max,fallback){
 }
 function validateReleaseDatabase(env){
   if(env.NODE_ENV!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
-  if(env.REPLIT_DEV_DOMAIN||env.SAM_DEVELOPMENT_SAFE_MODE==="1"||env.SAM_AUTONOMY_SANDBOX==="1"){
+  // A published Replit VM can carry development-domain metadata. Only the
+  // platform's exact deployment marker permits that metadata, never a dev flag.
+  if((env.REPLIT_DEV_DOMAIN&&env.REPLIT_DEPLOYMENT!=="1")||
+    ![undefined,"0"].includes(env.SAM_DEVELOPMENT_SAFE_MODE)||
+    ![undefined,"0"].includes(env.SAM_AUTONOMY_SANDBOX)){
     fail("RELEASE_DEVELOPMENT_ENV_FORBIDDEN");
+  }
+  if(env.REPLIT_DEPLOYMENT!==undefined&&!["0","1"].includes(env.REPLIT_DEPLOYMENT)){
+    fail("RELEASE_PLATFORM_MARKER_INVALID");
   }
   if(env.SAM_DATABASE_TARGET!=="production")fail("RELEASE_DATABASE_TARGET_REQUIRED");
   for(const k of ["DATABASE_URL","SAM_DB_APP_ROLE","SAM_DB_SCHEMA",

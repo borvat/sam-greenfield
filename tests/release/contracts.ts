@@ -25,6 +25,16 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  assert.doesNotThrow(()=>validateRelease({...env,REPLIT_DEPLOYMENT:"1",REPLIT_DEV_DOMAIN:"published-metadata.invalid"}));
+  for(const patch of [{REPLIT_DEPLOYMENT:"true"},{REPLIT_DEPLOYMENT:""},
+    {REPLIT_DEPLOYMENT:"0",REPLIT_DEV_DOMAIN:"editor.invalid"},
+    {REPLIT_DEPLOYMENT:"1",NODE_ENV:"development"},
+    {REPLIT_DEPLOYMENT:"1",SAM_DEVELOPMENT_SAFE_MODE:"1"},
+    {REPLIT_DEPLOYMENT:"1",SAM_DEVELOPMENT_SAFE_MODE:"true"},
+    {REPLIT_DEPLOYMENT:"1",SAM_AUTONOMY_SANDBOX:"1"},
+    {REPLIT_DEPLOYMENT:"1",SAM_AUTONOMY_SANDBOX:"true"},
+    {REPLIT_DEPLOYMENT:"1",SAM_RELEASE_APPROVED:"0"}])
+    assert.throws(()=>validateRelease({...env,...patch}));
   const managed=validateRelease({...env,SAM_DB_CONNECTION_SOURCE:"replit_managed",
     DATABASE_URL:env.DATABASE_URL.replace("verify-full","require")});
   assert.equal(new URL(managed.databaseUrl).searchParams.get("sslmode"),"verify-full");
