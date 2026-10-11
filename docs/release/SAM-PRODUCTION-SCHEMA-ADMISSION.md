@@ -51,3 +51,8 @@ Directly inspected `packages/db/src/migrate.js` on main:
 - Consequently, `npm run db:migrate` must **not** be run in production as a workaround. This audit does not mean the migrations themselves cannot be used in a separately reviewed, schema-scoped transaction.
 
 **Required correction before any schema DDL**: build a separate one-time migration mechanism, explicitly preflight the production DB identity, backups and roles; schema-qualify ledger and set a transaction-local `search_path=sam,pg_catalog`; reject mismatched hashes/existing objects; verify postconditions and keep runtime credentials separate. Code branch work alone cannot satisfy these live prerequisites.
+
+## Offline test execution record — 2026-10-11
+- Reconstructed the exact committed `production-schema-sql.cjs` generator in an isolated Node.js workspace, ran `node --check`, then ran eight assertions from the committed synthetic-fixture test: **PASS**.
+- No live Postgres connection was made. This tests generator syntax and guards on fake SQL, **not** validity of all original migrations, the RLS policy semantics, the Replit publishing mechanism, or the actual production database.
+- The generated SQL ends in `COMMIT`, so it remains an executable DDL draft and **must not be pasted into the Replit SQL console** before the backup/role and migration review gates are met.
