@@ -29,3 +29,14 @@ sequence; the real restricted LOGIN correctly refused it before any model call.
 **How to apply:** Include intake in real-database acceptance. Scope allocations
 to the already validated entity rather than granting access to global sequences
 to make a pilot pass.
+
+Do not assume a runtime CURRENT_USER membership predicate universally replaces
+a policy's TO-role selection under non-invoker views.
+
+**Why:** PostgreSQL can select RLS policies using a view owner's identity while
+CURRENT_USER remains the caller. Direct-table and security-invoker tests do not
+prove equivalence for non-invoker views with non-bypass owners.
+
+**How to apply:** Check view dependencies and owner bypass attributes before a
+role-portability conversion, and review them again if the query architecture
+introduces such a view. Never claim general equivalence from direct-role tests.

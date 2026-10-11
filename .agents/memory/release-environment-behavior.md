@@ -67,3 +67,15 @@ role-targeted policies with unconditional PUBLIC policies: restrictive and
 permissive policies require different permission-equivalent treatment. Existing
 development policy changes need explicit scope approval; never bypass the managed
 production migration flow with startup DDL or administrative worker credentials.
+
+Generate long transactional SQL fixtures to a temporary file and read that file
+fully before passing a compact batch to the database tool.
+
+**Why:** A stdout-mediated SQL rehearsal lost its middle despite a later
+non-truncated outer result, producing a misleading SQL syntax error. The full
+batch then exceeded the subprocess argument limit. A compact server-side test
+loop preserved the same coverage without either failure.
+
+**How to apply:** Check file byte length and read budgets, avoid routing large
+SQL through shell-output previews, and keep one transactional batch below the
+process argument limit. Never split a transaction across tool calls.
