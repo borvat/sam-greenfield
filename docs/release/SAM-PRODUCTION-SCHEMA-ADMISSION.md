@@ -42,3 +42,12 @@ This document is a decision aid, **not** an executed repair or evidence that Rep
 - Replit's announcement says Dev and Production data are isolated, and detected schema changes are proposed during deployment: https://replit.com/blog/introducing-a-safer-way-to-vibe-code-with-replit-databases
 - Neither source explicitly promises coverage of custom PostgreSQL namespace `sam`. Since direct catalog query proved the namespace absent while managed schema diff returned `hasDiff=false`, do **not** infer non-public-schema support.
 - Next action: obtain a platform-specific answer or validate *read-only* underlying introspection scope before deciding between Replit migration and independently reviewed one-time scoped production migration. Do not append `db:push` blindly to a build command or re-publish to experiment.
+
+## Code audit: original migration runner is NOT safe for this production repair
+Directly inspected `packages/db/src/migrate.js` on main:
+- Unless `--check-deterministic` is supplied without `--apply`, the script connects through plain `DATABASE_URL` and runs DDL without a production target confirmation.
+- It issues unqualified `CREATE TABLE IF NOT EXISTS sam_schema_migrations` and executes unqualified original SQL. With default production `search_path`, the ledger and business tables may be created in `public`, rather than `sam`.
+- It does not guard `current_database()`, compare schema presence, require a separate scoped migration principal, or force a known schema search path.
+- Consequently, `npm run db:migrate` must **not** be run in production as a workaround. This audit does not mean the migrations themselves cannot be used in a separately reviewed, schema-scoped transaction.
+
+**Required correction before any schema DDL**: build a separate one-time migration mechanism, explicitly preflight the production DB identity, backups and roles; schema-qualify ledger and set a transaction-local `search_path=sam,pg_catalog`; reject mismatched hashes/existing objects; verify postconditions and keep runtime credentials separate. Code branch work alone cannot satisfy these live prerequisites.
