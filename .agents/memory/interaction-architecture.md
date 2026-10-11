@@ -15,3 +15,12 @@ public access synthetic-only until a separate owner decision authorizes broader
 data or actions; preserve internal/original SAM behavior outside the experiment.
 Local preparation does not authorize external OAuth provisioning, Neon changes,
 paid model calls or publishing.
+
+The owner selected Auth0 Free for the ChatGPT OAuth authorization server, rather
+than creating a new authentication system.
+
+**Why:** The owner approved the established-provider route for a one-owner pilot.
+
+**How to apply:** Keep provider provisioning and Neon credential/role changes
+separately owner-gated. Approval for local OAuth compatibility preparation is not
+approval to create an Auth0 account, connect Neon, Publish or spend.

@@ -52,10 +52,21 @@ scope failures return `mcp/www_authenticate`. Authentication accepts only signed
 RS256 **access** JWTs (`typ=at+jwt`) using pinned public JWKS; no remote key fetch,
 algorithm fallback, ID tokens, opaque tokens or shared static token fallback.
 
-All of these must match the reviewed configuration: issuer, exact MCP audience,
-subject, client_id, org_id, legal_entity_id, pilot_run_id. Only
-`sam:synthetic:read` and `sam:synthetic:submit` scopes are accepted. JWT lifetime
-is at most one hour, additionally limited by the pilot deadline.
+All of these must match the reviewed configuration: issuer, intended MCP audience,
+subject, client_id and namespaced SAM organization/entity/run claims.
+`SAM_MCP_OAUTH_CLAIM_NAMESPACE` is a pinned HTTPS prefix on the resource's origin,
+without a trailing slash. The three flat JWT keys append `/org_id`,
+`/legal_entity_id`, `/pilot_run_id`. Root claims (including Auth0's reserved
+`org_id`) never select SAM's tenant; there is no root-claim fallback.
+
+Audience may be a string or an array, but must contain the exact MCP resource.
+Only one additional audience, the configured issuer's `/userinfo` endpoint, is
+accepted. Empty/duplicate/malformed arrays and other API audiences fail closed.
+The limited OIDC scopes `openid`, `profile`, `email`, `offline_access` may accompany
+SAM scopes, but are stripped from the principal's tool permissions. At least one
+SAM scope is mandatory; read and submit remain independently enforced. Unknown,
+duplicate or malformed scope strings fail closed. JWT lifetime remains at most
+one hour, additionally limited by the pilot deadline.
 
 Owner configuration needed, **only after choosing/reviewing a real issuer**:
 
@@ -66,6 +77,7 @@ Owner configuration needed, **only after choosing/reviewing a real issuer**:
 | `SAM_MCP_OAUTH_APPROVED=1` | Explicit issuer/configuration approval; currently unset |
 | `SAM_MCP_OAUTH_RESOURCE` | Actual published HTTPS URL ending `/mcp`, not an invented URL |
 | `SAM_MCP_OAUTH_ISSUER` | Trusted external authorization-server issuer |
+| `SAM_MCP_OAUTH_CLAIM_NAMESPACE` | Resource-owned HTTPS prefix, e.g. confirmed MCP origin + `/sam` |
 | `SAM_MCP_OAUTH_SUBJECT` | One authorized owner's subject; keep personal values out of Git |
 | `SAM_MCP_OAUTH_CLIENT_ID` | Exactly the reviewed ChatGPT OAuth client |
 | `SAM_MCP_OAUTH_PUBLIC_JWKS` | Public RSA signing verification keys only; never private keys |
@@ -96,7 +108,7 @@ for existing internal dependencies. Synthetic release never exposes its dashboar
 even with MCP disabled; selecting the new tool mode without enabling MCP rejects
 startup. Ordinary non-pilot/development behavior is preserved.
 
-## Local evidence, 2026-10-11
+## Initial bridge evidence, 2026-10-11 (before Auth0 compatibility correction)
 
 - Typecheck PASS.
 - `tests/release/mcp_synthetic.ts`: **82** local protocol/unit checks.
@@ -134,6 +146,30 @@ The last command is guarded to the existing Replit development helium/heliumdb
 target, uses original migrations in a dedicated temporary schema and restricted
 test LOGIN, blocks non-loopback model traffic and cleans only its own resources.
 Do not add a live-model flag: MCP test mode explicitly refuses live-provider mode.
+
+## Auth0 compatibility correction: local evidence
+
+The owner selected Auth0 Free and authorized only local compatibility changes.
+`tests/release/mcp_synthetic.ts` now passes **124 checks**, including string/
+singleton-array/array-with-UserInfo audiences, mixed OIDC+SAM scopes, read-only and
+submit-only permission separation, root-claim spoofing, missing/wrong namespace,
+foreign tenant/entity/run, malformed audiences/scopes, same-session scope reduction
+before SQL, public routing and worker-only provider-key inheritance.
+
+Typecheck, release contracts, 37 synthetic-planner refusal cases, local TLS
+negotiation, 16 Setup Mode refusals and command-center regression passed.
+The deterministic check passed for all ten original migrations, hash
+`33cd2986caea641c25bab129a4e67ee866968fdca861ef58e96290241deecbc2`.
+That check does not connect or apply migrations.
+
+No real-PG fixture/role creation was repeated in this correction; the earlier
+real-PG acceptance above is historical evidence, not a fresh Auth0/Neon test.
+No real credentials, Auth0 tenant, Neon connection, provider calls or publication
+were used. No AS endpoints, PKCE handling, RLS policies or goal execution paths
+were changed. Local signed tokens are not proof of browser login/PKCE/refresh.
+
+Owner actions and separate gates:
+`docs/release/AUTH0-NEON-OWNER-CHECKLIST.md`.
 
 **Not proven:** real ChatGPT login/refresh, Neon provisioning/TLS/permissions,
 published runtime, ACT/VERIFY-midflight recovery. Model was mocked; actual model

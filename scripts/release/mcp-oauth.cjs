@@ -13,6 +13,11 @@ function oauthResourceConfig(env,now=Date.now()){
     env.NODE_ENV!=="production"||env.SAM_RELEASE_APPROVED!=="1"||
     env.SAM_DATABASE_TARGET!=="production")deny();
   const resource=https(env.SAM_MCP_OAUTH_RESOURCE),issuer=https(env.SAM_MCP_OAUTH_ISSUER);
+  const claimNamespace=https(env.SAM_MCP_OAUTH_CLAIM_NAMESPACE);
+  const namespaceUrl=new URL(claimNamespace);
+  // Operator-pinned, resource-owned namespace. No caller-selected/root aliases.
+  if(claimNamespace.length>512||namespaceUrl.origin!==new URL(resource).origin||
+    !namespaceUrl.pathname||namespaceUrl.pathname.endsWith("/"))deny();
   if(new URL(resource).pathname!=="/mcp"||
     !(env.SAM_COMMAND_CENTER_ALLOWED_HOSTS??"").split(",").map(x=>x.trim()).includes(new URL(resource).hostname))deny();
   const subject=env.SAM_MCP_OAUTH_SUBJECT,clientId=env.SAM_MCP_OAUTH_CLIENT_ID;
@@ -36,7 +41,7 @@ function oauthResourceConfig(env,now=Date.now()){
       keys.set(key.kid,publicKey);
     }
   }catch{deny();}
-  return {resource,issuer,subject,clientId,orgId:ids[0].toLowerCase(),
+  return {resource,issuer,claimNamespace,subject,clientId,orgId:ids[0].toLowerCase(),
     entityId:ids[1].toLowerCase(),runId:ids[2].toLowerCase(),keys,deadline,maxGoals};
 }
 module.exports={oauthResourceConfig};

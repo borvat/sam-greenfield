@@ -3,11 +3,12 @@ import {createHash,verify,type KeyObject} from "node:crypto";
 import {createRequire} from "node:module";
 
 export const syntheticScopes=["sam:synthetic:read","sam:synthetic:submit"] as const;
+const oidcIdentityScopes=["openid","profile","email","offline_access"] as const;
 export interface SyntheticPrincipal {
   orgId:string; entityId:string; runId:string; actor:string; scopes:readonly string[]; expiresAt:number; maxGoals:number;
 }
 export interface OAuthResourceConfig {
-  resource:string; issuer:string; subject:string; clientId:string;
+  resource:string; issuer:string; claimNamespace:string; subject:string; clientId:string;
   orgId:string; entityId:string; runId:string; keys:Map<string,KeyObject>; deadline:number; maxGoals:number;
 }
 export const oauthRequest=new AsyncLocalStorage<SyntheticPrincipal>();
@@ -27,16 +28,26 @@ export function authenticateOAuth(token:string,config:OAuthResourceConfig,now=Ma
     const key=config.keys.get(header.kid);
     if(!key||!verify("RSA-SHA256",Buffer.from(parts[0]+"."+parts[1]),key,Buffer.from(parts[2],"base64url")))return deny();
     const claims=JSON.parse(Buffer.from(parts[1],"base64url").toString("utf8"));
-    if(claims.iss!==config.issuer||claims.aud!==config.resource||claims.sub!==config.subject||
-      claims.client_id!==config.clientId||claims.org_id!==config.orgId||
-      claims.legal_entity_id!==config.entityId||claims.pilot_run_id!==config.runId)return deny();
+    const audiences=typeof claims.aud==="string"?[claims.aud]:claims.aud;
+    // Auth0 may also target UserInfo. Never accept a token only for UserInfo,
+    // another API, malformed audiences or unreviewed multi-resource grants.
+    const userinfo=new URL("userinfo",config.issuer.endsWith("/")?config.issuer:config.issuer+"/").href;
+    if(!Array.isArray(audiences)||audiences.length<1||audiences.length>2||
+      new Set(audiences).size!==audiences.length||!audiences.includes(config.resource)||
+      audiences.some(a=>typeof a!=="string"||(a!==config.resource&&a!==userinfo)))return deny();
+    if(claims.iss!==config.issuer||claims.sub!==config.subject||claims.client_id!==config.clientId||
+      claims[config.claimNamespace+"/org_id"]!==config.orgId||
+      claims[config.claimNamespace+"/legal_entity_id"]!==config.entityId||
+      claims[config.claimNamespace+"/pilot_run_id"]!==config.runId)return deny();
     if(!Number.isSafeInteger(claims.exp)||!Number.isSafeInteger(claims.iat)||
       claims.exp<=now||claims.iat>now||claims.exp<=claims.iat||claims.exp-claims.iat>3600||
       (claims.nbf!==undefined&&(!Number.isSafeInteger(claims.nbf)||claims.nbf>now)))return deny();
     if(typeof claims.scope!=="string")return deny();
-    const scopes=claims.scope.split(" ");
-    if(scopes.length<1||new Set(scopes).size!==scopes.length||
-      scopes.some((s:string)=>!syntheticScopes.includes(s as typeof syntheticScopes[number])))return deny();
+    const presentedScopes=claims.scope.split(" ");
+    const scopes=presentedScopes.filter((s:string)=>syntheticScopes.includes(s as typeof syntheticScopes[number]));
+    if(scopes.length<1||new Set(presentedScopes).size!==presentedScopes.length||
+      presentedScopes.some((s:string)=>!syntheticScopes.includes(s as typeof syntheticScopes[number])&&
+        !oidcIdentityScopes.includes(s as typeof oidcIdentityScopes[number])))return deny();
     const actor="mcp:"+createHash("sha256").update(JSON.stringify([
       config.issuer,config.subject,config.orgId,config.entityId,config.runId])).digest("hex");
     if(config.deadline<=now*1000)return deny();

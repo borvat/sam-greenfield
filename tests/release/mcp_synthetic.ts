@@ -19,6 +19,7 @@ export function oauthFixture(base:NodeJS.ProcessEnv={}){
     SAM_MCP_SYNTHETIC_TOOLS:"1",SAM_MCP_OAUTH_APPROVED:"1",
     SAM_COMMAND_CENTER_ALLOWED_HOSTS:"pilot.example.invalid",
     SAM_MCP_OAUTH_RESOURCE:"https://pilot.example.invalid/mcp",SAM_MCP_OAUTH_ISSUER:"https://issuer.example.invalid",
+    SAM_MCP_OAUTH_CLAIM_NAMESPACE:"https://pilot.example.invalid/sam",
     SAM_MCP_OAUTH_SUBJECT:"synthetic-owner",SAM_MCP_OAUTH_CLIENT_ID:"synthetic-client",
     SAM_MCP_OAUTH_PUBLIC_JWKS:JSON.stringify({keys:[jwk]}),
     SAM_RELEASE_ORG_ID:base.SAM_RELEASE_ORG_ID??"11111111-1111-4111-8111-111111111111",
@@ -31,7 +32,9 @@ export function oauthFixture(base:NodeJS.ProcessEnv={}){
     const now=Math.floor(Date.now()/1000);
     const header={alg:"RS256",typ:"at+jwt",kid:jwk.kid,...headerChange};
     const claims={iss:config.issuer,aud:config.resource,sub:config.subject,client_id:config.clientId,
-      org_id:config.orgId,legal_entity_id:config.entityId,pilot_run_id:config.runId,
+      [config.claimNamespace+"/org_id"]:config.orgId,
+      [config.claimNamespace+"/legal_entity_id"]:config.entityId,
+      [config.claimNamespace+"/pilot_run_id"]:config.runId,
       scope:"sam:synthetic:read sam:synthetic:submit",iat:now,exp:now+300,...change};
     const data=[header,claims].map(x=>Buffer.from(JSON.stringify(x)).toString("base64url")).join(".");
     return data+"."+sign("RSA-SHA256",Buffer.from(data),privateKey).toString("base64url");
@@ -61,11 +64,41 @@ async function main(){
   let checks=0;const check=(value:unknown)=>{assert(value);checks++;};
   const fixture=oauthFixture();
   check(authenticateOAuth(fixture.token(),fixture.config).entityId===fixture.config.entityId);
+  const ns=fixture.config.claimNamespace;
+  const userinfo=fixture.config.issuer+"/userinfo";
+  const identity="openid profile email offline_access";
+  for(const aud of [fixture.config.resource,[fixture.config.resource],[fixture.config.resource,userinfo],
+    [userinfo,fixture.config.resource]]){
+    const principal=authenticateOAuth(fixture.token({aud,scope:identity+" sam:synthetic:read sam:synthetic:submit",
+      org_id:"org_auth0_not_a_sam_tenant",legal_entity_id:"ignored-root",pilot_run_id:"ignored-root"}),fixture.config);
+    check(principal.entityId===fixture.config.entityId&&principal.scopes.join(" ")==="sam:synthetic:read sam:synthetic:submit");
+  }
+  for(const scope of ["sam:synthetic:read "+identity,"sam:synthetic:submit "+identity]){
+    check(authenticateOAuth(fixture.token({scope}),fixture.config).scopes.length===1);
+  }
   const now=Math.floor(Date.now()/1000);
   for(const change of [{iss:"https://wrong.invalid"},{aud:"https://wrong.invalid/mcp"},{sub:"another"},
-    {client_id:"another"},{org_id:randomUUID()},{legal_entity_id:randomUUID()},{pilot_run_id:randomUUID()},
+    {client_id:"another"},{[ns+"/org_id"]:randomUUID()},{[ns+"/legal_entity_id"]:randomUUID()},
+    {[ns+"/pilot_run_id"]:randomUUID()},
     {exp:now-1},{iat:now+30},{exp:now+7200},{nbf:now+30},{scope:""},
     {scope:"sam:synthetic:read admin"},{scope:"sam:synthetic:read sam:synthetic:read"}]){
+    assert.throws(()=>authenticateOAuth(fixture.token(change),fixture.config));checks++;
+  }
+  for(const change of [
+    {aud:[]},{aud:[userinfo]},{aud:[fixture.config.resource,fixture.config.resource]},
+    {aud:[fixture.config.resource,"https://another-api.invalid"]},{aud:[fixture.config.resource,null]},
+    {aud:[fixture.config.resource,userinfo,"https://another-api.invalid"]},{aud:42},
+    {aud:[[fixture.config.resource]]},{aud:fixture.config.resource+"/"},
+    {scope:identity},{scope:"openid"},{scope:"sam:synthetic:read phone"},
+    {scope:"sam:synthetic:read openid openid"},{scope:"sam:synthetic:read  openid"},
+    {scope:"sam:synthetic:read\nsam:synthetic:submit"},{scope:"sam:synthetic:read address"},
+    {[ns+"/org_id"]:undefined,org_id:fixture.config.orgId},
+    {[ns+"/legal_entity_id"]:undefined,legal_entity_id:fixture.config.entityId},
+    {[ns+"/pilot_run_id"]:undefined,pilot_run_id:fixture.config.runId},
+    {[ns+"/org_id"]:randomUUID(),org_id:fixture.config.orgId},
+    {[ns+"/org_id"]:[fixture.config.orgId]},
+    {[ns+"/org_id"]:undefined,["https://untrusted.invalid/sam/org_id"]:fixture.config.orgId}
+  ]){
     assert.throws(()=>authenticateOAuth(fixture.token(change),fixture.config));checks++;
   }
   for(const change of [{alg:"none"},{typ:"JWT"},{kid:"untrusted"},{jku:"https://wrong.invalid/keys"},{crit:["custom"]}]){
@@ -74,6 +107,10 @@ async function main(){
   assert.throws(()=>authenticateOAuth(fixture.token().slice(0,-8)+"invalid",fixture.config));checks++;
   for(const change of [{SAM_MCP_OAUTH_APPROVED:"0"},{SAM_MCP_OAUTH_RESOURCE:"http://pilot.example.invalid/mcp"},
     {SAM_MCP_OAUTH_PUBLIC_JWKS:"{}"},{SAM_MCP_OAUTH_PUBLIC_JWKS:JSON.stringify({keys:[{kty:"RSA",d:"private"}]})},
+    {SAM_MCP_OAUTH_CLAIM_NAMESPACE:undefined},{SAM_MCP_OAUTH_CLAIM_NAMESPACE:"https://issuer.example.invalid/sam"},
+    {SAM_MCP_OAUTH_CLAIM_NAMESPACE:"https://pilot.example.invalid/sam/"},
+    {SAM_MCP_OAUTH_CLAIM_NAMESPACE:"https://pilot.example.invalid/sam?claim=org_id"},
+    {SAM_MCP_OAUTH_CLAIM_NAMESPACE:"http://pilot.example.invalid/sam"},
     {SAM_PILOT_EXPIRES_AT:new Date(Date.now()-1000).toISOString()}]){
     assert.throws(()=>oauthResourceConfig({...fixture.env,...change}));checks++;
   }
@@ -102,12 +139,17 @@ async function main(){
   try{
     // Use identical bindings for fake SQL and signed protocol credentials.
     session=await syntheticMcpClient(fixture.env);
+    session.headers.Authorization="Bearer "+session.token({aud:[fixture.config.resource,userinfo],
+      scope:identity+" sam:synthetic:read sam:synthetic:submit"});
     const listed=await session.client.listTools();
     check(listed.tools.map(t=>t.name).sort().join(",")==="sam_get_goal_result,sam_get_goal_status,sam_submit_synthetic_goal");
     check(listed.tools.every(t=>(t._meta as any)?.securitySchemes?.[0]?.type==="oauth2"));
     const metadata=await fetch(new URL("/.well-known/oauth-protected-resource/mcp",session.url));
     check(metadata.status===200);check((await metadata.json()).authorization_servers[0]===fixture.config.issuer);
-    for(const bearer of ["", "not-a-shared-token",session.token({legal_entity_id:randomUUID()}),session.token({scope:"company:read"})]){
+    for(const bearer of ["", "not-a-shared-token",session.token({[ns+"/legal_entity_id"]:randomUUID()}),
+      session.token({scope:"company:read"}),session.token({scope:identity}),
+      session.token({[ns+"/org_id"]:undefined,org_id:fixture.config.orgId}),
+      session.token({aud:[userinfo]})]){
       const before=touches;
       const denied=await fetch(session.url,{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+bearer},body:"{}"});
       check(denied.status===401&&denied.headers.get("www-authenticate")?.includes("resource_metadata="));
@@ -144,7 +186,8 @@ async function main(){
     receipt[0].result.value=9;
     check((await session.client.callTool({name:"sam_get_goal_result",arguments:{goal_id:goal.id}})).isError);
     // The same client/session must not retain its earlier, broader authority.
-    session.headers.Authorization="Bearer "+session.token({scope:"sam:synthetic:read"});
+    session.headers.Authorization="Bearer "+session.token({scope:"sam:synthetic:read "+identity,
+      aud:[fixture.config.resource,userinfo]});
     const beforeScoped=touches;
     const refused=await session.client.callTool({name:"sam_submit_synthetic_goal",arguments:input});
     check(refused.isError);
@@ -173,8 +216,10 @@ async function main(){
     const child=childEnvironment(env,config,service);
     check(!("DEEPSEEK_API_KEY" in child)&&!("SAM_PRODUCTION_BUNDLE_MODULE" in child));
     if(service==="mcp")check(!("SAM_MCP_BEARER_TOKEN" in child));
+    check(service==="mcp"?child.SAM_MCP_OAUTH_CLAIM_NAMESPACE===ns:!("SAM_MCP_OAUTH_CLAIM_NAMESPACE" in child));
   }
   check(childEnvironment(env,config,"worker").DEEPSEEK_API_KEY==="LOCAL-MOCK-NOT-A-KEY");
+  check(!("SAM_MCP_OAUTH_CLAIM_NAMESPACE" in childEnvironment(env,config,"worker")));
   for(const change of [{SAM_MCP_OAUTH_APPROVED:"0"},{SAM_MCP_SYNTHETIC_TOOLS:"0"},{SAM_MCP_OAUTH_SUBJECT:""},
     {SAM_RELEASE_ENABLE_MCP:"0"}]){
     assert.throws(()=>validateRelease({...env,...change}));checks++;
