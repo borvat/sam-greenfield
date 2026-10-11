@@ -97,6 +97,7 @@ SAM_RELEASE_SETUP_MODE = "1"
 SAM_RELEASE_SYNTHETIC_PLANNER = "1"
 SAM_RELEASE_SYNTHETIC_PLANNER_APPROVED = "0"
 SAM_MCP_OAUTH_RESOURCE = "https://sam-greenfield.replit.app/mcp"
+SAM_MCP_OAUTH_ISSUER = "https://dev-izt2dymhavtig3p5.eu.auth0.com/"
 
 [deployment]
 deploymentTarget = "vm"

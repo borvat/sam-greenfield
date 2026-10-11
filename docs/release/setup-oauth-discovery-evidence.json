@@ -30,9 +30,35 @@
     "typecheck": "PASS",
     "diffCheck": "PASS"
   },
-  "actualAuth0Issuer": "NOT_SUPPLIED",
+  "actualAuth0Issuer": "https://dev-izt2dymhavtig3p5.eu.auth0.com/",
+  "auth0PublicDiscovery": {
+    "oidcHttpStatus": 200,
+    "rfc8414HttpStatus": 200,
+    "issuerMatchesOwnerInput": true,
+    "authorizationTokenAndJwksEndpointsVerifiedHttpsSameOrigin": true,
+    "pkceMethodsAdvertised": ["S256", "plain"],
+    "authorizationResponseIssuerSupported": true,
+    "tokensOrClientRegistrationRequested": false
+  },
+  "configuredNativeHttpVerification": {
+    "timeUtc": "2026-10-11T03:01:43.015686+00:00",
+    "classification": "LOCAL_NATIVE_PRODUCTION_CONFIG_PUBLIC_DISCOVERY_ONLY",
+    "rootResourceMetadata": 200,
+    "mcpResourceMetadata": 200,
+    "protectedMcpChallenge": 401,
+    "readiness": 503,
+    "outboundDbChildTripwires": "PASS",
+    "sigtermExit": 0
+  },
+  "latestOldPublishedSnapshotCheck": {
+    "timeUtc": "2026-10-11T03:02:19.671963+00:00",
+    "mcpResourceMetadata": 500,
+    "mcp": 500,
+    "readiness": 500,
+    "discoveryChallengePresent": false
+  },
   "actualAuth0ConsentAndTokenAcceptance": "NOT_TESTED",
   "publicationPerformedByAgent": false,
   "newPaidResourcesOrProviderCalls": false,
-  "postFixDeployedEndpointSuccess": "NOT_PROVEN_REQUIRES_OWNER_CONFIG_AND_REPUBLISH"
+  "postFixDeployedEndpointSuccess": "NOT_PROVEN_REQUIRES_OWNER_REPUBLISH"
 }
