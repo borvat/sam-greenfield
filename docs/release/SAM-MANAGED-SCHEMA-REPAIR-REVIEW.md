@@ -29,23 +29,27 @@ Public deployment is a successful VM build, not a working executive:
 No production writes, republish, secret changes, execution activation,
 model calls, backup restore or paid provisioning were performed.
 
-## Supported mechanism versus unresolved cause
+## Supported mechanism and verified comparison-scope failure
 
 Replit engineering describes a forked Drizzle introspection/diff service,
 deploy-time comparison, validation on a temporary production branch and preview.
 This service is not implemented by this repository's `db:migrate`.
 Its internal introspection filters/source mapping are not available here.
-Both observed public namespaces have zero tables, so public-only filtering is
-a plausible explanation, NOT an established diagnosis.
+The controlled follow-up below establishes an observable scope failure:
+the service detects public objects but omits a custom-schema control, including
+when both have RLS. The exact internal filter/configuration is still unavailable.
 
 The generated documentation search answer asserted "public only"; the actual
 linked engineering article does not establish that restriction. Do not treat
-the search summary as confirmed support policy.
+the search summary as confirmed support policy. Current upstream Drizzle docs
+explicitly say schemaFilter defaults to "*"; they are not proof of this
+platform fork's version or configuration.
 
 Sources:
 - https://frontier.replit.com/production-databases-automated-migrations/
 - https://docs.replit.com/features/data-and-storage/development-and-production
 - https://docs.replit.com/features/data-and-storage/data-recovery
+- https://orm.drizzle.team/docs/drizzle-kit-pull
 
 Managed production DDL belongs to the native Publish flow. Do not run the
 diagnostic branch's production SQL generator, add startup/build DDL, copy the
@@ -84,9 +88,12 @@ no target/backup admission, and per-file rather than bundle transactions.
 
 ## Exact bounded transfer specification — not executable SQL
 
-1. Freeze/review source hashes and target identity. Native platform must expose
-   a nonempty proposed diff including `sam`, or explain/correct its source
-   mapping before the owner authorizes publishing.
+1. Freeze/review source hashes and target identity. Native platform must correct
+   its demonstrated comparison scope and expose a nonempty proposed diff
+   including `sam` before the owner authorizes publishing. Its reviewed scope
+   must include sam ONLY: not all development service namespaces or public.
+   Adding a project drizzle config is not a proven fix: this repo has no
+   installed Drizzle and native service configuration is outside the repo.
 2. Require a COMPLETE backup restore point (ID, time, correct database,
    retention) AND successful restore evidence from an isolated copy. Record
    verification of schemas, object ownership/ACL, RLS and audit preservation;
@@ -159,3 +166,69 @@ RLS/TLS acceptance, OAuth login or executive MCP execution evidence. The only
 LIVE evidence in this repair is read-only catalog/native diff/deployment metadata
 and public HTTP checks listed above. Existing developer service configuration
 and data were not modified.
+
+## Controlled development scope experiment (2026-10-11, completed by 13:54 UTC)
+
+This follow-up is a REAL platform/Development PostgreSQL diagnostic, not a
+mock. It does NOT constitute a production migration or a SAM goal acceptance.
+
+Before probes:
+- Native schema diff: hasDiff=false, zero statements.
+- Development primary: heliumdb, role postgres, search_path `"$user", public`,
+  sam USAGE=true, sam has 22 tables. Chosen probe names did not exist.
+
+Experiment A:
+- Created one empty, uniquely marked Development public table:
+  `public.sam_diff_probe_20261011_81b8950`.
+- Native diff immediately returned hasDiff=true and exactly its CREATE TABLE.
+- Removed only this test-created empty table after verifying its marker.
+
+Experiment B (rules out RLS as the differentiating cause):
+- Created that public table and a same-shaped custom control:
+  `sam_diff_scope_probe_81b8950.sam_diff_custom_probe_81b8950`.
+- Both tables had RLS enabled, no policies, no data and the same test owner.
+- Granted USAGE on the NEW test schema to PUBLIC to avoid a schema-USAGE
+  exclusion; no table data grants, SAM grants or runtime privileges changed.
+- Native diff returned exactly TWO statements: CREATE public probe and
+  ENABLE RLS on public probe. No custom schema/table creation was included.
+- Cleanup checked markers and emptiness, then dropped only both test tables
+  and their new test schema, without CASCADE.
+
+Independent final query:
+`public_probe_removed=true`, `scope_probe_removed=true`, sam tables=22,
+sam RLS tables=22, public tables=0.
+Native diff after cleanup: hasDiff=false, zero statements.
+
+Conclusion: this service sees the current development source's public changes
+immediately but does not include the tested custom namespace. RLS itself and
+a completely wrong/stale development source do not explain this experiment.
+Do not claim knowledge of the internal schemaFilter value or a global Replit
+custom-schema support policy. Production received NONE of the proposed SQL.
+
+## Backup/release status after owner's fresh screenshot
+
+Owner now reports Scheduled backups On, retention 7 days, No backups yet;
+PITR On, last 7 days. Neither a scheduled setting nor PITR availability proves
+an exercised restore. Both gates remain independent of the scope finding.
+
+The exposed agent tools have no backup-list/create-snapshot/restore-to-isolated-
+copy operation. Official recovery docs describe live restore switching the
+active database; performing that to "test" recovery is prohibited.
+The documented deployment preview uses a temporary production copy but is not
+a verified free standalone backup rehearsal and may create billable resources;
+do not create it or initiate publishing under the current authorization.
+No supported zero-new-cost isolated production restore was established here.
+SQL catalog snapshots are NOT data backups and cannot satisfy this gate.
+
+Next bounded release sequence:
+1. Obtain completed backup ID/time/status and owner-approved supported isolated
+   restore route/cost; execute and retain restore evidence only after approval.
+2. Platform corrects native comparison scope; review its exact sam-only SQL and
+   reject other namespaces/public objects/destructive or data-copy statements.
+3. Rehearse that exact native plan on an authorized isolated target with worker
+   off, verify public/data invariants and rollback before publication approval.
+4. Only then request owner Publish approval; afterwards prove schema, actual
+   restricted LOGIN/RLS/TLS and owner-bound OAuth separately before activation.
+
+Local checks rerun at 13:54 UTC: 6/6 migration safety tests, source/Action/
+closed-setup checks and typecheck PASS. Historical migration files untouched.

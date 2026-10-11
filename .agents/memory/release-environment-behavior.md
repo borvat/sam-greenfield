@@ -108,3 +108,17 @@ official engineering article did not establish that restriction.
 **How to apply:** Fetch the primary page before treating schema coverage or a
 deployment limitation as proven. Distinguish observed diff behavior from its
 unavailable internal implementation.
+
+Native schema-diff scope must be tested with paired public/custom controls,
+not inferred from an empty diff.
+
+**Why:** Empty development controls with identical shapes and RLS enabled were
+compared simultaneously; the native service detected public creation/RLS but
+omitted the custom namespace. Cleanup restored the empty diff. This isolated
+the observed scope failure without changing production or blaming RLS.
+
+**How to apply:** Treat that observed boundary as a release blocker until native
+scope is corrected and sam-only SQL is reviewed. Do not infer the fork's exact
+schemaFilter or general provider support: current upstream docs default to all
+schemas. Any repeat diagnostics must use new, owned, empty development objects
+and independently prove cleanup, never alter business objects.
