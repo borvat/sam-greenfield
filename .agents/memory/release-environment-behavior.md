@@ -88,3 +88,23 @@ production catalog checks disagreed about the application's schema.
 **How to apply:** Confirm actual source and target catalog presence independently.
 Treat the disagreement as a mapping/visibility blocker, not permission to run
 production DDL or a reason to assume custom-schema support is unavailable.
+
+The owner requires a completed, demonstrably restorable backup before the
+managed production schema repair. Enabling a scheduled backup is insufficient.
+
+**Why:** The owner explicitly prohibited production migrations, republishing,
+database copying/reset and executive activation until backup and migration-plan
+review; the reported backup list was still empty after scheduling.
+
+**How to apply:** Require backup identity/completion and isolated restore
+evidence, not a live database restore as a test. Keep this gate separate from
+the managed schema-diff discrepancy and from OAuth/runtime activation.
+
+Generated documentation search summaries can overstate platform restrictions.
+
+**Why:** A summary asserted public-only production schemas, whereas the linked
+official engineering article did not establish that restriction.
+
+**How to apply:** Fetch the primary page before treating schema coverage or a
+deployment limitation as proven. Distinguish observed diff behavior from its
+unavailable internal implementation.

@@ -31,7 +31,14 @@ async function main(){
     const sorted=[...files].sort();
     if(JSON.stringify(files)!==JSON.stringify(sorted)) throw new Error("Migrations not deterministic");
     console.log("Deterministic check PASS");
-    if(!process.argv.includes("--apply")) return;
+  }
+
+  // Merely inspecting migrations must never read credentials or connect.
+  // --apply retains the existing development/test workflow. It is NOT a
+  // supported migration route for Replit-managed production databases.
+  if(!process.argv.includes("--apply")){
+    console.log("OFFLINE ONLY: no database connection or changes; explicit --apply required");
+    return;
   }
 
   const client=new Client({connectionString:requireDatabaseUrl()});
@@ -88,6 +95,10 @@ async function main(){
 }
 
 main().catch(err=>{
-  console.error("DATABASE MIGRATION FAIL",err instanceof Error?err.message:err);
+  // PostgreSQL errors can contain SQL, connection details and supplied values.
+  // Expose only a validated SQLSTATE, never the message, detail, query or stack.
+  const code=typeof err?.code==="string"&&/^[0-9A-Z]{5}$/.test(err.code)
+    ?err.code:"MIGRATION_REJECTED";
+  console.error("DATABASE MIGRATION FAIL",code);
   process.exit(1);
 });
