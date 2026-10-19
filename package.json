@@ -8,6 +8,7 @@
   "scripts": {
     "db:migrate": "node packages/db/src/migrate.js",
     "test:phase0": "python3 tests/phase0/phase0_acceptance.py",
+    "test:phase17:bol-sam": "node --import tsx tests/phase17/bol_sam_surface.ts",
     "test:mcp-internal-oauth": "node --import tsx --test tests/phase21/mcp_internal_oauth.ts",
     "start": "tsx apps/runtime/src/main.ts",
     "start:mcp": "tsx apps/mcp/src/main.ts",
@@ -16,10 +17,11 @@
     "live:acceptance": "tsx apps/acceptance/src/main.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/node": "2.1.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/server": "2.3.1",
     "pg": "8.13.1",
     "tsx": "4.19.2",
-    "@modelcontextprotocol/server": "2.3.1",
-    "@modelcontextprotocol/node": "2.1.1",
     "zod": "4.2.1"
   },
   "devDependencies": {

@@ -116,7 +116,9 @@ export function createKernelProductionDispatcher(
             specialistAgentId:capability.specialistAgentId,
             specialistVersion:capability.specialistVersion,
             availability:"AVAILABLE" as const,
-            sideEffect:tool.sideEffect
+            sideEffect:tool.sideEffect,
+            description:tool.description??capability.description,
+            inputSchema:tool.inputSchema
           };
         })
         .sort((a,b)=>a.capabilityId.localeCompare(b.capabilityId));

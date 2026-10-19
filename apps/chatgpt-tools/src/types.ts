@@ -36,6 +36,7 @@ export interface ProductionCapabilityDescriptor{
   availability:ToolAvailability;
   sideEffect:boolean;
   description?:string;
+  inputSchema?:Record<string,unknown>;
 }
 
 export interface ProductionActionDispatcher{
