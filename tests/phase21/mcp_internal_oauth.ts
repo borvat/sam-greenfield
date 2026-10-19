@@ -60,8 +60,13 @@ test("SAM internal OAuth completes PKCE, issues JWTs, and rotates refresh tokens
     const csrf=html.match(/name="csrf" value="([^"]+)"/)?.[1];
     assert.ok(requestId&&csrf);
     const login=await post("/oauth/authorize/login",new URLSearchParams({request_id:requestId,csrf,email:config.ownerEmail,password:"test-password-that-is-long-123"}));
-    assert.equal(login.status,302);
-    const returned=new URL(login.headers.get("location")!);
+    assert.equal(login.status,200);
+    const returnPage=await login.text();
+    assert.match(returnPage,/http-equiv="refresh"/);
+    assert.match(returnPage,/العودة إلى ChatGPT/);
+    const href=returnPage.match(/href="([^"]+)"/)?.[1];
+    assert.ok(href);
+    const returned=new URL(href!.replace(/&amp;/g,"&"));
     assert.equal(returned.searchParams.get("state"),state);
     assert.equal(returned.searchParams.get("iss"),config.publicBaseUrl);
     const code=returned.searchParams.get("code");assert.ok(code);
