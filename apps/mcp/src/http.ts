@@ -50,7 +50,7 @@ function oauthConfig():{issuer:string;resource:string;jwks:string;subjects:strin
   try{
     const i=new URL(issuer),r=new URL(resource),j=new URL(jwks);
     if(i.protocol!=="https:"||r.protocol!=="https:"||j.protocol!=="https:"||r.pathname!=="/mcp"||i.username||i.password||r.username||r.password||j.username||j.password||i.hash||r.hash||j.hash)return undefined;
-    return {issuer:i.toString().replace(/\\/$/,""),resource:r.toString(),jwks:j.toString(),subjects};
+    return {issuer:i.toString().endsWith("/")?i.toString().slice(0,-1):i.toString(),resource:r.toString(),jwks:j.toString(),subjects};
   }catch{return undefined;}
 }
 
