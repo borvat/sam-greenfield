@@ -17,6 +17,13 @@ function isReadOnlyObjective(objective:string):boolean{
   return /read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
 }
 
+function defaultThirtyDayStart(objective:string):string{
+  const endMatch=objective.match(/(?:until|through|ending|حتى)\s*(\d{4}-\d{2}-\d{2})/i);
+  const end=endMatch?new Date(`${endMatch[1]}T00:00:00Z`):new Date();
+  end.setUTCDate(end.getUTCDate()-29);
+  return end.toISOString().slice(0,10);
+}
+
 function planningCapabilities(objective:string,items:unknown[],context:unknown):Record<string,unknown>[]{
   const all=items.filter(isObject);
   const readOnly=isReadOnlyObjective(objective);
@@ -118,6 +125,13 @@ export async function proposePlan(input: {
       const params={...(step.params??{})};
       delete params.quantity;delete params.stock;delete params.state;
       step.params=params;
+    }
+  }
+  if(bolReadOnlyPlan&&/(last\s+30\s+days|past\s+30\s+days|آخر\s+30\s+يوم)/i.test(input.objective)){
+    for(const step of candidate.steps){
+      if(step.capabilityId!=="bol_list_orders")continue;
+      if(typeof step.params?.latestChangeDate==="string")continue;
+      step.params={...(step.params??{}),latestChangeDate:defaultThirtyDayStart(input.objective)};
     }
   }
   return {
