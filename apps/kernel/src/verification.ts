@@ -91,8 +91,14 @@ export async function recordIndependentVerificationAtomic(input: {
           });
         }
       } else if (input.result === "FAILED") {
+        const gaps=input.independentEvidence.goal_data_gaps;
+        const replanReason=Array.isArray(gaps)&&gaps.length>0
+          ? `read_only_data_gap:${gaps.join(",")}`
+          : "independent_verification_failed";
+        await client.query("UPDATE goals SET replan_reason=$2,updated_at=now() WHERE id=$1",[ex.goal_id,replanReason]);
         await transitionGoal(client, ex.goal_id, "VERIFYING", "REPLANNING", "independent_verification_failed", {
-          verification_id: verificationId
+          verification_id: verificationId,
+          replan_reason:replanReason
         });
       } else {
         await transitionGoal(client, ex.goal_id, "VERIFYING", "WAITING_EXTERNAL", "independent_verification_inconclusive", {
