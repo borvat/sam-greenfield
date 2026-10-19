@@ -8,7 +8,7 @@ export function buildSamMcpServer(input:{
 }):McpServer{
   const server=new McpServer({
     name:"sam-executive",
-    version:"1.0.0"
+    version:"1.0.1"
   });
 
   for(const definition of input.surface.definitions()){
