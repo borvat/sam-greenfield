@@ -16,9 +16,9 @@ let bundle:ProductionBundle={
 bundle=withStandardModelProvidersFromEnv(bundle);
 bundle=process.env.SAM_GOOGLE_READ_ONLY==="true"?withGmailReadFromEnv(bundle):withGmailFromEnv(bundle);
 bundle=withGoogleDriveFromEnv(bundle);
+bundle=withBolRetailerFromEnv(bundle);
 if(process.env.SAM_GOOGLE_READ_ONLY!=="true"){
   bundle=withEBoekhoudenFromEnv(bundle);
-  bundle=withBolRetailerFromEnv(bundle);
   bundle=withFinanceReconciliationFromEnv(bundle);
 }
 
