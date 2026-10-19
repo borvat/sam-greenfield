@@ -13,6 +13,19 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function planningCapabilities(objective:string,items:unknown[]):Record<string,unknown>[]{
+  const all=items.filter(isObject);
+  const readOnly=/read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
+  if(!readOnly)return all;
+  const safe=all.filter(item=>item.sideEffect===false);
+  const bolCommerce=/bol\.com/i.test(objective)&&/(sales|orders|inventory|stock|return|مبيعات|طلبات|مخزون|مرتجعات)/i.test(objective);
+  if(!bolCommerce)return safe;
+  const ids=["bol_list_orders","bol_get_inventory"];
+  if(/return|مرتجعات/i.test(objective))ids.push("bol_list_returns");
+  const relevant=ids.map(id=>safe.find(item=>item.capabilityId===id)).filter((item):item is Record<string,unknown>=>Boolean(item));
+  return relevant.length?relevant:safe;
+}
+
 export function validateCandidatePlan(value: unknown): CandidatePlan {
   if (!isObject(value)) throw new Error("Planner output must be an object");
   if (!Array.isArray(value.steps) || value.steps.length === 0) {
@@ -50,6 +63,9 @@ export async function proposePlan(input: {
   preferredProviders?: string[];
   availableCapabilities?:unknown[];
 }): Promise<PersistPlanInput> {
+  const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
+  const bolReadOnlyPlan=/bol\.com/i.test(input.objective)&&/قراءة\s*فقط|read[-\s]?only|sideEffect\s*=?\s*false/i.test(input.objective);
+  const requiredSteps=bolReadOnlyPlan?2:1;
   const routed = await input.gateway.invoke({
     task: "executive_planning",
     capability: "planning",
@@ -59,18 +75,25 @@ export async function proposePlan(input: {
     input: {
       objective: input.objective,
       context: input.context,
-      capabilities:input.availableCapabilities??[],
+      capabilities,
       contract: {
         output: "CandidatePlan",
         schema: {
           assumptions: "object",
           constraints: "object",
           dependencies: "object",
-          steps: [{capabilityId:"one id from capabilities",params:"object matching that capability's parameters",priority:"integer"}]
+          steps: {
+            type: "array",
+            minItems: requiredSteps,
+            items: {capabilityId:"an id from capabilities",params:"object matching that capability's parameters",priority:"integer"}
+          }
         },
         rules: [
           "Return exactly one JSON object, with no markdown or prose.",
+          `The steps array must contain at least ${requiredSteps} entries; never return an empty plan.`,
           "Use only capability ids listed in capabilities.",
+          "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
+          "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
           "Follow the user's scope and constraints.",
           "Do not execute capabilities or cause side effects while planning."
         ]
