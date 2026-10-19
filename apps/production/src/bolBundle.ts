@@ -108,7 +108,7 @@ export function summarizeBolInventory(inventory:unknown[],threshold=10){
   return {inventoryItems:inventory.length,lowStockThreshold:threshold,lowStockItems:lowStock.length,lowStockByEan:lowStock.map((item)=>{const row=record(item)!;return {ean:row.ean??"unknown",title:row.title??"unknown",regularStock:row.regularStock??0,gradedStock:row.gradedStock??0};})};
 }
 
-function readBolTool(bridge:BolBridge,toolName:string,params:Record<string,unknown>){
+function readBolTool(bridge:BolBridge,toolName:string,params:Record<string,unknown>):Promise<Record<string,unknown>>{
   const collectionKey=PAGED_READS[toolName];
   if(!collectionKey) return bridge.client.callTool({name:toolName,arguments:params}).then(objectResult);
   const requestedStart=Number(params.page??1);
