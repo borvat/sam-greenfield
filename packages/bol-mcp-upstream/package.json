@@ -52,7 +52,7 @@
   "homepage": "https://github.com/bartwaardenburg/bol-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "zod": "^4.3.6"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "^10.0.5",
