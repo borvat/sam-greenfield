@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createPublicKey,timingSafeEqual,verify } from "node:crypto";
 import { createServer,type IncomingMessage,type Server,type ServerResponse } from "node:http";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
@@ -41,16 +41,58 @@ function publicUrl(req:IncomingMessage):URL|undefined{
   try{return new URL(req.url??"/","http://localhost");}catch{return undefined;}
 }
 
-function resourceMetadata(req:IncomingMessage):Record<string,unknown>|undefined{
+function oauthConfig():{issuer:string;resource:string;jwks:string}|undefined{
   const issuer=process.env.SAM_MCP_OAUTH_ISSUER?.trim();
   const resource=process.env.SAM_MCP_PUBLIC_RESOURCE_URL?.trim();
-  if(!issuer||!resource) return undefined;
+  if(!issuer||!resource)return undefined;
   try{
-    const i=new URL(issuer);
-    const r=new URL(resource);
-    if(i.protocol!=="https:"||r.protocol!=="https:"||r.pathname!=="/mcp") return undefined;
-    return {resource:r.toString(),authorization_servers:[i.toString()]};
+    const i=new URL(issuer),r=new URL(resource);
+    if(i.protocol!=="https:"||r.protocol!=="https:"||r.pathname!=="/mcp"||i.username||i.password||r.username||r.password)return undefined;
+    return {issuer:i.toString().replace(/\\/$/,""),resource:r.toString(),jwks:new URL("/.well-known/jwks.json",i).toString()};
   }catch{return undefined;}
+}
+
+function oauthMetadata():Record<string,unknown>|undefined{
+  const c=oauthConfig();
+  return c?{resource:c.resource,authorization_servers:[c.issuer]}:undefined;
+}
+
+function challenge(res:ServerResponse,resource:string){
+  res.setHeader("www-authenticate",`Bearer resource_metadata="${new URL("/.well-known/oauth-protected-resource",resource).toString()}"`);
+  deny(res,401,"unauthorized");
+}
+
+function decodeSegment(part:string):unknown{
+  return JSON.parse(Buffer.from(part,"base64url").toString("utf8"));
+}
+
+let jwksCache:{url:string;expires:number;keys:Array<Record<string,unknown>>}|undefined;
+async function validOAuthToken(token:string,config:{issuer:string;resource:string;jwks:string}):Promise<boolean>{
+  try{
+    const parts=token.split(".");
+    if(parts.length!==3||parts.some(p=>!p||p.length>16000))return false;
+    const header=decodeSegment(parts[0]) as Record<string,unknown>;
+    const claims=decodeSegment(parts[1]) as Record<string,unknown>;
+    if(header.alg!=="RS256"||typeof header.kid!=="string"||typeof claims.exp!=="number"||claims.exp<=Date.now()/1000||claims.iss!==config.issuer)return false;
+    const audiences=Array.isArray(claims.aud)?claims.aud:[claims.aud];
+    if(!audiences.includes(config.resource))return false;
+    if(typeof claims.nbf==="number"&&claims.nbf>Date.now()/1000)return false;
+    if(typeof claims.iat==="number"&&claims.iat>Date.now()/1000+60)return false;
+    if(!jwksCache||jwksCache.url!==config.jwks||jwksCache.expires<Date.now()){
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),3000);
+      try{
+        const response=await fetch(config.jwks,{signal:controller.signal,redirect:"error"});
+        if(!response.ok)return false;
+        const body=await response.json() as {keys?:Array<Record<string,unknown>>};
+        if(!Array.isArray(body.keys)||body.keys.length>50)return false;
+        jwksCache={url:config.jwks,expires:Date.now()+300000,keys:body.keys};
+      }finally{clearTimeout(timer);}
+    }
+    const key=jwksCache.keys.find(k=>k.kid===header.kid&&k.kty==="RSA"&&k.use!=="enc"&&(k.alg===undefined||k.alg==="RS256"));
+    if(!key)return false;
+    return verify("RSA-SHA256",Buffer.from(parts[0]+"."+parts[1]),createPublicKey({key:key as any,format:"jwk"}),Buffer.from(parts[2],"base64url"));
+  }catch{return false;}
 }
 
 export interface McpHttpServerOptions{
@@ -82,7 +124,7 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
   const server=createServer((req,res)=>{
     const path=publicUrl(req)?.pathname;
     if(req.method==="GET"&&path==="/.well-known/oauth-protected-resource"){
-      const metadata=resourceMetadata(req);
+      const metadata=oauthMetadata();
       if(!metadata){deny(res,404,"oauth_not_configured");return;}
       res.statusCode=200;
       res.setHeader("content-type","application/json");
@@ -113,7 +155,17 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
       return;
     }
 
-    if(expectedToken&&!safeTokenEqual(bearer(req),expectedToken)){
+    const oauth=oauthConfig();
+    const supplied=bearer(req);
+    if(oauth){
+      if(!supplied){challenge(res,oauth.resource);return;}
+      void validOAuthToken(supplied,oauth).then(valid=>{
+        if(!valid){challenge(res,oauth.resource);return;}
+        void nodeHandler(req,res);
+      }).catch(()=>challenge(res,oauth.resource));
+      return;
+    }
+    if(expectedToken&&!safeTokenEqual(supplied,expectedToken)){
       deny(res,401,"unauthorized");
       return;
     }
