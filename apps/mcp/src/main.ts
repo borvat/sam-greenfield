@@ -3,6 +3,7 @@ import { createKernelProductionDispatcher } from "../../production/src/dispatche
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { pool } from "../../../packages/db/src/client";
 import { startMcpHttpServer } from "./http";
+import {InternalOAuthServer,internalOAuthConfig,postgresOAuthStore} from "./internalOAuth";
 
 function positiveInt(name:string,value:string|undefined,fallback:number):number{
   if(!value) return fallback;
@@ -14,12 +15,15 @@ function positiveInt(name:string,value:string|undefined,fallback:number):number{
 async function main(){
   const production=process.env.NODE_ENV==="production";
   const token=process.env.SAM_MCP_BEARER_TOKEN?.trim()??"";
+  const oauthConfig=internalOAuthConfig(process.env);
+  if(oauthConfig&&token)throw new Error("CHOOSE_ONE_MCP_AUTH_MODE");
+  const internalOAuth=oauthConfig?new InternalOAuthServer(oauthConfig,postgresOAuthStore(pool)):undefined;
   const allowedHosts=process.env.SAM_MCP_ALLOWED_HOSTS?.trim()??"";
   const allowedOrigins=process.env.SAM_MCP_ALLOWED_ORIGINS?.trim()??"";
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 
-  if(production&&!token){
-    throw new Error("SAM_MCP_BEARER_TOKEN is required in production");
+  if(production&&!token&&!internalOAuth){
+    throw new Error("SAM_MCP_BEARER_TOKEN or configured internal OAuth is required in production");
   }
   if(production&&!allowedHosts){
     throw new Error("SAM_MCP_ALLOWED_HOSTS is required in production");
@@ -35,7 +39,8 @@ async function main(){
     actor:process.env.SAM_MCP_ACTOR?.trim()||"chatgpt-mcp",
     port:positiveInt("SAM_MCP_PORT",process.env.SAM_MCP_PORT,8081),
     host:process.env.SAM_MCP_HOST?.trim()||"0.0.0.0",
-    bearerToken:token||undefined,
+    bearerToken:internalOAuth?undefined:token||undefined,
+    internalOAuth,
     allowedHosts,
     allowedOrigins
   });
