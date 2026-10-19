@@ -4,6 +4,8 @@ export interface ToolDefinition {
   capabilityId:string;
   authorityClass:AuthorityClass;
   sideEffect:boolean;
+  description?:string;
+  inputSchema?:Record<string,unknown>;
 }
 
 export interface ToolExecutionRequest {

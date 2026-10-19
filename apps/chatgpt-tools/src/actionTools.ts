@@ -6,8 +6,35 @@ import type {
 export function createActionTools(dispatcher?:ProductionActionDispatcher):RegisteredChatGPTTool[]{
   const manifestAvailable=!!dispatcher;
   const executeAvailable=!!dispatcher;
+  const bolCapabilities=dispatcher?dispatcher.manifest().filter((item)=>item.capabilityId.startsWith("bol_")):[];
+  const directBolTools:RegisteredChatGPTTool[]=bolCapabilities.map((item)=>({
+    definition:{
+      name:item.capabilityId,
+      description:item.description??`Execute ${item.capabilityId} through SAM's authority and verification controls.`,
+      risk:item.authorityClass==="GREEN"?"GREEN":item.authorityClass,
+      availability:item.availability,
+      inputSchema:{
+        ...(item.inputSchema??{type:"object",additionalProperties:true}),
+        properties:{...((item.inputSchema?.properties as Record<string,unknown>|undefined)??{}),legal_entity_id:{type:"string",description:"SAM legal entity ID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}}
+      }
+    },
+    handler:async(args,context)=>{
+      if(!dispatcher) return {ok:false,unavailable:true,error:"Production capability dispatcher is not registered"};
+      const {legal_entity_id,...params}=args;
+      const legalEntityId=String(legal_entity_id??process.env.SAM_DEFAULT_LEGAL_ENTITY_ID??process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID??process.env.SAM_FINANCE_LEGAL_ENTITY_ID??"").trim();
+      if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
+      return {ok:true,data:await dispatcher.execute({
+        capabilityId:item.capabilityId,
+        params,
+        actor:context.actor,
+        legalEntityId,
+        objective:`Execute bol.com capability ${item.capabilityId}`
+      })};
+    }
+  }));
 
   return [
+    ...directBolTools,
     {
       definition:{
         name:"sam_capability_manifest",

@@ -7,6 +7,7 @@ export interface CapabilityDefinition {
   authorityClass: AuthorityClass;
   specialistAgentId: string;
   specialistVersion: string;
+  description?:string;
 }
 
 export class CapabilityCatalog {

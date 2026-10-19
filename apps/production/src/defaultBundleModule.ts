@@ -7,27 +7,25 @@ import { withEBoekhoudenFromEnv } from "./eboekhoudenBundle";
 import { withBolRetailerFromEnv } from "./bolBundle";
 import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle";
 
-let bundle:ProductionBundle={
-  capabilities:[],
-  toolDefinitions:[],
-  toolAdapters:[]
-};
-
-bundle=withStandardModelProvidersFromEnv(bundle);
-bundle=process.env.SAM_GOOGLE_READ_ONLY==="true"?withGmailReadFromEnv(bundle):withGmailFromEnv(bundle);
-bundle=withGoogleDriveFromEnv(bundle);
-bundle=withBolRetailerFromEnv(bundle);
-if(process.env.SAM_GOOGLE_READ_ONLY!=="true"){
-  bundle=withEBoekhoudenFromEnv(bundle);
-  bundle=withFinanceReconciliationFromEnv(bundle);
+async function buildBundle():Promise<ProductionBundle>{
+  let bundle:ProductionBundle={capabilities:[],toolDefinitions:[],toolAdapters:[]};
+  bundle=withStandardModelProvidersFromEnv(bundle);
+  bundle=process.env.SAM_GOOGLE_READ_ONLY==="true"?withGmailReadFromEnv(bundle):withGmailFromEnv(bundle);
+  bundle=withGoogleDriveFromEnv(bundle);
+  bundle=await withBolRetailerFromEnv(bundle);
+  if(process.env.SAM_GOOGLE_READ_ONLY!=="true"){
+    bundle=withEBoekhoudenFromEnv(bundle);
+    bundle=withFinanceReconciliationFromEnv(bundle);
+  }
+  if(process.env.SAM_GOOGLE_READ_ONLY==="true"){
+    const allowed=new Set(bundle.toolDefinitions.filter(d=>!d.sideEffect&&d.authorityClass==="GREEN").map(d=>d.capabilityId));
+    const keep=(id:string)=>allowed.has(id)||id.startsWith("bol_");
+    bundle={...bundle,capabilities:bundle.capabilities.filter(c=>keep(c.capabilityId)),
+      toolDefinitions:bundle.toolDefinitions.filter(d=>keep(d.capabilityId)),
+      toolAdapters:bundle.toolAdapters.filter(a=>keep(a.capabilityId)),
+      verificationAdapters:bundle.verificationAdapters?.filter(v=>keep(v.capabilityId))};
+  }
+  return bundle;
 }
 
-if(process.env.SAM_GOOGLE_READ_ONLY==="true"){
-  const allowed=new Set(bundle.toolDefinitions.filter(d=>!d.sideEffect&&d.authorityClass==="GREEN").map(d=>d.capabilityId));
-  bundle={...bundle,capabilities:bundle.capabilities.filter(c=>allowed.has(c.capabilityId)),
-    toolDefinitions:bundle.toolDefinitions.filter(d=>allowed.has(d.capabilityId)),
-    toolAdapters:bundle.toolAdapters.filter(a=>allowed.has(a.capabilityId)),
-    verificationAdapters:bundle.verificationAdapters?.filter(v=>allowed.has(v.capabilityId))};
-}
-
-export default bundle;
+export default buildBundle;
