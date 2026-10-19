@@ -124,7 +124,7 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
 
   const server=createServer((req,res)=>{
     const path=publicUrl(req)?.pathname;
-    if(req.method==="GET"&&path==="/.well-known/oauth-protected-resource"){
+    if(req.method==="GET"&&(path==="/.well-known/oauth-protected-resource"||path==="/.well-known/oauth-protected-resource/mcp")){
       const metadata=oauthMetadata();
       if(!metadata){deny(res,404,"oauth_not_configured");return;}
       res.statusCode=200;
