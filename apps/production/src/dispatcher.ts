@@ -122,18 +122,26 @@ async function ensureApprovalRequests(input:{
 export function createKernelProductionDispatcher(
   bundle:ValidatedProductionBundle
 ):ProductionActionDispatcher{
-  const planningConfigured=(bundle.raw.modelAdapters?.length??0)>0 && (bundle.raw.modelProviderConfigs?.length??0)>0;
   return {
-    canPlanGoals(){
-      return planningConfigured;
-    },
-
     async submitGoal(input){
       const objective=input.objective.trim();
       if(!objective) throw new Error("objective is required");
       if(objective.length>4000) throw new Error("objective must be 4000 characters or fewer");
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
-      if(!planningConfigured){
+      const planningReady=await withTransaction(async(client)=>{
+        const classification=bundle.raw.dataClassification??"INTERNAL";
+        const result=await client.query(
+          `SELECT provider_id FROM model_providers
+            WHERE health='HEALTHY'
+              AND capabilities @> '["planning"]'::jsonb
+              AND privacy_class_allowed @> $1::jsonb
+            ORDER BY provider_id
+            LIMIT 1`,
+          [JSON.stringify([classification])]
+        );
+        return result.rowCount>0;
+      });
+      if(!planningReady){
         return {
           status:"UNAVAILABLE",
           reason:"MODEL_PROVIDER_NOT_CONFIGURED",

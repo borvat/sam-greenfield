@@ -73,7 +73,6 @@ async function main(){
   });
 
   const dispatcher=createKernelProductionDispatcher(bundle);
-  assert.equal(dispatcher.canPlanGoals?.(),true);
   const surface=createChatGPTToolSurface({dispatcher});
   assert.equal(surface.definition("sam_submit_goal").availability,"AVAILABLE");
   const submitted=await surface.invoke("sam_submit_goal",{

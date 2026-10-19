@@ -53,12 +53,15 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
       },
       handler:async(args,context)=>{
         if(!dispatcher?.submitGoal) return {ok:false,unavailable:true,error:"Production goal planner is not registered"};
-        if(!dispatcher.canPlanGoals?.()) return {ok:false,unavailable:true,error:"SAM planning model provider is not configured; no goal was created"};
         const legalEntityId=String(args.legal_entity_id??process.env.SAM_DEFAULT_LEGAL_ENTITY_ID??process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID??process.env.SAM_FINANCE_LEGAL_ENTITY_ID??"").trim();
         if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
         const objective=String(args.objective??"").trim();
         if(!objective) return {ok:false,error:"objective is required"};
-        return {ok:true,data:await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor})};
+        const data=await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor}) as Record<string,unknown>;
+        if(data?.status==="UNAVAILABLE"){
+          return {ok:false,unavailable:true,error:String(data.message??"SAM planning is unavailable; no goal was created"),data};
+        }
+        return {ok:true,data};
       }
     },
     {

@@ -41,7 +41,6 @@ async function main(){
   let executed=0;
   let submitted:{objective:string;legalEntityId:string;actor:string}|null=null;
   const dispatcher:ProductionActionDispatcher={
-    canPlanGoals(){return true;},
     async submitGoal(input){submitted=input;return {status:"SUBMITTED",goalId:"test-goal"};},
     manifest(){
       return [{
@@ -77,6 +76,17 @@ async function main(){
     legalEntityId:"00000000-0000-0000-0000-000000000001",
     actor:"chatgpt-test"
   });
+
+  const noPlanner=createChatGPTToolSurface({dispatcher:{
+    ...dispatcher,
+    async submitGoal(){return {status:"UNAVAILABLE",message:"No planning model"};}
+  }});
+  const blocked=await noPlanner.invoke("sam_submit_goal",{
+    objective:"Read QNAN bol data",
+    legal_entity_id:"00000000-0000-0000-0000-000000000001"
+  },{actor:"chatgpt-test",systemOwner:true});
+  assert.equal(blocked.ok,false);
+  assert.equal(blocked.unavailable,true);
 
   const manifest=await withActions.invoke("sam_capability_manifest",{},{
     actor:"chatgpt-test",

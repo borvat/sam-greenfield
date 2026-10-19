@@ -41,7 +41,6 @@ export interface ProductionCapabilityDescriptor{
 
 export interface ProductionActionDispatcher{
   manifest():ProductionCapabilityDescriptor[];
-  canPlanGoals?():boolean;
   submitGoal?(input:{
     objective:string;
     legalEntityId:string;

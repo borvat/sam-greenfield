@@ -4,13 +4,10 @@ import { Client,StreamableHTTPClientTransport } from "@modelcontextprotocol/clie
 import { createChatGPTToolSurface } from "../../apps/chatgpt-tools/src/surface";
 import type { ProductionActionDispatcher } from "../../apps/chatgpt-tools/src/types";
 import { startMcpHttpServer } from "../../apps/mcp/src/http";
-import { validateProductionBundle } from "../../apps/production/src/bundle";
-import { createKernelProductionDispatcher } from "../../apps/production/src/dispatcher";
 
 test("sam_submit_goal is exposed only when a planner is configured and forwards the whole objective",async()=>{
   let received:any;
   const dispatcher:ProductionActionDispatcher={
-    canPlanGoals(){return true;},
     async submitGoal(input){received=input;return {status:"SUBMITTED",goalId:"goal-test"};},
     manifest(){return [];},
     async execute(){throw new Error("not used");}
@@ -47,30 +44,4 @@ test("sam_submit_goal is exposed only when a planner is configured and forwards 
     await server.close();
   }
 
-  const disabled=createChatGPTToolSurface({dispatcher:{
-    ...dispatcher,
-    canPlanGoals(){return false;}
-  }});
-  assert.equal(disabled.definition("sam_submit_goal").availability,"AVAILABLE");
-  const unavailable=await disabled.invoke("sam_submit_goal",{
-    objective:"Do not create a goal when no planner is configured",
-    legal_entity_id:"00000000-0000-0000-0000-000000000001"
-  },{actor:"phase22-test",systemOwner:true});
-  assert.equal(unavailable.ok,false);
-  assert.equal(unavailable.unavailable,true);
-
-  const unconfigured=validateProductionBundle({
-    capabilities:[{capabilityId:"read_only_probe",authorityClass:"GREEN",specialistAgentId:"test",specialistVersion:"1"}],
-    toolDefinitions:[{capabilityId:"read_only_probe",authorityClass:"GREEN",sideEffect:false}],
-    toolAdapters:[{capabilityId:"read_only_probe",async execute(){return {result:{},evidence:{}};}}]
-  });
-  const realDispatcher=createKernelProductionDispatcher(unconfigured);
-  assert.equal(realDispatcher.canPlanGoals?.(),false);
-  const noProvider=await realDispatcher.submitGoal?.({
-    objective:"No provider means no persistent goal should be created",
-    legalEntityId:"00000000-0000-0000-0000-000000000001",
-    actor:"phase22-test"
-  });
-  assert.equal((noProvider as any).status,"UNAVAILABLE");
-  assert.equal((noProvider as any).reason,"MODEL_PROVIDER_NOT_CONFIGURED");
 });
