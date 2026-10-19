@@ -48,6 +48,7 @@ export async function proposePlan(input: {
   dataClassification: DataClassification;
   maxCostUsd: number;
   preferredProviders?: string[];
+  availableCapabilities?:unknown[];
 }): Promise<PersistPlanInput> {
   const routed = await input.gateway.invoke({
     task: "executive_planning",
@@ -58,9 +59,21 @@ export async function proposePlan(input: {
     input: {
       objective: input.objective,
       context: input.context,
+      capabilities:input.availableCapabilities??[],
       contract: {
         output: "CandidatePlan",
-        rule: "proposal_only_no_side_effects"
+        schema: {
+          assumptions: "object",
+          constraints: "object",
+          dependencies: "object",
+          steps: [{capabilityId:"one id from capabilities",params:"object matching that capability's parameters",priority:"integer"}]
+        },
+        rules: [
+          "Return exactly one JSON object, with no markdown or prose.",
+          "Use only capability ids listed in capabilities.",
+          "Follow the user's scope and constraints.",
+          "Do not execute capabilities or cause side effects while planning."
+        ]
       }
     }
   });
