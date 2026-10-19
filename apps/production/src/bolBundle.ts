@@ -65,10 +65,11 @@ function record(value:unknown):Record<string,any>|undefined{
 
 export function selectOrdersByPlacedDate(orders:unknown[],startDate?:string){
   const from=startDate?Date.parse(`${startDate.slice(0,10)}T00:00:00Z`):undefined;
+  if(startDate&&Number.isNaN(from))throw new Error(`Invalid order period start date: ${startDate}`);
   return orders.filter((raw)=>{
     const order=record(raw);
     if(!order) return false;
-    if(from===undefined||Number.isNaN(from)) return true;
+    if(from===undefined) return true;
     const placed=Date.parse(String(order.orderPlacedDateTime??""));
     return Number.isFinite(placed)&&placed>=from;
   });
