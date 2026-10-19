@@ -10,8 +10,10 @@ import type { ValidatedProductionBundle } from "./bundle";
 async function createGoal(input:{
   legalEntityId:string;
   objective:string;
+  actor:string;
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
-}):Promise<string>{
+  domain?:string;
+}):Promise<{id:string;businessId:string}>{
   return withTransaction(async(client)=>{
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
@@ -28,16 +30,31 @@ async function createGoal(input:{
     const inserted=await client.query(
       `INSERT INTO goals
        (business_id,company_scope,domain,objective,state,authority_ceiling)
-       VALUES($1,$2,'chatgpt_direct',$3,'NEW',$4)
-       RETURNING id`,
+       VALUES($1,$2,$3,$4,'NEW',$5)
+       RETURNING id,business_id`,
       [
         business.rows[0].business_id,
         input.legalEntityId,
+        input.domain??"chatgpt_direct",
         input.objective,
         input.authorityCeiling
       ]
     );
-    return inserted.rows[0].id as string;
+    await client.query(
+      `INSERT INTO audit_log
+       (actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result)
+       VALUES($1,$2,'SAM_GOAL_SUBMITTED','goal',$2,$3::jsonb,'sam_mcp',$4,'CREATED')`,
+      [
+        input.actor,
+        inserted.rows[0].id,
+        JSON.stringify({business_id:inserted.rows[0].business_id,domain:input.domain??"chatgpt_direct",objective:input.objective}),
+        input.authorityCeiling
+      ]
+    );
+    return {
+      id:inserted.rows[0].id as string,
+      businessId:inserted.rows[0].business_id as string
+    };
   });
 }
 
@@ -105,7 +122,43 @@ async function ensureApprovalRequests(input:{
 export function createKernelProductionDispatcher(
   bundle:ValidatedProductionBundle
 ):ProductionActionDispatcher{
+  const planningConfigured=(bundle.raw.modelAdapters?.length??0)>0 && (bundle.raw.modelProviderConfigs?.length??0)>0;
   return {
+    canPlanGoals(){
+      return planningConfigured;
+    },
+
+    async submitGoal(input){
+      const objective=input.objective.trim();
+      if(!objective) throw new Error("objective is required");
+      if(objective.length>4000) throw new Error("objective must be 4000 characters or fewer");
+      if(!input.legalEntityId) throw new Error("legalEntityId is required");
+      if(!planningConfigured){
+        return {
+          status:"UNAVAILABLE",
+          reason:"MODEL_PROVIDER_NOT_CONFIGURED",
+          message:"Configure a SAM planning model provider before submitting autonomous goals. No goal was created."
+        };
+      }
+
+      const goal=await createGoal({
+        legalEntityId:input.legalEntityId,
+        objective,
+        actor:input.actor,
+        // Let SAM propose a complete plan, while the authority guard still
+        // requires owner approval for every YELLOW/RED step.
+        authorityCeiling:"RED",
+        domain:"chatgpt_goal_submission"
+      });
+      return {
+        status:"SUBMITTED",
+        goalId:goal.id,
+        businessId:goal.businessId,
+        state:"NEW",
+        planning:"SAM_RUNTIME_WORKER"
+      };
+    },
+
     manifest():ProductionCapabilityDescriptor[]{
       return bundle.raw.capabilities
         .map((capability)=>{
@@ -129,11 +182,13 @@ export function createKernelProductionDispatcher(
       const capability=bundle.catalog.get(input.capabilityId);
       bundle.tools.definition(input.capabilityId);
 
-      const goalId=await createGoal({
+      const goal=await createGoal({
         legalEntityId:input.legalEntityId,
         objective:input.objective?.trim() || `Execute capability ${input.capabilityId}`,
+        actor:input.actor,
         authorityCeiling:capability.authorityClass
       });
+      const goalId=goal.id;
 
       await transitionGoalAtomic(goalId,"NEW","MODELING","chatgpt_direct_observe");
       await transitionGoalAtomic(goalId,"MODELING","PLANNING","chatgpt_direct_plan");
