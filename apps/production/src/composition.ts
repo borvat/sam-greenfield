@@ -3,7 +3,7 @@ import { reconcilePendingSideEffects } from "../../tools/src/reconciler";
 import { runCatalogSpecialistTick } from "../../agents/src/executiveFlow";
 import type { RuntimeComposition } from "../../runtime/src/service";
 import type { ValidatedProductionBundle } from "./bundle";
-import { planNextNewGoal } from "./planner";
+import { planNextNewGoal,replanNextGoal } from "./planner";
 import { verifyNextExecution } from "./verifier";
 
 export function createProductionComposition(input:{
@@ -31,9 +31,10 @@ export function createProductionComposition(input:{
         executors
       });
       const verification=await verifyNextExecution(input.bundle);
+      const replanning=await replanNextGoal(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {reconciliation,planning,execution,verification,operational};
+      return {reconciliation,planning,execution,verification,replanning,operational};
     }
   };
 }
