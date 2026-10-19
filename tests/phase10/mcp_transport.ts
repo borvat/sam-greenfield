@@ -60,6 +60,10 @@ async function main(){
 
   let executed=0;
   const dispatcher:ProductionActionDispatcher={
+    canPlanGoals(){return true;},
+    async submitGoal(input){
+      return {accepted:true,objective:input.objective,legalEntityId:input.legalEntityId};
+    },
     manifest(){
       return [{
         capabilityId:"phase10_action",
@@ -101,6 +105,7 @@ async function main(){
 
   const actionTools=await actionClient.listTools();
   assert.ok(actionTools.tools.some((t)=>t.name==="sam_execute"));
+  assert.ok(actionTools.tools.some((t)=>t.name==="sam_submit_goal"));
 
   const result=await actionClient.callTool({
     name:"sam_execute",
@@ -112,6 +117,15 @@ async function main(){
   });
   assert.equal(result.isError??false,false);
   assert.equal(executed,1);
+
+  const goalResult=await actionClient.callTool({
+    name:"sam_submit_goal",
+    arguments:{
+      objective:"Synthetic read-only multi-step acceptance objective",
+      legal_entity_id:"00000000-0000-0000-0000-000000000001"
+    }
+  });
+  assert.equal(goalResult.isError??false,false);
 
   await actionClient.close();
   await actionService.close();

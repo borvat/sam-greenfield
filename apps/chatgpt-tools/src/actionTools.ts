@@ -37,6 +37,32 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
     ...directBolTools,
     {
       definition:{
+        name:"sam_submit_goal",
+        description:"Submit a new business objective to SAM's autonomous production planner. SAM creates a NEW goal; the Render worker chooses and persists the plan, delegates its steps, executes them, and verifies the results. YELLOW/RED or unknown capabilities remain blocked by SAM authority controls. Requires a configured planning model; no provider write is authorized by this tool.",
+        risk:"YELLOW",
+        availability:dispatcher?.submitGoal?"AVAILABLE":"UNAVAILABLE",
+        inputSchema:{
+          type:"object",
+          properties:{
+            objective:{type:"string",minLength:1,maxLength:4000},
+            legal_entity_id:{type:"string",description:"SAM legal entity UUID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}
+          },
+          required:["objective"],
+          additionalProperties:false
+        }
+      },
+      handler:async(args,context)=>{
+        if(!dispatcher?.submitGoal) return {ok:false,unavailable:true,error:"Production goal planner is not registered"};
+        if(!dispatcher.canPlanGoals?.()) return {ok:false,unavailable:true,error:"SAM planning model provider is not configured; no goal was created"};
+        const legalEntityId=String(args.legal_entity_id??process.env.SAM_DEFAULT_LEGAL_ENTITY_ID??process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID??process.env.SAM_FINANCE_LEGAL_ENTITY_ID??"").trim();
+        if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
+        const objective=String(args.objective??"").trim();
+        if(!objective) return {ok:false,error:"objective is required"};
+        return {ok:true,data:await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor})};
+      }
+    },
+    {
+      definition:{
         name:"sam_capability_manifest",
         description:"List production capabilities, authority classes, specialist ownership, side-effect status and availability.",
         risk:"READ",

@@ -40,7 +40,13 @@ export interface ProductionCapabilityDescriptor{
 }
 
 export interface ProductionActionDispatcher{
-  manifest():Promise<ProductionCapabilityDescriptor[]>|ProductionCapabilityDescriptor[];
+  manifest():ProductionCapabilityDescriptor[];
+  canPlanGoals?():boolean;
+  submitGoal?(input:{
+    objective:string;
+    legalEntityId:string;
+    actor:string;
+  }):Promise<unknown>;
   execute(input:{
     capabilityId:string;
     params:Record<string,unknown>;
