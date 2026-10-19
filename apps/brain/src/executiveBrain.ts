@@ -13,6 +13,7 @@ export async function runBrainPlanningCycle(input: {
   maxCostUsd: number;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
+  availableCapabilities?:unknown[];
 }) {
   const goal = await withTransaction(async (client) => {
     const res = await client.query(
@@ -34,6 +35,7 @@ export async function runBrainPlanningCycle(input: {
     goalId: input.goalId,
     objective: goal.objective,
     context,
+    availableCapabilities:input.availableCapabilities,
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
     preferredProviders: input.preferredProviders
