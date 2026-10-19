@@ -27,7 +27,8 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
           messages:[{
             role:"user",
             content:taskPrompt(task)
-          }]
+          }],
+          ...(task.task==="executive_planning"?{response_format:{type:"json_object"}}:{})
         })
       },
       this.options.timeoutMs
