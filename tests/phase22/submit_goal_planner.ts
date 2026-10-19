@@ -73,6 +73,7 @@ async function main(){
   });
 
   const dispatcher=createKernelProductionDispatcher(bundle);
+  assert.equal(dispatcher.canPlanGoals?.(),true);
   const surface=createChatGPTToolSurface({dispatcher});
   assert.equal(surface.definition("sam_submit_goal").availability,"AVAILABLE");
   const submitted=await surface.invoke("sam_submit_goal",{
@@ -84,6 +85,9 @@ async function main(){
   assert.equal(result.status,"SUBMITTED");
   const goalId=result.goalId as string;
   assert.ok(goalId);
+
+  const ceiling=await pool.query("SELECT authority_ceiling FROM goals WHERE id=$1",[goalId]);
+  assert.equal(ceiling.rows[0].authority_ceiling,"GREEN","explicit read-only goal should start with GREEN ceiling");
 
   const before=await pool.query("SELECT state FROM goals WHERE id=$1",[goalId]);
   assert.equal(before.rows[0].state,"NEW");

@@ -13,15 +13,28 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function planningCapabilities(objective:string,items:unknown[]):Record<string,unknown>[]{
+function isReadOnlyObjective(objective:string):boolean{
+  return /read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
+}
+
+function defaultThirtyDayStart(objective:string):string{
+  const endMatch=objective.match(/(?:until|through|ending|حتى)\s*(\d{4}-\d{2}-\d{2})/i);
+  const end=endMatch?new Date(`${endMatch[1]}T00:00:00Z`):new Date();
+  end.setUTCDate(end.getUTCDate()-29);
+  return end.toISOString().slice(0,10);
+}
+
+function planningCapabilities(objective:string,items:unknown[],context:unknown):Record<string,unknown>[]{
   const all=items.filter(isObject);
-  const readOnly=/read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
+  const readOnly=isReadOnlyObjective(objective);
   if(!readOnly)return all;
   const safe=all.filter(item=>item.sideEffect===false);
   const bolCommerce=/bol\.com/i.test(objective)&&/(sales|orders|inventory|stock|return|مبيعات|طلبات|مخزون|مرتجعات)/i.test(objective);
   if(!bolCommerce)return safe;
   const ids=["bol_list_orders","bol_get_inventory"];
   if(/return|مرتجعات/i.test(objective))ids.push("bol_list_returns");
+  const contextText=JSON.stringify(context??{});
+  if(contextText.includes("orders_empty_while_recent_returns_exist"))ids.push("bol_get_order");
   const relevant=ids.map(id=>safe.find(item=>item.capabilityId===id)).filter((item):item is Record<string,unknown>=>Boolean(item));
   return relevant.length?relevant:safe;
 }
@@ -63,8 +76,8 @@ export async function proposePlan(input: {
   preferredProviders?: string[];
   availableCapabilities?:unknown[];
 }): Promise<PersistPlanInput> {
-  const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
-  const bolReadOnlyPlan=/bol\.com/i.test(input.objective)&&/قراءة\s*فقط|read[-\s]?only|sideEffect\s*=?\s*false/i.test(input.objective);
+  const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[],input.context);
+  const bolReadOnlyPlan=/bol\.com/i.test(input.objective)&&isReadOnlyObjective(input.objective);
   const requiredSteps=bolReadOnlyPlan?2:1;
   const routed = await input.gateway.invoke({
     task: "executive_planning",
@@ -94,6 +107,10 @@ export async function proposePlan(input: {
           "Use only capability ids listed in capabilities.",
           "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
           "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
+          "For complete bol.com reads, start each paged endpoint at page 1; the SAM adapter automatically reads pages through the empty terminal page.",
+          "For a full current inventory read, do not set quantity, stock, or state filters; derive low-stock products from the complete result.",
+          "For a sales period, use the order placed date as the period boundary; the SAM adapter reads recent pages and filters locally by orderPlacedDateTime.",
+          "If context shows orders_empty_while_recent_returns_exist, use bol_get_order for a small sample of orderIds from the return evidence to check the mismatch, and include that limitation in assumptions.",
           "Follow the user's scope and constraints.",
           "Do not execute capabilities or cause side effects while planning."
         ]
@@ -102,6 +119,21 @@ export async function proposePlan(input: {
   });
 
   const candidate = validateCandidatePlan(routed.result.output);
+  if(bolReadOnlyPlan&&/inventory|stock|مخزون/i.test(input.objective)){
+    for(const step of candidate.steps){
+      if(step.capabilityId!=="bol_get_inventory")continue;
+      const params={...(step.params??{})};
+      delete params.quantity;delete params.stock;delete params.state;
+      step.params=params;
+    }
+  }
+  if(bolReadOnlyPlan&&/(last\s+30\s+days|past\s+30\s+days|آخر\s+30\s+يوم)/i.test(input.objective)){
+    for(const step of candidate.steps){
+      if(step.capabilityId!=="bol_list_orders")continue;
+      if(typeof step.params?.latestChangeDate==="string")continue;
+      step.params={...(step.params??{}),latestChangeDate:defaultThirtyDayStart(input.objective)};
+    }
+  }
   return {
     goalId: input.goalId,
     assumptions: candidate.assumptions,
