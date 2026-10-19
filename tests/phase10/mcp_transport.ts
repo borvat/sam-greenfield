@@ -60,7 +60,6 @@ async function main(){
 
   let executed=0;
   const dispatcher:ProductionActionDispatcher={
-    canPlanGoals(){return true;},
     async submitGoal(input){
       return {accepted:true,objective:input.objective,legalEntityId:input.legalEntityId};
     },
