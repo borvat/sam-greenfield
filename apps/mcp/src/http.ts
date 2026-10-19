@@ -156,6 +156,9 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
     }
 
     const oauth=oauthConfig();
+    if((process.env.SAM_MCP_OAUTH_ISSUER||process.env.SAM_MCP_PUBLIC_RESOURCE_URL)&&!oauth){
+      deny(res,503,"oauth_configuration_invalid");return;
+    }
     const supplied=bearer(req);
     if(oauth){
       if(!supplied){challenge(res,oauth.resource);return;}
