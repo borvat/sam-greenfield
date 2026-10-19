@@ -18,7 +18,7 @@ async function main(){
   const testMode=process.env.SAM_MCP_UNAUTHENTICATED_TEST_MODE==="1";
   const token=process.env.SAM_MCP_BEARER_TOKEN?.trim()??"";
   const oauthConfig=testMode?undefined:internalOAuthConfig(process.env);
-  if(oauthConfig&&token)throw new Error("CHOOSE_ONE_MCP_AUTH_MODE");
+  if(oauthConfig&&token&&process.env.SAM_MCP_OAUTH_OWNER_PASSWORD_HASH?.trim())throw new Error("CHOOSE_ONE_MCP_AUTH_MODE");
   const internalOAuth=oauthConfig?new InternalOAuthServer(oauthConfig,postgresOAuthStore(pool)):undefined;
   const allowedHosts=process.env.SAM_MCP_ALLOWED_HOSTS?.trim()??"";
   const allowedOrigins=process.env.SAM_MCP_ALLOWED_ORIGINS?.trim()??"";

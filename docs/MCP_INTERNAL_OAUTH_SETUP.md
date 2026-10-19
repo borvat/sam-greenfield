@@ -12,8 +12,16 @@ Set these variables in the MCP service's secret environment configuration:
 - `SAM_MCP_INTERNAL_OAUTH_ENABLED=1`
 - `SAM_MCP_PUBLIC_RESOURCE_URL=https://<public-host>/mcp`
 - `SAM_MCP_OAUTH_OWNER_EMAIL=<owner-login-email>`
-- `SAM_MCP_OAUTH_OWNER_PASSWORD_HASH=<scrypt-hash>`
+- `SAM_MCP_OAUTH_OWNER_PASSWORD_HASH=<scrypt-hash>` (optional when the generated bearer token is used as the sign-in password)
 - `SAM_MCP_OAUTH_SIGNING_PRIVATE_KEY=<RSA-private-key-PEM>`
+
+If `SAM_MCP_OAUTH_OWNER_PASSWORD_HASH` is blank, the service hashes the existing
+`SAM_MCP_BEARER_TOKEN` in memory and uses that value only as the owner's OAuth
+sign-in password. In OAuth mode, that token is no longer accepted as an MCP
+bearer token. The token remains stored only in Render; copy it from the
+`sam-mcp` service Environment page into the OAuth password field when ChatGPT
+asks you to sign in. Never send it in chat. If you use a separately hashed
+password instead, clear `SAM_MCP_BEARER_TOKEN` before enabling OAuth.
 
 Generate a unique password of at least 16 characters and hash it locally with
 `npm run mcp:password-hash`. Password input is hidden and only the hash is
