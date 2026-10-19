@@ -14,8 +14,16 @@ export function validateProductionBundle(bundle:ProductionBundle):ValidatedProdu
     throw new Error("Production bundle requires at least one real capability");
   }
 
-  const catalog=new CapabilityCatalog(bundle.capabilities);
   const tools=new ToolRegistry(bundle.toolDefinitions,bundle.toolAdapters);
+  const catalog=new CapabilityCatalog(bundle.capabilities.map((capability)=>{
+    const tool=tools.definition(capability.capabilityId);
+    return {
+      ...capability,
+      description:tool.description??capability.description,
+      parameters:tool.inputSchema??{},
+      sideEffect:tool.sideEffect
+    };
+  }));
   const adapterIds=new Set(bundle.toolAdapters.map((a)=>a.capabilityId));
   const definitionIds=new Set(bundle.toolDefinitions.map((d)=>d.capabilityId));
 
