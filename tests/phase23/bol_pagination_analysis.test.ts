@@ -3,6 +3,7 @@ import test from "node:test";
 import { readAllBolPages,selectOrdersByPlacedDate,summarizeBolInventory,summarizeBolOrders } from "../../apps/production/src/bolBundle";
 import { goalAuthorityCeiling } from "../../apps/production/src/dispatcher";
 import { detectBolDataGaps } from "../../apps/production/src/verifier";
+import { proposePlan } from "../../apps/brain/src/planner";
 
 test("readAllBolPages reads through the first empty terminal page",async()=>{
   const calls:number[]=[];
@@ -63,4 +64,26 @@ test("goal-level gap detection catches empty orders despite recent returns",()=>
 test("explicit read-only goals receive a GREEN authority ceiling",()=>{
   assert.equal(goalAuthorityCeiling("Analyze bol.com sales, read-only only"),"GREEN");
   assert.equal(goalAuthorityCeiling("Change the product price"),"RED");
+});
+
+test("planner sets an exact 30-day order boundary and removes narrow inventory filters",async()=>{
+  const objective="Analyze QNAN B.V. bol.com sales and current inventory for the last 30 days until 2026-10-19. Read-only only.";
+  const plan=await proposePlan({
+    gateway:{async invoke(){return {result:{output:{assumptions:{},constraints:{},dependencies:{},steps:[
+      {capabilityId:"bol_list_orders",params:{page:1,status:"ALL",fulfilmentMethod:"ALL"},priority:1},
+      {capabilityId:"bol_get_inventory",params:{page:1,quantity:"0-10",stock:"INSUFFICIENT",state:"REGULAR"},priority:2}
+    ]}}}}} as any,
+    goalId:"goal-test",
+    objective,
+    context:{},
+    dataClassification:"INTERNAL",
+    maxCostUsd:0.25,
+    availableCapabilities:[
+      {capabilityId:"bol_list_orders",sideEffect:false,parameters:{}},
+      {capabilityId:"bol_get_inventory",sideEffect:false,parameters:{}},
+      {capabilityId:"bol_change_price",sideEffect:true,parameters:{}}
+    ]
+  });
+  assert.equal(plan.steps.find(step=>step.capabilityId==="bol_list_orders")?.params?.latestChangeDate,"2026-09-20");
+  assert.deepEqual(plan.steps.find(step=>step.capabilityId==="bol_get_inventory")?.params,{page:1});
 });
