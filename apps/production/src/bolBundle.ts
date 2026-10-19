@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { BolClient } from "../../../packages/bol-mcp-upstream/src/bol-client.js";
-import { createServer } from "../../../packages/bol-mcp-upstream/src/server.js";
+import { BolClient } from "../../../vendor/bol-mcp-upstream/src/bol-client.js";
+import { createServer } from "../../../vendor/bol-mcp-upstream/src/server.js";
 import type { ProductionBundle,VerificationAdapter } from "./types";
 
 type BolTool={
