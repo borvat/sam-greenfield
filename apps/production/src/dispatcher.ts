@@ -58,6 +58,10 @@ async function createGoal(input:{
   });
 }
 
+export function goalAuthorityCeiling(objective:string):"GREEN"|"RED"{
+  return /read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective)?"GREEN":"RED";
+}
+
 async function ensureApprovalRequests(input:{
   goalId:string;
   legalEntityId:string;
@@ -153,9 +157,9 @@ export function createKernelProductionDispatcher(
         legalEntityId:input.legalEntityId,
         objective,
         actor:input.actor,
-        // Let SAM propose a complete plan, while the authority guard still
-        // requires owner approval for every YELLOW/RED step.
-        authorityCeiling:"RED",
+        // Explicitly read-only objectives start at GREEN. Other objectives
+        // retain the approval-gated ceiling for their proposed plans.
+        authorityCeiling:goalAuthorityCeiling(objective),
         domain:"chatgpt_goal_submission"
       });
       return {
