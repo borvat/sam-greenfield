@@ -44,11 +44,12 @@ function publicUrl(req:IncomingMessage):URL|undefined{
 function oauthConfig():{issuer:string;resource:string;jwks:string}|undefined{
   const issuer=process.env.SAM_MCP_OAUTH_ISSUER?.trim();
   const resource=process.env.SAM_MCP_PUBLIC_RESOURCE_URL?.trim();
-  if(!issuer||!resource)return undefined;
+  const jwks=process.env.SAM_MCP_OAUTH_JWKS_URI?.trim();
+  if(!issuer||!resource||!jwks)return undefined;
   try{
-    const i=new URL(issuer),r=new URL(resource);
-    if(i.protocol!=="https:"||r.protocol!=="https:"||r.pathname!=="/mcp"||i.username||i.password||r.username||r.password)return undefined;
-    return {issuer:i.toString().replace(/\\/$/,""),resource:r.toString(),jwks:new URL("/.well-known/jwks.json",i).toString()};
+    const i=new URL(issuer),r=new URL(resource),j=new URL(jwks);
+    if(i.protocol!=="https:"||r.protocol!=="https:"||j.protocol!=="https:"||r.pathname!=="/mcp"||i.username||i.password||r.username||r.password||j.username||j.password||i.hash||r.hash||j.hash)return undefined;
+    return {issuer:i.toString().replace(/\\/$/,""),resource:r.toString(),jwks:j.toString()};
   }catch{return undefined;}
 }
 
@@ -75,7 +76,7 @@ async function validOAuthToken(token:string,config:{issuer:string;resource:strin
     const claims=decodeSegment(parts[1]) as Record<string,unknown>;
     if(header.alg!=="RS256"||typeof header.kid!=="string"||typeof claims.exp!=="number"||claims.exp<=Date.now()/1000||claims.iss!==config.issuer)return false;
     const audiences=Array.isArray(claims.aud)?claims.aud:[claims.aud];
-    if(!audiences.includes(config.resource))return false;
+    if(!audiences.includes(config.resource)||typeof claims.sub!=="string"||!claims.sub)return false;
     if(typeof claims.nbf==="number"&&claims.nbf>Date.now()/1000)return false;
     if(typeof claims.iat==="number"&&claims.iat>Date.now()/1000+60)return false;
     if(!jwksCache||jwksCache.url!==config.jwks||jwksCache.expires<Date.now()){
@@ -156,7 +157,7 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
     }
 
     const oauth=oauthConfig();
-    if((process.env.SAM_MCP_OAUTH_ISSUER||process.env.SAM_MCP_PUBLIC_RESOURCE_URL)&&!oauth){
+    if((process.env.SAM_MCP_OAUTH_ISSUER||process.env.SAM_MCP_PUBLIC_RESOURCE_URL||process.env.SAM_MCP_OAUTH_JWKS_URI)&&!oauth){
       deny(res,503,"oauth_configuration_invalid");return;
     }
     const supplied=bearer(req);
