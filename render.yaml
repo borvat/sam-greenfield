@@ -25,6 +25,12 @@ services:
     fromDatabase:
       name: sam-trial-postgres
       property: connectionString
+  - key: GOOGLE_OAUTH_CLIENT_ID
+    sync: false
+  - key: GOOGLE_OAUTH_CLIENT_SECRET
+    sync: false
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
   - key: SAM_GOOGLE_READ_ONLY
     value: 'true'
   - key: SAM_PRODUCTION_BUNDLE_MODULE
@@ -104,6 +110,12 @@ services:
   - *id001
   - *id002
   - *id003
+  - key: GOOGLE_OAUTH_CLIENT_ID
+    sync: false
+  - key: GOOGLE_OAUTH_CLIENT_SECRET
+    sync: false
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
   - key: SAM_GOOGLE_READ_ONLY
     value: 'true'
   - key: SAM_PRODUCTION_BUNDLE_MODULE
