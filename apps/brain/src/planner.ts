@@ -19,13 +19,15 @@ function planningCapabilities(objective:string,items:unknown[]):Record<string,un
   const readOnly=/read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
   if(!readOnly)return all;
   const safe=all.filter(item=>item.sideEffect===false);
+  // Explicit executable requests must not be replaced by a generic commerce
+  // template. Preserve multiple named tools for cross-specialist objectives.
+  const named=new Set(objective.match(/\b[a-z][a-z0-9]*_[a-z0-9_]+\b/g)??[]);
+  const explicit=safe.filter(item=>named.has(String(item.capabilityId)));
+  if(explicit.length)return explicit;
   const bolCommerce=/bol\.com/i.test(objective)&&/(sales|orders|inventory|stock|return|مبيعات|طلبات|مخزون|مرتجعات)/i.test(objective);
   if(!bolCommerce)return safe;
-  const ids=["bol_list_orders","bol_get_inventory"];
   if(/report|analy|تقرير|تحليل/i.test(objective)&&safe.some(item=>item.capabilityId==="bol_sales_stock_report"))return safe.filter(item=>item.capabilityId==="bol_sales_stock_report");
-  if(/return|مرتجعات/i.test(objective))ids.push("bol_list_returns");
-  const relevant=ids.map(id=>safe.find(item=>item.capabilityId===id)).filter((item):item is Record<string,unknown>=>Boolean(item));
-  return relevant.length?relevant:safe;
+  return safe;
 }
 
 export function validateCandidatePlan(value: unknown): CandidatePlan {
@@ -66,8 +68,7 @@ export async function proposePlan(input: {
   availableCapabilities?:unknown[];
 }): Promise<PersistPlanInput> {
   const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
-  const bolReadOnlyPlan=/bol\.com/i.test(input.objective)&&/قراءة\s*فقط|read[-\s]?only|sideEffect\s*=?\s*false/i.test(input.objective);
-  const requiredSteps=bolReadOnlyPlan && capabilities.some(c=>c.capabilityId==="bol_list_orders") && capabilities.some(c=>c.capabilityId==="bol_get_inventory")?2:1;
+  const requiredSteps=1;
   const planningTime=new Date().toISOString();
   let previousError:string|undefined;
   for(let attempt=0;attempt<2;attempt++){
@@ -102,7 +103,7 @@ export async function proposePlan(input: {
             `The steps array must contain at least ${requiredSteps} entries; never return an empty plan.`,
             "Use only capability ids listed in capabilities.",
             "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
-            "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
+            "Choose only steps required by the objective. A bounded single read may have one step; do not add unrelated reads to satisfy an invented step count. When multiple explicit capabilities are requested, include each of them.",
             "For bol_sales_stock_report, use exactly one report step for the requested date range. It performs pagination, aggregation, stock reads and reporting itself. Use only closed days; when asked for the last seven complete days, exclude today. Its output is not net profit and does not account for returns.",
             "Follow the user's scope and constraints.",
             "Do not execute capabilities or cause side effects while planning."

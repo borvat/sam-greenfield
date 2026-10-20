@@ -47,8 +47,10 @@ jobs:
       - name: Verify autonomous goal submission and planning
         run: |
           node --import tsx --test tests/phase22/bol_analysis.ts
+          node --import tsx --test tests/phase22/planner_scope.ts
           node --import tsx tests/phase22/bol_analysis_bridge.ts
           npm run test:phase17:bol-sam
           node --import tsx --test tests/phase22/submit_goal_surface.ts tests/phase21/mcp_internal_oauth.ts
           node --import tsx tests/phase22/submit_goal_planner.ts
           node --import tsx tests/phase22/runtime_recovery.ts
+          node --import tsx tests/phase22/acceptance_recovery.ts
