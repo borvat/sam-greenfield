@@ -7,8 +7,10 @@ import { runCatalogPlanningCycle,runCatalogReplanCycle } from "../../agents/src/
 import type { ValidatedProductionBundle } from "./bundle";
 
 export async function planNextNewGoal(
-  bundle:ValidatedProductionBundle
+  bundle:ValidatedProductionBundle,
+  deadlineMs=120_000
 ):Promise<{processed:boolean;goalId?:string;failed?:boolean}>{
+  if(!Number.isFinite(deadlineMs)||deadlineMs<=0)throw new Error("Planning deadline must be positive");
   const adapters=bundle.raw.modelAdapters??[];
   if(adapters.length===0) return {processed:false};
 
@@ -39,15 +41,19 @@ export async function planNextNewGoal(
     dataClassification:bundle.raw.dataClassification??"INTERNAL",
     maxCostUsd:bundle.raw.planningMaxCostUsd??0.25
   };
+  let deadline:NodeJS.Timeout|undefined;
   try{
-    if(next.state==="REPLANNING"){
-      await runCatalogReplanCycle({...planningInput,alreadyStarted:true,reason:next.replan_reason??"independent verification failed"});
-    }else{
-      await runCatalogPlanningCycle({...planningInput,alreadyModeling:true});
-    }
+    const planning=next.state==="REPLANNING"
+      ?runCatalogReplanCycle({...planningInput,alreadyStarted:true,reason:next.replan_reason??"independent verification failed"})
+      :runCatalogPlanningCycle({...planningInput,alreadyModeling:true});
+    await Promise.race([planning,new Promise<never>((_,reject)=>{
+      deadline=setTimeout(()=>reject(new Error(`PLANNING_DEADLINE_EXCEEDED: no completed plan within ${deadlineMs}ms`)),deadlineMs);
+    })]);
     return {processed:true,goalId:next.id};
   }catch(error){
-    await recordPlanningFailure(next.id,error);
-    return {processed:true,goalId:next.id,failed:true};
+    const failed=await recordPlanningFailure(next.id,error);
+    return {processed:true,goalId:next.id,failed};
+  }finally{
+    if(deadline)clearTimeout(deadline);
   }
 }

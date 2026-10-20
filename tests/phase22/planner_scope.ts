@@ -25,3 +25,14 @@ test("natural-language identity reads are not assigned an arbitrary two-step min
 test("unavailable or mutating explicit tools never become executable",async()=>{
   await assert.rejects(plan("read-only bol.com use bol_cancel_order_item",["bol_cancel_order_item"]),/unavailable/);
 });
+test("identical reads are corrected once instead of posing as independent verification",async()=>{
+  let attempts=0;
+  const result=await proposePlan({goalId:"test",objective:"read-only bol_get_retailer_information",context:{},dataClassification:"INTERNAL",maxCostUsd:0.1,availableCapabilities,gateway:{async invoke(task:any){
+    attempts++;
+    if(attempts===2)assert.match(task.input.validationFeedback,/Duplicate planned/);
+    const step={capabilityId:"bol_get_retailer_information",params:{}};
+    return {result:{output:{steps:attempts===1?[step,step]:[step]}}};
+  }} as any});
+  assert.equal(attempts,2);assert.equal(result.steps.length,1);
+  await assert.rejects(plan("read-only bol_get_retailer_information",["bol_get_retailer_information","bol_get_retailer_information"]),/Duplicate planned/);
+});
