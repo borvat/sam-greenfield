@@ -61,6 +61,7 @@ export async function runBrainReplanCycle(input: {
     goalId:input.goalId,
     objective:goal.objective,
     availableCapabilities:input.availableCapabilities,
+    forbiddenReadSteps:failedReads,
     context:{
       ...context,
       replan_reason:input.reason
