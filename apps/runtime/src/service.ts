@@ -35,6 +35,9 @@ export async function startRuntimeService(input:{
       await runOperationalSupervisorTick({
         actor:input.supervisorActor ?? "operational-supervisor"
       });
+    }catch(err){
+      const message=err instanceof Error ? (err.stack ?? err.message) : String(err);
+      process.stderr.write(`[sam-runtime] work tick failed: ${message}\n`);
     }finally{
       tickInFlight=false;
     }
