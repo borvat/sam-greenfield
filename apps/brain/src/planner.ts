@@ -11,6 +11,16 @@ export interface CandidatePlan {
   steps: PlanStepInput[];
 }
 
+export function sameReadRequest(a:{capabilityId:string;params:Record<string,unknown>},b:{capabilityId:string;params:Record<string,unknown>}):boolean{
+  if(a.capabilityId!==b.capabilityId)return false;
+  const canonical=(p:Record<string,unknown>)=>{
+    if(a.capabilityId!=="drive_get_metadata")return p;
+    const {fileId,file_id,...rest}=p;
+    return {...rest,file_id:file_id??fileId};
+  };
+  return sha256Hex(canonical(a.params))===sha256Hex(canonical(b.params));
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -67,6 +77,7 @@ export async function proposePlan(input: {
   maxCostUsd: number;
   preferredProviders?: string[];
   availableCapabilities?:unknown[];
+  forbiddenReadSteps?:Array<{capabilityId:string;params:Record<string,unknown>}>;
 }): Promise<PersistPlanInput> {
   const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
   const requiredSteps=1;
@@ -85,6 +96,7 @@ export async function proposePlan(input: {
         validationFeedback:previousError,
         context: input.context,
         capabilities,
+        forbiddenReadSteps:input.forbiddenReadSteps??[],
         contract: {
           output: "CandidatePlan",
           schema: {
@@ -108,6 +120,7 @@ export async function proposePlan(input: {
             "For bol_sales_stock_report, use exactly one report step for the requested date range. It performs pagination, aggregation, stock reads and reporting itself. Use only closed days; when asked for the last seven complete days, exclude today. Its output is not net profit and does not account for returns.",
             "Follow the user's scope and constraints.",
             "Independent verification runs automatically after execution. Never repeat an identical capability and parameter set as a verification step.",
+            "In replanning, never repeat any failed read with the same capability and parameters listed in forbiddenReadSteps. Pick an alternate read or fail safely.",
             "Do not execute capabilities or cause side effects while planning."
           ]
         }
@@ -120,6 +133,8 @@ export async function proposePlan(input: {
       const unique=new Set<string>();
       for(const step of candidate.steps){
         const key=sha256Hex({capabilityId:step.capabilityId,params:step.params});
+        const forbidden=(input.forbiddenReadSteps??[]).some(b=>sameReadRequest(b,step));
+        if(forbidden)throw new Error(`Previously failed read cannot be repeated: ${step.capabilityId}. Choose an alternate capability/parameters or fail safely.`);
         if(unique.has(key))throw new Error(`Duplicate planned read/action: ${step.capabilityId}. Independent verification runs automatically after execution; do not repeat identical tool parameters.`);
         unique.add(key);
         const descriptor=capabilities.find(item=>item.capabilityId===step.capabilityId);
