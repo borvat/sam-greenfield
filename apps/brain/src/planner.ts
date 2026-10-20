@@ -1,4 +1,5 @@
 import { validateToolParameters } from "../../../packages/tool-gateway/src/validation";
+import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
@@ -106,6 +107,7 @@ export async function proposePlan(input: {
             "Choose only steps required by the objective. A bounded single read may have one step; do not add unrelated reads to satisfy an invented step count. When multiple explicit capabilities are requested, include each of them.",
             "For bol_sales_stock_report, use exactly one report step for the requested date range. It performs pagination, aggregation, stock reads and reporting itself. Use only closed days; when asked for the last seven complete days, exclude today. Its output is not net profit and does not account for returns.",
             "Follow the user's scope and constraints.",
+            "Independent verification runs automatically after execution. Never repeat an identical capability and parameter set as a verification step.",
             "Do not execute capabilities or cause side effects while planning."
           ]
         }
@@ -115,7 +117,11 @@ export async function proposePlan(input: {
     try{
       const candidate = validateCandidatePlan(routed.result.output);
       if(candidate.steps.length<requiredSteps) throw new Error(`Planner requires at least ${requiredSteps} steps`);
+      const unique=new Set<string>();
       for(const step of candidate.steps){
+        const key=sha256Hex({capabilityId:step.capabilityId,params:step.params});
+        if(unique.has(key))throw new Error(`Duplicate planned read/action: ${step.capabilityId}. Independent verification runs automatically after execution; do not repeat identical tool parameters.`);
+        unique.add(key);
         const descriptor=capabilities.find(item=>item.capabilityId===step.capabilityId);
         if(input.availableCapabilities && !descriptor) throw new Error(`Planner selected unavailable capability: ${step.capabilityId}`);
         validateToolParameters(step.capabilityId,step.params??{},descriptor?.parameters as Record<string,unknown>|undefined);

@@ -36,3 +36,16 @@ tests does not automatically grant approvals.
 Live evidence belongs in the private acceptance report/SAM audit, not this
 public repository. Synthetic tests are labeled accordingly. If any gate remains
 unproven, overall production readiness remains unproven.
+
+The live sequence exposed duplicate identical planned reads and a goal that
+remained in PLANNING beyond the acceptance deadline with no recorded cause.
+Duplicate capability/parameter pairs now trigger the existing single correction
+attempt. Independent verification is performed by the verification subsystem,
+not duplicate planned reads. Planning has an overall 120-second deadline,
+including gateways/adapters that never return; it records PLANNING_FAILED with
+PLANNING_DEADLINE_EXCEEDED rather than holding the work loop indefinitely.
+Failed goal state prevents late model output from persisting a plan. This is
+containment, not a guarantee the remote model request was cancelled. Interrupted
+planning recovery uses a three-minute window, beyond the live planning deadline.
+The database fixture proves timeout, rejection of late plan persistence and a
+successful subsequent healthy goal. Runtime readiness is not task success.

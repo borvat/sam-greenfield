@@ -54,7 +54,7 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
   });
 }
 
-export async function failInterruptedPlanning(staleMinutes=10,limit=25):Promise<string[]>{
+export async function failInterruptedPlanning(staleMinutes=3,limit=25):Promise<string[]>{
   return withTransaction(async client=>{
     const stale=await client.query(
       `SELECT id FROM goals WHERE state IN ('MODELING','PLANNING')
