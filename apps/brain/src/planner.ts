@@ -11,6 +11,16 @@ export interface CandidatePlan {
   steps: PlanStepInput[];
 }
 
+export function sameReadRequest(a:{capabilityId:string;params:Record<string,unknown>},b:{capabilityId:string;params:Record<string,unknown>}):boolean{
+  if(a.capabilityId!==b.capabilityId)return false;
+  const canonical=(p:Record<string,unknown>)=>{
+    if(a.capabilityId!=="drive_get_metadata")return p;
+    const {fileId,file_id,...rest}=p;
+    return {...rest,file_id:file_id??fileId};
+  };
+  return sha256Hex(canonical(a.params))===sha256Hex(canonical(b.params));
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -123,7 +133,7 @@ export async function proposePlan(input: {
       const unique=new Set<string>();
       for(const step of candidate.steps){
         const key=sha256Hex({capabilityId:step.capabilityId,params:step.params});
-        const forbidden=(input.forbiddenReadSteps??[]).some(b=>b.capabilityId===step.capabilityId && sha256Hex(b.params)===sha256Hex(step.params));
+        const forbidden=(input.forbiddenReadSteps??[]).some(b=>sameReadRequest(b,step));
         if(forbidden)throw new Error(`Previously failed read cannot be repeated: ${step.capabilityId}. Choose an alternate capability/parameters or fail safely.`);
         if(unique.has(key))throw new Error(`Duplicate planned read/action: ${step.capabilityId}. Independent verification runs automatically after execution; do not repeat identical tool parameters.`);
         unique.add(key);
