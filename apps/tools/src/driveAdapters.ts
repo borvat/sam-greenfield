@@ -6,7 +6,7 @@ export class DriveGetMetadataAdapter implements ToolAdapter{
   constructor(private readonly client:GoogleDriveApiClient){}
 
   async execute(request:ToolExecutionRequest):Promise<ToolExecutionResult>{
-    const fileId=String(request.params.file_id??"").trim();
+    const fileId=String(request.params.file_id??request.params.fileId??"").trim();
     if(!fileId) throw new Error("drive_get_metadata requires file_id");
     const file=await this.client.getFile(fileId);
     return {
