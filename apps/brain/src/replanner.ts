@@ -49,11 +49,11 @@ export async function runBrainReplanCycle(input: {
   const failedReads=await withTransaction(async client=>{
     const r=await client.query(
       `SELECT DISTINCT w.capability_id,w.params FROM work_queue w
-       JOIN tool_definitions t ON t.capability_id=w.capability_id
-       WHERE w.goal_id=$1 AND w.status='FAILED' AND t.side_effect=false`,
+       WHERE w.goal_id=$1 AND w.status='FAILED'`,
       [input.goalId]
     );
-    return r.rows.map((x:any)=>({capabilityId:String(x.capability_id),params:x.params??{}}));
+    const readOnly=new Set((input.availableCapabilities??[]).filter((x:any)=>x?.sideEffect===false).map((x:any)=>String(x.capabilityId)));
+    return r.rows.filter((x:any)=>readOnly.has(String(x.capability_id))).map((x:any)=>({capabilityId:String(x.capability_id),params:x.params??{}}));
   });
 
   const candidate = await proposePlan({
