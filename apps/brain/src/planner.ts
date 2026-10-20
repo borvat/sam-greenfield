@@ -67,6 +67,7 @@ export async function proposePlan(input: {
   maxCostUsd: number;
   preferredProviders?: string[];
   availableCapabilities?:unknown[];
+  forbiddenReadSteps?:Array<{capabilityId:string;params:Record<string,unknown>}>;
 }): Promise<PersistPlanInput> {
   const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
   const requiredSteps=1;
