@@ -86,6 +86,7 @@ export async function proposePlan(input: {
         validationFeedback:previousError,
         context: input.context,
         capabilities,
+        forbiddenReadSteps:input.forbiddenReadSteps??[],
         contract: {
           output: "CandidatePlan",
           schema: {
