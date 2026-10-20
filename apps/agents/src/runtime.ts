@@ -1,3 +1,4 @@
+import { recordWorkFailure } from "../../kernel/src/failures";
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "../../kernel/src/execution";
@@ -11,13 +12,15 @@ export async function claimNextWorkForSpecialistAtomic(
 ): Promise<ClaimedWork | null> {
   return withTransaction(async (client) => {
     const candidate = await client.query(
-      `SELECT id
-         FROM work_queue
-        WHERE status IN ('QUEUED','HANDBACK')
+      `SELECT w.id
+         FROM work_queue w
+         LEFT JOIN goals g ON g.id=w.goal_id
+        WHERE (w.goal_id IS NULL OR (g.state='EXECUTING' AND w.plan_id=g.current_plan_id))
+          AND status IN ('QUEUED','HANDBACK')
           AND capability_id = ANY($1::text[])
           AND (due_at IS NULL OR due_at <= now())
-        ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
-        FOR UPDATE SKIP LOCKED
+        ORDER BY w.priority DESC,w.due_at ASC NULLS FIRST,w.queued_at ASC,w.id ASC
+        FOR UPDATE OF w SKIP LOCKED
         LIMIT 1`,
       [agent.capabilities]
     );
@@ -69,7 +72,7 @@ export async function runOneSpecialistWork(input: {
   workerInstanceId: string;
   ttlSeconds: number;
   executors: Record<string, CapabilityExecutor>;
-}): Promise<{ processed: boolean; queueId?: string; executionId?: string }> {
+}): Promise<{ processed: boolean; queueId?: string; executionId?: string; failed?:boolean }> {
   const work = await claimNextWorkForSpecialistAtomic(
     input.agent,
     input.workerInstanceId,
@@ -77,32 +80,37 @@ export async function runOneSpecialistWork(input: {
   );
   if (!work) return { processed:false };
 
-  if (!input.agent.capabilities.includes(work.capabilityId)) {
-    throw new Error(`Specialist ${input.agent.agentId} cannot execute ${work.capabilityId}`);
-  }
-
-  const executor = input.executors[work.capabilityId];
-  if (!executor) {
-    throw new Error(`No executor registered for capability ${work.capabilityId}`);
-  }
-
-  const outcome = await executor(work);
-  const actor = `${input.agent.agentId}@${input.agent.version}`;
-  const execution = await recordExecutionAndRequestVerificationAtomic({
-    queueId:work.queueId,
-    fencingToken:work.fencingToken,
-    actor,
-    result:outcome.result,
-    evidence:{
-      ...outcome.evidence,
-      specialist_agent_id:input.agent.agentId,
-      specialist_agent_version:input.agent.version
+  try{
+    if (!input.agent.capabilities.includes(work.capabilityId)) {
+      throw new Error(`Specialist ${input.agent.agentId} cannot execute ${work.capabilityId}`);
     }
-  });
 
-  return {
-    processed:true,
-    queueId:work.queueId,
-    executionId:execution.executionId
-  };
+    const executor = input.executors[work.capabilityId];
+    if (!executor) {
+      throw new Error(`No executor registered for capability ${work.capabilityId}`);
+    }
+
+    const outcome = await executor(work);
+    const actor = `${input.agent.agentId}@${input.agent.version}`;
+    const execution = await recordExecutionAndRequestVerificationAtomic({
+      queueId:work.queueId,
+      fencingToken:work.fencingToken,
+      actor,
+      result:outcome.result,
+      evidence:{
+        ...outcome.evidence,
+        specialist_agent_id:input.agent.agentId,
+        specialist_agent_version:input.agent.version
+      }
+    });
+
+    return {
+      processed:true,
+      queueId:work.queueId,
+      executionId:execution.executionId
+    };
+  }catch(error){
+    await recordWorkFailure({queueId:work.queueId,fencingToken:work.fencingToken,error,actor:`${input.agent.agentId}@${input.agent.version}`});
+    return {processed:true,queueId:work.queueId,failed:true};
+  }
 }

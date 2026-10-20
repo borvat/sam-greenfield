@@ -1,3 +1,4 @@
+import { validateToolParameters } from "../../../packages/tool-gateway/src/validation";
 import { withTransaction } from "../../../packages/db/src/client";
 import { consumeApproval } from "../../../packages/db/src/approvals";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
@@ -42,6 +43,7 @@ export function createToolExecutors(input:{
 
     executors[capabilityId]=async(work:ClaimedWork)=>{
       const params=work.params ?? {};
+      validateToolParameters(capabilityId,params,tool.inputSchema);
       const requestHash=sha256Hex(params);
       const operationKey=`tool:${work.queueId}:${capabilityId}:${requestHash}`;
 

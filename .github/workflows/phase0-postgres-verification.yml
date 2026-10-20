@@ -48,3 +48,4 @@ jobs:
         run: |
           node --import tsx --test tests/phase22/submit_goal_surface.ts tests/phase21/mcp_internal_oauth.ts
           node --import tsx tests/phase22/submit_goal_planner.ts
+          node --import tsx tests/phase22/runtime_recovery.ts

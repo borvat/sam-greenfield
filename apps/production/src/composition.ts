@@ -1,3 +1,6 @@
+import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
+import { failInterruptedPlanning } from "../../kernel/src/failures";
+import { relayOutboxUntilEmpty } from "../../kernel/src/outboxRelay";
 import { createToolExecutors } from "../../tools/src/executorFactory";
 import { reconcilePendingSideEffects } from "../../tools/src/reconciler";
 import { runCatalogSpecialistTick } from "../../agents/src/executiveFlow";
@@ -19,6 +22,9 @@ export function createProductionComposition(input:{
 
   return {
     async runWorkTick(){
+      const recovery=await recoverKernelAfterRestart();
+      const interruptedPlanning=await failInterruptedPlanning();
+      const events=await relayOutboxUntilEmpty(50);
       const reconciliation=await reconcilePendingSideEffects({
         tools:input.bundle.tools,
         limit:25
@@ -33,7 +39,7 @@ export function createProductionComposition(input:{
       const verification=await verifyNextExecution(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {reconciliation,planning,execution,verification,operational};
+      return {recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,operational};
     }
   };
 }

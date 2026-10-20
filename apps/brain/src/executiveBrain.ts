@@ -7,6 +7,7 @@ import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authori
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 
 export async function runBrainPlanningCycle(input: {
+  alreadyModeling?:boolean;
   gateway: ModelGateway;
   goalId: string;
   dataClassification: DataClassification;
@@ -24,11 +25,11 @@ export async function runBrainPlanningCycle(input: {
     return res.rows[0];
   });
 
-  if (goal.state !== "NEW") {
+  if (goal.state !== (input.alreadyModeling?"MODELING":"NEW")) {
     throw new Error(`Brain planning cycle requires NEW goal, got ${goal.state}`);
   }
 
-  const context = await observeAndEnterPlanning(input.goalId);
+  const context = await observeAndEnterPlanning(input.goalId,input.alreadyModeling);
 
   const candidate = await proposePlan({
     gateway: input.gateway,

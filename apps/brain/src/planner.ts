@@ -1,3 +1,4 @@
+import { validateToolParameters } from "../../../packages/tool-gateway/src/validation";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
@@ -65,48 +66,68 @@ export async function proposePlan(input: {
 }): Promise<PersistPlanInput> {
   const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
   const bolReadOnlyPlan=/bol\.com/i.test(input.objective)&&/قراءة\s*فقط|read[-\s]?only|sideEffect\s*=?\s*false/i.test(input.objective);
-  const requiredSteps=bolReadOnlyPlan?2:1;
-  const routed = await input.gateway.invoke({
-    task: "executive_planning",
-    capability: "planning",
-    dataClassification: input.dataClassification,
-    maxCostUsd: input.maxCostUsd,
-    preferredProviders: input.preferredProviders,
-    input: {
-      objective: input.objective,
-      context: input.context,
-      capabilities,
-      contract: {
-        output: "CandidatePlan",
-        schema: {
-          assumptions: "object",
-          constraints: "object",
-          dependencies: "object",
-          steps: {
-            type: "array",
-            minItems: requiredSteps,
-            items: {capabilityId:"an id from capabilities",params:"object matching that capability's parameters",priority:"integer"}
-          }
-        },
-        rules: [
-          "Return exactly one JSON object, with no markdown or prose.",
-          `The steps array must contain at least ${requiredSteps} entries; never return an empty plan.`,
-          "Use only capability ids listed in capabilities.",
-          "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
-          "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
-          "Follow the user's scope and constraints.",
-          "Do not execute capabilities or cause side effects while planning."
-        ]
+  const requiredSteps=bolReadOnlyPlan && capabilities.some(c=>c.capabilityId==="bol_list_orders") && capabilities.some(c=>c.capabilityId==="bol_get_inventory")?2:1;
+  const planningTime=new Date().toISOString();
+  let previousError:string|undefined;
+  for(let attempt=0;attempt<2;attempt++){
+    const routed = await input.gateway.invoke({
+      task: "executive_planning",
+      capability: "planning",
+      dataClassification: input.dataClassification,
+      maxCostUsd: input.maxCostUsd/2,
+      preferredProviders: input.preferredProviders,
+      input: {
+        objective: input.objective,
+        planningTimeUtc:planningTime,
+        validationFeedback:previousError,
+        context: input.context,
+        capabilities,
+        contract: {
+          output: "CandidatePlan",
+          schema: {
+            assumptions: "object",
+            constraints: "object",
+            dependencies: "object",
+            steps: {
+              type: "array",
+              minItems: requiredSteps,
+              items: {capabilityId:"an id from capabilities",params:"object matching that capability's parameters",priority:"integer"}
+            }
+          },
+          rules: [
+            "Return exactly one JSON object, with no markdown or prose.",
+            "All parameters must be concrete values. Resolve relative dates against planningTimeUtc. Never use placeholders, templates, expressions, or invented variables. Dates must be real YYYY-MM-DD strings.",
+            "This executor does not resolve output references or run prose instructions in assumptions/dependencies. Do not claim analysis, identity checks, pagination, or reporting are steps unless matching executable capabilities are included.",
+            `The steps array must contain at least ${requiredSteps} entries; never return an empty plan.`,
+            "Use only capability ids listed in capabilities.",
+            "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
+            "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
+            "Follow the user's scope and constraints.",
+            "Do not execute capabilities or cause side effects while planning."
+          ]
+        }
       }
-    }
-  });
+    });
 
-  const candidate = validateCandidatePlan(routed.result.output);
-  return {
-    goalId: input.goalId,
-    assumptions: candidate.assumptions,
-    constraints: candidate.constraints,
-    dependencies: candidate.dependencies,
-    steps: candidate.steps
-  };
+    try{
+      const candidate = validateCandidatePlan(routed.result.output);
+      if(candidate.steps.length<requiredSteps) throw new Error(`Planner requires at least ${requiredSteps} steps`);
+      for(const step of candidate.steps){
+        const descriptor=capabilities.find(item=>item.capabilityId===step.capabilityId);
+        if(input.availableCapabilities && !descriptor) throw new Error(`Planner selected unavailable capability: ${step.capabilityId}`);
+        validateToolParameters(step.capabilityId,step.params??{},descriptor?.parameters as Record<string,unknown>|undefined);
+      }
+      return {
+        goalId: input.goalId,
+        assumptions: candidate.assumptions,
+        constraints: candidate.constraints,
+        dependencies: candidate.dependencies,
+        steps: candidate.steps
+      };
+    }catch(error){
+      previousError=error instanceof Error?error.message:String(error);
+      if(attempt===1) throw new Error(`Planner validation failed after correction: ${previousError}`);
+    }
+  }
+  throw new Error("Planner did not produce a valid plan");
 }
