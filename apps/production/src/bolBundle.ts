@@ -3,6 +3,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { BolClient } from "../../../vendor/bol-mcp-upstream/src/bol-client.js";
 import { createServer } from "../../../vendor/bol-mcp-upstream/src/server.js";
 import type { ProductionBundle,VerificationAdapter } from "./types";
+import { ANALYSIS_ID,ANALYSIS_DESCRIPTION,ANALYSIS_SCHEMA,buildBolAnalysis,verifyBolAnalysis } from "./bolAnalysis";
 
 type BolTool={
   name:string;
@@ -87,6 +88,12 @@ export async function withBolRetailerFromEnv(
   if(!clientId||!clientSecret) throw new Error("bol production wiring requires BOL_CLIENT_ID and BOL_CLIENT_SECRET");
 
   const bridge=await createBolBridge(clientId,clientSecret);
+  const analysisCall=async(name:string,params:Record<string,unknown>,timeoutMs:number)=>{
+    if(!["get_retailer_information","list_orders","get_order","get_inventory","get_offer"].includes(name))throw new Error("Analysis attempted unsupported tool");
+    const tool=bridge.tools.find(tool=>tool.name===name);
+    if(tool?.annotations?.readOnlyHint!==true)throw new Error("Analysis requires a read-only upstream tool");
+    return objectResult(await bridge.client.callTool({name,arguments:params},undefined,{timeout:timeoutMs}));
+  };
   const capabilities=bridge.tools.map((tool)=>{
     const readOnly=tool.annotations?.readOnlyHint===true&&tool.name!=="request_product_labels";
     const authorityClass=readOnly?"GREEN" as const:tool.annotations?.destructiveHint?"RED" as const:"YELLOW" as const;
@@ -114,7 +121,14 @@ export async function withBolRetailerFromEnv(
     requiredEvidenceFields:{readback:"boolean"},
     independentQueryTemplate:{api:"bol-retailer",tool:tool.name,verification:"fresh_readback_or_process_status"}
   }));
-  BOL_VERIFICATION_CONTRACTS=contracts;
+  BOL_VERIFICATION_CONTRACTS=[...contracts,{capabilityId:ANALYSIS_ID,description:"Reproduce commercial report with independent full API reads",verificationMethod:"api_readback",requiredEvidenceFields:{reportHash:"string"},independentQueryTemplate:{api:"bol-retailer",verification:"full_independent_report_recomputation"}}];
 
-  return {...bundle,capabilities:[...bundle.capabilities,...capabilities],toolDefinitions:[...bundle.toolDefinitions,...toolDefinitions],toolAdapters:[...bundle.toolAdapters,...toolAdapters],verificationAdapters:[...(bundle.verificationAdapters??[]),...verificationAdapters]};
+  return {...bundle,
+    // The report has a four-minute collection deadline. Keep its lease alive
+    // beyond that bound; no repeated read is accepted under an expired lease.
+    workerLeaseTtlSeconds:Math.max(bundle.workerLeaseTtlSeconds??60,300),
+    capabilities:[...bundle.capabilities,...capabilities,{capabilityId:ANALYSIS_ID,authorityClass:"GREEN",specialistAgentId:"marketplace",specialistVersion:"1.0.0",description:ANALYSIS_DESCRIPTION}],
+    toolDefinitions:[...bundle.toolDefinitions,...toolDefinitions,{capabilityId:ANALYSIS_ID,authorityClass:"GREEN",sideEffect:false,description:ANALYSIS_DESCRIPTION,inputSchema:ANALYSIS_SCHEMA}],
+    toolAdapters:[...bundle.toolAdapters,...toolAdapters,{capabilityId:ANALYSIS_ID,execute:request=>buildBolAnalysis(request.params,analysisCall)}],
+    verificationAdapters:[...(bundle.verificationAdapters??[]),...verificationAdapters,{capabilityId:ANALYSIS_ID,verify:input=>verifyBolAnalysis(input.execution.params,input.execution.evidence,analysisCall)}]};
 }

@@ -22,6 +22,7 @@ function planningCapabilities(objective:string,items:unknown[]):Record<string,un
   const bolCommerce=/bol\.com/i.test(objective)&&/(sales|orders|inventory|stock|return|مبيعات|طلبات|مخزون|مرتجعات)/i.test(objective);
   if(!bolCommerce)return safe;
   const ids=["bol_list_orders","bol_get_inventory"];
+  if(/report|analy|تقرير|تحليل/i.test(objective)&&safe.some(item=>item.capabilityId==="bol_sales_stock_report"))return safe.filter(item=>item.capabilityId==="bol_sales_stock_report");
   if(/return|مرتجعات/i.test(objective))ids.push("bol_list_returns");
   const relevant=ids.map(id=>safe.find(item=>item.capabilityId===id)).filter((item):item is Record<string,unknown>=>Boolean(item));
   return relevant.length?relevant:safe;
@@ -102,6 +103,7 @@ export async function proposePlan(input: {
             "Use only capability ids listed in capabilities.",
             "Respect each capability's sideEffect field; if the objective says read-only, choose only sideEffect=false capabilities.",
             "For a read-only bol.com sales and stock objective, include bol_list_orders and bol_get_inventory when they are listed.",
+            "For bol_sales_stock_report, use exactly one report step for the requested date range. It performs pagination, aggregation, stock reads and reporting itself. Use only closed days; when asked for the last seven complete days, exclude today. Its output is not net profit and does not account for returns.",
             "Follow the user's scope and constraints.",
             "Do not execute capabilities or cause side effects while planning."
           ]
