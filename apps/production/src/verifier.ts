@@ -15,6 +15,7 @@ export async function verifyNextExecution(
          JOIN verification_contracts vc ON vc.capability_id=e.capability_id
         WHERE g.state='VERIFYING'
           AND e.status='EXECUTED'
+          AND e.plan_id=g.current_plan_id
           AND NOT EXISTS (
             SELECT 1 FROM verifications v WHERE v.execution_id=e.id
           )

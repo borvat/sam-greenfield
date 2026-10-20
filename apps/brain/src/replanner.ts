@@ -9,6 +9,7 @@ import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authori
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
 
 export async function runBrainReplanCycle(input: {
+  alreadyStarted?:boolean;
   gateway: ModelGateway;
   goalId: string;
   reason: string;
@@ -27,11 +28,11 @@ export async function runBrainReplanCycle(input: {
     return res.rows[0];
   });
 
-  if (goal.state !== "REPLANNING") {
+  if (goal.state !== (input.alreadyStarted?"PLANNING":"REPLANNING")) {
     throw new Error(`Brain replan cycle requires REPLANNING goal, got ${goal.state}`);
   }
 
-  const replanState = await beginReplanAtomic(input.goalId,input.reason);
+  const replanState = input.alreadyStarted?"PLANNING":await beginReplanAtomic(input.goalId,input.reason);
   if (replanState === "FAILED") {
     return { failed:true, reason:"replan_budget_exhausted" as const };
   }

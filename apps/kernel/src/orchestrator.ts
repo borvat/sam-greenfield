@@ -3,13 +3,13 @@ import { persistPlanAndDelegateAtomic, type PersistPlanInput } from "./planning"
 import { assembleContext } from "../../brain/src/contextAssembler";
 import { withTransaction } from "../../../packages/db/src/client";
 
-export async function observeAndEnterPlanning(goalId: string): Promise<{
+export async function observeAndEnterPlanning(goalId: string, alreadyModeling=false): Promise<{
   entityType: string;
   entityId: string | null;
   facts: unknown[];
   memory: unknown[];
 }> {
-  await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
+  if(!alreadyModeling) await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
 
   const context = await withTransaction(async (client) => {
     const goal = await client.query(

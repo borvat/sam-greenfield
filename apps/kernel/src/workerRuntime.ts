@@ -1,3 +1,4 @@
+import { recordWorkFailure } from "./failures";
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "./execution";
@@ -21,12 +22,14 @@ export async function claimNextWorkAtomic(
 ): Promise<ClaimedWork | null> {
   return withTransaction(async (client) => {
     const candidate = await client.query(
-      `SELECT id
-         FROM work_queue
-        WHERE status IN ('QUEUED','HANDBACK')
+      `SELECT w.id
+         FROM work_queue w
+         LEFT JOIN goals g ON g.id=w.goal_id
+        WHERE (w.goal_id IS NULL OR (g.state='EXECUTING' AND w.plan_id=g.current_plan_id))
+          AND status IN ('QUEUED','HANDBACK')
           AND (due_at IS NULL OR due_at <= now())
-        ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
-        FOR UPDATE SKIP LOCKED
+        ORDER BY w.priority DESC,w.due_at ASC NULLS FIRST,w.queued_at ASC,w.id ASC
+        FOR UPDATE OF w SKIP LOCKED
         LIMIT 1`
     );
     if (candidate.rowCount === 0) return null;
@@ -53,27 +56,32 @@ export async function runOneClaimedWork(
   owner: string,
   ttlSeconds: number,
   executors: Record<string, CapabilityExecutor>
-): Promise<{ processed: boolean; executionId?: string; queueId?: string }> {
+): Promise<{ processed: boolean; executionId?: string; queueId?: string; failed?:boolean }> {
   const work = await claimNextWorkAtomic(owner, ttlSeconds);
   if (!work) return { processed: false };
 
-  const executor = executors[work.capabilityId];
-  if (!executor) {
-    throw new Error(`No executor registered for capability ${work.capabilityId}`);
+  try{
+    const executor = executors[work.capabilityId];
+    if (!executor) {
+      throw new Error(`No executor registered for capability ${work.capabilityId}`);
+    }
+
+    const outcome = await executor(work);
+    const execution = await recordExecutionAndRequestVerificationAtomic({
+      queueId: work.queueId,
+      fencingToken: work.fencingToken,
+      actor: owner,
+      result: outcome.result,
+      evidence: outcome.evidence
+    });
+
+    return {
+      processed: true,
+      executionId: execution.executionId,
+      queueId: work.queueId
+    };
+  }catch(error){
+    await recordWorkFailure({queueId:work.queueId,fencingToken:work.fencingToken,error,actor:owner});
+    return {processed:true,queueId:work.queueId,failed:true};
   }
-
-  const outcome = await executor(work);
-  const execution = await recordExecutionAndRequestVerificationAtomic({
-    queueId: work.queueId,
-    fencingToken: work.fencingToken,
-    actor: owner,
-    result: outcome.result,
-    evidence: outcome.evidence
-  });
-
-  return {
-    processed: true,
-    executionId: execution.executionId,
-    queueId: work.queueId
-  };
 }

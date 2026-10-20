@@ -7,6 +7,7 @@ import type { CapabilityCatalog } from "./capabilityCatalog";
 import { runSpecialistSupervisorTick } from "./supervisor";
 
 export async function runCatalogPlanningCycle(input:{
+  alreadyModeling?:boolean;
   catalog:CapabilityCatalog;
   gateway:ModelGateway;
   goalId:string;
@@ -15,6 +16,7 @@ export async function runCatalogPlanningCycle(input:{
   preferredProviders?:string[];
 }){
   return runBrainPlanningCycle({
+    alreadyModeling:input.alreadyModeling,
     gateway:input.gateway,
     goalId:input.goalId,
     dataClassification:input.dataClassification,
@@ -26,6 +28,7 @@ export async function runCatalogPlanningCycle(input:{
 }
 
 export async function runCatalogReplanCycle(input:{
+  alreadyStarted?:boolean;
   catalog:CapabilityCatalog;
   gateway:ModelGateway;
   goalId:string;
@@ -35,6 +38,7 @@ export async function runCatalogReplanCycle(input:{
   preferredProviders?:string[];
 }){
   return runBrainReplanCycle({
+    alreadyStarted:input.alreadyStarted,
     gateway:input.gateway,
     goalId:input.goalId,
     reason:input.reason,

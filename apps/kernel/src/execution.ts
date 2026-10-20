@@ -12,6 +12,9 @@ export async function recordExecutionAndRequestVerificationAtomic(input: {
   operationKeyRef?: string | null;
 }): Promise<{ executionId: string; executionHash: string }> {
   return withTransaction(async (client) => {
+    const reference=await client.query("SELECT goal_id FROM work_queue WHERE id=$1",[input.queueId]);
+    const goalId=reference.rows[0]?.goal_id;
+    const goal=goalId?await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goalId]):null;
     const work = await client.query(
       `SELECT w.*, p.plan_hash
          FROM work_queue w
@@ -31,6 +34,10 @@ export async function recordExecutionAndRequestVerificationAtomic(input: {
     }
     if (!row.goal_id || !row.plan_id || !row.plan_hash) {
       throw new Error("Execution requires goal_id, plan_id and persisted plan_hash");
+    }
+
+    if(goal?.rows[0]?.state!=="EXECUTING"||goal?.rows[0]?.current_plan_id!==row.plan_id){
+      throw new Error("Execution is not for the active executing plan");
     }
 
     await client.query(
