@@ -123,6 +123,8 @@ export async function proposePlan(input: {
       const unique=new Set<string>();
       for(const step of candidate.steps){
         const key=sha256Hex({capabilityId:step.capabilityId,params:step.params});
+        const forbidden=(input.forbiddenReadSteps??[]).some(b=>b.capabilityId===step.capabilityId && sha256Hex(b.params)===sha256Hex(step.params));
+        if(forbidden)throw new Error(`Previously failed read cannot be repeated: ${step.capabilityId}. Choose an alternate capability/parameters or fail safely.`);
         if(unique.has(key))throw new Error(`Duplicate planned read/action: ${step.capabilityId}. Independent verification runs automatically after execution; do not repeat identical tool parameters.`);
         unique.add(key);
         const descriptor=capabilities.find(item=>item.capabilityId===step.capabilityId);
