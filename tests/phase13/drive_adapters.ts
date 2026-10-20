@@ -100,6 +100,10 @@ async function main(){
     params:{file_id:"existing-1"}
   });
   assert.equal((meta.result as any).file.id,"existing-1");
+  const aliasMeta=await metaAdapter.execute({capabilityId:"drive_get_metadata",idempotencyKey:"read-alias",params:{fileId:"existing-1"}});
+  assert.equal((aliasMeta.result as any).file.id,"existing-1");
+  const aliasVerified=await new DriveGetMetadataVerifier(client).verify({execution:{id:"alias-e1",capabilityId:"drive_get_metadata",params:{fileId:"existing-1"},evidence:aliasMeta.evidence,operationKeyRef:null},contract:{id:"alias-c1",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
+  assert.equal(aliasVerified.result,"VERIFIED");
 
   const searchAdapter=new DriveSearchAdapter(client);
   const search=await searchAdapter.execute({
