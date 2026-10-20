@@ -19,7 +19,7 @@ export class GoogleDriveApiClient{
       let response:Response;
       try{
         response=await fetchImpl(
-          `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(/\\/$/,"")}${path}`,
+          `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(new RegExp("/$"),"")}${path}`,
           {
             ...init,
             headers:{
