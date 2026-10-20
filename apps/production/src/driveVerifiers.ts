@@ -6,7 +6,7 @@ export class DriveGetMetadataVerifier implements VerificationAdapter{
   constructor(private readonly client:GoogleDriveApiClient){}
 
   async verify(input:Parameters<VerificationAdapter["verify"]>[0]){
-    const fileId=String(input.execution.params?.file_id??"").trim();
+    const fileId=String(input.execution.params?.file_id??input.execution.params?.fileId??"").trim();
     if(!fileId){
       return {
         result:"INCONCLUSIVE" as const,
