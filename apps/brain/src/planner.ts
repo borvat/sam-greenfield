@@ -110,6 +110,7 @@ export async function proposePlan(input: {
             "For bol_sales_stock_report, use exactly one report step for the requested date range. It performs pagination, aggregation, stock reads and reporting itself. Use only closed days; when asked for the last seven complete days, exclude today. Its output is not net profit and does not account for returns.",
             "Follow the user's scope and constraints.",
             "Independent verification runs automatically after execution. Never repeat an identical capability and parameter set as a verification step.",
+            "In replanning, never repeat any failed read with the same capability and parameters listed in forbiddenReadSteps. Pick an alternate read or fail safely.",
             "Do not execute capabilities or cause side effects while planning."
           ]
         }
