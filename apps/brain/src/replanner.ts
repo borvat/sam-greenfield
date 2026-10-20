@@ -44,6 +44,18 @@ export async function runBrainReplanCycle(input: {
     return assembleContext(client,"legal_entity",goal.company_scope);
   });
 
+  // Capture failed reads from prior plan versions: the planner must not
+  // replay the same failing request while attempting same-goal recovery.
+  const failedReads=await withTransaction(async client=>{
+    const r=await client.query(
+      `SELECT DISTINCT w.capability_id,w.params FROM work_queue w
+       JOIN tool_definitions t ON t.capability_id=w.capability_id
+       WHERE w.goal_id=$1 AND w.status='FAILED' AND t.side_effect=false`,
+      [input.goalId]
+    );
+    return r.rows.map((x:any)=>({capabilityId:String(x.capability_id),params:x.params??{}}));
+  });
+
   const candidate = await proposePlan({
     gateway:input.gateway,
     goalId:input.goalId,
