@@ -7,7 +7,8 @@ try{
  const repo=path.join(temp,'repo'),bin=path.join(temp,'bin');fs.mkdirSync(repo);fs.mkdirSync(bin);
  fs.mkdirSync(path.join(repo,'scripts/testing'),{recursive:true});
  for(const name of ['verify-full.cjs','verification-images.json'])fs.copyFileSync(path.join(root,'scripts/testing',name),path.join(repo,'scripts/testing',name));
- const git=execFileSync('which',['git'],{encoding:'utf8'}).trim();fs.symlinkSync(git,path.join(bin,'git'));
+ const git=process.env.PATH.split(path.delimiter).map(d=>path.resolve(d,'git')).find(f=>fs.existsSync(f));
+ assert(git,'git prerequisite');fs.symlinkSync(git,path.join(bin,'git'));
  const runGit=args=>execFileSync(git,args,{cwd:repo,stdio:'ignore'});
  runGit(['init']);runGit(['add','.']);runGit(['-c','user.name=Verification Fixture','-c','user.email=verification@example.invalid','commit','-m','fixture']);
  for(const name of ['missing-docker','dirty-checkout','remote-docker']){

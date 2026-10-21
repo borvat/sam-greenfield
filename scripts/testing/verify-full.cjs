@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'migration-upgrade-rollback','postgres-restart','migration-after-restart','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','cleanup'])
+ 'migration-upgrade-rollback','postgres-restart','migration-after-restart','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -56,10 +56,18 @@ function save(){
   `Source: \`${report.source.sha||'UNAVAILABLE'}\` (clean: ${report.source.clean})`,
   `Started: ${report.startedAt}; completed: ${report.completedAt||'running'}`,
   '',report.classification,'','| Check | Result | Log |','| --- | --- | --- |',
-  ...report.steps.map(s=>`| ${s.name} | ${s.status} | [log](${s.log}) |`),'',
+  ...report.steps.map(s=>`| ${s.name} | ${s.status} | ${fs.existsSync(path.join(output,s.log))?'[log]('+s.log+')':'not executed'} |`),'',
   '## Unresolved defects / blockers','',...(report.unresolvedDefects.length?report.unresolvedDefects.map(x=>'- '+x):['- No required local check failed. Hosted/governance and deployment gates remain separate.']),
   '','## Excluded checks','',...report.excludedChecks.map(x=>`- ${x.name}: ${x.status} — ${x.reason}`),'',
-  'Exact commands, individual suite results, timestamps, versions, image IDs and evidence hashes: [report.json](report.json).',
+  '## Runtime versions','', '```json',JSON.stringify(report.runtimes||{},null,2),'```','',
+  '## Container images','',...report.images.map(i=>'- '+i.role+': `'+i.ref+'`; ID `'+i.id+'`'),'',
+  '## Commands and suite outcomes','',...report.steps.flatMap(s=>[
+   '### '+s.name+' — '+s.status,'',`${s.startedAt||'not started'} → ${s.completedAt||'not completed'}`,'',
+   ...s.commands.flatMap(c=>['```sh',c.argv.map(quote).join(' '),'```',
+    `Exit: ${c.exitCode??'unavailable'}; signal: ${c.signal||'none'}; ${c.startedAt} → ${c.completedAt||'not completed'}`,'']),
+   ...(s.suiteResults?.results||[]).map(r=>`- ${r.test}: ${r.passed?'PASS':'FAIL'}; ${r.startedAt||'see parent command'} → ${r.completedAt||'see parent command'}`),''
+  ]),
+  'Exact structured commands, suite results and evidence hashes: [report.json](report.json).',
   'No GitHub status was posted. A local pass cannot satisfy a required hosted check or authorize merge/deployment.',''];
  fs.writeFileSync(path.join(output,'report.md'),lines.join('\n'));
  const artifacts={...report.artifacts,'report.json':hash(fs.readFileSync(path.join(output,'report.json'))),'report.md':hash(fs.readFileSync(path.join(output,'report.md')))};
@@ -144,6 +152,8 @@ async function main(){
    const context=JSON.parse((await command(s,'docker',['context','inspect'])).text)[0];
    if(!context.Endpoints.docker.Host.startsWith('unix://'))throw Error('LOCAL_UNIX_DOCKER_REQUIRED');
    const version=(await command(s,'docker',['version','--format','{{json .}}'])).text;report.host.docker=JSON.parse(version);
+   report.host.compose=(await command(s,'docker',['compose','version','--short'])).text.trim();
+   await command(s,'docker',['buildx','version']);
    const info=(await command(s,'docker',['info','--format','{{.OSType}}/{{.Architecture}}'])).text.trim();
    if(!['linux/x86_64','linux/amd64'].includes(info))throw Error('LOCAL_LINUX_AMD64_DOCKER_REQUIRED');
    await command(s,'git',['--version']);await command(s,'curl',['--version']);await command(s,'tar',['--version']);
@@ -153,7 +163,11 @@ async function main(){
    await command(s,'git',['archive','--format=tar','--output',path.join(temp,'source.tar'),report.source.sha]);
    await command(s,'tar',['-xf',path.join(temp,'source.tar'),'-C',source]);
    const names=execFileSync('git',['ls-tree','-r','--name-only','-z',report.source.sha],{cwd:root,env}).toString().split('\0').filter(Boolean).sort();
-   const manifest=Object.fromEntries(names.map(n=>[n,hash(fs.readFileSync(path.join(source,n)))]));
+   const manifest=Object.fromEntries(names.map(n=>{
+    const target=path.join(source,n);
+    if(!fs.lstatSync(target).isFile())throw Error('TRACKED_NONREGULAR_FILE_REQUIRES_REVIEW: '+n);
+    return [n,hash(fs.readFileSync(target))];
+   }));
    fs.mkdirSync(path.join(output,'metadata'));fs.writeFileSync(path.join(output,'metadata/source-files.json'),JSON.stringify(manifest,null,2)+'\n');
    report.source.fileManifestHash=hash(fs.readFileSync(path.join(output,'metadata/source-files.json')));
    const implementation=Object.fromEntries(Object.entries(manifest).filter(([f])=>!f.startsWith('docs/')));
@@ -167,6 +181,7 @@ async function main(){
     const found=await command(s,'docker',['image','inspect',ref],{allowFailure:true});
     if(found.exitCode!==0)await command(s,'docker',['pull','--platform',pins.platform,ref],{timeout:300000});
     const image=JSON.parse((await command(s,'docker',['image','inspect',ref])).text)[0];
+    if(image.Os!=='linux'||image.Architecture!=='amd64')throw Error('PINNED_IMAGE_PLATFORM_MISMATCH: '+role);
     report.images.push({role,ref,id:image.Id,repoDigests:image.RepoDigests,os:image.Os,architecture:image.Architecture});
    }
   });
@@ -208,6 +223,8 @@ async function main(){
   });
   await step('configuration-validation',async s=>{
    await command(s,process.execPath,['tests/testing/runner-contract.cjs'],{cwd:source});
+   for(const file of ['docker-compose.yml','docker-compose.production.yml','deploy/production/docker-compose.live.yml'])
+    await command(s,'docker',['compose','--file',file,'config','--quiet','--no-interpolate','--no-env-resolution'],{cwd:source});
    await node(s,['node','tests/release/build_configuration.cjs']);
    await node(s,['node','tests/release/preparation.cjs']);
    await node(s,['node','packages/db/src/migrate.js','--check-deterministic']);
@@ -254,10 +271,17 @@ async function main(){
     '--env','DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test_application',
     tag,'node','tests/testing/application-restart.cjs'],{timeout:180000});
   });
+  await step('source-integrity',async s=>{
+   const manifest=JSON.parse(fs.readFileSync(path.join(output,'metadata/source-files.json')));
+   for(const [file,expected] of Object.entries(manifest))
+    if(hash(fs.readFileSync(path.join(source,file)))!==expected)throw Error('SNAPSHOT_SOURCE_CHANGED: '+file);
+   fs.writeFileSync(path.join(output,s.log),'PASS: all '+Object.keys(manifest).length+' tracked source files retain the archived SHA256; generated Dockerfile recorded separately.\n');
+  });
  }catch(error){report.unresolvedDefects.push(error.message);console.error('VERIFY_FAILED:',error.message);}
  finally{
   try{await step('cleanup',cleanup);}catch(error){report.unresolvedDefects.push(error.message);}
-  report.completedAt=now();report.status=report.steps.every(s=>s.status==='PASS')?'PASS':'FAIL';save();
+  if(interrupted)report.unresolvedDefects.push('INTERRUPTED: partial results are not acceptance');
+  report.completedAt=now();report.status=!interrupted&&report.steps.every(s=>s.status==='PASS')?'PASS':'FAIL';save();
   console.log('VERIFICATION',report.status,report.source.sha||'SHA_UNAVAILABLE','report:',path.join(output,'report.md'));
   process.exitCode=report.status==='PASS'?0:1;
  }

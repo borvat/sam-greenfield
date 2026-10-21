@@ -52,6 +52,18 @@ async function main(){
     const response=await fetch(`http://127.0.0.1:${port}${route}`,{headers:{authorization:'Bearer '+token}});
     assert.equal(response.status,200);assert.equal(typeof await response.json(),'object');
    }
+   let ticked=false;
+   for(let attempt=0;attempt<100;attempt++){
+    const metrics=await(await fetch('http://127.0.0.1:8080/statusz',{headers:{authorization:'Bearer '+token}})).json();
+    assert.equal(metrics.errors,0);assert.equal(metrics.dependencyFailures,0);
+    if(metrics.ticks>0){ticked=true;break;}await wait(20);
+   }
+   assert(ticked,'real maintenance tick must complete, not just listen on a port');
+   const initialized=await fetch('http://127.0.0.1:3001/mcp',{
+    method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json',accept:'application/json, text/event-stream'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'verification-fixture',version:'1'}}})
+   });
+   assert.equal(initialized.status,200);assert.match(await initialized.text(),/"result"/);
    await stop();for(const child of children)assert.equal(child.exitCode,0,'graceful application stop');
    assert.equal((await c.query(`SELECT count(*)::int n FROM ${schema}.legal_entities WHERE id=$1`,[entity])).rows[0].n,1);
    console.log('APPLICATION_RESTART_PASS round',round+1,'real runtime/Command Center/MCP ready, auth enforced, graceful stop, sentinel retained');

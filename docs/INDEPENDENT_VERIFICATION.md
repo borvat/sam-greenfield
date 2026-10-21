@@ -8,7 +8,7 @@ No running services or databases from a previous task are prerequisites.
 ## Execute from a clean checkout
 
 Install Git, Node.js 22 or newer (including npm), curl, GNU tar and Docker Engine
-with BuildKit. Use a local Unix-socket Docker context, not a remote production
+with BuildKit and Compose v2 supporting `config --no-env-resolution`. Use a local Unix-socket Docker context, not a remote production
 daemon. The pinned containers supply Node 22, Python 3.11, PostgreSQL 15/pgvector
 and OpenSSL. Host npm dependencies are not required for this command:
 
@@ -61,7 +61,7 @@ acceptance. SIGINT/SIGTERM request cleanup; rerun after diagnosing interruption.
 | Phase 0 and tenants | Existing four Python commands, actual pgvector image, SQL migrations, app-login isolation and fail-closed tests |
 | Clean image | Existing `build-image.cjs`, no build cache, fresh production dependencies, base digest pinned in a generated Dockerfile, non-root/image-env checks |
 | Startup/restart | Actual image entrypoints: runtime, Command Center and MCP, two starts/stops, HTTP readiness/auth checks and retained synthetic sentinel; maintenance-only profile |
-| Configuration | Existing build/preparation contracts, deterministic migration check, all workflow files through actionlint |
+| Configuration | Existing build/preparation contracts, deterministic migration check, all workflow files through actionlint, three Compose configurations parsed without environment interpolation/resolution (no services started) |
 
 The historical Phase 0 suite prints old migration counts/hashes and a statement
 that GitHub Actions is needed for `LIVE_PROVEN`. Those legacy labels are not the
@@ -74,6 +74,16 @@ The new database lifecycle fixture generalizes the Phase 2 one-off upgrade
 exercise; the actual migration algorithm remains `packages/db/src/migrate.js`.
 The application lifecycle fixture adds real process coverage around existing
 entrypoints; it does not substitute a fake service or planner for SAM.
+
+The first independent run (`c08f9985dcc2bf97e2343ba7a0b3829a60f2ca78`)
+passed the source suites, migrations, database restart, isolation and clean build,
+then correctly failed real image startup. The image lacked `scripts/release`:
+runtime composition imports reported `MODULE_NOT_FOUND` for
+`synthetic-pilot.cjs`; MCP also imports `mcp-oauth.cjs` from that directory.
+The Dockerfile now includes those existing helpers. This is a packaging
+correction, without deployment or a change to production services. Retain that
+failed run beside subsequent successful evidence; a successful build alone is
+not application startup acceptance.
 
 ## Dependencies, isolation and reproducibility
 
