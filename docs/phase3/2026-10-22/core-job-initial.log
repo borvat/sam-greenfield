@@ -1,0 +1,103 @@
+v22.23.4
+10.9.9
+
+> typecheck
+> tsc --noEmit
+
+
+> test:core-reliability
+> node scripts/testing/core-reliability.cjs
+
+PASS tests/core/reliability.ts
+PASS planning failure isolation, fairness, persisted backoff and redaction
+PASS deadline prevents late plan persistence
+PASS planning retry budget
+PASS malformed parameters and dependency cycles rejected
+PASS dependency ordering, independent verification, typed propagation and restart
+PASS invalid result types fail durably; cancelled prerequisites never execute
+PASS replanner receives prior plan/failure evidence; replan budget enforced
+PASS HTTP/readback success is insufficient; typed and contradictory evidence rejected
+PASS Gmail verifies intended content, not message existence
+PASS real process crash after ACT, reconciliation, no resend across restart/replan
+PASS unknown side effects escalate to owner without resending
+PASS production outbox relay and event consumption
+PASS separate app identity, negative tenant/missing/spoofed-context tests and protected registry writes
+PASS specialist lease attempt exhaustion
+PASS external OAuth request deadline
+CORE_RELIABILITY 15 checks passed; fixtures only; zero external provider calls
+
+PASS tests/core/planningConcurrency.ts
+{"check":"concurrent planning with failures and two DB connections","healthy":12,"failed":4,"invokes":16,"ms":143,"thresholdMs":3000,"poolMax":2}
+
+PASS tests/core/reservationRace.ts
+PASS atomic reservation/approval/lease binding under reconciler interleaving; denied approval leaves no operation; concurrent identical writes consume one approval and send once per goal
+
+PASS tests/core/tenantWorkload.ts
+{"check":"parallel fixed-principal workload","tenants":4,"rows":80,"crossTenantReads":0,"ms":42,"thresholdMs":3000,"unboundRoleRejected":true}
+
+PASS tests/core/eventBacklog.ts
+{"check":"bounded event backlog","events":350,"ticks":4,"batches":[{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":50,"consumed":50}],"ms":1258,"thresholdMs":5000}
+
+PASS tests/core/learningScheduling.ts
+PASS unfinished legacy goal does not starve learning from a completed verified goal
+
+PASS tests/core/startupAdmission.ts
+PASS production owner-role refusal before serving: apps/runtime/src/main.ts
+PASS production owner-role refusal before serving: apps/mcp/src/main.ts
+PASS production owner-role refusal before serving: apps/command-center/src/main.ts
+
+PASS tests/core/planningDeadline.ts
+PASS deadline expiring after proposal but before persistence creates no plan
+
+{"passed":8,"failed":0,"results":[{"test":"tests/core/reliability.ts","passed":true,"exit":0},{"test":"tests/core/planningConcurrency.ts","passed":true,"exit":0},{"test":"tests/core/reservationRace.ts","passed":true,"exit":0},{"test":"tests/core/tenantWorkload.ts","passed":true,"exit":0},{"test":"tests/core/eventBacklog.ts","passed":true,"exit":0},{"test":"tests/core/learningScheduling.ts","passed":true,"exit":0},{"test":"tests/core/startupAdmission.ts","passed":true,"exit":0},{"test":"tests/core/planningDeadline.ts","passed":true,"exit":0}]}
+
+> test:core-regression
+> node scripts/testing/core-reliability.cjs --regression
+
+PASS tests/phase1/final_acceptance.ts
+PASS tests/phase1/full_vertical_slice.ts
+PASS tests/phase1/kernel_smoke.ts
+PASS tests/phase1/replan_recovery.ts
+PASS tests/phase1/runtime_loop.ts
+PASS tests/phase2/authority_guard.ts
+PASS tests/phase2/brain_kernel_handoff.ts
+PASS tests/phase2/brain_replanning.ts
+PASS tests/phase2/final_acceptance.ts
+PASS tests/phase2/gateway_resilience.ts
+PASS tests/phase2/model_gateway.ts
+PASS tests/phase3/capability_catalog.ts
+PASS tests/phase3/final_acceptance.ts
+PASS tests/phase3/specialist_delegation.ts
+PASS tests/phase3/specialist_supervisor.ts
+PASS tests/phase4/reconciliation.ts
+PASS tests/phase4/tool_gateway.ts
+PASS tests/phase5/final_acceptance.ts
+PASS tests/phase5/verified_learning.ts
+PASS tests/phase6/final_acceptance.ts
+PASS tests/phase6/operational_supervision.ts
+PASS tests/phase6/policy_evaluation.ts
+PASS tests/phase7/production_readiness.ts
+PASS tests/phase7/runtime_service.ts
+PASS tests/phase8/chatgpt_tool_surface.ts
+PASS tests/phase9/production_wiring.ts
+PASS tests/phase10/mcp_transport.ts
+PASS tests/phase11/model_adapters.ts
+PASS tests/phase12/gmail_adapter.ts
+PASS tests/phase13/drive_adapters.ts
+PASS tests/phase14/eboekhouden_read.ts
+PASS tests/phase15/bol_read.ts
+PASS tests/phase16/bol_operational_intelligence.ts
+PASS tests/phase17/finance_reconciliation.ts
+PASS tests/phase18/operational_finance_loop.ts
+PASS tests/phase19/command_center.ts
+PASS tests/phase20/live_golden_chain_gate.ts
+PASS tests/phase21/production_deployment.ts
+{"passed":38,"failed":0,"results":[{"test":"tests/phase1/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase1/full_vertical_slice.ts","passed":true,"exit":0},{"test":"tests/phase1/kernel_smoke.ts","passed":true,"exit":0},{"test":"tests/phase1/replan_recovery.ts","passed":true,"exit":0},{"test":"tests/phase1/runtime_loop.ts","passed":true,"exit":0},{"test":"tests/phase2/authority_guard.ts","passed":true,"exit":0},{"test":"tests/phase2/brain_kernel_handoff.ts","passed":true,"exit":0},{"test":"tests/phase2/brain_replanning.ts","passed":true,"exit":0},{"test":"tests/phase2/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase2/gateway_resilience.ts","passed":true,"exit":0},{"test":"tests/phase2/model_gateway.ts","passed":true,"exit":0},{"test":"tests/phase3/capability_catalog.ts","passed":true,"exit":0},{"test":"tests/phase3/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase3/specialist_delegation.ts","passed":true,"exit":0},{"test":"tests/phase3/specialist_supervisor.ts","passed":true,"exit":0},{"test":"tests/phase4/reconciliation.ts","passed":true,"exit":0},{"test":"tests/phase4/tool_gateway.ts","passed":true,"exit":0},{"test":"tests/phase5/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase5/verified_learning.ts","passed":true,"exit":0},{"test":"tests/phase6/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase6/operational_supervision.ts","passed":true,"exit":0},{"test":"tests/phase6/policy_evaluation.ts","passed":true,"exit":0},{"test":"tests/phase7/production_readiness.ts","passed":true,"exit":0},{"test":"tests/phase7/runtime_service.ts","passed":true,"exit":0},{"test":"tests/phase8/chatgpt_tool_surface.ts","passed":true,"exit":0},{"test":"tests/phase9/production_wiring.ts","passed":true,"exit":0},{"test":"tests/phase10/mcp_transport.ts","passed":true,"exit":0},{"test":"tests/phase11/model_adapters.ts","passed":true,"exit":0},{"test":"tests/phase12/gmail_adapter.ts","passed":true,"exit":0},{"test":"tests/phase13/drive_adapters.ts","passed":true,"exit":0},{"test":"tests/phase14/eboekhouden_read.ts","passed":true,"exit":0},{"test":"tests/phase15/bol_read.ts","passed":true,"exit":0},{"test":"tests/phase16/bol_operational_intelligence.ts","passed":true,"exit":0},{"test":"tests/phase17/finance_reconciliation.ts","passed":true,"exit":0},{"test":"tests/phase18/operational_finance_loop.ts","passed":true,"exit":0},{"test":"tests/phase19/command_center.ts","passed":true,"exit":0},{"test":"tests/phase20/live_golden_chain_gate.ts","passed":true,"exit":0},{"test":"tests/phase21/production_deployment.ts","passed":true,"exit":0}]}
+PASS tests/release/provider_auth.ts
+PROVIDER_AUTH PASS: local HTTP 401/403/429/503 fixtures, one request per case, typed redacted errors; not a live-provider authentication test.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/provider_auth.ts","passed":true,"exit":0}]}
+FAIL tests/release/postgres_tls.ts
+POSTGRES_TLS_LOCAL_FAILED ERR_ASSERTION
+
+{"passed":0,"failed":1,"results":[{"test":"tests/release/postgres_tls.ts","passed":false,"exit":1}]}

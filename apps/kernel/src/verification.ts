@@ -1,3 +1,4 @@
+import {validateEvidence} from './verificationEvidence';
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import { transitionGoal } from "./stateMachine";
@@ -13,8 +14,9 @@ export async function recordIndependentVerificationAtomic(input: {
   result: VerificationResult;
 }): Promise<string> {
   return withTransaction(async (client) => {
+    let goalState:string|undefined;
     const execution = await client.query(
-      "SELECT id, goal_id, plan_id, plan_hash, execution_hash, actor FROM executions WHERE id=$1 FOR UPDATE",
+      "SELECT id, goal_id, plan_id, plan_hash, execution_hash, actor,capability_id FROM executions WHERE id=$1 FOR UPDATE",
       [input.executionId]
     );
     if (execution.rowCount !== 1) throw new Error("Execution not found");
@@ -25,7 +27,7 @@ export async function recordIndependentVerificationAtomic(input: {
     }
 
     const contract = await client.query(
-      "SELECT id, must_not_trust_execution_result FROM verification_contracts WHERE id=$1",
+      "SELECT id, capability_id,required_evidence_fields, must_not_trust_execution_result FROM verification_contracts WHERE id=$1",
       [input.contractId]
     );
     if (contract.rowCount !== 1) throw new Error("Verification contract not found");
@@ -55,10 +57,14 @@ export async function recordIndependentVerificationAtomic(input: {
       return prior.rows[0].id as string;
     }
 
+    if(contract.rows[0].capability_id!==ex.capability_id)throw new Error('VERIFICATION_CONTRACT_CAPABILITY_MISMATCH');
+    if(input.result==='VERIFIED')validateEvidence(contract.rows[0].required_evidence_fields,input.independentEvidence);
     if (ex.goal_id) {
-      const goal = await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
+      const goal = await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
       if (goal.rowCount !== 1) throw new Error("Goal not found for execution");
-      if (goal.rows[0].state !== "VERIFYING") {
+      if(goal.rows[0].current_plan_id!==ex.plan_id)throw new Error('VERIFICATION_PLAN_OBSOLETE');
+      goalState=goal.rows[0].state;
+      if (!["VERIFYING","EXECUTING"].includes(goal.rows[0].state)) {
         throw new Error(`Goal must be VERIFYING before verification, got ${goal.rows[0].state}`);
       }
     }
@@ -104,7 +110,7 @@ export async function recordIndependentVerificationAtomic(input: {
         );
         const total = Number(coverage.rows[0].total);
         const verified = Number(coverage.rows[0].verified);
-        if (total > 0 && total === verified) {
+        if (goalState==="VERIFYING" && total > 0 && total === verified) {
           const definition=await client.query("SELECT completion_definition FROM goals WHERE id=$1",[ex.goal_id]);
           const verifiedResults=await client.query(
             `SELECT e.capability_id,e.params,e.result FROM executions e
@@ -124,11 +130,11 @@ export async function recordIndependentVerificationAtomic(input: {
           }
         }
       } else if (input.result === "FAILED") {
-        await transitionGoal(client, ex.goal_id, "VERIFYING", "REPLANNING", "independent_verification_failed", {
+        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", "REPLANNING", "independent_verification_failed", {
           verification_id: verificationId
         });
       } else {
-        await transitionGoal(client, ex.goal_id, "VERIFYING", "WAITING_EXTERNAL", "independent_verification_inconclusive", {
+        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", "WAITING_EXTERNAL", "independent_verification_inconclusive", {
           verification_id: verificationId,
           result: input.result
         });

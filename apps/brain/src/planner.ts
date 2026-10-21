@@ -1,3 +1,5 @@
+import {validateParameters} from '../../../packages/tool-gateway/src/validation';
+import {normalizeDependencies,validateStepGraph} from '../../kernel/src/dependencies';
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { PersistPlanInput, PlanStepInput } from "../../kernel/src/planning";
@@ -22,19 +24,25 @@ export function validateCandidatePlan(value: unknown): CandidatePlan {
     throw new Error("Planner output requires non-empty steps");
   }
 
-  const steps = value.steps.map((raw, index) => {
+  let steps:PlanStepInput[] = value.steps.map((raw, index) => {
     if (!isObject(raw) || typeof raw.capabilityId !== "string" || raw.capabilityId.length === 0) {
       throw new Error(`Planner step ${index} missing capabilityId`);
     }
     return {
       capabilityId: raw.capabilityId,
-      params: isObject(raw.params) ? raw.params : {},
+      stepKey:raw.stepKey as string|undefined,
+      dependsOn:raw.dependsOn as string[]|undefined,
+      resultRefs:raw.resultRefs as PlanStepInput["resultRefs"],
+      params: raw.params===undefined?{}:isObject(raw.params)?raw.params:(()=>{throw new Error("PLAN_PARAMETERS_INVALID")})(),
       priority: typeof raw.priority === "number" ? raw.priority : 0,
       idempotencyKey: typeof raw.idempotencyKey === "string" ? raw.idempotencyKey : null,
       operationKeyRef: typeof raw.operationKeyRef === "string" ? raw.operationKeyRef : null
     } satisfies PlanStepInput;
   });
 
+  validateStepGraph(steps);
+  steps=normalizeDependencies(steps,isObject(value.dependencies)?value.dependencies:{});
+  validateStepGraph(steps);
   return {
     assumptions: isObject(value.assumptions) ? value.assumptions : {},
     constraints: isObject(value.constraints) ? value.constraints : {},
@@ -50,6 +58,7 @@ export async function proposePlan(input: {
   context: unknown;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
   preferredProviders?: string[];
   availableCapabilities?: unknown[];
 }): Promise<PersistPlanInput> {
@@ -62,7 +71,7 @@ export async function proposePlan(input: {
     capability: "planning",
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
-    preferredProviders: input.preferredProviders,
+    signal:input.signal,preferredProviders: input.preferredProviders,
     input: {
       objective: input.objective,
     context: input.context,
@@ -73,12 +82,22 @@ export async function proposePlan(input: {
       }
     }
   };
-  const routed = await input.gateway.invoke(task as import("../../../packages/model-gateway/src/types").ModelTask);
+  input.signal?.throwIfAborted();
+  let onAbort:(()=>void)|undefined;
+  const abort=new Promise<never>((_,reject)=>{onAbort=()=>reject(new Error('PLANNING_DEADLINE_EXCEEDED'));input.signal?.addEventListener('abort',onAbort,{once:true});});
+  let routed;
+  try{routed=await Promise.race([input.gateway.invoke(task as import("../../../packages/model-gateway/src/types").ModelTask),abort]);}
+  finally{if(onAbort)input.signal?.removeEventListener('abort',onAbort);}
+  input.signal?.throwIfAborted();
 
   if(autonomyEnabled())validateAutonomyCandidate(routed.result.output);
   const candidate = localDevelopment() && !autonomyEnabled() ?
     validateSyntheticPlan(routed.result.output, () => {}, phase => input.gateway.recordDevelopmentValidation(phase)) :
     validateCandidatePlan(routed.result.output);
+  for(const step of candidate.steps){
+    const descriptor=(input.availableCapabilities as {capabilityId:string;parameters?:Record<string,unknown>}[]|undefined)?.find(c=>c.capabilityId===step.capabilityId);
+    if(!Object.keys(step.resultRefs??{}).length)validateParameters(descriptor?.parameters,step.params??{});
+  }
   return {
     goalId: input.goalId,
     assumptions: candidate.assumptions,

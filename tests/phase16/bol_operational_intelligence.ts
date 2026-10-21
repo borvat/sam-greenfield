@@ -42,7 +42,7 @@ async function main(){
   assert.equal(v.tools.definition(id).sideEffect,false);
   const ex=await v.tools.adapter(id).execute({capabilityId:id,params:{...params},idempotencyKey:`read-${id}`});
   assert.ok((ex.result as any).data);
-  const vr=await v.verifiers.get(id)!.verify({execution:{id:`e-${id}`,capabilityId:id,params:{...params},evidence:ex.evidence,operationKeyRef:null},contract:{id:`c-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
+  const vr=await v.verifiers.get(id)!.verify({execution:{id:`e-${id}`,capabilityId:id,params:{...params},result:ex.result,evidence:ex.evidence,operationKeyRef:null},contract:{id:`c-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
   assert.equal(vr.result,"VERIFIED");
  }
  await syncVerificationContracts(BOL_VERIFICATION_CONTRACTS);

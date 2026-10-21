@@ -1,0 +1,43 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from sam-phase3-test.Dockerfile
+#1 transferring dockerfile: 450B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [stage-0 1/2] FROM docker.io/library/node:22-alpine
+#4 CACHED
+
+#5 [stage-0 2/2] RUN --mount=type=secret,id=registry_ca     cp /etc/ssl/cert.pem /tmp/sam-test-ca.pem &&     if [ -s /run/secrets/registry_ca ]; then cat /run/secrets/registry_ca >> /tmp/sam-test-ca.pem; fi &&     SSL_CERT_FILE=/tmp/sam-test-ca.pem apk add --no-cache openssl &&     rm /tmp/sam-test-ca.pem
+#5 0.437 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz: HTTP 403: Forbidden
+#5 0.442 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/community/x86_64/APKINDEX.tar.gz: HTTP 403: Forbidden
+#5 0.442 ERROR: unable to select packages:
+#5 0.442   openssl (no such package):
+#5 0.442     required by: world[openssl]
+#5 ERROR: process "/bin/sh -c cp /etc/ssl/cert.pem /tmp/sam-test-ca.pem &&     if [ -s /run/secrets/registry_ca ]; then cat /run/secrets/registry_ca >> /tmp/sam-test-ca.pem; fi &&     SSL_CERT_FILE=/tmp/sam-test-ca.pem apk add --no-cache openssl &&     rm /tmp/sam-test-ca.pem" did not complete successfully: exit code: 1
+------
+ > [stage-0 2/2] RUN --mount=type=secret,id=registry_ca     cp /etc/ssl/cert.pem /tmp/sam-test-ca.pem &&     if [ -s /run/secrets/registry_ca ]; then cat /run/secrets/registry_ca >> /tmp/sam-test-ca.pem; fi &&     SSL_CERT_FILE=/tmp/sam-test-ca.pem apk add --no-cache openssl &&     rm /tmp/sam-test-ca.pem:
+0.437 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz: HTTP 403: Forbidden
+0.442 WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.24/community/x86_64/APKINDEX.tar.gz: HTTP 403: Forbidden
+0.442 ERROR: unable to select packages:
+0.442   openssl (no such package):
+0.442     required by: world[openssl]
+------
+WARNING: current commit information was not captured by the build: failed to read current commit information with git rev-parse --is-inside-work-tree
+sam-phase3-test.Dockerfile:3
+--------------------
+   2 |     # Local test fixture only: postgres_tls.ts generates synthetic certificates.
+   3 | >>> RUN --mount=type=secret,id=registry_ca \
+   4 | >>>     cp /etc/ssl/cert.pem /tmp/sam-test-ca.pem && \
+   5 | >>>     if [ -s /run/secrets/registry_ca ]; then cat /run/secrets/registry_ca >> /tmp/sam-test-ca.pem; fi && \
+   6 | >>>     SSL_CERT_FILE=/tmp/sam-test-ca.pem apk add --no-cache openssl && \
+   7 | >>>     rm /tmp/sam-test-ca.pem
+   8 |
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c cp /etc/ssl/cert.pem /tmp/sam-test-ca.pem &&     if [ -s /run/secrets/registry_ca ]; then cat /run/secrets/registry_ca >> /tmp/sam-test-ca.pem; fi &&     SSL_CERT_FILE=/tmp/sam-test-ca.pem apk add --no-cache openssl &&     rm /tmp/sam-test-ca.pem" did not complete successfully: exit code: 1

@@ -1,4 +1,5 @@
 import {pool} from "../../../packages/db/src/client";
+import {assertRuntimeTenantBinding} from '../../../packages/db/src/runtimeAccess';
 import {startCommandCenterHttpServer} from "./http";
 
 function positiveInt(name:string,value:string|undefined,fallback:number){
@@ -15,6 +16,7 @@ async function main(){
   if(production&&!token)throw new Error("SAM_COMMAND_CENTER_BEARER_TOKEN is required in production");
   if(production&&!allowedHosts)throw new Error("SAM_COMMAND_CENTER_ALLOWED_HOSTS is required in production");
   if(!legalEntityId)throw new Error("SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required");
+  if(production&&(await assertRuntimeTenantBinding(pool)).entity!==legalEntityId)throw new Error('RUNTIME_TENANT_CONTEXT_MISMATCH');
 
   const service=await startCommandCenterHttpServer({
     legalEntityId,

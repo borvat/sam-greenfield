@@ -1,0 +1,4 @@
+PASS tests/release/managed_schema_source.cjs
+PASS: empty managed development schema source, 12 reviewed migrations, guarded atomic batch; no connections
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/managed_schema_source.cjs","passed":true,"exit":0}]}

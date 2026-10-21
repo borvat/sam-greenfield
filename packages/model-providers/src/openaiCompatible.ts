@@ -18,7 +18,7 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
     const body=await (this.options.transport??fetchJson)(
       `${this.options.baseUrl.replace(/\/$/,"")}/chat/completions`,
       {
-        method:"POST",
+        method:"POST",signal:task.signal,
         headers:{
           authorization:`Bearer ${this.options.apiKey}`,
           "content-type":"application/json",

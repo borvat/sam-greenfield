@@ -127,7 +127,7 @@ async function main(){
       id:"e14",
       capabilityId:"eboekhouden_list_ledgers",
       params:{limit:10,offset:0},
-      evidence:read.evidence,
+      result:read.result,evidence:read.evidence,
       operationKeyRef:null
     },
     contract:{id:"c14",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}

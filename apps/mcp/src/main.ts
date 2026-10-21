@@ -2,6 +2,7 @@ import { createChatGPTToolSurface } from "../../chatgpt-tools/src/surface";
 import { createKernelProductionDispatcher } from "../../production/src/dispatcher";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { pool } from "../../../packages/db/src/client";
+import {assertRuntimeTenantBinding} from '../../../packages/db/src/runtimeAccess';
 import { startMcpHttpServer } from "./http";
 import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
 import {createReleaseReadSurface} from "./releaseReadSurface";
@@ -35,6 +36,7 @@ async function main(){
   const releaseReadOnly=process.env.SAM_MCP_RELEASE_READ_ONLY==="1";
   if((releaseReadOnly||synthetic)&&bundlePath)throw new Error("RELEASE_MCP_DISPATCHER_FORBIDDEN");
   if(synthetic)await admitSyntheticMcpDatabase();
+  if(production&&!synthetic)await assertRuntimeTenantBinding(pool);
   const dispatcher=bundlePath
     ? createKernelProductionDispatcher(await loadProductionBundle(bundlePath))
     : undefined;

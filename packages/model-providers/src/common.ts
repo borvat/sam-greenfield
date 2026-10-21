@@ -35,7 +35,7 @@ export async function fetchJson(
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
   try{
-    const response=await fetch(url,{...init,signal:controller.signal});
+    const response=await fetch(url,{...init,signal:init.signal?AbortSignal.any([init.signal,controller.signal]):controller.signal});
     const text=await response.text();
     let body:any={};
     try{ body=text?JSON.parse(text):{}; }catch{ body={raw:text}; }

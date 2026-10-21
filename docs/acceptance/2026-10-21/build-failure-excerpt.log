@@ -1,0 +1,34 @@
+#13 75.94 npm error Exit handler never called!
+#13 75.97 129 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with EAI_AGAIN
+#13 75.97 131 http fetch GET https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 132 http fetch GET https://registry.npmjs.org/zod/-/zod-4.2.1.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 133 http fetch GET https://registry.npmjs.org/tsx/-/tsx-4.23.15.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 134 http fetch GET https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.2.0.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 135 http fetch GET https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.7.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 136 http fetch GET https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.1.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 137 http fetch GET https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 138 http fetch GET https://registry.npmjs.org/pgpass/-/pgpass-1.0.6.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 139 http fetch GET https://registry.npmjs.org/pg-types/-/pg-types-2.2.0.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 140 http fetch GET https://registry.npmjs.org/pg-protocol/-/pg-protocol-1.16.1.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 141 http fetch GET https://registry.npmjs.org/pg-int8/-/pg-int8-1.0.1.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 142 http fetch GET https://registry.npmjs.org/pg-pool/-/pg-pool-3.14.0.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 143 http fetch GET https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-2.14.1.tgz attempt 1 failed with EAI_AGAIN
+#13 75.97 144 verbose audit error FetchError: request to https://registry.npmjs.org/-/npm/v1/security/audits/quick failed, reason: getaddrinfo EAI_AGAIN proxy
+#13 75.97 144 verbose audit error   code: 'EAI_AGAIN',
+#13 75.97 144 verbose audit error   errno: 'EAI_AGAIN',
+#13 75.97 147 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with EAI_AGAIN
+#13 75.97 148 http fetch GET https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 149 http fetch GET https://registry.npmjs.org/zod/-/zod-4.2.1.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 150 http fetch GET https://registry.npmjs.org/tsx/-/tsx-4.23.15.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 151 http fetch GET https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.2.0.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 152 http fetch GET https://registry.npmjs.org/postgres-date/-/postgres-date-1.0.7.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 153 http fetch GET https://registry.npmjs.org/postgres-bytea/-/postgres-bytea-1.0.1.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 154 http fetch GET https://registry.npmjs.org/postgres-array/-/postgres-array-2.0.0.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 155 http fetch GET https://registry.npmjs.org/pgpass/-/pgpass-1.0.6.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 156 http fetch GET https://registry.npmjs.org/pg-types/-/pg-types-2.2.0.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 157 http fetch GET https://registry.npmjs.org/pg-protocol/-/pg-protocol-1.16.1.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 158 http fetch GET https://registry.npmjs.org/pg-int8/-/pg-int8-1.0.1.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 159 http fetch GET https://registry.npmjs.org/pg-pool/-/pg-pool-3.14.0.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 160 http fetch GET https://registry.npmjs.org/pg-connection-string/-/pg-connection-string-2.14.1.tgz attempt 2 failed with EAI_AGAIN
+#13 75.97 165 error Exit handler never called!
+75.97 165 error Exit handler never called!

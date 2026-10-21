@@ -6,6 +6,7 @@ export class GoogleDriveApiClient{
     tokens:AccessTokenProvider;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
   } | {
     // Scoped authenticated transport; original OAuth clients retain their behavior.
     readOnlyRequest:(path:string)=>Promise<any>;
@@ -25,6 +26,7 @@ export class GoogleDriveApiClient{
       `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(/\/$/,"")}${path}`,
       {
         ...init,
+        signal:AbortSignal.timeout(this.options.timeoutMs??20000),
         headers:{
           authorization:`Bearer ${token}`,
           ...(init.body?{"content-type":"application/json"}:{}),
@@ -35,7 +37,7 @@ export class GoogleDriveApiClient{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok){
       throw new Error(
-        `Google Drive API HTTP ${response.status}: ${String(body?.error?.message??body?.message??"unknown").slice(0,500)}`
+        `Google Drive API HTTP ${response.status}: upstream_details_withheld`
       );
     }
     return body;

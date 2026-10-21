@@ -111,7 +111,8 @@ async function main(){
   ["finance_reconciliation_preview",{period_start_date:"2026-09-01",period_end_date:"2026-09-30",limit:100,offset:0}],
   ["finance_outstanding_snapshot",{limit:100,offset:0}]
  ] as const){
-  const vr=await v.verifiers.get(id)!.verify({execution:{id:`e-${id}`,capabilityId:id,params:{...params},evidence:{},operationKeyRef:null},contract:{id:`c-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
+  const original=await v.tools.adapter(id).execute({capabilityId:id,params:{...params},idempotencyKey:"fixture"});
+  const vr=await v.verifiers.get(id)!.verify({execution:{id:`e-${id}`,capabilityId:id,params:{...params},result:original.result,evidence:{},operationKeyRef:null},contract:{id:`c-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
   assert.equal(vr.result,"VERIFIED");
  }
  assert.equal(b.tokens(),1);

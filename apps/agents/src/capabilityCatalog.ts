@@ -1,3 +1,4 @@
+import {standardContract} from './standardContracts';
 import type { AuthorityClass } from "../../../packages/shared/src/types";
 import type { SpecialistAgentDefinition } from "./types";
 import { SpecialistRegistry } from "./registry";
@@ -18,7 +19,8 @@ export class CapabilityCatalog {
   constructor(items: readonly CapabilityDefinition[]) {
     const byAgent = new Map<string, { version: string; capabilities: string[] }>();
 
-    for (const item of items) {
+    for (const raw of items) {
+      const item=standardContract(raw);
       if (!item.capabilityId.trim()) throw new Error("capabilityId is required");
       if (!item.specialistAgentId.trim()) throw new Error(`specialistAgentId is required for ${item.capabilityId}`);
       if (!item.specialistVersion.trim()) throw new Error(`specialistVersion is required for ${item.capabilityId}`);

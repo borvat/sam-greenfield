@@ -96,7 +96,7 @@ async function main(){
     executionId:e1,
     type:"COMMERCIAL",
     statement:"Synthetic supplier accepts deferred payment",
-    scope:{supplier:"phase5-final"}
+    scope:{legal_entity_id:g1.legalEntityId,supplier:"phase5-final"}
   });
   assert.equal(firstObs.status,"OBSERVED");
 
@@ -104,7 +104,7 @@ async function main(){
     executionId:e1,
     type:"COMMERCIAL",
     statement:"Synthetic supplier accepts deferred payment",
-    scope:{supplier:"phase5-final"}
+    scope:{legal_entity_id:g1.legalEntityId,supplier:"phase5-final"}
   });
   assert.equal(duplicateObs.supportCount,1);
 
@@ -121,7 +121,7 @@ async function main(){
     executionId:e2,
     type:"COMMERCIAL",
     statement:"Synthetic supplier accepts deferred payment",
-    scope:{supplier:"phase5-final"}
+    scope:{legal_entity_id:g1.legalEntityId,supplier:"phase5-final"}
   });
   assert.equal(reinforced.status,"REINFORCED");
   assert.equal(reinforced.supportCount,2);
@@ -129,14 +129,14 @@ async function main(){
   const rule1=await recordOwnerRule({
     type:"FORMAL_RULE",
     statement:"Synthetic rule version 1",
-    scope:{rule_key:"phase5-final"},
+    scope:{legal_entity_id:g1.legalEntityId,rule_key:"phase5-final"},
     source:"owner-test",
     approvedBy:"owner"
   });
   const rule2=await recordOwnerRule({
     type:"FORMAL_RULE",
     statement:"Synthetic rule version 2",
-    scope:{rule_key:"phase5-final"},
+    scope:{legal_entity_id:g1.legalEntityId,rule_key:"phase5-final"},
     source:"owner-test",
     approvedBy:"owner",
     supersedesMemoryId:rule1

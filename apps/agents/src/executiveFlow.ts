@@ -12,6 +12,7 @@ export async function runCatalogPlanningCycle(input:{
   goalId:string;
   dataClassification:DataClassification;
   maxCostUsd:number;
+  signal?:AbortSignal;
   preferredProviders?:string[];
 }){
   return runBrainPlanningCycle({
@@ -19,7 +20,7 @@ export async function runCatalogPlanningCycle(input:{
     goalId:input.goalId,
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    preferredProviders:input.preferredProviders,
+    signal:input.signal,preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
     ,availableCapabilities:input.catalog.planningDescriptors()
   });
@@ -32,6 +33,7 @@ export async function runCatalogReplanCycle(input:{
   reason:string;
   dataClassification:DataClassification;
   maxCostUsd:number;
+  signal?:AbortSignal;
   preferredProviders?:string[];
 }){
   return runBrainReplanCycle({
@@ -40,7 +42,7 @@ export async function runCatalogReplanCycle(input:{
     reason:input.reason,
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    preferredProviders:input.preferredProviders,
+    signal:input.signal,preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
     ,availableCapabilities:input.catalog.planningDescriptors()
   });

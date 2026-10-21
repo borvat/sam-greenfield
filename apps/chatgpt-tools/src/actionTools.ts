@@ -33,6 +33,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
             capability_id:{type:"string"},
             legal_entity_id:{type:"string"},
             objective:{type:"string"},
+            acceptance_contract:{type:"object"},
             params:{type:"object"}
           },
           required:["capability_id","legal_entity_id","params"],
@@ -56,7 +57,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           params,
           actor:context.actor,
           legalEntityId,
-          objective
+          objective,acceptanceContract:args.acceptance_contract
         })};
       }
     },

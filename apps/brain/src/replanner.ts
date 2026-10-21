@@ -1,3 +1,4 @@
+import {loadReplanContext} from './replanContext';
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
@@ -16,6 +17,7 @@ export async function runBrainReplanCycle(input: {
   reason: string;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
   availableCapabilities?: unknown[];
@@ -47,6 +49,7 @@ export async function runBrainReplanCycle(input: {
     return assembleContext(client,"legal_entity",goal.company_scope);
   });
 
+  const history=await loadReplanContext(input.goalId);
   const candidate = await proposePlan({
     gateway:input.gateway,
     goalId:input.goalId,
@@ -54,11 +57,12 @@ export async function runBrainReplanCycle(input: {
     availableCapabilities:input.availableCapabilities,
     context:{
       ...context,
+      ...history,
       replan_reason:input.reason
     },
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    preferredProviders:input.preferredProviders
+    signal:input.signal,preferredProviders:input.preferredProviders
   });
 
   const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
@@ -79,6 +83,7 @@ export async function runBrainReplanCycle(input: {
     throw new Error("Replanned candidate blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

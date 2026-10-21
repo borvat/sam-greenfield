@@ -1,3 +1,5 @@
+import {pool} from '../../../packages/db/src/client';
+import {assertRuntimeTenantBinding} from '../../../packages/db/src/runtimeAccess';
 import { loadRuntimeConfig } from "./config";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { createProductionComposition } from "../../production/src/composition";
@@ -11,6 +13,9 @@ import { createFinanceOperationalTickFromEnv } from "../../production/src/financ
 
 export default (async()=>{
 const config=loadRuntimeConfig();
+if(config.mode==='production'){
+ await assertRuntimeTenantBinding(pool);
+}
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
 await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);

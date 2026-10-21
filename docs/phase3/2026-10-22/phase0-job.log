@@ -1,0 +1,96 @@
+Python 3.11.17
+2.9.13 (dt dec pq3 ext lo64)
+✓ deterministic_migrations PASS - 12 files: ['00001_initial_org_legal_entities.sql', '00002_audit_framework.sql', '00003_event_fabric.sql', '00004_outbox_and_side_effect.sql', '00005_world_facts_memory.sql', '00006_policy_approvals_verification.sql', '00007_goals_plans_financial.sql', '00008_rls_tenant_isolation_policies.sql', '00009_fix_rls_fail_closed.sql', '00010_fix_global_business_id_sequence.sql', '00012_core_reliability.sql', '00013_operational_tenant_policies.sql']
+✓ RLS isolation PASS - 22 tables have RLS enabled, 22 tables checked
+✓ RLS fail-closed policies present (IS NOT NULL AND ...)
+✓ append-only audit PASS - trigger exists
+✓ event deduplication and event_seq ordering PASS - dedup_key UNIQUE, event_seq monotonic
+✓ transactional outbox atomicity PASS - state + outbox in same tx (rollback proven in real postgres test)
+✓ inbox consumer deduplication PASS - per-consumer dedup_key UNIQUE
+✓ lease fencing PASS - stale token rejected, new token accepted
+✓ semantic side-effect reconciliation foundation PASS - effectively-once via operation_key
+✓ business ID concurrency PASS - 50 IDs generated transactionally, no duplicates, no MAX()+1
+✓ financial immutability invariant PASS - DB trigger prevents UPDATE/DELETE after issued
+✓ clean boot proof PASS - 12 migrations applied deterministically, final hash 46b5b2ea30b89305
+  Migrations: 00001_initial_org_legal_entities.sql:4b01452c74004121, 00002_audit_framework.sql:1532b32e2a3ca7aa, 00003_event_fabric.sql:d942ee36640bdd36, 00004_outbox_and_side_effect.sql:06888f2a03e31f6e, 00005_world_facts_memory.sql:b9bcb63c289fdae9, 00006_policy_approvals_verification.sql:1b09604a3363455a, 00007_goals_plans_financial.sql:4d60577ef6b47dae, 00008_rls_tenant_isolation_policies.sql:c41bc43f7501ee91, 00009_fix_rls_fail_closed.sql:255e3fa1fe2cbfb1, 00010_fix_global_business_id_sequence.sql:001630b5347f1fdf, 00012_core_reliability.sql:78205ef98aa952f3, 00013_operational_tenant_policies.sql:18586d04848985d2
+
+Phase 0 Acceptance: 11/11 passed, 0 failed
+=== Real PostgreSQL Phase 0 Verification - FULL SUITE ===
+DB: postgres://postgres:phase3-phase0-fixture@127.0.0.1:5432/sam_greenfield
+App Role DB: postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield (NOSUPERUSER NOBYPASSRLS - proves superuser bypass avoided)
+✓ extensions provisioned: pgcrypto
+✓ all 9 migrations applied from zero: 22 tables (expected 22), final hash 40da9a3081ffc4f7
+✓ RLS isolation real: 22 tables rowsecurity=true
+✓ RLS fail-closed policies verified, no fail-open patterns, 21 policies
+  Policies: ['approvals_current', 'audit_current', 'business_ids_current', 'events_current', 'executions_current', 'financial_documents_tenant_isolation_fail_closed', 'goals_org_boundary', 'goals_tenant_isolation_fail_closed', 'inbox_current', 'legal_entities_tenant_isolation_fail_closed', 'memory_current', 'calls_current', 'providers_read', 'organizations_current', 'outbox_current', 'plans_current', 'side_effects_current', 'contracts_read', 'verifications_current', 'work_current', 'facts_current']
+✓ RLS app role app_tenant_test NOSUPERUSER NOBYPASSRLS created and can connect (proves superuser bypass avoided)
+✓ append-only audit UPDATE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ append-only audit DELETE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ financial immutability UPDATE rejection real: financial_documents is immutable once issued, id=3f485d3a-9733-4404-b7c8-7ae754b93588, business_id=INV1792618556111
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ financial immutability DELETE rejection real: financial_documents is immutable once issued, id=3f485d3a-9733-4404-b7c8-7ae754b93588, business_id=INV1792618556111
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ concurrent next_business_id() real: 100 IDs from 10 connections, no duplicates, no MAX()+1
+✓ lease-fencing race real: stale worker token 2 commit rejected (ok=False)
+✓ lease-fencing race real: current worker token 3 commit accepted (ok=True)
+✓ transactional outbox rollback real: state change + outbox atomic, rollback proved (state=NEW, outbox=0)
+✓ transactional outbox commit real: state + outbox committed atomically
+✓ concurrent inbox deduplication real: 10 concurrent inserts same dedup_key, 1 ok, 9 deduped (UNIQUE constraint)
+✓ concurrent semantic side-effect dedup real: operation_key UNIQUE, 1 ok, 9 deduped, effectively-once
+✓ side-effect reconciliation real: crash-after-provider-success simulated, reconciled to CONFIRMED
+✓ monotonic event_seq replay/cursor real: seqs [1, 2, 3, 4, 5], replay ordered by event_seq ASC
+
+=== All Real PostgreSQL Tests PASS - FULL SUITE ===
+Phase 0 Status: MECHANICALLY_TESTED + SECURITY FIXED + FULL REAL POSTGRES INVARIANTS VERIFIED
+Requires actual GitHub Actions run for LIVE_PROVEN
+Entities: Org 9a701b95-98db-41b5-a2fb-ea5a761f79ba, A c0e4b037-4368-4ff7-83be-ac40e161aac9, B df7905d4-f9e4-44f3-9e9e-e23955114389
+Docs: A 6cc7c09c-6974-463a-912c-1984ae0f9f49, B 0592c5db-54c1-4b26-8674-e2f66791d5e2
+Using NOSUPERUSER NOBYPASSRLS role app_tenant_test to prove superuser bypass avoided
+No context SELECT financial_documents (app role): count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed, app role)
+✓ PASS: Tenant A cannot read B doc (app role)
+✓ PASS: Tenant A can read own doc (app role)
+✓ PASS: Tenant A cannot UPDATE B doc (app role, rowcount 0)
+✓ PASS: Tenant B cannot read A doc (app role)
+✓ PASS: Tenant B can read own doc (app role)
+
+=== RLS Tenant Isolation Real Test PASS (NOSUPERUSER role) ===
+Proves isolation with actual RLS policies, superuser bypass avoided
+Setup: Org 6ed8fc0b-af4f-4ea7-a68f-2ae2c3ddd1f3, Entity A a0dd34d9-1b62-4e7b-bb12-521f0acf43d6, B a775b2ff-5149-4502-ba50-fb7db096616e
+Using NOSUPERUSER NOBYPASSRLS role - superuser bypass avoided, no stale NULL bypass comment
+
+--- TEST 1: No tenant context -> zero protected rows visible ---
+No context SELECT: count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed)
+✓ PASS: No context goals 0 rows
+
+--- TEST 2: No tenant context -> INSERT blocked ---
+✓ PASS: No context INSERT blocked (exception): new row violates row-level security policy for table "financial_documents"
+
+
+--- TEST 3: No context -> UPDATE blocked ---
+✓ PASS: No context UPDATE blocked (rowcount 0)
+
+--- TEST 4: No context -> DELETE blocked ---
+✓ PASS: No context DELETE blocked (rowcount 0)
+
+--- TEST 5: Tenant A cannot read/write B ---
+✓ PASS: Tenant A cannot read B doc
+✓ PASS: Tenant A can read own doc
+
+--- TEST 6: Tenant B cannot read/write A ---
+✓ PASS: Tenant B cannot read A doc
+
+--- TEST 7: Tenant A can access own ---
+✓ PASS: Tenant A can access own goal
+
+--- TEST 8: Service/admin bypass explicit, never via NULL ---
+✓ PASS: NULL context does NOT bypass - explicit bypass via service_role/is_admin only, never NULL - FAIL-CLOSED verified
+
+=== ALL SECURITY TESTS PASS - FAIL-CLOSED VERIFIED (NOSUPERUSER ROLE) ===

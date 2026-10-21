@@ -1,0 +1,26 @@
+v22.23.4
+OpenSSL 3.0.22 25 Aug 2026 (Library: OpenSSL 3.0.22 25 Aug 2026)
+
+> typecheck
+> tsc --noEmit
+
+PASS tests/release/provider_auth.ts
+PROVIDER_AUTH PASS: local HTTP 401/403/429/503 fixtures, one request per case, typed redacted errors; not a live-provider authentication test.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/provider_auth.ts","passed":true,"exit":0}]}
+PASS tests/release/postgres_tls.ts
+POSTGRES_TLS_LOCAL_PASS: real pg SSL negotiation; trusted matching certificate reaches synthetic startup; untrusted and hostname-mismatch certificates denied before startup. NOT_PROVIDER_OR_DB_AUTH_PROOF.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/postgres_tls.ts","passed":true,"exit":0}]}
+PASS tests/release/contracts.ts
+RELEASE_CONTRACTS PASS: config/refusal, credential stripping, owner criteria, read-only MCP, one-port proxy, bounded real-child restart, graceful stop, output withholding. Classification=LOCAL_PROCESS_WITH_FIXTURE_BACKENDS.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/contracts.ts","passed":true,"exit":0}]}
+PASS tests/release/synthetic_pilot.ts
+{"test":"SYNTHETIC_RELEASE_PILOT","status":"PASS","refusedCases":37,"mockHttpRequests":7,"contextReads":0,"realProviderCalls":0,"migrations":0,"rolesCreated":0,"classification":"UNIT_MOCK_DB_LOCAL_HTTP_REAL_PLANNER_AND_LOCAL_EXECUTOR_NOT_LIVE_ACCEPTANCE"}
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/synthetic_pilot.ts","passed":true,"exit":0}]}
+PASS tests/release/managed_schema_source.cjs
+PASS: empty managed development schema source, 12 reviewed migrations, guarded atomic batch; no connections
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/managed_schema_source.cjs","passed":true,"exit":0}]}
