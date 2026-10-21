@@ -7,15 +7,15 @@ import { reconcileOneSideEffectAtomic,reconcilePendingSideEffects } from "../../
 import type { ProductionActionDispatcher,ProductionCapabilityDescriptor } from "../../chatgpt-tools/src/types";
 import type { ValidatedProductionBundle } from "./bundle";
 
-async function createGoal(input:{
+export async function createGoal(input:{
   legalEntityId:string;
   objective:string;
   actor:string;
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
   domain?:string;
   completionDefinition?:string;
-}):Promise<{id:string;businessId:string}>{
-  return withTransaction(async(client)=>{
+},transactionClient?:any):Promise<{id:string;businessId:string}>{
+  const insert=async(client:any)=>{
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
       [input.legalEntityId]
@@ -57,7 +57,8 @@ async function createGoal(input:{
       id:inserted.rows[0].id as string,
       businessId:inserted.rows[0].business_id as string
     };
-  });
+  };
+  return transactionClient?insert(transactionClient):withTransaction(insert);
 }
 
 async function ensureApprovalRequests(input:{

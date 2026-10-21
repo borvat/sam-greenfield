@@ -1,0 +1,31 @@
+{
+  "capturedAt": "2026-10-21T13:28:22.571Z",
+  "provider": "duckduckgo-mcp-server@0.7.0",
+  "productionChanged": false,
+  "liveModel": false,
+  "goalState": "WAITING_EXTERNAL",
+  "executionState": "EXECUTED",
+  "verification": "INCONCLUSIVE",
+  "receipt": {
+    "id": "oss_search",
+    "package": "duckduckgo-mcp-server",
+    "version": "0.7.0",
+    "repository": "https://github.com/nickclyde/duckduckgo-mcp-server",
+    "upstreamTools": 3,
+    "registeredReads": [
+      "search"
+    ],
+    "state": "STDIO_CONNECTED_NOT_PRODUCTION"
+  },
+  "result": {
+    "content": [
+      {
+        "text": "Found 3 search results:\n\n1. What is the Model Context Protocol (MCP)?\n   URL: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro\n   Summary: MCP (ModelContextProtocol) is an open-source standard for connecting AI applications to external systems. Using MCP, AI applications like Claude or ChatGPT can connect to data sources (e.g. local files, databases), tools (e.g. search engines, calculators) and workflows (e.g. specialized prompts)—enabling them to access key information and perform tasks. Think of MCP like a USB-C port for ...\n\n2. Microsoft | Dev Tools & Languages | Model Context Protocol\n   URL: https://www.microsoft.com/en-us/thesource-developer/Category/159/model-context-protocol\n   Summary: Microsoft Learn MCP server The Microsoft LearnModelContextProtocol(MCP) Server enables clients like GitHub Copilot and other AI agents to bring trusted and up-to-date information directly from Microsoft'sofficialdocumentation.\n\n3. MCP Docs - Model Context Protocol （MCP）\n   URL: https://modelcontextprotocol.info/docs/\n   Summary: Welcome to theModelContextProtocoldocumentation! MCP is a standardizedprotocoldesigned to enhance the interaction between Large LanguageModels(LLMs) and applications by providing structuredcontextmanagement.\n",
+        "type": "text"
+      }
+    ],
+    "structuredContent": {
+      "result": "Found 3 search results:\n\n1. What is the Model Context Protocol (MCP)?\n   URL: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro\n   Summary: MCP (ModelContextProtocol) is an open-source standard for connecting AI applications to external systems. Using MCP, AI applications like Claude or ChatGPT can connect to data sources (e.g. local files, databases), tools (e.g. search engines, calculators) and workflows (e.g. specialized prompts)—enabling them to access key information and perform tasks. Think of MCP like a USB-C port for ...\n\n2. Microsoft | Dev Tools & Languages | Model Context Protocol\n   URL: https://www.microsoft.com/en-us/thesource-developer/Category/159/model-context-protocol\n   Summary: Microsoft Learn MCP server The Microsoft LearnModelContextProtocol(MCP) Server enables clients like GitHub Copilot and other AI agents to bring trusted and up-to-date information directly from Microsoft'sofficialdocumentation.\n\n3. MCP Docs - Model Context Protocol （MCP）\n   URL: https://modelcontextprotocol.info/docs/\n   Summary: Welcome to theModelContextProtocoldocumentation! MCP is a standardizedprotocoldesigned to enhance the interaction between Large LanguageModels(LLMs) and applications by providing structuredcontextmanagement.\n"
+    }
+  }
+}

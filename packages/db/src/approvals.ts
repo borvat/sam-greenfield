@@ -4,6 +4,7 @@ import type { AuthorityClass } from "../../shared/src/types";
 export async function consumeApproval(
   client:any,
   input:{
+    goalId?:string|null;
     capabilityId:string;
     params:Record<string,unknown>;
     legalEntityId:string|null;
@@ -19,13 +20,14 @@ export async function consumeApproval(
         AND params_hash=$2
         AND legal_entity_id IS NOT DISTINCT FROM $3
         AND authority_class=$4
+        AND (goal_id IS NULL OR goal_id=$5)
         AND status='APPROVED'
         AND expiry_at > now()
         AND used_count < max_uses
       ORDER BY created_at DESC
       FOR UPDATE SKIP LOCKED
       LIMIT 1`,
-    [input.capabilityId,paramsHash,input.legalEntityId,input.authorityClass]
+    [input.capabilityId,paramsHash,input.legalEntityId,input.authorityClass,input.goalId??null]
   );
   if(selected.rowCount!==1){
     throw new Error("No matching live approval");

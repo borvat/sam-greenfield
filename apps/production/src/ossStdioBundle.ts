@@ -23,7 +23,7 @@ export async function buildOssStdioReadBundle(base:ProductionBundle,profiles:Oss
  try{
  for(const profile of profiles){
   if(!/^[a-z][a-z0-9_]{1,39}$/.test(profile.id)||!profile.companyId||!profile.command.startsWith('/')||!profile.tools.length)throw new Error('OSS_TRUSTED_PROFILE_INVALID');
-  if(profile.tools.some(t=>!/^(read_text_file|list_directory|get_file_info|git_status|git_log|git_diff_unstaged|fetch)$/.test(t.name)))throw new Error('OSS_TOOL_NOT_REVIEWED_AS_READ');
+  if(profile.tools.some(t=>!/^(read_text_file|list_directory|get_file_info|git_status|git_log|git_diff_unstaged|fetch|search|fetch_content)$/.test(t.name)))throw new Error('OSS_TOOL_NOT_REVIEWED_AS_READ');
   const client=new Client({name:'sam-oss-staging',version:'1.0.0'});clients.push(client);
   const transport=new StdioClientTransport({command:profile.command,args:profile.args,env,stderr:'pipe'});
   // Child logs are intentionally not copied into reports; they may contain source data.
@@ -49,6 +49,8 @@ export async function buildOssStdioReadBundle(base:ProductionBundle,profiles:Oss
    if(!tool)throw new Error('OSS_UNREVIEWED_TOOL');
    validateToolParameters(args.name,args.arguments,tool.inputSchema);
    try{const result=await client.callTool(args,undefined,{timeout:15_000});
+    const body=(result.content??[]).filter((x:any)=>x.type==='text').map((x:any)=>x.text).join('\n');
+    if((args.name==='search'||args.name==='fetch_content') && /^(?:Error:|No results were found.*(?:bot detection|blocking))/is.test(body))throw new Error('provider diagnostic');
     if(JSON.stringify(result).length>1_048_576)throw new Error('oversized');
     return result;
    }catch{throw new Error('OSS_PROVIDER_READ_FAILED')}

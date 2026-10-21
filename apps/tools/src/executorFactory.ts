@@ -1,5 +1,7 @@
+import {companyMayUse} from "../../../packages/tool-gateway/src/companyScope";
+import { insertOutboxEvent } from "../../../packages/db/src/outbox";
+import { authorizeClaimedAction } from "../../perception/src/policy";
 import { validateToolParameters } from "../../../packages/tool-gateway/src/validation";
-import { companyMayUse } from "../../../packages/tool-gateway/src/companyScope";
 import { withTransaction } from "../../../packages/db/src/client";
 import { consumeApproval } from "../../../packages/db/src/approvals";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
@@ -39,6 +41,7 @@ export async function scopedWorkCompany(client:any,work:ClaimedWork,scopes:reado
   return row.company_scope;
 }
 
+
 export function createToolExecutors(input:{
   catalog:CapabilityCatalog;
   tools:ToolRegistry;
@@ -57,12 +60,17 @@ export function createToolExecutors(input:{
 
     executors[capabilityId]=async(work:ClaimedWork)=>{
       if(work.capabilityId!==capabilityId)throw new Error("TOOL_WORK_CAPABILITY_MISMATCH");
-      const scopedCompany=tool.companyScopes===undefined?undefined:
-        await withTransaction(client=>scopedWorkCompany(client,work,tool.companyScopes!));
+      const scopedCompany=tool.companyScopes===undefined?undefined:await withTransaction(c=>scopedWorkCompany(c,work,tool.companyScopes!));
       const params=work.params ?? {};
       validateToolParameters(capabilityId,params,tool.inputSchema);
+      const scoped=await authorizeClaimedAction(work,tool);
       const requestHash=sha256Hex(params);
-      const operationKey=`tool:${work.queueId}:${capabilityId}:${requestHash}`;
+      let operationKey=scoped?.operationKey??`tool:${work.queueId}:${capabilityId}:${requestHash}`;
+      // Preserve already-issued action intent keys if the feature is later disabled.
+      if(!scoped&&tool.sideEffect&&work.goalId){
+        const prior=await withTransaction(c=>c.query("SELECT operation_key FROM side_effect_operations WHERE goal_id=$1 AND capability_id=$2 AND request_hash=$3 AND operation_key LIKE 'action:%' ORDER BY created_at,id LIMIT 1",[work.goalId,capabilityId,requestHash]));
+        if(prior.rows[0])operationKey=prior.rows[0].operation_key;
+      }
 
       if(!tool.sideEffect){
         const result=await input.tools.adapter(capabilityId).execute({
@@ -91,11 +99,13 @@ export function createToolExecutors(input:{
         idempotencyKey:operationKey
       });
 
+      if(sideEffect.operation.legal_entity_id!==legalEntityId||sideEffect.operation.goal_id!==(work.goalId??null))throw new Error('ACTION_OPERATION_SCOPE_MISMATCH');
       if(!sideEffect.created){
         if(sideEffect.operation.request_hash!==requestHash){
           throw new Error("Operation key collision with different request hash");
         }
         if(sideEffect.operation.state==="CONFIRMED"){
+          await bindSideEffectToWorkAtomic(work.queueId,operationKey);
           return {
             result:{
               deduplicated:true,
@@ -119,13 +129,16 @@ export function createToolExecutors(input:{
           capabilityId,
           params,
           legalEntityId,
+          goalId:work.goalId,
           authorityClass:capability.authorityClass
         }));
       }
 
       await bindSideEffectToWorkAtomic(work.queueId,operationKey);
 
+      try{
       const result=await input.tools.adapter(capabilityId).execute({
+        legalEntityId:scopedCompany,
         capabilityId,
         params,
         idempotencyKey:operationKey
@@ -147,6 +160,13 @@ export function createToolExecutors(input:{
           idempotency_key:operationKey
         }
       };
+      }catch(error){
+        await withTransaction(async client=>{
+          await client.query("UPDATE side_effect_operations SET reconciliation_state='NEEDS_RECONCILIATION',updated_at=now() WHERE operation_key=$1 AND state='PENDING'",[operationKey]);
+          await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:work.goalId!,eventType:'SIDE_EFFECT_OUTCOME_UNKNOWN',payload:{operation_key:operationKey,capability_id:capabilityId,requires_reconciliation:true}});
+        });
+        throw error;
+      }
     };
   }
 

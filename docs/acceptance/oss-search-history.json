@@ -1,0 +1,17 @@
+{
+  "attempts": [
+    {
+      "order": 1,
+      "evidence": "Earlier session test output: installed open-source search runs through actual SAM planning/worker/execution and independent MCP readback",
+      "result": "VERIFIED",
+      "testDurationMs": 16054.339489
+    },
+    {
+      "order": 2,
+      "evidence": "oss-search-sam.json plus strict search assertion in oss-live-search-inconclusive.txt",
+      "result": "INCONCLUSIVE",
+      "capturedAt": "2026-10-21T13:28:22.571Z"
+    }
+  ],
+  "conclusion": "Search executed in both attempts; repeatable exact-response verification was not established. No production readiness claim."
+}

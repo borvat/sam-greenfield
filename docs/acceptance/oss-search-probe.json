@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-10-21T13:22:07.962Z",
+  "provider": "duckduckgo-mcp-server@0.7.0",
+  "results": [
+    {
+      "tool": "search",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Found 3 search results:\n\n1. What is the Model Context Protocol (MCP)?\n   URL: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro\n   Summary: MCP (ModelContextProtocol) is an open-source standard for connecting AI applications to external systems. Using MCP, AI applications like Claude or ChatGPT can connect to data sources (e.g. local files, databases), tools (e.g. search engines, calculators) and workflows (e.g. specialized prompts)—enabling them to access key information and perform tasks. Think of MCP like a USB-C port for ...\n\n2. MCP Docs - Model Context Protocol （MCP）\n   URL: https://modelcontextprotocol.info/docs/\n   Summary: Welcome to theModelContextProtocoldocumentation! MCP is a standardizedprotocoldesigned to enhance the interaction between Large LanguageModels(LLMs) and applications by providing structuredcontextmanagement.\n\n3. Microsoft | Dev Tools & Languages | Model Context Protocol\n   URL: https://www.microsoft.com/en-us/thesource-developer/Category/159/model-context-protocol\n   Summary: Microsoft Learn MCP server The Microsoft LearnModelContextProtocol(MCP) Server enables clients like GitHub Copilot and other AI agents to bring trusted and up-to-date information directly from Microsoft'sofficialdocumentation.\n"
+          }
+        ],
+        "structuredContent": {
+          "result": "Found 3 search results:\n\n1. What is the Model Context Protocol (MCP)?\n   URL: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro\n   Summary: MCP (ModelContextProtocol) is an open-source standard for connecting AI applications to external systems. Using MCP, AI applications like Claude or ChatGPT can connect to data sources (e.g. local files, databases), tools (e.g. search engines, calculators) and workflows (e.g. specialized prompts)—enabling them to access key information and perform tasks. Think of MCP like a USB-C port for ...\n\n2. MCP Docs - Model Context Protocol （MCP）\n   URL: https://modelcontextprotocol.info/docs/\n   Summary: Welcome to theModelContextProtocoldocumentation! MCP is a standardizedprotocoldesigned to enhance the interaction between Large LanguageModels(LLMs) and applications by providing structuredcontextmanagement.\n\n3. Microsoft | Dev Tools & Languages | Model Context Protocol\n   URL: https://www.microsoft.com/en-us/thesource-developer/Category/159/model-context-protocol\n   Summary: Microsoft Learn MCP server The Microsoft LearnModelContextProtocol(MCP) Server enables clients like GitHub Copilot and other AI agents to bring trusted and up-to-date information directly from Microsoft'sofficialdocumentation.\n"
+        },
+        "isError": false
+      }
+    },
+    {
+      "tool": "fetch_content",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Error: Refusing to fetch https://example.com/ (could not resolve host 'example.com': [Errno -3] Temporary failure in name resolution). This server blocks requests to private/internal addresses to prevent SSRF. If this is a trusted local deployment, set DDG_ALLOW_PRIVATE_URLS=1 (or pass --allow-private-urls)."
+          }
+        ],
+        "structuredContent": {
+          "result": "Error: Refusing to fetch https://example.com/ (could not resolve host 'example.com': [Errno -3] Temporary failure in name resolution). This server blocks requests to private/internal addresses to prevent SSRF. If this is a trusted local deployment, set DDG_ALLOW_PRIVATE_URLS=1 (or pass --allow-private-urls)."
+        },
+        "isError": false
+      }
+    }
+  ]
+}

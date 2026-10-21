@@ -1,3 +1,4 @@
+import {scopedCatalog} from "../../perception/src/policy";
 import { recordPlanningFailure } from "../../kernel/src/failures";
 import { withTransaction } from "../../../packages/db/src/client";
 import { transitionGoal } from "../../kernel/src/stateMachine";
@@ -36,13 +37,13 @@ export async function planNextNewGoal(
   if(next.exhausted) return {processed:true,goalId:next.id,failed:true};
 
   const gateway=new ModelGateway(Object.fromEntries(adapters.map(adapter=>[adapter.providerId,adapter])));
+  let deadline:NodeJS.Timeout|undefined;
+  try{
   const planningInput={
-    catalog:bundle.catalog,gateway,goalId:next.id,
+    catalog:await withTransaction(c=>scopedCatalog(c,bundle.catalog,next.id)),gateway,goalId:next.id,
     dataClassification:bundle.raw.dataClassification??"INTERNAL",
     maxCostUsd:bundle.raw.planningMaxCostUsd??0.25
   };
-  let deadline:NodeJS.Timeout|undefined;
-  try{
     const planning=next.state==="REPLANNING"
       ?runCatalogReplanCycle({...planningInput,alreadyStarted:true,reason:next.replan_reason??"independent verification failed"})
       :runCatalogPlanningCycle({...planningInput,alreadyModeling:true});

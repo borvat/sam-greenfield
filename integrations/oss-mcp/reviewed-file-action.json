@@ -1,0 +1,38 @@
+{
+  "read_text_file": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "tail": {
+        "description": "If provided, returns only the last N lines of the file",
+        "type": "number"
+      },
+      "head": {
+        "description": "If provided, returns only the first N lines of the file",
+        "type": "number"
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  },
+  "write_file": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path",
+      "content"
+    ],
+    "$schema": "https://json-schema.org/draft/2020-12/schema"
+  }
+}

@@ -1,0 +1,16 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:oss-extended
+> node --import tsx --test --test-concurrency=1 tests/phase24/business_reads.ts tests/phase24/oss_monitor_actions.ts
+
+✔ accounting uses existing real client against local HTTP API; company scope, identical fresh reads and changed-source rejection (58.088922ms)
+✔ monitor is inert while off and fails closed for write sources and wrong-company OSS sources (2170.166037ms)
+✔ actual upstream file -> SAM goal/planner/worker/verifier/report -> persistent observation and one change event; guarded SAM write/reconcile/dedup (3669.65358ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7352.272577
