@@ -1,3 +1,4 @@
+import {runOwnerNotificationTick} from "../../notifications/src/center";
 import {safePerceptionTick} from "../../perception/src/monitor";
 import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
 import { failInterruptedPlanning } from "../../kernel/src/failures";
@@ -42,9 +43,10 @@ export function createProductionComposition(input:{
       });
       const verification=await verifyNextExecution(input.bundle);
       const review=await reviewNextReadGoal(input.bundle);
+      const notifications=await runOwnerNotificationTick();
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {recovery,interruptedPlanning,events,reconciliation,perception,planning,execution,verification,review,operational};
+      return {notifications,recovery,interruptedPlanning,events,reconciliation,perception,planning,execution,verification,review,operational};
     }
   };
 }

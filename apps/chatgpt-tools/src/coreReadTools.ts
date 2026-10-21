@@ -1,3 +1,4 @@
+import {notificationsEnabled} from "../../notifications/src/center";
 import { knowledgeEnabled } from "../../brain/src/knowledge";
 import { captureHealthSnapshot } from "../../supervisor/src/health";
 import { loadActiveIncidents } from "../../supervisor/src/incidents";
@@ -200,6 +201,12 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
              WHEN expires_at<=now() THEN 'EXPIRED' ELSE 'ACTIVE' END AS freshness
         FROM knowledge_records WHERE legal_entity_id=$1 ORDER BY created_at DESC,id DESC LIMIT $2`,
         [args.legal_entity_id,clampLimit(args.limit)])};
+    },{type:"object",properties:{legal_entity_id:{type:"string",format:"uuid"},limit:{type:"integer",minimum:1,maximum:200}},required:["legal_entity_id"],additionalProperties:false}),
+
+    readTool("sam_list_notifications","Read the owner notification inbox. Stored, accepted, confirmed and read are distinct states.",async(args)=>{
+      if(typeof args.legal_entity_id!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.legal_entity_id))return {ok:false,error:"legal_entity_id must be an explicit UUID"};
+      if(!notificationsEnabled())return {ok:true,data:[],enabled:false};
+      return {ok:true,data:await rows(`SELECT * FROM owner_notifications WHERE legal_entity_id=$1 ORDER BY created_at DESC,id DESC LIMIT $2`,[args.legal_entity_id,clampLimit(args.limit)])};
     },{type:"object",properties:{legal_entity_id:{type:"string",format:"uuid"},limit:{type:"integer",minimum:1,maximum:200}},required:["legal_entity_id"],additionalProperties:false}),
 
     readTool("sam_list_model_providers","List model providers and health.",async(args)=>{
