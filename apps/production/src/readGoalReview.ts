@@ -16,6 +16,9 @@ const sourceLines=(text:string)=>text.split("\n").flatMap(line=>line.length<=100
 export function validateReadReview(value:any,sources:Source[],objective:string,descriptors:any[]):Review{
  if(!object(value)||!["continue","complete","blocked"].includes(value.status)||typeof value.summary!=="string"||!value.summary.trim()||value.summary.length>8000)throw new Error("REVIEW_INVALID_STATUS_OR_SUMMARY");
  if(!Array.isArray(value.requirements)||!value.requirements.length||value.requirements.length>30)throw new Error("REVIEW_REQUIREMENTS_REQUIRED");
+ const observedEmails=new Set((objective+"\n"+sources.map(s=>s.text).join("\n")).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)?.map(s=>s.toLowerCase())??[]);
+ const reportText=JSON.stringify({summary:value.summary,findings:value.findings,requirements:value.requirements,limitations:value.limitations});
+ for(const email of reportText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)??[])if(!observedEmails.has(email.toLowerCase()))throw new Error("REVIEW_UNOBSERVED_EMAIL: copy the exact address from the verified source; do not retype or invent its spelling");
  for(const r of value.requirements){
   if(!object(r)||typeof r.requirement!=="string"||!r.requirement.trim()||typeof r.fulfilled!=="boolean"||!Array.isArray(r.evidenceIds)||r.evidenceIds.some((id:any)=>typeof id!=="string"||!sources.some(s=>s.id===id)))throw new Error("REVIEW_INVALID_REQUIREMENT");
   if(value.status==="complete"&&(!r.fulfilled||!r.evidenceIds.length))throw new Error("REVIEW_UNFULFILLED_REQUIREMENT");
