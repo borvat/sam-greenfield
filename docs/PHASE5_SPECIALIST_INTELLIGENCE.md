@@ -161,10 +161,12 @@ monetary ceilings are also reserved before execution. All child specialists
 share it, while each specialist session also has its own charged counters and
 deadline. A child configuration can narrow its allowance; it cannot enlarge the
 family allowance. Limits cover model attempts, **actual read-tool attempts including
-retries**, reasoning iterations, conservatively reserved tokens, monetary upper
+retries and independent verifier readbacks**, reasoning iterations, conservatively reserved tokens, monetary upper
 bounds, elapsed time, delegations and depth (three), plus separate bounded model/read-call deadlines. Before executing child reads,
 the composition rechecks family cancellation/deadline and reserves a tool attempt.
-No refund follows a crash or ambiguous model outcome. Family advisory locks give
+Readback verification uses the same quoted cost, call accounting and timeout
+boundary; blocked, failed or timed-out readbacks record INCONCLUSIVE without
+inventing evidence or passing a contract. No refund follows a crash or ambiguous model outcome. Family advisory locks give
 all fenced mutations one lock order; short ledger row locks use NO KEY UPDATE.
 Provider calls occur outside database transactions and can run concurrently.
 Read execution is also raced against the family deadline and a 20-second ceiling;

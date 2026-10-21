@@ -9,6 +9,8 @@ export async function createIntelligentComposition(input:Parameters<typeof creat
  if(input.intelligence.catalog!==input.bundle.catalog||input.intelligence.tools!==input.bundle.tools)throw Error('SPECIALIST_BUNDLE_MISMATCH');
  const engine=await createSpecialistIntelligence(input.intelligence);
  const verifiers=new Map(input.bundle.verifiers);
+ for(const [id,verifier]of input.bundle.verifiers)verifiers.set(id,{capabilityId:id,
+  verify:args=>engine.verifyRead(args.execution.id,()=>verifier.verify(args))});
  for(const cfg of input.intelligence.configs){
   if(verifiers.has(cfg.capabilityId))throw Error('SPECIALIST_VERIFIER_OVERRIDE_DENIED');
   verifiers.set(cfg.capabilityId,{capabilityId:cfg.capabilityId,async verify({execution}){

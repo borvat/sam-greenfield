@@ -12,6 +12,7 @@ import {createSpecialistIntelligence} from '../../apps/agents/src/intelligence/e
 import {createIntelligentComposition} from '../../apps/agents/src/intelligence/composition';
 import {ceiling,type Limits,type SpecialistConfig} from '../../apps/agents/src/intelligence/contracts';
 import {learnVerifiedQuote,recallVerifiedLessons,proposeHypothesis,evaluateHypothesis} from '../../apps/agents/src/intelligence/learning';
+import {recordIndependentVerificationAtomic} from '../../apps/kernel/src/verification';
 import {recordExecutionAndRequestVerificationAtomic} from '../../apps/kernel/src/execution';
 import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
 import {runOneSpecialistWork,claimNextWorkForSpecialistAtomic} from '../../apps/agents/src/runtime';
@@ -183,6 +184,13 @@ async function main(){
     await boundedEngine.beforeTool(child);
     await assert.rejects(()=>boundedEngine.beforeTool(child),/BUDGET_EXHAUSTED:tools/);
     assert.equal((await one('SELECT count(*)::int n FROM executions WHERE queue_id=$1',[child.queueId])).n,0);
+    const executed=await createToolExecutors({catalog:bundle.catalog,tools:bundle.tools})[read](child);
+    const persisted=await recordExecutionAndRequestVerificationAtomic({queueId:child.queueId,fencingToken:child.fencingToken,actor:'budget-source',...executed});
+    let readbackCalled=false;const boundedVerification=await boundedEngine.verifyRead(persisted.executionId,async()=>{readbackCalled=true;return {result:'VERIFIED',evidence:{readback:true},verifier:'fixture-readback'};});
+    assert.equal(readbackCalled,false);assert.equal(boundedVerification.result,'INCONCLUSIVE');
+    await recordIndependentVerificationAtomic({executionId:persisted.executionId,contractId:(await one('SELECT id FROM verification_contracts WHERE capability_id=$1',[read])).id,
+     result:boundedVerification.result,independentEvidence:boundedVerification.evidence,verifier:boundedVerification.verifier});
+    assert.equal((await one('SELECT state FROM goals WHERE id=$1',[child.goalId])).state,'WAITING_EXTERNAL');
     await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[child.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[child.goalId]);
     await boundedEngine.cancel(g.queue);await sleep(110);await direct(boundedEngine);
    }
@@ -195,6 +203,14 @@ async function main(){
   await toolTimeEngine.beforeTool(timedWork);
   await assert.rejects(()=>toolTimeEngine.executeRead(timedWork,async()=>new Promise(()=>{})),/TOOL_TIMEOUT/);
   assert.equal((await one('SELECT count(*)::int n FROM executions WHERE queue_id=$1',[timedWork.queueId])).n,0);
+  await toolTimeEngine.beforeTool(timedWork);
+  const retryRead=await toolTimeEngine.executeRead(timedWork,createToolExecutors({catalog:bundle.catalog,tools:bundle.tools})[read]);
+  const retryExecution=await recordExecutionAndRequestVerificationAtomic({queueId:timedWork.queueId,fencingToken:timedWork.fencingToken,actor:'timeout-source',...retryRead});
+  const timedVerification=await toolTimeEngine.verifyRead(retryExecution.executionId,async()=>new Promise(()=>{}));assert.equal(timedVerification.result,'INCONCLUSIVE');
+  await recordIndependentVerificationAtomic({executionId:retryExecution.executionId,contractId:(await one('SELECT id FROM verification_contracts WHERE capability_id=$1',[read])).id,
+   result:timedVerification.result,independentEvidence:timedVerification.evidence,verifier:timedVerification.verifier});
+  assert.equal((await one('SELECT state FROM goals WHERE id=$1',[timedWork.goalId])).state,'WAITING_EXTERNAL');
+  console.log('PASS independent readback budget and timeout become INCONCLUSIVE, never verified');
   await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[timedWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[timedWork.goalId]);
   await toolTimeEngine.cancel(toolTime.queue);await sleep(110);await direct(toolTimeEngine);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[toolTime.queue])).state.phase,'BLOCKED');

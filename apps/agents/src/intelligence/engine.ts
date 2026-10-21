@@ -8,6 +8,7 @@ import {validateParameters} from '../../../../packages/tool-gateway/src/validati
 import type {ClaimedWork,CapabilityExecutor} from '../../../kernel/src/workerRuntime';
 import {persistPlanAndDelegate} from '../../../kernel/src/planning';
 import {transitionGoal} from '../../../kernel/src/stateMachine';
+import type {VerificationAdapter} from '../../../production/src/types';
 import type {CapabilityCatalog} from '../capabilityCatalog';
 import {sourceEnvelope} from '../../../brain/src/research';
 import {recallVerifiedLessons,learnVerifiedQuote} from './learning';
@@ -228,6 +229,23 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    await save(c,r);return outcome(r);
   });
  }
+ async function boundedRead<T>(work:ClaimedWork,execute:(work:ClaimedWork)=>Promise<T>){
+   const budget=await withTransaction(async c=>{
+    const link=(await c.query('SELECT root_queue_id FROM specialist_delegations WHERE goal_id=$1',[work.goalId])).rows[0];
+    if(!link)return null;
+    const b=(await c.query('SELECT least(b.deadline,s.deadline) deadline,b.cancelled,b.limits,p.capability_id parent_capability FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id JOIN specialist_sessions s ON s.queue_id=d.parent_queue_id JOIN work_queue p ON p.id=s.queue_id WHERE d.goal_id=$1',[work.goalId])).rows[0];
+    if(!b||b.cancelled)throw Error('SPECIALIST_CANCELLED');b.limits={...b.limits,toolCallMs:Math.min(b.limits.toolCallMs,configs.get(b.parent_capability)!.limits.toolCallMs)};return b;
+   });
+   const remaining=budget?new Date(budget.deadline).getTime()-Date.now():20_000;
+   if(remaining<=0)throw Error('SPECIALIST_TIME_EXHAUSTED');
+   let timer:ReturnType<typeof setTimeout>|undefined;
+   try{
+    const result=await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,budget?.limits.toolCallMs??20_000));})]);
+    if(budget)await withTransaction(async c=>{const link=(await c.query(`SELECT b.cancelled,least(b.deadline,s.deadline) deadline FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id JOIN specialist_sessions s ON s.queue_id=d.parent_queue_id WHERE d.goal_id=$1`,[work.goalId])).rows[0];if(!link||link.cancelled||new Date(link.deadline).getTime()<=Date.now())throw Error('SPECIALIST_CANCELLED_OR_EXPIRED');});
+    return result;
+   }
+   finally{if(timer)clearTimeout(timer);}
+  }
  return {advancers:Object.fromEntries([...configs.keys()].map(id=>[id,advance])) as Record<string,(w:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>>,
   learnNextReport:async()=>withTransaction(async c=>{
    const row=(await c.query(`SELECT e.result,g.id goal_id FROM executions e JOIN goals g ON g.id=e.goal_id
@@ -248,22 +266,28 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    }
    return {learned};
   }),
-  executeRead:async(work:ClaimedWork,execute:CapabilityExecutor)=>{
-   const budget=await withTransaction(async c=>{
-    const link=(await c.query('SELECT root_queue_id FROM specialist_delegations WHERE goal_id=$1',[work.goalId])).rows[0];
-    if(!link)return null;
-    const b=(await c.query('SELECT least(b.deadline,s.deadline) deadline,b.cancelled,b.limits,p.capability_id parent_capability FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id JOIN specialist_sessions s ON s.queue_id=d.parent_queue_id JOIN work_queue p ON p.id=s.queue_id WHERE d.goal_id=$1',[work.goalId])).rows[0];
-    if(!b||b.cancelled)throw Error('SPECIALIST_CANCELLED');b.limits={...b.limits,toolCallMs:Math.min(b.limits.toolCallMs,configs.get(b.parent_capability)!.limits.toolCallMs)};return b;
-   });
-   const remaining=budget?new Date(budget.deadline).getTime()-Date.now():20_000;
-   if(remaining<=0)throw Error('SPECIALIST_TIME_EXHAUSTED');
-   let timer:ReturnType<typeof setTimeout>|undefined;
+  executeRead:(work:ClaimedWork,execute:CapabilityExecutor)=>boundedRead(work,execute),
+  verifyRead:async(executionId:string,verify:()=>ReturnType<VerificationAdapter['verify']>)=>{
    try{
-    const result=await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,budget?.limits.toolCallMs??20_000));})]);
-    if(budget)await withTransaction(async c=>{const link=(await c.query(`SELECT b.cancelled,b.deadline FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id WHERE d.goal_id=$1`,[work.goalId])).rows[0];if(!link||link.cancelled||new Date(link.deadline).getTime()<=Date.now())throw Error('SPECIALIST_CANCELLED_OR_EXPIRED');});
-    return result;
+    const work=await withTransaction(async c=>{
+     const e=(await c.query(`SELECT e.queue_id,e.goal_id,e.plan_id,e.capability_id,e.params,w.fencing_token,d.parent_queue_id,d.root_queue_id,d.capability_id assigned_capability,d.params_hash
+      FROM executions e JOIN work_queue w ON w.id=e.queue_id LEFT JOIN specialist_delegations d ON d.goal_id=e.goal_id WHERE e.id=$1`,[executionId])).rows[0];
+     if(!e)throw Error('SPECIALIST_SCOPE_DENIED');
+     if(e.root_queue_id){
+      await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,106))',[e.root_queue_id]);
+      const parent=(await c.query(`SELECT s.*,w.capability_id,g.state parent_state,g.current_plan_id,w.plan_id parent_plan
+       FROM specialist_sessions s JOIN work_queue w ON w.id=s.queue_id JOIN goals g ON g.id=w.goal_id WHERE s.queue_id=$1`,[e.parent_queue_id])).rows[0];
+      const cfg=configs.get(parent?.capability_id);
+      if(!cfg||parent.parent_state!=='EXECUTING'||parent.current_plan_id!==parent.parent_plan||e.capability_id!==e.assigned_capability||e.params_hash!==sha256Hex(e.params)||!cfg.allowedCapabilities.includes(e.capability_id))throw Error('SPECIALIST_DELEGATED_TASK_CHANGED');
+      parent.agentLimits=cfg.limits;
+      await reserve(c,parent,{tools:1,costUsd:input.tools.definition(e.capability_id).costUpperBoundUsd!});
+     }
+     return {queueId:e.queue_id,goalId:e.goal_id,planId:e.plan_id,capabilityId:e.capability_id,params:e.params,fencingToken:Number(e.fencing_token)} as ClaimedWork;
+    });
+    return await boundedRead(work,verify);
+   }catch{
+    return {result:'INCONCLUSIVE' as const,evidence:{reason:'SPECIALIST_READBACK_UNAVAILABLE_OR_LIMITED'},verifier:'specialist-bounded-readback-v1'};
    }
-   finally{if(timer)clearTimeout(timer);}
   },
   beforeTool:async(work:ClaimedWork)=>withTransaction(async c=>{
    const link=(await c.query('SELECT root_queue_id,parent_queue_id FROM specialist_delegations WHERE goal_id=$1',[work.goalId])).rows[0];
@@ -276,8 +300,8 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   /** Cancellation is scoped by RLS; no permissions or external policy changes. */
   cancel:async(rootQueueId:string)=>withTransaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,106))',[rootQueueId]);const r=await c.query('UPDATE specialist_budgets SET cancelled=true WHERE root_queue_id=$1 RETURNING root_queue_id',[rootQueueId]);if(!r.rowCount)throw Error('SPECIALIST_SCOPE_DENIED');}),
   verifyReport:async(result:Record<string,unknown>,queueId:string)=>withTransaction(async c=>{
-   const r=(await c.query('SELECT s.state,b.cancelled FROM specialist_sessions s JOIN specialist_budgets b USING(root_queue_id) WHERE s.queue_id=$1',[queueId])).rows[0];
-   if(!r||r.cancelled||r.state.phase!=='COMPLETE'||result.status!=='COMPLETE'||sha256Hex(result.report)!==sha256Hex(r.state.report))return false;
+   const r=(await c.query('SELECT s.state,b.cancelled,least(b.deadline,s.deadline) deadline FROM specialist_sessions s JOIN specialist_budgets b USING(root_queue_id) WHERE s.queue_id=$1',[queueId])).rows[0];
+   if(!r||r.cancelled||new Date(r.deadline).getTime()<=Date.now()||r.state.phase!=='COMPLETE'||result.status!=='COMPLETE'||sha256Hex(result.report)!==sha256Hex(r.state.report))return false;
    const report=r.state.report as Report;
    const fresh=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
    return report.claims.length>0&&report.claims.every(cl=>cl.evidenceIds.length>0&&cl.evidenceIds.every(id=>{
