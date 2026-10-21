@@ -1,3 +1,5 @@
+import {handleGoogleOauth} from "./googleOauth";
+import type {SamGoogleConnection} from "../../production/src/samGoogleConnection";
 import {timingSafeEqual} from "node:crypto";
 import { createServer,type IncomingMessage,type Server,type ServerResponse } from "node:http";
 import { createMcpHandler } from "@modelcontextprotocol/server";
@@ -39,6 +41,7 @@ function deny(res:ServerResponse,status:number,message:string){
 
 
 export interface McpHttpServerOptions{
+  googleConnection?:SamGoogleConnection;
   surface:ChatGPTToolRegistry;
   actor:string;
   port:number;
@@ -65,49 +68,31 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
   );
   const nodeHandler=toNodeHandler(handler);
 
-  const server=createServer((req,res)=>{
-    const pathname=new URL(req.url??"/","http://localhost").pathname;
-    const host=hostname(req);
-    if(allowedHosts.size>0&&!allowedHosts.has(host)){deny(res,403,"host_not_allowed");return;}
-    const origin=req.headers.origin;
-    if(origin&&allowedOrigins.size>0&&!allowedOrigins.has(origin)){deny(res,403,"origin_not_allowed");return;}
-    if(options.internalOAuth){
-      void options.internalOAuth.handle(req,res,pathname).then(handled=>{
-        if(!handled)routeRequest(req,res,pathname);
-      }).catch(()=>deny(res,400,"invalid_request"));
-      return;
-    }
-    routeRequest(req,res,pathname);
-  });
-
-  function routeRequest(req:IncomingMessage,res:ServerResponse,path:string){
-    if(req.method==="GET"&&path==="/livez"){
-      res.statusCode=200;
-      res.setHeader("content-type","application/json");
-      res.end(JSON.stringify({status:"alive"}));
-      return;
-    }
-
-    if(path!=="/mcp"){
-      deny(res,404,"not_found");
-      return;
-    }
-
-    const supplied=bearer(req);
-    if(options.internalOAuth){
-      if(!options.internalOAuth.authenticate(supplied)){
+  const server=createServer(async(req,res)=>{
+    try{
+      const pathname=new URL(req.url??"/","http://localhost").pathname;
+      if(allowedHosts.size>0&&!allowedHosts.has(hostname(req))){deny(res,403,"host_not_allowed");return;}
+      const origin=req.headers.origin;
+      if(origin&&allowedOrigins.size>0&&!allowedOrigins.has(origin)){deny(res,403,"origin_not_allowed");return;}
+      const supplied=bearer(req);
+      const ownerAuthorized=options.internalOAuth
+        ? options.internalOAuth.authenticate(supplied)
+        : !!expectedToken&&safeTokenEqual(supplied,expectedToken);
+      if(options.googleConnection&&await handleGoogleOauth(req,res,options.googleConnection,ownerAuthorized))return;
+      if(options.internalOAuth&&await options.internalOAuth.handle(req,res,pathname))return;
+      if(req.method==="GET"&&pathname==="/livez"){
+        res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify({status:"alive"}));return;
+      }
+      if(pathname!=="/mcp"){deny(res,404,"not_found");return;}
+      if(options.internalOAuth&&!ownerAuthorized){
         const metadata=new URL("/.well-known/oauth-protected-resource/mcp",options.internalOAuth.resourceUrl()).href;
         res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="sam:access offline_access"`);
         res.setHeader("cache-control","no-store");deny(res,401,"unauthorized");return;
       }
-    }
-    if(expectedToken&&!safeTokenEqual(supplied,expectedToken)){
-      deny(res,401,"unauthorized");
-      return;
-    }
-
-    void nodeHandler(req,res);
-  }
+      if(expectedToken&&!safeTokenEqual(supplied,expectedToken)){deny(res,401,"unauthorized");return;}
+      await nodeHandler(req,res);
+    }catch{if(!res.headersSent)deny(res,500,"request_failed");else res.end();}
+  });
 
   await new Promise<void>((resolve,reject)=>{
     server.once("error",reject);

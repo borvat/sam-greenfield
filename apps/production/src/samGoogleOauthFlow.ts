@@ -2,7 +2,7 @@
  * HTTP routes must call start only after authenticating the SAM owner.
  * Callback must stay bound to the same configured client and redirect URI.
  */
-import {createPkceRequest,redeemPkceCode} from "./samGoogleOauthPkce";
+import {createPkceRequest,redeemPkceCode,SAM_GOOGLE_ISSUER} from "./samGoogleOauthPkce";
 import {consumeOAuthTxn,hashState,type OAuthTxnStore} from "./samGoogleOauthState";
 
 export interface SamGoogleTokenSink {
@@ -22,16 +22,18 @@ export async function beginSamGoogleOauth(config:SamGoogleOauthFlowConfig):Promi
   stateStore:async(state,verifier)=>{
    const id=hashState(state);
    await config.transactions.put(id,{
-    stateHash:id,verifier,redirectUri:config.redirectUri,createdAt:Date.now()
+    stateHash:id,verifier,redirectUri:config.redirectUri,createdAt:Date.now(),ownerId:config.ownerId,clientId:config.clientId
    });
   }
  });
  return result.authorizationUrl;
 }
-export async function finishSamGoogleOauth(config:SamGoogleOauthFlowConfig,input:{state:string;code:string}):Promise<"AUTHORIZED">{
+export async function finishSamGoogleOauth(config:SamGoogleOauthFlowConfig,input:{state:string;code:string;issuer:string}):Promise<"AUTHORIZED">{
  if(!input.state||!input.code)throw new Error("OAUTH_CALLBACK_FIELDS_REQUIRED");
+ if(input.issuer!==SAM_GOOGLE_ISSUER+"/")throw new Error("OAUTH_ISSUER_MISMATCH");
  const transaction=await consumeOAuthTxn({store:config.transactions,state:input.state});
  if(transaction.redirectUri!==config.redirectUri)throw new Error("OAUTH_CALLBACK_REDIRECT_MISMATCH");
+ if(transaction.ownerId!==config.ownerId||transaction.clientId!==config.clientId)throw new Error("OAUTH_CALLBACK_OWNER_CLIENT_MISMATCH");
  const issued=await redeemPkceCode({
   code:input.code,state:input.state,storedState:input.state,
   verifier:transaction.verifier,clientId:config.clientId,

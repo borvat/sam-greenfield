@@ -38,9 +38,9 @@ export class SamGoogleMcpBridge {
   constructor(private readonly accessToken:string,private readonly endpoint=SAM_GOOGLE_MCP_URL) {
     if(!accessToken || !accessToken.trim())throw new Error("SAM_GOOGLE_OAUTH_ACCESS_TOKEN_REQUIRED");
     const u=new URL(endpoint);
-    if(u.protocol!=="https:" || u.username || u.password)throw new Error("HTTPS_MCP_ENDPOINT_REQUIRED");
+    if(u.protocol!=="https:" || u.username || u.password || u.origin!==new URL(SAM_GOOGLE_MCP_URL).origin || u.pathname!=="/mcp" || u.search || u.hash)throw new Error("HTTPS_MCP_ENDPOINT_REQUIRED");
   }
-  private async rpc(method:string,params:Record<string,unknown>):Promise<any> {
+  private async rpc(method:string,params:Record<string,unknown>,notification=false):Promise<any> {
     const ctrl=new AbortController();
     const timeout=setTimeout(()=>ctrl.abort(),20000);
     try {
@@ -51,28 +51,32 @@ export class SamGoogleMcpBridge {
         "MCP-Protocol-Version":"2025-03-26",
       };
       if(this.session)headers["Mcp-Session-Id"]=this.session;
+      const id=notification?undefined:this.id++;
       const resp=await fetch(this.endpoint,{
-        method:"POST",headers,signal:ctrl.signal,
-        body:JSON.stringify({jsonrpc:"2.0",id:this.id++,method,params})
+        method:"POST",headers,signal:ctrl.signal,redirect:"error",
+        body:JSON.stringify({jsonrpc:"2.0",...(notification?{}:{id}),method,params})
       });
       if(resp.status===401 || resp.status===403)throw new Error("SAM_GOOGLE_AUTH_REQUIRED");
       if(!resp.ok)throw new Error(`MCP_HTTP_${resp.status}`);
       const session=resp.headers.get("mcp-session-id");
       if(session)this.session=session;
+      if(notification){await resp.body?.cancel();return;}
       const raw=await resp.text();
       // Streamable HTTP responses may be JSON or SSE.
       const json=resp.headers.get("content-type")?.includes("text/event-stream")
         ?raw.split(/\r?\n/).filter(line=>line.startsWith("data:"))
             .map(line=>{try{return JSON.parse(line.slice(5).trim())}catch{return null}})
-            .find(o=>o?.id!=null)
+            .find(o=>o?.id===id)
         :JSON.parse(raw);
-      if(!json || json.error)throw new Error("MCP_RPC_FAILURE");
+      if(!json || json.id!==id || json.jsonrpc!=="2.0" || json.error || !("result" in json))throw new Error("MCP_RPC_FAILURE");
       return json.result;
     } finally {clearTimeout(timeout)}
   }
   async discover():Promise<McpTool[]> {
     if(!this.initialized){
-      await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"sam-google-readonly-pilot",version:"0.1.0"}});
+      const init=await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"sam-google-readonly",version:"0.2.0"}});
+      if(init?.protocolVersion!=="2025-03-26")throw new Error("MCP_PROTOCOL_VERSION_UNSUPPORTED");
+      await this.rpc("notifications/initialized",{},true);
       this.initialized=true;
     }
     const results:McpTool[]=[];

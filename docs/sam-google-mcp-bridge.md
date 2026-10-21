@@ -1,76 +1,97 @@
-# SAM Google MCP read-only bridge — staged implementation
+# SAM Google MCP: read-only OAuth integration
 
-The existing ChatGPT connector `sam google` has its own OAuth 2.1 session. Those user-specific
-access tokens are NOT available to SAM in Render and must never be copied from browser logs.
+SAM uses its own OAuth authorization-code + PKCE client. The ChatGPT connector's
+credentials are never copied or forwarded to SAM. Only seven explicitly allowed
+Gmail/Drive read tools can register; email sends and Drive mutations are excluded.
 
-This PR adds an isolated MCP JSON-RPC client for the self-hosted
-`https://sam-google-workspace-mcp.onrender.com/mcp` server, without enabling it in production.
+## Rollout controls
 
-Security properties:
-- Hardcoded exact seven-tool allowlist, rejects writes and unverified read-only annotations.
-- HTTPS-only transport, bearer token required and kept out of logs.
-- Remote discovery on connection, explicit failure on unauthorized HTTP, pagination cap, 20s timeout.
-- Remains disconnected from the production bundle until authentication and verification gates pass.
+- `SAM_GOOGLE_MCP_AUTH_ENABLED=true`: enable only owner-protected consent/status
+  tools and HTTP routes. The existing business bundle remains unchanged.
+- `SAM_GOOGLE_MCP_ENABLED=true`: switch the Google business bundle from legacy
+  REST to the MCP adapter. Leave off until consent and authenticated discovery
+  succeed. After consent, deploy/restart both SAM services to load saved schemas.
+- Both require `SAM_GOOGLE_PUBLIC_ORIGIN=https://sam-mcp-cn7q.onrender.com`, a fixed
+  `SAM_GOOGLE_OWNER_ID`, and `SAM_GOOGLE_TOKEN_ENCRYPTION_KEY`: a random 32-byte
+  secret in canonical base64. Use the same key/owner/origin on sam-mcp and runtime.
+  Never regenerate the key on a deploy. Dashboard secret values are currently the
+  deployment source of truth. Do not put credentials into Git or messages.
 
-**Next mandatory prerequisites:**
-1. Establish a separate OAuth 2.1 authorization-code + PKCE client identity for SAM and
-   securely store its refresh/access token on Render (do not paste secrets into PR or chat).
-2. Verify authenticated `initialize`, `tools/list`, and the exact seven tool schemas.
-3. Build a per-tool credential-refresh provider and independent verification adapters;
-   register the allowed subset into SAM's production capability bundle only after those tests.
-4. Run isolated tests and 10 consecutive verified read-only goals on a fixed deployment.
-5. Never forward ChatGPT's connector token into SAM or enable email sends/Drive mutations.
+All flags default off. Existing internal OAuth, host/origin checks and bearer
+mode remain supported. Unauthenticated connection-test mode never enables real
+Google consent routes. Existing Google REST credentials are not reused.
 
-Test command: `node --import tsx --test tests/isolated/sam_google_mcp_bridge.ts`
+## Owner authorization
 
-## Authorization implementation status (not yet deployable)
+The owner-authenticated MCP tool `sam_google_authorize` returns a ten-minute
+consent URL. `sam_google_connection_status` reports stored authorization and
+read-tool discovery counts, never credentials or a claimed live-read success.
 
-The PKCE authorization builder, code redemption, and MCP refresh helper exist as
-independent modules. They are **not** a deployed OAuth client. A working SAM
-OAuth client still requires:
-- its own HTTPS callback endpoint wired into SAM's HTTP router;
-- a client identifier registered with the MCP authorization server (CIMD
-  metadata document or supported dynamic registration);
-- persistent, encrypted, user-bound PKCE verifier/state with a short expiry,
-  atomic one-time consumption, and CSRF validation;
-- encrypted storage of SAM-only refresh tokens, token rotation and expiry
-  handling; never store secrets in GitHub, an audit trail, or user messages;
-- an authenticated admin-only button/URL for starting authorization and a
-  callback that does not echo the token or authorization code;
-- authenticated initialize, tools/list and read-only tool calls from the
-  SAM runtime, with independent business evidence and readback verification.
+HTTP equivalents on the SAM MCP service:
 
-The manually configured Google OAuth redirect
-`https://sam-google-workspace-mcp.onrender.com/oauth2callback` belongs to the
-**Google Workspace MCP server**, not to SAM's separate MCP client. Do not
-reuse it as the SAM client's callback and do not assume the ChatGPT connector's
-`https://chatgpt.com/connector_platform_oauth_redirect` applies to SAM.
+- `POST /google/oauth/start`: existing owner bearer required; returns consent URL.
+- `GET /google/status`: existing owner bearer required.
+- `GET /google/oauth/client.json`: public CIMD document; secretless PKCE client.
+- `GET /google/oauth/callback`: checks one-use state, exact issuer, owner, client
+  and redirect. Provider errors, authorization codes and tokens are never echoed.
+  A successful callback redirects to a clean URL before rendering a message.
 
-**Do not merge this PR or deploy its OAuth helpers as a working integration.**
+CIMD discovery is advertised by the inspected upstream OAuth authorization server.
+Its issuer is `https://sam-google-workspace-mcp.onrender.com/`. Its `/oauth2callback`
+belongs to the upstream Google proxy, not to SAM's separate OAuth client.
 
-## OAuth transaction state gate added
-`samGoogleOauthState.ts` now provides one-time consume semantics, SHA-256 state
-lookup, constant-time state comparison and a ten-minute expiry with isolated
-tests. `MemoryOAuthTxnStore` is **test-only / single-process prototype** and
-MUST NOT be used in SAM production because it does not persist across Render
-instances or restarts. Production integration still requires an atomic,
-persistent encrypted transaction store, an authenticated admin login, safe
-callback route and encrypted token storage before enabling the bridge.
+## Storage and read verification
 
-## Durable encrypted storage pilot (2026-10-21)
-Added `samGoogleTokenCrypto.ts` (AES-256-GCM per-token random IV with bound context),
-`samGoogleOauthPostgres.ts` (atomic consume via DELETE ... RETURNING, encrypted
-OAuth verifier and refresh token), and pilot SQL migration
-`packages/db/migrations/00099_sam_google_oauth.sql`.
+Migrations 00099 and 00100 add private OAuth state/token tables. AES-256-GCM
+protects refresh tokens, cached access tokens and PKCE verifiers with random IVs
+and bound contexts. The encryption key stays in service secrets. OAuth states
+expire in ten minutes and are consumed atomically using DELETE RETURNING.
 
-These are **code artifacts, not a production migration**. Generate and
-retain `SAM_GOOGLE_TOKEN_ENCRYPTION_KEY` securely through Render before wiring
-anything; losing the key makes stored tokens unreadable. Do not reuse the
-existing Google REST credentials. Access to the token table must be restricted
-to the SAM server role; Postgres backups contain ciphertext.
+PostgreSQL transaction advisory locks serialize refreshes across SAM processes.
+Refresh-token rotation and encrypted access-token caching commit atomically.
+Revoked/expired grants fail closed with reauthorization required. A transport 401
+invalidates cached access credentials and allows one fresh read-only retry.
 
-Remaining blocker for real authorization: an authenticated operator UI/route,
-a dedicated externally reachable HTTPS callback for SAM and client registration,
-plus wiring the isolated bridge to the verified production bundle. Tests have
-not been executed as part of this PR; GitHub-hosted runner failures must not
-be misrepresented as passing. No changes are live on Render.
+After consent, discovery must find all seven allowlisted tools explicitly marked
+read-only before schemas are saved. Business capabilities register from that
+snapshot and recheck discovery before each call. They have GREEN authority,
+sideEffect=false, schemas, specialist ownership and independent verifiers.
+Verification makes a separate fresh MCP read. Changed response hashes produce
+INCONCLUSIVE, never a false VERIFIED result.
+
+The bridge checks HTTPS origin/path, JSON-RPC response IDs, protocol negotiation,
+initialized notification, tool pagination and auth errors. It never follows
+redirects carrying bearer credentials.
+
+## Fixed upstream version and durability gate
+
+Inspected upstream and current live Google MCP deployment:
+`taylorwilsdon/google_workspace_mcp@484f64b5a43ddfed0d1e214f7e1038076d904c5b`.
+Render auto-deploy is off. Keep this exact deployment during acceptance; do not
+redeploy the Google service from a moving branch.
+
+The Google MCP service currently uses Render's free plan; no persistent disk is
+shown. The pinned upstream documents a default in-memory OAuth proxy store on
+Linux (`.env.oauth21`). Render logs show the instance changing between initial
+authorization and subsequent requests. This supports investigating lost proxy
+state, but does not prove that every authorization error has the same cause.
+
+SAM's PostgreSQL client-token store does NOT make the upstream OAuth proxy's
+server-side grants durable. Before claiming restart reliability, configure a
+supported persistent encrypted upstream store (disk or Valkey), then prove real
+Google reads and token refresh after restarting that upstream service. No paid
+plan upgrade, disk or Redis purchase is included in this change. Do not bypass
+authentication or extend token lifetimes to conceal a persistence failure.
+
+## Validation
+
+Run `npm run test:sam-google`: protocol, HTTP/CIMD/owner/issuer checks, MCP SDK
+transport, encryption, registration, independent readback and existing SAM OAuth.
+The SQL test uses PostgreSQL embedded in PGlite WASM, a temporary local data
+directory, and close/reopen validation. It checks encrypted persistence, atomic
+state consumption, refresh rotation, cache reuse and rollback. It does not test
+network/TLS or OS multi-process locking, and does not touch production data.
+
+Live acceptance remains: owner consent, seven-tool discovery, Gmail/Drive reads,
+independent verification, refresh and upstream restart, then ten varied read-only
+goals on a fixed deployment. Bootstrap deployment is not full business readiness.

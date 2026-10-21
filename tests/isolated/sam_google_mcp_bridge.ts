@@ -26,6 +26,7 @@ test("read-only tool discovery uses authenticated MCP initialize and tools/list"
    const request=JSON.parse(options.body);
    methods.push(request.method);
    assert.equal(options.headers.Authorization,"Bearer test-token");
+   if(request.method==="notifications/initialized"){assert.equal(request.id,undefined);return new Response(null,{status:202})}
    const result=request.method==="initialize"
       ?{protocolVersion:"2025-03-26",capabilities:{},serverInfo:{name:"test",version:"1"}}
       :{tools:[{name:"search_gmail_messages",annotations:{readOnlyHint:true}},{name:"send_gmail_message",annotations:{readOnlyHint:false}}]};
@@ -34,7 +35,7 @@ test("read-only tool discovery uses authenticated MCP initialize and tools/list"
  try{
    const bridge=new SamGoogleMcpBridge("test-token");
    assert.deepEqual((await bridge.discover()).map(x=>x.name),["search_gmail_messages"]);
-   assert.deepEqual(methods,["initialize","tools/list"]);
+   assert.deepEqual(methods,["initialize","notifications/initialized","tools/list"]);
  }finally{globalThis.fetch=original}
 });
 test("401 fails closed instead of registering capabilities",async()=>{
@@ -43,4 +44,13 @@ test("401 fails closed instead of registering capabilities",async()=>{
  try{
    await assert.rejects(new SamGoogleMcpBridge("expired-token").discover(),/SAM_GOOGLE_AUTH_REQUIRED/);
  }finally{globalThis.fetch=original}
+});
+
+test("bearer token cannot be sent to an arbitrary HTTPS endpoint",()=>{
+ assert.throws(()=>new SamGoogleMcpBridge("secret","https://attacker.example/mcp"),/HTTPS_MCP_ENDPOINT_REQUIRED/);
+});
+test("mismatched JSON-RPC response IDs fail closed",async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=(async()=>new Response(JSON.stringify({jsonrpc:"2.0",id:999,result:{protocolVersion:"2025-03-26"}}),{status:200,headers:{"content-type":"application/json"}})) as typeof fetch;
+ try{await assert.rejects(new SamGoogleMcpBridge("token").discover(),/MCP_RPC_FAILURE/)}finally{globalThis.fetch=original}
 });

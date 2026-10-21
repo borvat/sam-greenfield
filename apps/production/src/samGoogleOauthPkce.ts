@@ -31,8 +31,8 @@ export async function createPkceRequest(input:{clientId:string;redirectUri:strin
 }
 export async function redeemPkceCode(input:{code:string;state:string;storedState:string;verifier:string;clientId:string;redirectUri:string}):Promise<{access_token:string;refresh_token?:string;expires_in?:number}>{
  if(!input.code||!input.state||input.state!==input.storedState||!input.verifier)throw new Error("OAUTH_STATE_MISMATCH");
- const form=new URLSearchParams({grant_type:"authorization_code",code:input.code,redirect_uri:input.redirectUri,client_id:input.clientId,code_verifier:input.verifier});
- const resp=await fetch(SAM_GOOGLE_ISSUER+"/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:form,signal:AbortSignal.timeout(15000)});
+ const form=new URLSearchParams({grant_type:"authorization_code",code:input.code,redirect_uri:input.redirectUri,client_id:input.clientId,code_verifier:input.verifier,resource:SAM_GOOGLE_ISSUER+"/mcp"});
+ const resp=await fetch(SAM_GOOGLE_ISSUER+"/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:form,redirect:"error",signal:AbortSignal.timeout(15000)});
  if(!resp.ok)throw new Error("OAUTH_TOKEN_EXCHANGE_FAILED");
  const raw=await resp.json() as Record<string,unknown>;
  if(typeof raw.access_token!=="string"||!raw.access_token)throw new Error("OAUTH_ACCESS_TOKEN_MISSING");
@@ -42,8 +42,8 @@ export async function redeemPkceCode(input:{code:string;state:string;storedState
 /** Renew an already-authorized SAM-only MCP token. Never use legacy Google tokens. */
 export async function refreshSamMcpAccessToken(input:{clientId:string;refreshToken:string}):Promise<{access_token:string;refresh_token?:string;expires_in?:number}> {
  if(!input.clientId?.trim()||!input.refreshToken?.trim())throw new Error("SAM_MCP_REFRESH_CREDENTIALS_REQUIRED");
- const body=new URLSearchParams({grant_type:"refresh_token",client_id:input.clientId,refresh_token:input.refreshToken});
- const resp=await fetch(SAM_GOOGLE_ISSUER+"/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body,signal:AbortSignal.timeout(15000)});
+ const body=new URLSearchParams({grant_type:"refresh_token",client_id:input.clientId,refresh_token:input.refreshToken,resource:SAM_GOOGLE_ISSUER+"/mcp"});
+ const resp=await fetch(SAM_GOOGLE_ISSUER+"/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body,redirect:"error",signal:AbortSignal.timeout(15000)});
  if(resp.status===400||resp.status===401)throw new Error("SAM_MCP_REFRESH_REAUTH_REQUIRED");
  if(!resp.ok)throw new Error("SAM_MCP_REFRESH_FAILED");
  const value=await resp.json() as Record<string,unknown>;

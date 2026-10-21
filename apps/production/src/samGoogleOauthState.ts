@@ -2,7 +2,7 @@
  * No global access or external token log. Use only behind authenticated HTTPS.
  */
 import {createHash,randomBytes,timingSafeEqual} from "node:crypto";
-export type OAuthTxn={stateHash:string;verifier:string;createdAt:number;redirectUri:string};
+export type OAuthTxn={stateHash:string;verifier:string;createdAt:number;redirectUri:string;ownerId?:string;clientId?:string};
 export interface OAuthTxnStore {
  put(id:string,txn:OAuthTxn):Promise<void>;
  take(id:string):Promise<OAuthTxn|undefined>;

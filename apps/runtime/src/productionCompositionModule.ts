@@ -1,3 +1,4 @@
+import {SAM_GOOGLE_VERIFICATION_CONTRACTS} from "../../production/src/samGoogleBundle";
 import { loadRuntimeConfig } from "./config";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { createProductionComposition } from "../../production/src/composition";
@@ -14,6 +15,7 @@ async function initializeProductionComposition(){
   const config=loadRuntimeConfig();
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
   const bundle=await loadProductionBundle(bundlePath);
+  await syncVerificationContracts(SAM_GOOGLE_VERIFICATION_CONTRACTS);
   await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
   if(bundle.raw.capabilities.some(c=>c.capabilityId==="gmail_list_messages")){
     await syncVerificationContracts(GMAIL_READ_VERIFICATION_CONTRACTS);
