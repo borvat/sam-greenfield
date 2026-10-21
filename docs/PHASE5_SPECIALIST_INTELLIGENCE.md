@@ -150,7 +150,7 @@ No roles, credentials or external permissions are created by this helper. New
 relations have FORCE RLS plus fixed company/org role fences and parent scope
 checks. Missing context or a missing restrictive policy rejects admission;
 mutable session GUCs cannot switch company. Runtime can update only budget
-usage/cancellation and session state; limits and learning records are immutable
+usage/cancellation and session state/usage; limits and learning records are immutable
 through its grants. Admission requires the existing non-owner, non-superuser,
 non-DDL runtime boundary. Run the profile only after operator migration/provisioning
 review; there is no automatic staging or production activation.
@@ -158,7 +158,9 @@ review; there is no automatic staging or production activation.
 A family-wide durable ledger reserves every provider attempt before invocation,
 including fallback attempts and failed/uncertain responses. Declared tool-attempt
 monetary ceilings are also reserved before execution. All child specialists
-share it. Limits cover model attempts, **actual read-tool attempts including
+share it, while each specialist session also has its own charged counters and
+deadline. A child configuration can narrow its allowance; it cannot enlarge the
+family allowance. Limits cover model attempts, **actual read-tool attempts including
 retries**, reasoning iterations, conservatively reserved tokens, monetary upper
 bounds, elapsed time, delegations and depth (three), plus separate bounded model/read-call deadlines. Before executing child reads,
 the composition rechecks family cancellation/deadline and reserves a tool attempt.
@@ -226,7 +228,7 @@ specialist plans, failed source verification and revised actions, typed result
 passing, contradiction detection and targeted new research, one executive report,
 source revocation, positive cold-process memory retrieval, real SIGKILL recovery,
 retained cost reservations, populated sibling/cross-org isolation, missing-fence
-refusal, schema/side-effect boundaries, each budget dimension, in-flight
+refusal, schema/side-effect boundaries, each budget dimension (including a child allowance narrower than its family), in-flight
 cancellation and ignored late responses. PostgreSQL restart independently checks
 pending session state, charged counters and the migration receipt survive an
 actual container restart. Source contents, model reasoning decisions and readback

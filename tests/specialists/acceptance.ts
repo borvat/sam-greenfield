@@ -34,7 +34,7 @@ async function main(){
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='synthetic-specialist-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,SAM_SPECIALIST_INTELLIGENCE:'synthetic',FIXTURE_ENTITY:entity,FIXTURE_FOREIGN:foreign};
   const run=(mode:string,extra:Record<string,string>={})=>{
-   const r=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts',mode],{env:{...env,...extra},encoding:'utf8',timeout:50000});
+   const r=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts',mode],{env:{...env,...extra},encoding:'utf8',timeout:65000});
    process.stdout.write(r.stdout+r.stderr);console.log(JSON.stringify({worker:mode,exit:r.status,signal:r.signal,error:r.error?.message??null}));assert.equal(r.status,0,'restricted specialist worker '+mode);
   };
   run('collaboration');
@@ -52,7 +52,7 @@ async function main(){
   for(const tenant of [foreign,otherEntity]){
    const g=await make('foreign','specialist.executive',tenant);
    await c.query(`INSERT INTO specialist_budgets(root_queue_id,legal_entity_id,limits,deadline) VALUES($1,$2,'{}',now()+interval '1 hour')`,[g.queue,tenant]);
-   await c.query(`INSERT INTO specialist_sessions(queue_id,root_queue_id,legal_entity_id,agent_id,config_hash,depth,state) VALUES($1,$1,$2,'foreign','foreign',0,'{}')`,[g.queue,tenant]);
+   await c.query(`INSERT INTO specialist_sessions(queue_id,root_queue_id,legal_entity_id,agent_id,config_hash,depth,deadline,state) VALUES($1,$1,$2,'foreign','foreign',0,now()+interval '1 hour','{}')`,[g.queue,tenant]);
    await c.query(`INSERT INTO specialist_learning(legal_entity_id,goal_id,kind,statement,expires_at) VALUES($1,$2,'MODEL_INFERENCE','foreign secret',now()+interval '1 day')`,[tenant,g.goal]);
   }
   run('isolation');

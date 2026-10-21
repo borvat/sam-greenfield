@@ -11,6 +11,8 @@ CREATE TABLE specialist_sessions (
  root_queue_id uuid NOT NULL REFERENCES specialist_budgets(root_queue_id),
  legal_entity_id uuid NOT NULL REFERENCES legal_entities(id),
  agent_id text NOT NULL, config_hash text NOT NULL, depth int NOT NULL CHECK(depth BETWEEN 0 AND 3),
+ used jsonb NOT NULL DEFAULT '{"models":0,"tools":0,"iterations":0,"tokens":0,"costUsd":0,"delegations":0}',
+ deadline timestamptz NOT NULL,
  state jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE specialist_delegations (
@@ -68,21 +70,21 @@ CREATE INDEX specialist_learning_recall ON specialist_learning(legal_entity_id,k
 -- committing, even if the adapter itself cannot abort an in-flight request.
 -- Ordinary core/Phase 4 work does not enter this profile-specific branch.
 CREATE FUNCTION specialist_execution_live_guard() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE domain_name text; root_id uuid; live boolean;
+DECLARE domain_name text; root_id uuid; session_id uuid; live boolean;
 BEGIN
  SELECT domain INTO domain_name FROM goals WHERE id=NEW.goal_id;
  IF domain_name='sam_specialist' OR NEW.evidence ? 'specialist_session' THEN
   IF NEW.evidence ? 'specialist_session' THEN
-   SELECT root_queue_id INTO root_id FROM specialist_sessions WHERE queue_id=NEW.queue_id;
+   SELECT root_queue_id,queue_id INTO root_id,session_id FROM specialist_sessions WHERE queue_id=NEW.queue_id;
   ELSE
-   SELECT root_queue_id INTO root_id FROM specialist_delegations WHERE goal_id=NEW.goal_id;
+   SELECT root_queue_id,parent_queue_id INTO root_id,session_id FROM specialist_delegations WHERE goal_id=NEW.goal_id;
   END IF;
   -- A stopped report carries uncertainty and verifies INCONCLUSIVE. Persist it
   -- for audit even when the budget/deadline caused the stop; successful results
   -- still require a live family below.
   IF NEW.evidence ? 'specialist_session' AND NEW.result->>'status'='STOPPED' AND root_id IS NOT NULL THEN RETURN NEW; END IF;
-  SELECT NOT b.cancelled AND b.deadline>clock_timestamp() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id
-   INTO live FROM specialist_budgets b JOIN work_queue w ON w.id=b.root_queue_id JOIN goals g ON g.id=w.goal_id WHERE b.root_queue_id=root_id;
+  SELECT NOT b.cancelled AND b.deadline>clock_timestamp() AND s.deadline>clock_timestamp() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id
+   INTO live FROM specialist_budgets b JOIN specialist_sessions s ON s.queue_id=session_id JOIN work_queue w ON w.id=b.root_queue_id JOIN goals g ON g.id=w.goal_id WHERE b.root_queue_id=root_id;
   IF live IS DISTINCT FROM true OR EXISTS(WITH RECURSIVE lineage(id,parent_goal_id,state,depth) AS (
     SELECT id,parent_goal_id,state,0 FROM goals WHERE id=NEW.goal_id
     UNION ALL SELECT g.id,g.parent_goal_id,g.state,l.depth+1 FROM goals g JOIN lineage l ON g.id=l.parent_goal_id WHERE l.depth<3

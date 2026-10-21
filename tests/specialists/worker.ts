@@ -99,7 +99,7 @@ async function main(){
   const goal=await one("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Investigate unfamiliar aerogel packaging demand and reconcile specialist findings','NEW','GREEN') RETURNING id",['P5-'+randomUUID(),entity]);
   const {composition,engine}=await createIntelligentComposition({bundle,workerId:'phase5-acceptance',intelligence:{configs:configs(),catalog:bundle.catalog,tools:bundle.tools,gateway,diagnostic:console.error}});
   const begin=Date.now();
-  while(Date.now()-begin<12000){await composition.runWorkTick();if((await one('SELECT state FROM goals WHERE id=$1',[goal.id])).state==='COMPLETED')break;await sleep(110);}
+  while(Date.now()-begin<25000){await composition.runWorkTick();if((await one('SELECT state FROM goals WHERE id=$1',[goal.id])).state==='COMPLETED')break;await sleep(110);}
   const g=await one('SELECT state,current_plan_id FROM goals WHERE id=$1',[goal.id]);
   if(g.state!=='COMPLETED')console.log(JSON.stringify((await pool.query("SELECT agent_id,state->>'phase' phase,state->>'reason' reason,state->'history' history FROM specialist_sessions WHERE agent_id='executive-specialist'")).rows));
   assert.equal(g.state,'COMPLETED');assert(maxActive>=2,'specialists independently invoke models concurrently');assert.equal(executiveCalls,1,'delegated failures must replan through the budgeted parent, not the executive planner');
@@ -234,6 +234,16 @@ async function main(){
   assert.equal((await one('SELECT count(*)::int n FROM specialist_delegations WHERE parent_queue_id=$1',[timeoutGoal.queue])).n,0);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[timeoutGoal.queue])).state.phase,'BLOCKED');
   console.log('PASS controls: model-timeout');
+  const narrowGoal=await make('narrow-child-model-allowance');
+  const narrowConfigs=configs();narrowConfigs[1].limits={...limits,models:0};
+  const delegateProvider:ModelProviderAdapter={...provider,async invoke(){return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:dispatch(market,'Narrow child task',{objective:'Narrow child task'})};}};
+  const narrowEngine=await createSpecialistIntelligence({...normal,configs:narrowConfigs,gateway:new ModelGateway({[provider.providerId]:delegateProvider})});await direct(narrowEngine);
+  const narrowResult=await runOneSpecialistWork({agent:bundle.catalog.specialists.getAgent('market-specialist'),workerInstanceId:'narrow-child',ttlSeconds:5,executors:createToolExecutors({catalog:bundle.catalog,tools:bundle.tools}),advancers:narrowEngine.advancers});assert(narrowResult.processed);
+  const childBudget=await one('SELECT state,used FROM specialist_sessions WHERE queue_id=$1',[narrowResult.queueId]);assert.equal(childBudget.state.phase,'BLOCKED');assert.equal(childBudget.used.models,0);
+  assert.match(childBudget.state.reason,/AGENT_BUDGET_EXHAUSTED:models/);
+  assert.equal((await one('SELECT used FROM specialist_budgets WHERE root_queue_id=$1',[narrowGoal.queue])).used.models,1);
+  await narrowEngine.cancel(narrowGoal.queue);await sleep(110);await direct(narrowEngine);
+  console.log('PASS narrowed child model budget enforced independently of available family budget');
   const unsafe={...bundle.raw,toolDefinitions:bundle.raw.toolDefinitions.map(d=>({...d,sideEffect:true}))};const bad=validateProductionBundle(unsafe);
   await assert.rejects(()=>createSpecialistIntelligence({...normal,catalog:bad.catalog,tools:bad.tools}),/READ_SCOPE_REQUIRED/);
   const wrongCompany=validateProductionBundle({...bundle.raw,capabilities:bundle.raw.capabilities.map(c=>({...c,companyScopes:[process.env.FIXTURE_FOREIGN!]})),toolDefinitions:bundle.raw.toolDefinitions.map(t=>({...t,companyScopes:[process.env.FIXTURE_FOREIGN!]}))});

@@ -37,7 +37,7 @@ export async function provisionSpecialistAccess(c:PoolClient,input:{schema:strin
   await c.query(`GRANT SELECT,INSERT ON "${schema}".${table} TO "${role}"`);
  }
  await c.query(`GRANT UPDATE(used,cancelled) ON "${schema}".specialist_budgets TO "${role}"`);
- await c.query(`GRANT UPDATE(state,updated_at) ON "${schema}".specialist_sessions TO "${role}"`);
+ await c.query(`GRANT UPDATE(state,used,updated_at) ON "${schema}".specialist_sessions TO "${role}"`);
 }
 export async function assertSpecialistAccess(c:PoolClient){
  const tenant=await assertRuntimeTenantBinding(c);
