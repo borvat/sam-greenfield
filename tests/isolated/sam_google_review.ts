@@ -8,6 +8,9 @@ const descriptors=[{capabilityId:"google_mcp_get_gmail_message_content",authorit
 const source={id:execution,capabilityId:"google_mcp_search_gmail_messages",params:{query:"business"},text:"Found message ID: actual-message. Supplier confirms release.",truncated:false,actor:"communications@1.0.0"};
 const review=(status:string)=>({status,summary:"Evidence-linked result",requirements:[{requirement:"Read the source",fulfilled:status==="complete",evidenceIds:[execution]}],findings:[{text:"Supplier confirms release",executionId:execution,quote:"Supplier confirms release."}],limitations:[],steps:status==="continue"?[{capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}}]:[]});
 test("review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion",()=>{
+ const indexed:any=review("complete");indexed.findings[0]={text:"Source finding",executionId:execution,quoteLine:0,quote:"Retyped wrong value"};
+ assert.equal(validateReadReview(indexed,[source],"Read",descriptors).findings[0].quote,source.text);
+ indexed.findings[0].quoteLine=9;assert.throws(()=>validateReadReview(indexed,[source],"Read",descriptors),/QUOTE_LINE/);
  assert.equal(validateReadReview(review("continue"),[source],"Read the source",descriptors).status,"continue");
  const bad=structuredClone(review("continue"));bad.steps[0].params.message_id="invented";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNOBSERVED_ID/);
  bad.steps[0].capabilityId="send_email";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNSAFE/);
