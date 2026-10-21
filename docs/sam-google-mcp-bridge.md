@@ -47,3 +47,12 @@ reuse it as the SAM client's callback and do not assume the ChatGPT connector's
 `https://chatgpt.com/connector_platform_oauth_redirect` applies to SAM.
 
 **Do not merge this PR or deploy its OAuth helpers as a working integration.**
+
+## OAuth transaction state gate added
+`samGoogleOauthState.ts` now provides one-time consume semantics, SHA-256 state
+lookup, constant-time state comparison and a ten-minute expiry with isolated
+tests. `MemoryOAuthTxnStore` is **test-only / single-process prototype** and
+MUST NOT be used in SAM production because it does not persist across Render
+instances or restarts. Production integration still requires an atomic,
+persistent encrypted transaction store, an authenticated admin login, safe
+callback route and encrypted token storage before enabling the bridge.
