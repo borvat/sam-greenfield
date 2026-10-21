@@ -7,19 +7,19 @@ export async function verifyNextExecution(
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
-      `SELECT e.id,e.capability_id,e.params,e.evidence,e.operation_key_ref,
+      `SELECT e.id,e.capability_id,e.params,e.result,e.evidence,e.operation_key_ref,
               vc.id AS contract_id,vc.verification_method,
               vc.required_evidence_fields,vc.independent_query_template
          FROM executions e
          JOIN goals g ON g.id=e.goal_id
-         JOIN verification_contracts vc ON vc.capability_id=e.capability_id
+         JOIN verification_contracts vc ON vc.capability_id=e.capability_id OR (vc.capability_pattern IS NOT NULL AND e.capability_id ~ vc.capability_pattern)
         WHERE g.state='VERIFYING'
           AND e.status='EXECUTED'
           AND e.plan_id=g.current_plan_id
           AND NOT EXISTS (
             SELECT 1 FROM verifications v WHERE v.execution_id=e.id
           )
-        ORDER BY e.finished_at NULLS LAST,e.started_at,e.id
+        ORDER BY (vc.capability_id=e.capability_id) DESC,e.finished_at NULLS LAST,e.started_at,e.id
         LIMIT 1`
     );
     return res.rows[0]??null;
@@ -43,6 +43,7 @@ export async function verifyNextExecution(
       id:candidate.id,
       capabilityId:candidate.capability_id,
       params:candidate.params??{},
+      result:candidate.result??{},
       evidence:candidate.evidence??{},
       operationKeyRef:candidate.operation_key_ref??null
     },

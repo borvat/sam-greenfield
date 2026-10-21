@@ -6,6 +6,7 @@ import { withGmailReadFromEnv } from "./gmailReadBundle";
 import { withGoogleDriveFromEnv } from "./driveBundle";
 import { withEBoekhoudenFromEnv } from "./eboekhoudenBundle";
 import { withBolRetailerFromEnv } from "./bolBundle";
+import { withResearchMcpFromEnv } from "./researchMcpBundle";
 import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle";
 
 async function buildBundle():Promise<ProductionBundle>{
@@ -18,6 +19,7 @@ async function buildBundle():Promise<ProductionBundle>{
     bundle=withGoogleDriveFromEnv(bundle);
   }
   bundle=await withBolRetailerFromEnv(bundle);
+  bundle=await withResearchMcpFromEnv(bundle);
   if(process.env.SAM_GOOGLE_READ_ONLY!=="true"){
     bundle=withEBoekhoudenFromEnv(bundle);
     bundle=withFinanceReconciliationFromEnv(bundle);
