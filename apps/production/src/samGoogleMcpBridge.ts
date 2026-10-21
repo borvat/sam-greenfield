@@ -24,7 +24,7 @@ export interface McpTool {name:string;description?:string;inputSchema?:unknown;a
 export function allowedTool(tool:McpTool):boolean {
   return ALLOW.has(tool.name) && !unsafe.test(tool.name)
     && tool.annotations?.destructiveHint !== true
-    && tool.annotations?.readOnlyHint !== false;
+    && tool.annotations?.readOnlyHint === true;
 }
 export function filterReadOnlyTools(tools:McpTool[]):McpTool[] {
   if(!Array.isArray(tools)) throw new Error("INVALID_TOOLS_LIST");
