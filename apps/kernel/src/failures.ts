@@ -1,7 +1,7 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import { transitionGoal } from "./stateMachine";
-import {isReadSourceNotFound} from "../../../packages/shared/src/readSourceFailure";
+import {isReadSourceNotFound,isScopedCloudReadUnavailable} from "../../../packages/shared/src/readSourceFailure";
 
 export function failureMessage(error:unknown):string{
   return (error instanceof Error?error.message:String(error)).slice(0,4000);
@@ -50,10 +50,9 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
       operation_key_ref:row.operation_key_ref,error:failureMessage(input.error)};
     await insertOutboxEvent(client,{aggregateType:"work_queue",aggregateId:row.id,eventType:"WORK_FAILED",payload:detail});
     if(goalId){
-      // A missing Drive file is a safe, read-only recovery opportunity. Do not
-      // re-execute writes, transient writes, or arbitrary failed tool calls.
-      // Only replan the active goal with a bounded budget; leave the failed
-      // attempt and its evidence intact for the operator.
+      // Only known missing-file reads or internally classified reviewed cloud
+      // reads can request recovery. Never retry an external write. Replan the
+      // active goal within its budget and retain the failed attempt's history.
       const state=await client.query(
         "SELECT state,replan_attempts,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
         [goalId]
@@ -63,22 +62,25 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
           isReadSourceNotFound(row.capability_id,input.error)) &&
         state.rows[0]?.state==="EXECUTING" &&
         Number(state.rows[0]?.replan_attempts??0)<2;
-      if(safeNotFound){
+      const safeCloudRead=!row.operation_key_ref&&isScopedCloudReadUnavailable(row.capability_id,input.error)&&
+        state.rows[0]?.state==='EXECUTING'&&Number(state.rows[0]?.replan_attempts??0)<2;
+      if(safeNotFound||safeCloudRead){
+        const recoveryCode=safeCloudRead?'READ_ONLY_SOURCE_REPLAN':'READ_ONLY_NOT_FOUND_REPLAN';
         await client.query(
           `UPDATE work_queue SET status='FAILED',fencing_token=fencing_token+1,
              lease_owner=NULL,lease_timestamp=NULL,lease_expiry=NULL,
-             wake_reason='READ_ONLY_NOT_FOUND_REPLAN'
+             wake_reason=CASE WHEN $4 AND id<>$3 THEN 'READ_ONLY_SOURCE_REPLAN_SKIPPED' ELSE $5 END
            WHERE goal_id=$1 AND plan_id=$2 AND
              status IN ('QUEUED','HANDBACK','LEASED','EXECUTING')`,
-          [goalId,state.rows[0].current_plan_id]
+          [goalId,state.rows[0].current_plan_id,row.id,safeCloudRead,recoveryCode]
         );
-        const reason="Drive source returned HTTP 404; choose a read-only search fallback instead of retrying the missing file";
+        const reason=safeCloudRead?"A reviewed cloud read is unavailable; choose another allowed read, preserve scope and document any evidence gaps. Never replay the exact failed request.":"Drive source returned HTTP 404; choose a read-only search fallback instead of retrying the missing file";
         await client.query("UPDATE goals SET replan_reason=$2,updated_at=now() WHERE id=$1",[goalId,reason]);
-        await transitionGoal(client,goalId,"EXECUTING","REPLANNING","READ_ONLY_NOT_FOUND_REPLAN",{failed_capability:row.capability_id});
+        await transitionGoal(client,goalId,"EXECUTING","REPLANNING",recoveryCode,{failed_capability:row.capability_id});
         await client.query(
           `INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,result)
            VALUES('sam-runtime',$1,'RUNTIME_RECOVERY_REQUESTED','goal',$1,$2::jsonb,'runtime','REPLANNING')`,
-          [goalId,JSON.stringify({reason,queue_id:row.id,capability_id:row.capability_id,params:row.params??{},error_code:"READ_SOURCE_NOT_FOUND"})]
+          [goalId,JSON.stringify({reason,queue_id:row.id,capability_id:row.capability_id,params:row.params??{},error_code:safeCloudRead?"SCOPED_CLOUD_READ_UNAVAILABLE":"READ_SOURCE_NOT_FOUND"})]
         );
         return true;
       }

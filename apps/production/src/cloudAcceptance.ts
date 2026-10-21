@@ -15,3 +15,8 @@ export type CloudTrial={goalId:string;state:string;liveChoices:number;modelSelec
 export function assessCloudTrials(trials:CloudTrial[],required=10){
  return trials.length===required&&new Set(trials.map(t=>t.goalId)).size===required&&trials.every(t=>t.state==='COMPLETED'&&t.liveChoices>0&&t.modelSelectedAllExecuted&&t.githubMemory>0&&t.renderMemory>0&&t.githubVerified>0&&t.renderVerified>0&&t.unverified===0&&t.memory>0&&t.report);
 }
+
+export type CloudRecoveryTrial={goalId:string;state:string;failedGoalId:string;faults:number;replans:number;modelCallsAfterFault:number;verifiedGithub:number;verifiedRender:number;verifiedAfterFaultOnOtherServer:number;memory:number;report:boolean;limitationRecorded:boolean;selectedByModel:boolean};
+export function assessCloudRecovery(t:CloudRecoveryTrial|undefined){
+ return !!t&&!!t.goalId&&t.goalId===t.failedGoalId&&t.state==='COMPLETED'&&t.faults===1&&t.replans>0&&t.replans<=2&&t.modelCallsAfterFault>0&&t.verifiedGithub>0&&t.verifiedRender>0&&t.verifiedAfterFaultOnOtherServer>0&&t.memory>0&&t.report&&t.limitationRecorded&&t.selectedByModel;
+}

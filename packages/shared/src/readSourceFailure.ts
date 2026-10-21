@@ -15,3 +15,11 @@ export function isReadSourceNotFound(capabilityId:string,error:unknown):boolean{
   return googleFileReads.has(capabilityId) && error instanceof ReadSourceNotFoundError
     && error.capabilityId===capabilityId;
 }
+
+/** Constructed only by the reviewed cloud read bundle; never parse remote text as this type. */
+export class ScopedCloudReadUnavailableError extends Error {
+  constructor(readonly capabilityId:string){super('SCOPED_CLOUD_READ_UNAVAILABLE');this.name='ScopedCloudReadUnavailableError'}
+}
+export function isScopedCloudReadUnavailable(capabilityId:string,error:unknown):boolean{
+  return /^research_mcp_[a-z0-9_]+$/.test(capabilityId)&&error instanceof ScopedCloudReadUnavailableError&&error.capabilityId===capabilityId;
+}

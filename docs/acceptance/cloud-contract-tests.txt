@@ -1,18 +1,20 @@
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 
 > test:cloud-contracts
-> node --import tsx --test tests/phase24/cloud_acceptance.ts
+> node --import tsx --test --test-concurrency=1 tests/phase24/cloud_acceptance.ts tests/phase24/cloud_recovery.ts
 
-✔ cloud policy rejects writes, unknown destinations, wrong company and unscoped old schemas before connection (37.060361ms)
-✔ fixture transport tests scope enforcement and original-schema pins, never evidence of a live cloud connection (16.46502ms)
-✔ acceptance requires ten distinct completed goals, actual model choices, both sources, fresh verification and attributed memory (0.546466ms)
-✔ fixed revision check rejects edits and untracked executable source without changing the inspected checkout (73.542441ms)
-✔ live entry point reports BLOCKED with zero trials before any inherited production DB fallback (395.021227ms)
-ℹ tests 5
+✔ cloud policy rejects writes, unknown destinations, wrong company and unscoped old schemas before connection (31.145579ms)
+✔ fixture transport tests scope enforcement and original-schema pins, never evidence of a live cloud connection (13.931706ms)
+✔ acceptance requires ten distinct completed goals, actual model choices, both sources, fresh verification and attributed memory (0.568398ms)
+✔ fixed revision check rejects edits and untracked executable source without changing the inspected checkout (62.592529ms)
+✔ live entry point reports BLOCKED with zero trials before any inherited production DB fallback (329.95964ms)
+✔ mechanism only: failed cloud read -> same-goal bounded replan -> two-provider verification, report and memory (4469.164183ms)
+✔ acceptance rejects replacement goals, repeated faults, no cross-provider progress or no model replan; error text is not a recovery grant (1.227648ms)
+ℹ tests 7
 ℹ suites 0
-ℹ pass 5
+ℹ pass 7
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1171.751776
+ℹ duration_ms 6193.061104

@@ -1,3 +1,4 @@
+import {ScopedCloudReadUnavailableError} from '../../../packages/shared/src/readSourceFailure';
 import {buildScopedMcpExpansion,connectScopedMcp,parseScopedMcpManifest,type ExpansionFactory} from './scopedMcpBundle';
 import {validateToolParameters} from '../../../packages/tool-gateway/src/validation';
 import type {ProductionBundle} from './types';
@@ -74,5 +75,14 @@ export async function buildCloudReadOnlyBundle(base:ProductionBundle,raw:string,
   const tool=server.tools.find(t=>'research_mcp_'+server.serverId+'_'+t.name===def.capabilityId)!;
   return {...def,inputSchema:policy.schemas.get(server.serverId+':'+tool.name)!};
  });
+ // Only this explicitly reviewed read bundle can request bounded same-goal
+ // replanning on a provider failure. Scope/validation errors stay terminal.
+ const cloudIds=new Set(result.inventory.flatMap((i:any)=>i.capabilities));
+ result.bundle.toolAdapters=result.bundle.toolAdapters.map(adapter=>!cloudIds.has(adapter.capabilityId)?adapter:({capabilityId:adapter.capabilityId,async execute(request){
+  try{return await adapter.execute(request)}catch(error){
+   if(error instanceof Error&&['MCP_READ_FAILED','MCP_READ_INVALID'].includes(error.message))throw new ScopedCloudReadUnavailableError(adapter.capabilityId);
+   throw error;
+  }
+ }}));
  return result;
 }

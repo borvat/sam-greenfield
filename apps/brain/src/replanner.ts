@@ -50,7 +50,8 @@ export async function runBrainReplanCycle(input: {
   const failedReads=await withTransaction(async client=>{
     const r=await client.query(
       `SELECT DISTINCT w.capability_id,w.params FROM work_queue w
-       WHERE w.goal_id=$1 AND w.status='FAILED'`,
+       WHERE w.goal_id=$1 AND w.status='FAILED'
+         AND w.wake_reason IS DISTINCT FROM 'READ_ONLY_SOURCE_REPLAN_SKIPPED'`,
       [input.goalId]
     );
     const readOnly=new Set((input.availableCapabilities??[]).filter((x:any)=>x?.sideEffect===false).map((x:any)=>String(x.capabilityId)));
