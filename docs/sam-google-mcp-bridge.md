@@ -56,3 +56,21 @@ MUST NOT be used in SAM production because it does not persist across Render
 instances or restarts. Production integration still requires an atomic,
 persistent encrypted transaction store, an authenticated admin login, safe
 callback route and encrypted token storage before enabling the bridge.
+
+## Durable encrypted storage pilot (2026-10-21)
+Added `samGoogleTokenCrypto.ts` (AES-256-GCM per-token random IV with bound context),
+`samGoogleOauthPostgres.ts` (atomic consume via DELETE ... RETURNING, encrypted
+OAuth verifier and refresh token), and pilot SQL migration
+`packages/db/migrations/00099_sam_google_oauth.sql`.
+
+These are **code artifacts, not a production migration**. Generate and
+retain `SAM_GOOGLE_TOKEN_ENCRYPTION_KEY` securely through Render before wiring
+anything; losing the key makes stored tokens unreadable. Do not reuse the
+existing Google REST credentials. Access to the token table must be restricted
+to the SAM server role; Postgres backups contain ciphertext.
+
+Remaining blocker for real authorization: an authenticated operator UI/route,
+a dedicated externally reachable HTTPS callback for SAM and client registration,
+plus wiring the isolated bridge to the verified production bundle. Tests have
+not been executed as part of this PR; GitHub-hosted runner failures must not
+be misrepresented as passing. No changes are live on Render.
