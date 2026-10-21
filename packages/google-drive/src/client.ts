@@ -11,24 +11,43 @@ export class GoogleDriveApiClient{
   private async request(path:string,init:RequestInit={}):Promise<any>{
     const token=await this.options.tokens.getAccessToken();
     const fetchImpl=this.options.fetchImpl??fetch;
-    const response=await fetchImpl(
-      `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(/\/$/,"")}${path}`,
-      {
-        ...init,
-        headers:{
-          authorization:`Bearer ${token}`,
-          ...(init.body?{"content-type":"application/json"}:{}),
-          ...(init.headers??{})
+    // Retry only idempotent GET reads. Never replay POST/create operations.
+    // Keep total attempts bounded and surface the final error to SAM.
+    const canRetry=(init.method??"GET").toUpperCase()==="GET";
+    const maxAttempts=canRetry?3:1;
+    for(let attempt=0;attempt<maxAttempts;attempt++){
+      let response:Response;
+      try{
+        response=await fetchImpl(
+          `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(new RegExp("/$"),"")}${path}`,
+          {
+            ...init,
+            headers:{
+              authorization:`Bearer ${token}`,
+              ...(init.body?{"content-type":"application/json"}:{}),
+              ...(init.headers??{})
+            }
+          }
+        );
+      }catch(error){
+        if(!canRetry || attempt===maxAttempts-1 || !(error instanceof TypeError)){
+          throw error;
         }
+        await new Promise(resolve=>setTimeout(resolve,100*2**attempt));
+        continue;
       }
-    );
-    const body:any=await response.json().catch(()=>({}));
-    if(!response.ok){
+      const body:any=await response.json().catch(()=>({}));
+      if(response.ok)return body;
+      const transient=[429,502,503,504].includes(response.status);
+      if(canRetry&&transient&&attempt<maxAttempts-1){
+        await new Promise(resolve=>setTimeout(resolve,100*2**attempt));
+        continue;
+      }
       throw new Error(
         `Google Drive API HTTP ${response.status}: ${String(body?.error?.message??body?.message??"unknown").slice(0,500)}`
       );
     }
-    return body;
+    throw new Error("Google Drive read retry budget exhausted");
   }
 
   getFile(fileId:string):Promise<any>{
