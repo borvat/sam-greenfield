@@ -34,6 +34,12 @@ async function main(){
   const modelAdapter:ModelProviderAdapter={
     providerId:modelId,
     async invoke(_task,model){
+      const review:any=_task.input;
+      if(review?.proposedReport)return {model,usage:{inputTokens:80,outputTokens:50},output:{accepted:true,missing:[]}};
+      if(review?.verifiedObservations){
+        const sources=review.verifiedObservations;
+        return {model,usage:{inputTokens:80,outputTokens:100},output:{status:"complete",summary:"Sales and inventory reads combined",requirements:[{requirement:"Read and combine both sources",fulfilled:true,evidenceIds:sources.map((s:any)=>s.id)}],findings:sources.map((s:any)=>({text:"Verified read completed",executionId:s.id,quote:s.text})),limitations:["Synthetic data only"],steps:[]}};
+      }
       return {
         model,
         usage:{inputTokens:80,outputTokens:50},

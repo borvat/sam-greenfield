@@ -85,7 +85,10 @@ export async function recordIndependentVerificationAtomic(input: {
         const total = Number(coverage.rows[0].total);
         const verified = Number(coverage.rows[0].verified);
         if (total > 0 && total === verified) {
-          await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
+          const completion=await client.query("SELECT completion_definition FROM goals WHERE id=$1",[ex.goal_id]);
+          // Managed read goals need an evidence-linked objective review/report,
+          // or another concrete plan based on the verified observations.
+          if(completion.rows[0]?.completion_definition!=="sam.read_report.v1")await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
             verification_id: verificationId,
             verified_executions: verified
           });
