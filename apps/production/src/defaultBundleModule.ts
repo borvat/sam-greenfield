@@ -1,4 +1,5 @@
 import type { ProductionBundle } from "./types";
+import {withSamGoogleMcpFromEnv} from "./samGoogleBundle";
 import { withStandardModelProvidersFromEnv } from "./standardModels";
 import { withGmailFromEnv } from "./gmailBundle";
 import { withGmailReadFromEnv } from "./gmailReadBundle";
@@ -10,8 +11,12 @@ import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle"
 async function buildBundle():Promise<ProductionBundle>{
   let bundle:ProductionBundle={capabilities:[],toolDefinitions:[],toolAdapters:[]};
   bundle=withStandardModelProvidersFromEnv(bundle);
-  bundle=process.env.SAM_GOOGLE_READ_ONLY==="true"?withGmailReadFromEnv(bundle):withGmailFromEnv(bundle);
-  bundle=withGoogleDriveFromEnv(bundle);
+  if(process.env.SAM_GOOGLE_MCP_ENABLED==="true"){
+    bundle=await withSamGoogleMcpFromEnv(bundle);
+  }else{
+    bundle=process.env.SAM_GOOGLE_READ_ONLY==="true"?withGmailReadFromEnv(bundle):withGmailFromEnv(bundle);
+    bundle=withGoogleDriveFromEnv(bundle);
+  }
   bundle=await withBolRetailerFromEnv(bundle);
   if(process.env.SAM_GOOGLE_READ_ONLY!=="true"){
     bundle=withEBoekhoudenFromEnv(bundle);

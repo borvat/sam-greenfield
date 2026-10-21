@@ -1,3 +1,5 @@
+import {samGoogleConfigFromEnv,SamGoogleConnection} from "../../production/src/samGoogleConnection";
+import {googleConnectionTools} from "./googleOauth";
 import { createChatGPTToolSurface } from "../../chatgpt-tools/src/surface";
 import { ChatGPTToolRegistry } from "../../chatgpt-tools/src/registry";
 import { createKernelProductionDispatcher } from "../../production/src/dispatcher";
@@ -35,7 +37,9 @@ async function main(){
     ? createKernelProductionDispatcher(await loadProductionBundle(bundlePath))
     : undefined;
 
-  const registeredSurface=createChatGPTToolSurface({dispatcher});
+  const googleConfig=testMode?undefined:samGoogleConfigFromEnv();
+  const googleConnection=googleConfig?new SamGoogleConnection(googleConfig):undefined;
+  const registeredSurface=createChatGPTToolSurface({dispatcher,additionalTools:googleConnection?googleConnectionTools(googleConnection):[]});
   const surface=testMode
     ? new ChatGPTToolRegistry(registeredSurface.definitions().map((definition)=>({
         definition:{...definition,availability:"AVAILABLE" as const},
@@ -55,6 +59,7 @@ async function main(){
   }
 
   const service=await startMcpHttpServer({
+    googleConnection,
     surface,
     actor:process.env.SAM_MCP_ACTOR?.trim()||"chatgpt-mcp",
     port:positiveInt("SAM_MCP_PORT",process.env.SAM_MCP_PORT,8081),

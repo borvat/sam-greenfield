@@ -14,7 +14,8 @@
     "start:mcp": "tsx apps/mcp/src/main.ts",
     "mcp:password-hash": "node --import tsx scripts/mcp-password-hash.ts",
     "start:command-center": "tsx apps/command-center/src/main.ts",
-    "live:acceptance": "tsx apps/acceptance/src/main.ts"
+    "live:acceptance": "tsx apps/acceptance/src/main.ts",
+    "test:sam-google": "node --import tsx --test tests/isolated/sam_google_*.ts tests/phase21/mcp_internal_oauth.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",
@@ -27,6 +28,7 @@
     "zod": "4.2.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
     "@modelcontextprotocol/client": "2.3.1"
   }
 }
