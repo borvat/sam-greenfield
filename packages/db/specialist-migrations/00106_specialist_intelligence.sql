@@ -63,3 +63,26 @@ BEGIN
 END $$;
 CREATE TRIGGER specialist_learning_guard BEFORE INSERT ON specialist_learning FOR EACH ROW EXECUTE FUNCTION specialist_learning_guard();
 CREATE INDEX specialist_learning_recall ON specialist_learning(legal_entity_id,kind,expires_at);
+-- Prevent a read that finishes after cancellation/deadline/replanning from
+-- committing, even if the adapter itself cannot abort an in-flight request.
+-- Ordinary core/Phase 4 work does not enter this profile-specific branch.
+CREATE FUNCTION specialist_execution_live_guard() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE domain_name text; root_id uuid; live boolean;
+BEGIN
+ SELECT domain INTO domain_name FROM goals WHERE id=NEW.goal_id;
+ IF domain_name='sam_specialist' OR NEW.evidence ? 'specialist_session' THEN
+  IF NEW.evidence ? 'specialist_session' THEN
+   SELECT root_queue_id INTO root_id FROM specialist_sessions WHERE queue_id=NEW.queue_id;
+  ELSE
+   SELECT root_queue_id INTO root_id FROM specialist_delegations WHERE goal_id=NEW.goal_id;
+  END IF;
+  SELECT NOT b.cancelled AND b.deadline>clock_timestamp() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id
+   INTO live FROM specialist_budgets b JOIN work_queue w ON w.id=b.root_queue_id JOIN goals g ON g.id=w.goal_id WHERE b.root_queue_id=root_id;
+  IF live IS DISTINCT FROM true OR EXISTS(WITH RECURSIVE lineage(id,parent_goal_id,state,depth) AS (
+    SELECT id,parent_goal_id,state,0 FROM goals WHERE id=NEW.goal_id
+    UNION ALL SELECT g.id,g.parent_goal_id,g.state,l.depth+1 FROM goals g JOIN lineage l ON g.id=l.parent_goal_id WHERE l.depth<3
+   ) SELECT 1 FROM lineage WHERE state<>'EXECUTING') THEN RAISE EXCEPTION 'SPECIALIST_EXECUTION_CANCELLED_OR_EXPIRED'; END IF;
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER specialist_execution_live_guard BEFORE INSERT ON executions FOR EACH ROW EXECUTE FUNCTION specialist_execution_live_guard();

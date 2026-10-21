@@ -12,6 +12,7 @@ import {createSpecialistIntelligence} from '../../apps/agents/src/intelligence/e
 import {createIntelligentComposition} from '../../apps/agents/src/intelligence/composition';
 import {ceiling,type Limits,type SpecialistConfig} from '../../apps/agents/src/intelligence/contracts';
 import {learnVerifiedQuote,recallVerifiedLessons,proposeHypothesis,evaluateHypothesis} from '../../apps/agents/src/intelligence/learning';
+import {recordExecutionAndRequestVerificationAtomic} from '../../apps/kernel/src/execution';
 import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
 import {runOneSpecialistWork,claimNextWorkForSpecialistAtomic} from '../../apps/agents/src/runtime';
 import {recoverKernelAfterRestart} from '../../apps/kernel/src/recovery';
@@ -188,6 +189,14 @@ async function main(){
   await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[timedWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[timedWork.goalId]);
   await direct(toolTimeEngine);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[toolTime.queue])).state.phase,'BLOCKED');
+  const cancelledRead=await make('cancel-inflight-read'),cancelReadEngine=await createSpecialistIntelligence({...normal,gateway:dispatchGateway});await direct(cancelReadEngine);
+  const cancelledWork=await claimNextWorkForSpecialistAtomic(bundle.catalog.specialists.getAgent('source-specialist'),'cancel-read',5);assert(cancelledWork);await cancelReadEngine.beforeTool(cancelledWork);
+  let finishRead!:(v:any)=>void,startedRead!:()=>void;const readStarted=new Promise<void>(r=>startedRead=r);
+  const pendingRead=cancelReadEngine.executeRead(cancelledWork,async()=>{startedRead();return new Promise(r=>finishRead=r);});await readStarted;await cancelReadEngine.cancel(cancelledRead.queue);
+  finishRead({result:{value:'27'},evidence:{readback:true}});await assert.rejects(()=>pendingRead,/CANCELLED_OR_EXPIRED/);
+  await assert.rejects(()=>recordExecutionAndRequestVerificationAtomic({queueId:cancelledWork.queueId,fencingToken:cancelledWork.fencingToken,actor:'late-fixture',result:{value:'27'},evidence:{readback:true}}),/CANCELLED_OR_EXPIRED/);
+  await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[cancelledWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[cancelledWork.goalId]);
+  await sleep(110);await direct(cancelReadEngine);
   const money=await make('cumulative-money'),moneyEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,costUsd:0.04})});
   await direct(moneyEngine);await sleep(110);await direct(moneyEngine);
   const used=(await one('SELECT used FROM specialist_budgets WHERE root_queue_id=$1',[money.queue])).used;

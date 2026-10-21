@@ -160,7 +160,9 @@ No refund follows a crash or ambiguous model outcome. Family advisory locks give
 all fenced mutations one lock order; short ledger row locks use NO KEY UPDATE.
 Provider calls occur outside database transactions and can run concurrently.
 Read execution is also raced against the family deadline and a 20-second ceiling;
-a late result cannot be recorded as an execution. Existing tool adapters lack a
+a late result cannot be recorded as an execution. A profile-specific INSERT
+trigger rechecks cancellation, deadline, current root plan and active goal lineage
+at execution persistence, covering cancellation between adapter return and commit. Existing tool adapters lack a
 universal abort interface, so an already started read may continue in its adapter
 after timeout; it remains charged and must never be a side-effect capability.
 

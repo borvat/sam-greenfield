@@ -87,8 +87,8 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
  }
  async function save(c:PoolClient,run:Run){await c.query('UPDATE specialist_sessions SET state=$2,updated_at=now() WHERE queue_id=$1',[run.queue_id,JSON.stringify(run.state)]);}
  async function reserve(c:PoolClient,run:Run,delta:Record<string,number>){
-  const b=(await c.query('SELECT * FROM specialist_budgets WHERE root_queue_id=$1 FOR NO KEY UPDATE',[run.root_queue_id])).rows[0];
-  if(b.cancelled||new Date(b.deadline).getTime()<=Date.now())throw Error(b.cancelled?'SPECIALIST_CANCELLED':'SPECIALIST_TIME_EXHAUSTED');
+  const b=(await c.query('SELECT b.*,g.state root_state FROM specialist_budgets b JOIN work_queue w ON w.id=b.root_queue_id JOIN goals g ON g.id=w.goal_id WHERE b.root_queue_id=$1 FOR NO KEY UPDATE OF b',[run.root_queue_id])).rows[0];
+  if(b.cancelled||b.root_state!=='EXECUTING'||new Date(b.deadline).getTime()<=Date.now())throw Error(b.cancelled||b.root_state!=='EXECUTING'?'SPECIALIST_CANCELLED':'SPECIALIST_TIME_EXHAUSTED');
   const used={...b.used};
   for(const [key,n]of Object.entries(delta)){
    if(!Number.isFinite(n)||n<0||!Number.isFinite(used[key])||used[key]+n>b.limits[key]+1e-12)throw Error('SPECIALIST_BUDGET_EXHAUSTED:'+key);
@@ -247,7 +247,11 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const remaining=budget?new Date(budget.deadline).getTime()-Date.now():20_000;
    if(remaining<=0)throw Error('SPECIALIST_TIME_EXHAUSTED');
    let timer:ReturnType<typeof setTimeout>|undefined;
-   try{return await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,20_000));})]);}
+   try{
+    const result=await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,20_000));})]);
+    if(budget)await withTransaction(async c=>{const link=(await c.query(`SELECT b.cancelled,b.deadline FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id WHERE d.goal_id=$1`,[work.goalId])).rows[0];if(!link||link.cancelled||new Date(link.deadline).getTime()<=Date.now())throw Error('SPECIALIST_CANCELLED_OR_EXPIRED');});
+    return result;
+   }
    finally{if(timer)clearTimeout(timer);}
   },
   beforeTool:async(work:ClaimedWork)=>withTransaction(async c=>{
