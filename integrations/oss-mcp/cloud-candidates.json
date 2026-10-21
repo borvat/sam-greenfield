@@ -1,0 +1,19 @@
+{
+  "productionEnabled": false,
+  "candidates": [
+    {
+      "id": "github-official",
+      "repository": "https://github.com/github/github-mcp-server",
+      "status": "RUNTIME_AUTHORIZATION_REQUIRED_NOT_INSTALLED",
+      "purpose": "Repository, pull-request and workflow observation; separately gated code actions",
+      "firstAcceptance": "Scoped repository reads and independent readback using a dedicated runtime credential"
+    },
+    {
+      "id": "render-official",
+      "repository": "https://github.com/render-oss/render-mcp-server",
+      "status": "RUNTIME_AUTHORIZATION_REQUIRED_NOT_INSTALLED",
+      "purpose": "Service status, events, logs and metrics; separately gated operations",
+      "firstAcceptance": "Explicit workspace/service identity, bounded reads, sanitized logs and independent readback"
+    }
+  ]
+}
