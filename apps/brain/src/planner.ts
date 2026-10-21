@@ -25,11 +25,13 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function planningCapabilities(objective:string,items:unknown[]):Record<string,unknown>[]{
+function planningCapabilities(objective:string,items:unknown[],recovering=false):Record<string,unknown>[]{
   const all=items.filter(isObject);
   const readOnly=/read[-\s]?only|sideEffect\s*=?\s*false|قراءة\s*فقط|دون\s+تعديل|لا\s+(?:تغيّر|تعدل|تنفذ)/i.test(objective);
   if(!readOnly)return all;
   const safe=all.filter(item=>item.sideEffect===false);
+  // After a failed preferred read, expose safe search alternatives as well.
+  if(recovering)return safe;
   // Explicit executable requests must not be replaced by a generic commerce
   // template. Preserve multiple named tools for cross-specialist objectives.
   const named=new Set(objective.match(/\b[a-z][a-z0-9]*_[a-z0-9_]+\b/g)??[]);
@@ -79,7 +81,7 @@ export async function proposePlan(input: {
   availableCapabilities?:unknown[];
   forbiddenReadSteps?:Array<{capabilityId:string;params:Record<string,unknown>}>;
 }): Promise<PersistPlanInput> {
-  const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[]);
+  const capabilities=planningCapabilities(input.objective,input.availableCapabilities??[],Boolean(input.forbiddenReadSteps?.length));
   const requiredSteps=1;
   const planningTime=new Date().toISOString();
   let previousError:string|undefined;
