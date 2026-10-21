@@ -22,3 +22,28 @@ Security properties:
 5. Never forward ChatGPT's connector token into SAM or enable email sends/Drive mutations.
 
 Test command: `node --import tsx --test tests/isolated/sam_google_mcp_bridge.ts`
+
+## Authorization implementation status (not yet deployable)
+
+The PKCE authorization builder, code redemption, and MCP refresh helper exist as
+independent modules. They are **not** a deployed OAuth client. A working SAM
+OAuth client still requires:
+- its own HTTPS callback endpoint wired into SAM's HTTP router;
+- a client identifier registered with the MCP authorization server (CIMD
+  metadata document or supported dynamic registration);
+- persistent, encrypted, user-bound PKCE verifier/state with a short expiry,
+  atomic one-time consumption, and CSRF validation;
+- encrypted storage of SAM-only refresh tokens, token rotation and expiry
+  handling; never store secrets in GitHub, an audit trail, or user messages;
+- an authenticated admin-only button/URL for starting authorization and a
+  callback that does not echo the token or authorization code;
+- authenticated initialize, tools/list and read-only tool calls from the
+  SAM runtime, with independent business evidence and readback verification.
+
+The manually configured Google OAuth redirect
+`https://sam-google-workspace-mcp.onrender.com/oauth2callback` belongs to the
+**Google Workspace MCP server**, not to SAM's separate MCP client. Do not
+reuse it as the SAM client's callback and do not assume the ChatGPT connector's
+`https://chatgpt.com/connector_platform_oauth_redirect` applies to SAM.
+
+**Do not merge this PR or deploy its OAuth helpers as a working integration.**
