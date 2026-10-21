@@ -1,0 +1,39 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:oss-extended
+> node --import tsx --test --test-concurrency=1 tests/phase24/*.ts
+
+✔ accounting uses existing real client against local HTTP API; company scope, identical fresh reads and changed-source rejection (64.257576ms)
+✔ monitor is inert while off and fails closed for write sources and wrong-company OSS sources (2156.621845ms)
+✔ tests/phase24/lab.ts (506.878339ms)
+✔ actual upstream file -> SAM goal/planner/worker/verifier/report -> persistent observation and one change event; guarded SAM write/reconcile/dedup (3119.97471ms)
+✖ installed open-source search runs through actual SAM planning/worker/execution and independent MCP readback (15471.03179ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23349.218649
+
+✖ failing tests:
+
+test at tests/phase24/oss_search.ts:2:1548
+✖ installed open-source search runs through actual SAM planning/worker/execution and independent MCP readback (15471.03179ms)
+  AssertionError [ERR_ASSERTION]: Changed live results must remain inconclusive, not a claimed pass
+  + actual - expected
+
+  + 'INCONCLUSIVE'
+  - 'VERIFIED'
+
+      at TestContext.<anonymous> (/workspace/scratch/7bcf7125f14e/sam-greenfield/tests/phase24/oss_search.ts:32:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'INCONCLUSIVE',
+    expected: 'VERIFIED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

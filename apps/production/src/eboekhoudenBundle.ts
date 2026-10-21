@@ -1,3 +1,4 @@
+import {sha256Hex} from "../../../packages/shared/src/stableJson";
 import { EBoekhoudenClient } from "../../../packages/eboekhouden/src/client";
 import {
   EBoekhoudenMutationsAdapter,
@@ -22,18 +23,19 @@ function verificationAdapter(
     capabilityId,
     async verify(input){
       const params=input.execution.params??{};
+      let fresh:any;
       if(capabilityId==="eboekhouden_list_mutations"){
-        await client.listMutations(params);
+        fresh=await client.listMutations(params);
       }else if(capabilityId==="eboekhouden_outstanding_invoices"){
-        await client.getOutstandingInvoices(params);
+        fresh=await client.getOutstandingInvoices(params);
       }else if(capabilityId==="eboekhouden_list_ledgers"){
-        await client.listLedgers(params);
+        fresh=await client.listLedgers(params);
       }else{
-        await client.listRelations(params);
+        fresh=await client.listRelations(params);
       }
       return {
-        result:"VERIFIED" as const,
-        evidence:{method:"eboekhouden_independent_api_readback"},
+        result:sha256Hex({data:fresh})===sha256Hex(input.execution.result??{})?"VERIFIED" as const:"INCONCLUSIVE" as const,
+        evidence:{method:"eboekhouden_independent_api_readback",freshHash:sha256Hex({data:fresh}),executionHash:sha256Hex(input.execution.result??{})},
         verifier:"eboekhouden-independent-readback"
       };
     }

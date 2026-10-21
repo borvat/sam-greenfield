@@ -1,0 +1,10 @@
+{
+  "productionEnabled": false,
+  "defaultGrants": [],
+  "systems": [
+    {"id":"bol","implementation":"existing bol bundle","role":"orders, inventory and returns reads","runtimeAccountBinding":"must be independently confirmed per company","newConnectionCreated":false},
+    {"id":"google","implementation":"existing Google MCP bridge","role":"mail and document reads; eligible bounded monitoring sources","runtimeAccountBinding":"existing OAuth must be checked in staging","newConnectionCreated":false},
+    {"id":"accounting","implementation":"withCompanyAccountingReads","role":"four scoped e-Boekhouden reads with hash-equal fresh verification","runtimeAccountBinding":"requires dedicated account credential and company identity evidence","testedWith":"real existing client against isolated local HTTP API","newConnectionCreated":false},
+    {"id":"warehouse_shipping","implementation":"scoped MCP gateway / reviewed file exports","role":"future stock and shipment source reads","runtimeAccountBinding":"provider endpoint, schemas and authorization not supplied","testedWith":"synthetic local source only; no live WMS/shipping connector","newConnectionCreated":false}
+  ]
+}

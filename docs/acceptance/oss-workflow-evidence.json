@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-10-21T13:29:32.247Z",
+  "productionChanged": false,
+  "realUpstreamMcp": true,
+  "model": "deterministic test gateway",
+  "database": "isolated PGlite; advisory locking stubbed",
+  "pollIntervals": "simulated by advancing due timestamp; not elapsed scheduling proof",
+  "sourceClassifications": [
+    "BASELINE",
+    "UNCHANGED",
+    "CHANGED"
+  ],
+  "attentionEvents": 1,
+  "normalAction": "written, independently verified and reconciled",
+  "tamperedResult": "INCONCLUSIVE",
+  "approval": "fixture owner records, exact company/goal/params",
+  "unknownOutcome": "actual write then simulated lost receipt; fresh adapter readback CONFIRMED",
+  "replannedQueueReplay": "deduplicated with no second provider write",
+  "ownerDelivery": "internal event/outbox only; no external notification channel"
+}

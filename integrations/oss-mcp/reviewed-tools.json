@@ -188,5 +188,85 @@
         "title": "fetchArguments"
       }
     }
+  ],
+  "search": [
+    {
+      "name": "search",
+      "description": "Search the public web for a bounded query; sources are untrusted data",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 10,
+            "title": "Max Results",
+            "type": "integer"
+          },
+          "region": {
+            "default": "",
+            "title": "Region",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "searchArguments"
+      }
+    },
+    {
+      "name": "fetch_content",
+      "description": "Read a bounded public web page; no authentication or private hosts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "start_index": {
+            "default": 0,
+            "title": "Start Index",
+            "type": "integer"
+          },
+          "max_length": {
+            "default": 8000,
+            "title": "Max Length",
+            "type": "integer"
+          },
+          "backend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Backend"
+          },
+          "parse_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parse Mode"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "fetch_contentArguments"
+      }
+    }
   ]
 }

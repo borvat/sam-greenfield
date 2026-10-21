@@ -36,7 +36,7 @@ const profiles:OssStdioProfile[]=[
  parameterConstraints:{fetch:{url:{type:'string',enum:['https://example.com/']},max_length:{type:'integer',minimum:1,maximum:2000}}}}
 ];
 const env:Record<string,string>={PATH:process.env.PATH!,PYTHONUNBUFFERED:'1'};
-for(const key of ['HTTPS_PROXY','HTTP_PROXY','ALL_PROXY','NO_PROXY','SSL_CERT_FILE','REQUESTS_CA_BUNDLE'])if(process.env[key])env[key]=process.env[key]!;
+for(const key of ['HTTPS_PROXY','HTTP_PROXY','ALL_PROXY','NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy','SSL_CERT_FILE','REQUESTS_CA_BUNDLE'])if(process.env[key])env[key]=process.env[key]!;
 const expansion=await buildOssStdioReadBundle({capabilities:[],toolDefinitions:[],toolAdapters:[]},profiles,env);
 const validated=validateProductionBundle(expansion.bundle),db=new PGlite();const original=pool.connect;
 const checks:Array<Record<string,unknown>>=[];

@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "package": "@playwright/mcp",
+  "version": "0.0.83",
+  "args": ["--headless", "--isolated", "--sandbox", "--no-webmcp"],
+  "productionRegistered": false,
+  "status": "BLOCKED_BROWSER_BINARY_AND_OS_ISOLATION",
+  "required": ["verified installed browser binary", "working OS sandbox in disposable worker", "dedicated empty browser profile", "network and action allowlists", "real navigate/read/action/readback acceptance"],
+  "verifiedHere": ["25 upstream tools discovered", "navigation failed with missing Chrome", "headless-shell installer returned invalid ZIP in prior phase", "unshare -Ur true denied creating user namespace"],
+  "sandboxDisabled": false,
+  "userSessionAttached": false
+}

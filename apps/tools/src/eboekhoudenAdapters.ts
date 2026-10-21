@@ -1,3 +1,4 @@
+import {sha256Hex} from "../../../packages/shared/src/stableJson";
 import type { ToolAdapter,ToolExecutionRequest,ToolExecutionResult } from "../../../packages/tool-gateway/src/types";
 import type { EBoekhoudenClient } from "../../../packages/eboekhouden/src/client";
 
@@ -22,7 +23,7 @@ abstract class ReadAdapter implements ToolAdapter{
           : [];
     return {
       result:{data},
-      evidence:{readback:true,result_count:items.length}
+      evidence:{readback:true,result_count:items.length,responseHash:sha256Hex({data})}
     };
   }
 }

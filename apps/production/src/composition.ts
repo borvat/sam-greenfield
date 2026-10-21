@@ -1,3 +1,4 @@
+import {safePerceptionTick} from "../../perception/src/monitor";
 import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
 import { failInterruptedPlanning } from "../../kernel/src/failures";
 import { relayOutboxUntilEmpty } from "../../kernel/src/outboxRelay";
@@ -31,6 +32,7 @@ export function createProductionComposition(input:{
         tools:input.bundle.tools,
         limit:25
       });
+      const perception=await safePerceptionTick(input.bundle);
       const planning=await planNextNewGoal(input.bundle);
       const execution=await runCatalogSpecialistTick({
         catalog:input.bundle.catalog,
@@ -42,7 +44,7 @@ export function createProductionComposition(input:{
       const review=await reviewNextReadGoal(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,review,operational};
+      return {recovery,interruptedPlanning,events,reconciliation,perception,planning,execution,verification,review,operational};
     }
   };
 }
