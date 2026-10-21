@@ -11,6 +11,8 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
  const indexed:any=review("complete");indexed.findings[0]={text:"Source finding",executionId:execution,quoteLine:0,quote:"Retyped wrong value"};
  assert.equal(validateReadReview(indexed,[source],"Read",descriptors).findings[0].quote,source.text);
  indexed.findings[0].quoteLine=9;assert.throws(()=>validateReadReview(indexed,[source],"Read",descriptors),/QUOTE_LINE/);
+ const address=review("complete");address.summary="Owner ceo@examplle.test";
+ assert.throws(()=>validateReadReview(address,[{...source,text:source.text+" Owner ceo@example.test"}],"Read",descriptors),/UNOBSERVED_EMAIL/);
  assert.equal(validateReadReview(review("continue"),[source],"Read the source",descriptors).status,"continue");
  const bad=structuredClone(review("continue"));bad.steps[0].params.message_id="invented";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNOBSERVED_ID/);
  bad.steps[0].capabilityId="send_email";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNSAFE/);
