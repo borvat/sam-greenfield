@@ -28,12 +28,12 @@ const configs=(l:Limits=limits):SpecialistConfig[]=>[
 const dispatch=(cap:string,objective:string,params:Record<string,unknown>)=>({action:'dispatch',understanding:'Assess the unfamiliar aerogel packaging market with independent evidence',plan:['Acquire sources','Evaluate and revise','Report evidence and uncertainty'],reason:'Need independently verified evidence',tasks:[{capabilityId:cap,objective,params}]});
 const report=(source:any,agent:string)=>({action:'report',understanding:'Use the independently verified market quotation',plan:['Acquire and verify a source','Produce a bounded conclusion'],summary:agent+' observes synthetic demand '+source.result.value,
  claims:[{topic:'aerogel-demand',value:String(source.result.value),evidenceIds:[source.id]}],uncertainties:['Synthetic source only; real market truth and live reasoning have not been evaluated'],completionCriteria:['One current independently verified quotation']});
-let active=0,maxActive=0,seen=new Set<string>(),open!:()=>void;
+let active=0,maxActive=0,executiveCalls=0,seen=new Set<string>(),open!:()=>void;
 const barrier=new Promise<void>(r=>open=r);
 const provider:ModelProviderAdapter={providerId:'specialist-fixture',executionMode:'synthetic',supportsUsageLimits:true,async invoke(task){
  if(mode==='crash'){console.log('MODEL_ATTEMPT_RESERVED');await new Promise(()=>{});}
  const p=task.input as any;
- if(task.capability==='planning')return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:{steps:[{capabilityId:root,params:{objective:p.objective}}]}};
+ if(task.capability==='planning'){executiveCalls++;return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:{steps:[{capabilityId:root,params:{objective:p.objective}}]}};}
  assert(task.boundedSynthetic,'specialist model invocation must reserve bounded usage');
  active++;maxActive=Math.max(active,maxActive);
  try{
@@ -102,7 +102,7 @@ async function main(){
   while(Date.now()-begin<12000){await composition.runWorkTick();if((await one('SELECT state FROM goals WHERE id=$1',[goal.id])).state==='COMPLETED')break;await sleep(110);}
   const g=await one('SELECT state,current_plan_id FROM goals WHERE id=$1',[goal.id]);
   if(g.state!=='COMPLETED')console.log(JSON.stringify((await pool.query("SELECT agent_id,state->>'phase' phase,state->>'reason' reason,state->'history' history FROM specialist_sessions WHERE agent_id='executive-specialist'")).rows));
-  assert.equal(g.state,'COMPLETED');assert(maxActive>=2,'specialists independently invoke models concurrently');
+  assert.equal(g.state,'COMPLETED');assert(maxActive>=2,'specialists independently invoke models concurrently');assert.equal(executiveCalls,1,'delegated failures must replan through the budgeted parent, not the executive planner');
   const final=await one('SELECT result,evidence FROM executions WHERE goal_id=$1',[goal.id]);
   assert.equal(final.result.report.claims[0].value,'27');assert.equal(final.result.report.classification,'MODEL_INFERENCE');
   assert.equal((await one('SELECT count(*)::int n FROM executions WHERE goal_id=$1',[goal.id])).n,1);
@@ -179,6 +179,7 @@ async function main(){
    await direct(boundedEngine);
    if(key==='tools'){
     const child=await claimNextWorkForSpecialistAtomic(bundle.catalog.specialists.getAgent('source-specialist'),'tool-budget',5);assert(child);
+    await assert.rejects(()=>boundedEngine.beforeTool({...child,params:{channel:'risk'}}),/DELEGATED_TASK_CHANGED/);
     await boundedEngine.beforeTool(child);
     await assert.rejects(()=>boundedEngine.beforeTool(child),/BUDGET_EXHAUSTED:tools/);
     assert.equal((await one('SELECT count(*)::int n FROM executions WHERE queue_id=$1',[child.queueId])).n,0);

@@ -16,6 +16,7 @@ CREATE TABLE specialist_sessions (
 CREATE TABLE specialist_delegations (
  goal_id uuid PRIMARY KEY REFERENCES goals(id),
  parent_queue_id uuid NOT NULL REFERENCES specialist_sessions(queue_id),
+ capability_id text NOT NULL, params_hash text NOT NULL,
  root_queue_id uuid NOT NULL REFERENCES specialist_budgets(root_queue_id),
  legal_entity_id uuid NOT NULL REFERENCES legal_entities(id),
  depth int NOT NULL CHECK(depth BETWEEN 1 AND 3),

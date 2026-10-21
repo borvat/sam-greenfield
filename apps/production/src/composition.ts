@@ -17,6 +17,7 @@ export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
   specialistConcurrency?:number;
+  excludeDelegatedSpecialistPlanning?:boolean;
   specialistAdvancers?:Parameters<typeof runCatalogSpecialistTick>[0]['advancers'];
   operationalTick?:()=>Promise<unknown>;
   executeTool?:(work:import('../../kernel/src/workerRuntime').ClaimedWork,execute:import('../../kernel/src/workerRuntime').CapabilityExecutor)=>ReturnType<import('../../kernel/src/workerRuntime').CapabilityExecutor>;
@@ -56,7 +57,7 @@ export function createProductionComposition(input:{
       })):null;
       const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle)):null;
       const earlyLearning=input.bundle.raw.deferVerification?await attempt("learning",()=>learnNextVerifiedExecution(input.bundle)):null;
-      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle));
+      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle,{excludeDelegatedSpecialistTasks:input.excludeDelegatedSpecialistPlanning}));
       const execution=await attempt("execution",()=>runCatalogSpecialistTick({
         catalog:input.bundle.catalog,
         workerInstanceId:input.workerId,

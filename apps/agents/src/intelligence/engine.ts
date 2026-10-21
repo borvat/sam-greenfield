@@ -68,7 +68,11 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    WHERE w.id=$1 AND w.fencing_token=$2 AND w.capability_id=$3 AND w.goal_id=$4 AND w.plan_id=$5
    AND w.status IN ('LEASED','EXECUTING') AND w.lease_expiry>now() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id FOR UPDATE OF w,g`,
    [work.queueId,work.fencingToken,work.capabilityId,work.goalId,work.planId])).rows[0];
-  if(!row||row.company_scope!==tenant.entity)throw Error('SPECIALIST_LEASE_OR_SCOPE_DENIED');return row;
+  if(!row||row.company_scope!==tenant.entity)throw Error('SPECIALIST_LEASE_OR_SCOPE_DENIED');
+  const delegated=(await c.query(`SELECT d.*,p.capability_id parent_capability FROM specialist_delegations d JOIN work_queue p ON p.id=d.parent_queue_id WHERE d.goal_id=$1`,[work.goalId])).rows[0];
+  if(delegated&&(delegated.capability_id!==work.capabilityId||delegated.params_hash!==sha256Hex(work.params)||
+    !configs.get(delegated.parent_capability)?.allowedCapabilities.includes(work.capabilityId)))throw Error('SPECIALIST_DELEGATED_TASK_CHANGED');
+  return row;
  }
  async function load(c:PoolClient,work:ClaimedWork,cfg:SpecialistConfig):Promise<Run>{
   const goal=await fence(c,work);
@@ -189,7 +193,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
       VALUES(next_business_id('goal',NULL),$1,$2,'NEW','sam_specialist','GREEN','independent_verified_execution',$3) RETURNING id`,[tenant.entity,task.objective,work.goalId])).rows[0].id;
      await transitionGoal(c,goal,'NEW','MODELING','specialist_task');await transitionGoal(c,goal,'MODELING','PLANNING','specialist_selected_capability');
      await persistPlanAndDelegate(c,{goalId:goal,constraints:{parent_queue_id:work.queueId,root_queue_id:run.root_queue_id},steps:[{capabilityId:task.capabilityId,params:task.params}]});
-     await c.query(`INSERT INTO specialist_delegations(goal_id,parent_queue_id,root_queue_id,legal_entity_id,depth) VALUES($1,$2,$3,$4,$5)`,[goal,work.queueId,run.root_queue_id,tenant.entity,run.depth+1]);
+     await c.query(`INSERT INTO specialist_delegations(goal_id,parent_queue_id,root_queue_id,legal_entity_id,depth,capability_id,params_hash) VALUES($1,$2,$3,$4,$5,$6,$7)`,[goal,work.queueId,run.root_queue_id,tenant.entity,run.depth+1,task.capabilityId,sha256Hex(task.params)]);
      run.state.children.push(goal);
     }
     run.state.phase='WAITING';run.state.conflicts=current.conflicts;await save(c,run);return null;

@@ -34,7 +34,12 @@ composition. It does not introduce another Executive Brain, model router, queue,
 lease system, tool transport or verification engine. Existing behavior remains
 sequential unless concurrency/advancers are explicitly supplied. The intelligent
 profile opts into at most four distinct specialist agents per supervisor batch;
-queue dependency gates still decide what can be claimed. One agent can process
+delegated child goals are excluded from ordinary executive replanning: their
+bounded parent specialist sees failure states and decides whether to revise and
+dispatch another task. The existing Executive Brain still plans/replans ordinary
+root goals. Each child is bound to its original capability and parameter hash,
+preventing an unrelated replanner from expanding a specialist assignment.
+Queue dependency gates still decide what can be claimed. One agent can process
 one claimed task per batch. Failed concurrent tasks are awaited before reporting
 failure, so other in-flight work is not silently abandoned.
 

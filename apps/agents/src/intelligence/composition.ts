@@ -16,7 +16,7 @@ export async function createIntelligentComposition(input:Parameters<typeof creat
    return {result:grounded?'VERIFIED':'INCONCLUSIVE',evidence:{grounded},verifier:'specialist-evidence-validator-v1'};
   }});
  }
- const composition=createProductionComposition({...input,bundle:{...input.bundle,verifiers},specialistAdvancers:engine.advancers,specialistConcurrency:input.concurrency??4,
+ const composition=createProductionComposition({...input,bundle:{...input.bundle,verifiers},specialistAdvancers:engine.advancers,excludeDelegatedSpecialistPlanning:true,specialistConcurrency:input.concurrency??4,
   executeTool:engine.executeRead,
   operationalTick:async()=>{const learning=await engine.learnNextReport();return {learning,other:input.operationalTick?await input.operationalTick():null};},
   authorizeWork:async w=>{if(input.authorizeWork)await input.authorizeWork(w);await engine.beforeTool(w);}});
