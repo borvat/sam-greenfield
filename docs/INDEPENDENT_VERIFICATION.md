@@ -1,5 +1,9 @@
 # Independent engineering verification
 
+The opt-in [Phase 5 specialist candidate](PHASE5_SPECIALIST_INTELLIGENCE.md)
+adds four required stages for 42 total, including reasoning, Gateway budgets
+and specialist state checks around the existing PostgreSQL restart.
+
 The isolated [Phase 4 integration candidate](PHASE4_INTEGRATION_ACCEPTANCE.md)
 adds three required integration stages. Use that document's candidate branch and
 commands when accepting the combined profile; PR #46 remains unchanged.
