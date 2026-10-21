@@ -3,7 +3,7 @@
 | File | Reason |
 |---|---|
 | `.github/workflows/phase0-postgres-verification.yml` | Add isolated Node/PostgreSQL reliability and regression CI. |
-| `Dockerfile` | Use frozen dependency installation and reproducible build/test commands. |
+| `Dockerfile` | Frozen install with ephemeral CA; explicit copy ownership preserves non-root access for restrictive checkout modes. |
 | `apps/agents/src/capabilityCatalog.ts` | Share standard capability schemas and enforce verified dependency claims. |
 | `apps/agents/src/executiveFlow.ts` | Share standard capability schemas and enforce verified dependency claims. |
 | `apps/agents/src/runtime.ts` | Share standard capability schemas and enforce verified dependency claims. |
@@ -92,3 +92,6 @@
 | `tests/phase5/verified_learning.ts` | Update fixtures/contracts for stricter verification, tenant scope and additive migrations. |
 | `tests/release/managed_schema_source.cjs` | Update fixtures/contracts for stricter verification, tenant scope and additive migrations. |
 | `docs/CORE_RELIABILITY_PR.md` | Preserve the reviewable draft description because both GitHub API creation routes were Forbidden. |
+| `scripts/development/build-image.cjs` | Repeatable clean build through the configured proxy with verified trust and build failure propagation. |
+| `docs/CORE_RELIABILITY_ACCEPTANCE.md` | Commands, actual acceptance results, remaining blockers and manual Draft PR instructions. |
+| `docs/acceptance/2026-10-21/*` | Captured local acceptance outputs and the executed disposable migration upgrade fixture. |

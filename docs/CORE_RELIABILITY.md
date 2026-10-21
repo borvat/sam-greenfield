@@ -181,28 +181,23 @@ general autonomous research and multi-specialist reasoning are not added here.
 Model-price defaults and provider billing hard caps still require a separate cost
 control phase before broad live model use.
 
-## Final verification and build limitation
+## Acceptance rerun
 
-All 38 phase 1–21 suites passed on the modified branch. The core suite passed
-15 assertion groups on Node 24.19.0 and again on Node 22.23.4. The latter container
-used dependencies already installed and verified from the lockfile; it does not
-prove a fresh image installation. Typecheck, four Phase 0 commands, and five
-focused release/protocol/schema preparation suites passed. Full counts and
-commands are in `CORE_RELIABILITY_EVIDENCE.json`.
+The acceptance blockers were investigated on the requested `12f988f` baseline.
+Tested implementation commit: `3aee07abf2d7f48a3f8f90f02602ddd263ebf2bd`.
+The clean Docker build now passes with the reusable
+`node scripts/development/build-image.cjs sam-core-reliability:acceptance` command.
+BuildKit's configured proxy DNS failure caused npm's misleading exit-handler
+error. The helper supplies the host-resolved address of that same proxy and the
+existing CA without disabling verification. Docker copies now set ownership so
+owner-only checkout modes remain readable by the non-root runtime user.
 
-The full Docker image build failed at `npm ci` with `Exit handler never called`
-(exit 1). Initial container registry access lacked the organization CA. A bounded
-registry metadata probe passed with the existing public trust bundle; image
-installation still failed after ephemeral CA, proxy, network and workspace-layout
-corrections. TLS/checksum verification was never disabled and no failed image is
-accepted. This unresolved build failure prevents a production-readiness claim.
+All 38 regression suites, 15 core groups on host and freshly built Node 22 image,
+TypeScript, five focused suites and four Phase 0 commands pass. Isolated migration
+upgrade/repeat apply, PostgreSQL restart persistence and image startup/restart
+checks pass. GitHub API transport still fails with proxy CONNECT 403, so no PR
+creation or hosted CI success is claimed. A manual Draft PR form link and full
+command/output evidence are in [the acceptance report](CORE_RELIABILITY_ACCEPTANCE.md).
 
-For environments requiring an organization proxy CA, the Dockerfile supports
-`--secret id=registry_ca,src=PATH_TO_PUBLIC_CA_BUNDLE`. Predefined HTTP_PROXY,
-HTTPS_PROXY and NO_PROXY build arguments use the supported proxy route; no proxy
-credentials or CA bundle are committed or copied into the runtime image.
-
-The development branch was pushed successfully. Draft PR creation was attempted
-through both GraphQL and REST using existing authentication; both returned
-`Forbidden`. The prepared description is retained in `CORE_RELIABILITY_PR.md`.
-No PR URL or hosted-CI success is claimed.
+These are local fixture results, not production readiness. No live providers,
+production services/data/credentials or ongoing stability tests were changed.
