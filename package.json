@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "verify:full": "node scripts/testing/verify-full.cjs",
     "typecheck": "tsc --noEmit",
     "start:release": "node scripts/release/main.cjs",
     "release:check-db": "node --import tsx scripts/release/database-check.ts",

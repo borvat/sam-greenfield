@@ -11,6 +11,9 @@ async function main(){
   const tag=process.argv[2]||'sam-core-reliability:review';
   if(!/^[a-zA-Z0-9][a-zA-Z0-9_./:-]*$/.test(tag))throw Error('IMAGE_TAG_INVALID');
   const args=['build','--no-cache','--progress=plain'];
+  // Verification can pin the base in a generated Dockerfile without changing
+  // the production Dockerfile or its default build behavior.
+  if(process.argv[3])args.push('--file',process.argv[3]);
   const hosts=new Set();
   for(const name of ['HTTP_PROXY','HTTPS_PROXY','NO_PROXY','http_proxy','https_proxy','no_proxy']){
     if(!process.env[name])continue;
