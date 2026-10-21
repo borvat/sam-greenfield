@@ -1,0 +1,26 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:mcp-expansion
+> node --import tsx --test tests/isolated/scoped_mcp_expansion.ts
+
+✔ feature is disabled by default, even with leftover manifest; opt-in requires a manifest (1.300537ms)
+✔ manifest rejects remote URLs, credential leakage, unknown fields, write declarations and malformed scope (33.940606ms)
+✔ pinned schemas reject references, unknown parameters and tool identifier collisions (1.36378ms)
+✔ no connection occurs before every company credential and endpoint passes preflight (2.503811ms)
+✔ schema drift or missing tools close the opened connections and leave original bundle untouched (3.440922ms)
+✔ failed second discovery cleans up both sessions; duplicate and looping discovery fail closed (5.23629ms)
+✔ transport forbids endpoint changes and redirects, and bounds response bytes (5.534148ms)
+✔ real loopback MCP servers isolate companies, feed trusted choices to planner, execute persisted work and independently read back (1891.619625ms)
+✔ scope helper preserves legacy tools but denies missing or empty company scopes (0.441731ms)
+✔ provider errors, oversized payloads and missing content never verify as successful reads (5.237852ms)
+✔ reviewed discovery follows bounded pages; provider exceptions cannot leak credentials (1.759885ms)
+✔ scope mismatch in catalog and tool metadata is rejected before bundle use (0.441411ms)
+✔ a hung read reaches the hard deadline, closes its session and does not retry (15001.973568ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17772.887343

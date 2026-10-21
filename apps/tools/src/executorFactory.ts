@@ -1,4 +1,5 @@
 import { validateToolParameters } from "../../../packages/tool-gateway/src/validation";
+import { companyMayUse } from "../../../packages/tool-gateway/src/companyScope";
 import { withTransaction } from "../../../packages/db/src/client";
 import { consumeApproval } from "../../../packages/db/src/approvals";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
@@ -25,6 +26,19 @@ async function legalEntityForWork(queueId:string):Promise<string|null>{
   });
 }
 
+/** Scoped integrations require an actual active work lease and current persisted plan. */
+export async function scopedWorkCompany(client:any,work:ClaimedWork,scopes:readonly string[]):Promise<string>{
+  const r=await client.query(`SELECT g.company_scope,w.params,w.capability_id,w.goal_id,w.plan_id,w.fencing_token
+    FROM work_queue w JOIN goals g ON g.id=w.goal_id
+    WHERE w.id=$1 AND w.status='LEASED' AND w.lease_expiry>now()
+      AND g.state='EXECUTING' AND w.plan_id=g.current_plan_id`,[work.queueId]);
+  const row=r.rows[0];
+  if(!row || row.capability_id!==work.capabilityId || row.goal_id!==work.goalId || row.plan_id!==work.planId ||
+     String(row.fencing_token)!==String(work.fencingToken) || sha256Hex(row.params??{})!==sha256Hex(work.params??{}) ||
+     !companyMayUse(scopes,row.company_scope)) throw new Error("MCP_SCOPED_WORK_DENIED");
+  return row.company_scope;
+}
+
 export function createToolExecutors(input:{
   catalog:CapabilityCatalog;
   tools:ToolRegistry;
@@ -42,6 +56,9 @@ export function createToolExecutors(input:{
     }
 
     executors[capabilityId]=async(work:ClaimedWork)=>{
+      if(work.capabilityId!==capabilityId)throw new Error("TOOL_WORK_CAPABILITY_MISMATCH");
+      const scopedCompany=tool.companyScopes===undefined?undefined:
+        await withTransaction(client=>scopedWorkCompany(client,work,tool.companyScopes!));
       const params=work.params ?? {};
       validateToolParameters(capabilityId,params,tool.inputSchema);
       const requestHash=sha256Hex(params);
@@ -49,6 +66,7 @@ export function createToolExecutors(input:{
 
       if(!tool.sideEffect){
         const result=await input.tools.adapter(capabilityId).execute({
+          legalEntityId:scopedCompany,
           capabilityId,
           params,
           idempotencyKey:operationKey

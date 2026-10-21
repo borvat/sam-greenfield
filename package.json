@@ -17,7 +17,8 @@
     "live:acceptance": "tsx apps/acceptance/src/main.ts",
     "test:sam-google": "node --import tsx --test tests/isolated/sam_google_*.ts tests/phase21/mcp_internal_oauth.ts",
     "test:knowledge": "node --import tsx --test tests/isolated/scoped_knowledge.ts tests/isolated/sam_google_review.ts tests/phase22/planner_scope.ts",
-    "test:research": "node --import tsx --test tests/isolated/research_engine.ts"
+    "test:research": "node --import tsx --test tests/isolated/research_engine.ts",
+    "test:mcp-expansion": "node --import tsx --test tests/isolated/scoped_mcp_expansion.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",

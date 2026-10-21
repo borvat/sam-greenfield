@@ -7,7 +7,7 @@ export async function verifyNextExecution(
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
-      `SELECT e.id,e.capability_id,e.params,e.result,e.evidence,e.operation_key_ref,
+      `SELECT e.id,e.capability_id,e.params,e.result,e.evidence,e.operation_key_ref,g.company_scope,
               vc.id AS contract_id,vc.verification_method,
               vc.required_evidence_fields,vc.independent_query_template
          FROM executions e
@@ -41,6 +41,7 @@ export async function verifyNextExecution(
   const outcome=await verifier.verify({
     execution:{
       id:candidate.id,
+      legalEntityId:candidate.company_scope??null,
       capabilityId:candidate.capability_id,
       params:candidate.params??{},
       result:candidate.result??{},

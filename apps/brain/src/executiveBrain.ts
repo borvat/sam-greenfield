@@ -1,4 +1,5 @@
 import { withTransaction } from "../../../packages/db/src/client";
+import { companyCapabilities } from "../../../packages/tool-gateway/src/companyScope";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import { observeAndEnterPlanning, persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
@@ -18,7 +19,7 @@ export async function runBrainPlanningCycle(input: {
 }) {
   const goal = await withTransaction(async (client) => {
     const res = await client.query(
-      "SELECT id,objective,state,completion_definition FROM goals WHERE id=$1",
+      "SELECT id,objective,state,completion_definition,company_scope FROM goals WHERE id=$1",
       [input.goalId]
     );
     if (res.rowCount !== 1) throw new Error("Goal not found");
@@ -36,7 +37,7 @@ export async function runBrainPlanningCycle(input: {
     goalId: input.goalId,
     objective: goal.objective,
     context:goal.completion_definition==="sam.read_report.v1"?{...context,continuation:"After independent verification the executive observes results, plans concrete follow-up reads from returned IDs, and persists an evidence-linked final report. Start with discovery when IDs are unknown; do not invent IDs or declare the remaining deliverables impossible."}:context,
-    availableCapabilities:goal.completion_definition==="sam.read_report.v1"?input.availableCapabilities?.filter((x:any)=>x.sideEffect===false&&x.authorityClass==="GREEN"):input.availableCapabilities,
+    availableCapabilities:companyCapabilities(goal.completion_definition==="sam.read_report.v1"?input.availableCapabilities?.filter((x:any)=>x.sideEffect===false&&x.authorityClass==="GREEN"):input.availableCapabilities,goal.company_scope),
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
     preferredProviders: input.preferredProviders

@@ -3,6 +3,7 @@ import type { SpecialistAgentDefinition } from "./types";
 import { SpecialistRegistry } from "./registry";
 
 export interface CapabilityDefinition {
+  companyScopes?:readonly string[];
   capabilityId: string;
   authorityClass: AuthorityClass;
   specialistAgentId: string;
@@ -65,6 +66,7 @@ export class CapabilityCatalog {
 
   planningDescriptors(){
     return [...this.definitions.values()].map(item=>({
+      ...(item.companyScopes ? {companyScopes:item.companyScopes} : {}),
       capabilityId:item.capabilityId,
       authorityClass:item.authorityClass,
       sideEffect:item.sideEffect??true,

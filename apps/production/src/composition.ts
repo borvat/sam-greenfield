@@ -22,6 +22,7 @@ export function createProductionComposition(input:{
   const ttl=input.bundle.raw.workerLeaseTtlSeconds??60;
 
   return {
+    close:()=>input.bundle.raw.closeIntegrations?.()??Promise.resolve(),
     async runWorkTick(){
       const recovery=await recoverKernelAfterRestart();
       const interruptedPlanning=await failInterruptedPlanning();

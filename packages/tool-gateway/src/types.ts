@@ -1,6 +1,8 @@
 import type { AuthorityClass } from "../../shared/src/types";
 
 export interface ToolDefinition {
+  /** Trusted operator scope, never supplied by the planner or remote server. */
+  companyScopes?:readonly string[];
   capabilityId:string;
   authorityClass:AuthorityClass;
   sideEffect:boolean;
@@ -9,6 +11,8 @@ export interface ToolDefinition {
 }
 
 export interface ToolExecutionRequest {
+  /** Set by the executor from the persisted goal, never from tool parameters. */
+  legalEntityId?:string;
   capabilityId:string;
   params:Record<string,unknown>;
   idempotencyKey:string;

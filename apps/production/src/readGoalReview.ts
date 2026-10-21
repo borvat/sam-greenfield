@@ -103,7 +103,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
     ?(await client.query(`SELECT after_ref,timestamp FROM audit_log WHERE goal_id=$1
        AND action='RUNTIME_RECOVERY_REQUESTED' ORDER BY timestamp,id`,[goal.id])).rows
     :[];
-  const descriptors=bundle.catalog.planningDescriptors().filter(d=>d.sideEffect===false&&d.authorityClass==="GREEN");
+  const descriptors=bundle.catalog.planningDescriptors().filter(d=>d.sideEffect===false&&d.authorityClass==="GREEN"&&(!d.companyScopes||d.companyScopes.includes(goal.company_scope)));
   const gateway=new ModelGateway(Object.fromEntries((bundle.raw.modelAdapters??[]).map(a=>[a.providerId,a])));
   const perResearchCallCeiling=researchPlan?(researchPlan.maxCostUsd*0.6)/(researchPlan.maxIterations*3):undefined;
   const invokeModel=invoke??(async(input:any)=>(await gateway.invoke({task:"executive_planning",capability:"planning",input,dataClassification:bundle.raw.dataClassification??"INTERNAL",maxCostUsd:perResearchCallCeiling??(bundle.raw.planningMaxCostUsd??0.25)/3})).result.output);

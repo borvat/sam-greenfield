@@ -33,9 +33,8 @@ async function main(){
     throw new Error("SAM_MCP_ALLOWED_HOSTS is required in production");
   }
 
-  const dispatcher=bundlePath
-    ? createKernelProductionDispatcher(await loadProductionBundle(bundlePath))
-    : undefined;
+  const productionBundle=bundlePath?await loadProductionBundle(bundlePath):undefined;
+  const dispatcher=productionBundle?createKernelProductionDispatcher(productionBundle):undefined;
 
   const googleConfig=testMode?undefined:samGoogleConfigFromEnv();
   const googleConnection=googleConfig?new SamGoogleConnection(googleConfig):undefined;
@@ -77,6 +76,7 @@ async function main(){
     process.stderr.write(`SAM MCP shutdown requested: ${signal}\n`);
     try{
       await service.close();
+      await productionBundle?.raw.closeIntegrations?.();
       await pool.end();
       process.exit(0);
     }catch(err){

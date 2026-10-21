@@ -17,8 +17,12 @@ export function validateProductionBundle(bundle:ProductionBundle):ValidatedProdu
   const tools=new ToolRegistry(bundle.toolDefinitions,bundle.toolAdapters);
   const catalog=new CapabilityCatalog(bundle.capabilities.map((capability)=>{
     const tool=tools.definition(capability.capabilityId);
+    if(capability.companyScopes && JSON.stringify([...capability.companyScopes].sort())!==JSON.stringify([...(tool.companyScopes??[])].sort())){
+      throw new Error(`Company scope mismatch: ${capability.capabilityId}`);
+    }
     return {
       ...capability,
+      companyScopes:tool.companyScopes,
       description:tool.description??capability.description,
       parameters:tool.inputSchema??{},
       sideEffect:tool.sideEffect
