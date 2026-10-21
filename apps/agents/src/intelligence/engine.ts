@@ -45,7 +45,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
  if(configs.size!==input.configs.length||!configs.size)throw Error('SPECIALIST_CONFIG_INVALID');
  for(const id of Object.keys(input.catalog.authorityPolicies())){
   const c=input.catalog.get(id),t=input.tools.definition(id);
-  if(c.authorityClass!=='GREEN'||c.sideEffect!==false||t.authorityClass!=='GREEN'||t.sideEffect!==false||c.companyScopes?.length!==1||c.companyScopes[0]!==tenant.entity||t.companyScopes?.length!==1||t.companyScopes[0]!==tenant.entity)throw Error('SPECIALIST_READ_SCOPE_REQUIRED');
+  if(!Number.isFinite(t.costUpperBoundUsd)||t.costUpperBoundUsd!<0||c.authorityClass!=='GREEN'||c.sideEffect!==false||t.authorityClass!=='GREEN'||t.sideEffect!==false||c.companyScopes?.length!==1||c.companyScopes[0]!==tenant.entity||t.companyScopes?.length!==1||t.companyScopes[0]!==tenant.entity)throw Error('SPECIALIST_READ_SCOPE_REQUIRED');
  }
  for(const cfg of configs.values()){
   if(!cfg.agentId||!cfg.purpose||cfg.allowedCapabilities.length>16)throw Error('SPECIALIST_CONFIG_INVALID');
@@ -134,7 +134,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    ctx=initial.ctx;
   }catch(e){input.diagnostic?.(e);return stop(work,cfg,e);}
   const controller=new AbortController();
-  const timeout=Math.max(1,Math.min(new Date(run.deadline).getTime()-Date.now(),20_000));
+  const timeout=Math.max(1,Math.min(new Date(run.deadline).getTime()-Date.now(),run.limits.modelCallMs));
   let timer:ReturnType<typeof setTimeout>|undefined;
   try{
    const memory=await withTransaction(c=>recallVerifiedLessons(c,tenant.entity,run.objective.slice(0,200)));
@@ -241,14 +241,14 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const budget=await withTransaction(async c=>{
     const link=(await c.query('SELECT root_queue_id FROM specialist_delegations WHERE goal_id=$1',[work.goalId])).rows[0];
     if(!link)return null;
-    const b=(await c.query('SELECT deadline,cancelled FROM specialist_budgets WHERE root_queue_id=$1',[link.root_queue_id])).rows[0];
+    const b=(await c.query('SELECT deadline,cancelled,limits FROM specialist_budgets WHERE root_queue_id=$1',[link.root_queue_id])).rows[0];
     if(!b||b.cancelled)throw Error('SPECIALIST_CANCELLED');return b;
    });
    const remaining=budget?new Date(budget.deadline).getTime()-Date.now():20_000;
    if(remaining<=0)throw Error('SPECIALIST_TIME_EXHAUSTED');
    let timer:ReturnType<typeof setTimeout>|undefined;
    try{
-    const result=await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,20_000));})]);
+    const result=await Promise.race([execute(work),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error('SPECIALIST_TOOL_TIMEOUT')),Math.min(remaining,budget?.limits.toolCallMs??20_000));})]);
     if(budget)await withTransaction(async c=>{const link=(await c.query(`SELECT b.cancelled,b.deadline FROM specialist_budgets b JOIN specialist_delegations d ON d.root_queue_id=b.root_queue_id WHERE d.goal_id=$1`,[work.goalId])).rows[0];if(!link||link.cancelled||new Date(link.deadline).getTime()<=Date.now())throw Error('SPECIALIST_CANCELLED_OR_EXPIRED');});
     return result;
    }
@@ -259,7 +259,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    if(!link)return;
    await fence(c,work);
    const run=(await c.query('SELECT * FROM specialist_sessions WHERE root_queue_id=$1 LIMIT 1',[link.root_queue_id])).rows[0];
-   await reserve(c,run,{tools:1});
+   await reserve(c,run,{tools:1,costUsd:input.tools.definition(work.capabilityId).costUpperBoundUsd!});
   }),
   /** Cancellation is scoped by RLS; no permissions or external policy changes. */
   cancel:async(rootQueueId:string)=>withTransaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,106))',[rootQueueId]);const r=await c.query('UPDATE specialist_budgets SET cancelled=true WHERE root_queue_id=$1 RETURNING root_queue_id',[rootQueueId]);if(!r.rowCount)throw Error('SPECIALIST_SCOPE_DENIED');}),

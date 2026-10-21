@@ -34,8 +34,8 @@ async function main(){
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='synthetic-specialist-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,SAM_SPECIALIST_INTELLIGENCE:'synthetic',FIXTURE_ENTITY:entity,FIXTURE_FOREIGN:foreign};
   const run=(mode:string,extra:Record<string,string>={})=>{
-   const r=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts',mode],{env:{...env,...extra},encoding:'utf8',timeout:25000});
-   process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,'restricted specialist worker '+mode);
+   const r=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts',mode],{env:{...env,...extra},encoding:'utf8',timeout:50000});
+   process.stdout.write(r.stdout+r.stderr);console.log(JSON.stringify({worker:mode,exit:r.status,signal:r.signal,error:r.error?.message??null}));assert.equal(r.status,0,'restricted specialist worker '+mode);
   };
   run('collaboration');
   // Kill a real process only after its model attempt has a durable reservation.

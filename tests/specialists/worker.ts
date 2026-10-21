@@ -45,7 +45,10 @@ const provider:ModelProviderAdapter={providerId:'specialist-fixture',executionMo
    if(!ctx.tasks.length)output={...dispatch(market,'Study aerogel packaging demand',{objective:'Study aerogel packaging demand'}),tasks:[
     {capabilityId:market,objective:'Study aerogel packaging demand',params:{objective:'Study aerogel packaging demand'}},
     {capabilityId:risk,objective:'Assess aerogel packaging risk',params:{objective:'Assess aerogel packaging risk'}}]};
-   else if(ctx.conflicts.length&&!ctx.evidence.some((e:any)=>e.capabilityId===read&&e.result.channel==='resolve'))output=dispatch(read,'Resolve contradictory aerogel demand quotations',{channel:'resolve'});
+   else if(ctx.conflicts.length&&!ctx.evidence.some((e:any)=>e.capabilityId===read&&e.result.channel==='resolve')){
+    if(!p.prior.some((h:any)=>h.error==='SPECIALIST_CONFLICT_UNRESOLVED'))output=report(ctx.evidence.find((e:any)=>e.result.channel==='market'),agent);
+    else output=dispatch(read,'Resolve contradictory aerogel demand quotations',{channel:'resolve'});
+   }
    else {const source=ctx.evidence.find((e:any)=>e.capabilityId===read&&e.result.channel==='resolve');assert(source,'root must see both contradiction and corrective source');output=report(source,agent);}
   }else{
    if(!seen.has(agent)){seen.add(agent);if(seen.size===2)open();await Promise.race([barrier,sleep(2000).then(()=>{throw Error('INDEPENDENT_REASONING_NOT_CONCURRENT');})]);}
@@ -61,7 +64,7 @@ function bundleFor(adapter=provider){
   companyScopes:[entity],parameters:{type:'object',properties:{objective:{type:'string'}},required:['objective'],additionalProperties:false}}));
  const source={capabilityId:read,authorityClass:'GREEN' as const,specialistAgentId:'source-specialist',specialistVersion:'1',sideEffect:false,companyScopes:[entity],parameters:{type:'object',properties:{channel:{type:'string',enum:['bad','market','risk','resolve']}},required:['channel'],additionalProperties:false}};
  const values:Record<string,string>={bad:'0',market:'23',risk:'29',resolve:'27'};
- return validateProductionBundle({capabilities:[...caps,source],toolDefinitions:[...caps,source].map(c=>({capabilityId:c.capabilityId,authorityClass:c.authorityClass,sideEffect:false,companyScopes:[entity]})),
+ return validateProductionBundle({capabilities:[...caps,source],toolDefinitions:[...caps,source].map(c=>({capabilityId:c.capabilityId,authorityClass:c.authorityClass,sideEffect:false,costUpperBoundUsd:0,companyScopes:[entity]})),
   toolAdapters:[...caps.map(c=>({capabilityId:c.capabilityId,async execute(){throw Error('REASONING_DISPATCH_REQUIRED');}})),{capabilityId:read,async execute({params}){
    return {result:{value:values[String(params.channel)],channel:params.channel,uri:'fixture://aerogel/'+params.channel,sourceKind:'synthetic-primary'},evidence:{readback:true}};
   }}],verificationAdapters:[{capabilityId:read,async verify({execution}){
@@ -104,7 +107,7 @@ async function main(){
   assert.equal(final.result.report.claims[0].value,'27');assert.equal(final.result.report.classification,'MODEL_INFERENCE');
   assert.equal((await one('SELECT count(*)::int n FROM executions WHERE goal_id=$1',[goal.id])).n,1);
   const sessions=(await pool.query('SELECT * FROM specialist_sessions')).rows;
-  const executive=sessions.find(s=>s.agent_id==='executive-specialist');assert(executive.state.history.filter((h:any)=>h.decision?.action==='dispatch').length>=2);
+  const executive=sessions.find(s=>s.agent_id==='executive-specialist');assert(executive.state.history.some((h:any)=>h.error==='SPECIALIST_CONFLICT_UNRESOLVED'));assert(executive.state.history.filter((h:any)=>h.decision?.action==='dispatch').length>=2);
   assert(sessions.find(s=>s.agent_id==='market-specialist').state.history.filter((h:any)=>h.decision?.action==='dispatch').length>=2,'specialist replans after independently rejected source');
   assert.equal((await one('SELECT count(*)::int n FROM side_effect_operations')).n,0);
   const source=final.result.report.evidence.find((e:any)=>e.capabilityId===read&&e.result.channel==='resolve');
@@ -115,6 +118,9 @@ async function main(){
    const evaluation=await evaluateHypothesis(c,{hypothesisId:hypothesis,sourceGoalId:source.goalId,executionId:source.id});assert.equal(evaluation.supported,false);
   });
   await withTransaction(async c=>{assert.equal((await recallVerifiedLessons(c,entity,'27')).length,1);});
+  const unrelated=await make('unrelated-task');
+  await assert.rejects(()=>withTransaction(c=>learnVerifiedQuote(c,{entityId:entity,goalId:unrelated.goal,sourceGoalId:source.goalId,executionId:source.id,statement:'27'})),/VERIFIED_QUOTE_REQUIRED/);
+  await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[unrelated.queue]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[unrelated.goal]);
   const cold=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts','recall-positive'],{
    env:{PATH:process.env.PATH,DATABASE_URL:process.env.DATABASE_URL!,FIXTURE_ENTITY:entity},encoding:'utf8',timeout:5000});
   process.stdout.write(cold.stdout+cold.stderr);assert.equal(cold.status,0);
@@ -154,7 +160,7 @@ async function main(){
    const e=await createSpecialistIntelligence({...normal,configs:configs(l),gateway:localGateway});
    await direct(e);await sleep(110);await direct(e);await sleep(110);await direct(e);
    const s=await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[g.queue]);assert.equal(s.state.phase,'BLOCKED',key);
-   assert.equal((await one('SELECT count(*)::int n FROM specialist_delegations WHERE parent_queue_id=$1',[g.queue])).n,0);
+   assert.equal((await one('SELECT count(*)::int n FROM specialist_delegations WHERE parent_queue_id=$1',[g.queue])).n,0);console.log('PASS budget',key);
   }
   const e=await createSpecialistIntelligence(normal),cancel=await make('cancel');await direct(e);await e.cancel(cancel.queue);await sleep(110);await direct(e);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[cancel.queue])).state.reason,'SPECIALIST_CANCELLED');
@@ -165,6 +171,7 @@ async function main(){
   assert(deniedState.history.some((h:any)=>h.error==='SPECIALIST_CAPABILITY_DENIED'));
   // Stop this synthetic pending work without mutating any protected environment.
   await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[denied.goal]);await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[denied.queue]);
+  console.log('PASS controls: scope-cancel-time');
   const dispatchProvider:ModelProviderAdapter={...provider,async invoke(){return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:dispatch(read,'Bounded direct source',{channel:'resolve'})};}};
   const dispatchGateway=new ModelGateway({[provider.providerId]:dispatchProvider});
   for(const key of ['delegations','tools'] as const){
@@ -180,15 +187,17 @@ async function main(){
    }
    assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[g.queue])).state.phase,'BLOCKED');
   }
-  const toolTime=await make('read-tool-timeout'),toolTimeEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,elapsedMs:300}),gateway:dispatchGateway});
+  console.log('PASS controls: tool-and-delegation-counters');
+  const toolTime=await make('read-tool-timeout'),toolTimeEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,toolCallMs:50}),gateway:dispatchGateway});
   await direct(toolTimeEngine);
   const timedWork=await claimNextWorkForSpecialistAtomic(bundle.catalog.specialists.getAgent('source-specialist'),'bounded-read',5);assert(timedWork);
   await toolTimeEngine.beforeTool(timedWork);
   await assert.rejects(()=>toolTimeEngine.executeRead(timedWork,async()=>new Promise(()=>{})),/TOOL_TIMEOUT/);
   assert.equal((await one('SELECT count(*)::int n FROM executions WHERE queue_id=$1',[timedWork.queueId])).n,0);
   await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[timedWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[timedWork.goalId]);
-  await direct(toolTimeEngine);
+  await toolTimeEngine.cancel(toolTime.queue);await sleep(110);await direct(toolTimeEngine);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[toolTime.queue])).state.phase,'BLOCKED');
+  console.log('PASS controls: read-timeout');
   const cancelledRead=await make('cancel-inflight-read'),cancelReadEngine=await createSpecialistIntelligence({...normal,gateway:dispatchGateway});await direct(cancelReadEngine);
   const cancelledWork=await claimNextWorkForSpecialistAtomic(bundle.catalog.specialists.getAgent('source-specialist'),'cancel-read',5);assert(cancelledWork);await cancelReadEngine.beforeTool(cancelledWork);
   let finishRead!:(v:any)=>void,startedRead!:()=>void;const readStarted=new Promise<void>(r=>startedRead=r);
@@ -197,10 +206,19 @@ async function main(){
   await assert.rejects(()=>recordExecutionAndRequestVerificationAtomic({queueId:cancelledWork.queueId,fencingToken:cancelledWork.fencingToken,actor:'late-fixture',result:{value:'27'},evidence:{readback:true}}),/CANCELLED_OR_EXPIRED/);
   await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[cancelledWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[cancelledWork.goalId]);
   await sleep(110);await direct(cancelReadEngine);
+  console.log('PASS controls: cancel-inflight-read');
+  const priced=validateProductionBundle({...bundle.raw,toolDefinitions:bundle.raw.toolDefinitions.map(t=>({...t,costUpperBoundUsd:t.capabilityId===read?0.02:0}))});
+  const pricedGoal=await make('priced-tool-budget'),pricedEngine=await createSpecialistIntelligence({configs:configs({...limits,costUsd:0.04}),catalog:priced.catalog,tools:priced.tools,gateway:dispatchGateway});await direct(pricedEngine);
+  const pricedWork=await claimNextWorkForSpecialistAtomic(bundle.catalog.specialists.getAgent('source-specialist'),'priced-read',5);assert(pricedWork);
+  await assert.rejects(()=>pricedEngine.beforeTool(pricedWork),/BUDGET_EXHAUSTED:costUsd/);
+  await pool.query("UPDATE work_queue SET status='FAILED' WHERE id=$1",[pricedWork.queueId]);await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[pricedWork.goalId]);
+  await pricedEngine.cancel(pricedGoal.queue);await sleep(110);await direct(pricedEngine);
+  console.log('PASS controls: tool-cost');
   const money=await make('cumulative-money'),moneyEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,costUsd:0.04})});
   await direct(moneyEngine);await sleep(110);await direct(moneyEngine);
   const used=(await one('SELECT used FROM specialist_budgets WHERE root_queue_id=$1',[money.queue])).used;
   assert.equal(used.models,1);assert(used.costUsd>0&&used.costUsd<=0.04);
+  console.log('PASS controls: cumulative-model-cost');
   let entered!:()=>void,finish!:(v:any)=>void;const started=new Promise<void>(r=>entered=r);
   const slow:ModelProviderAdapter={...provider,async invoke(){entered();return new Promise(r=>finish=r);}};
   const late=await make('cancel-inflight'),lateEngine=await createSpecialistIntelligence({...normal,gateway:new ModelGateway({[provider.providerId]:slow})});
@@ -208,11 +226,13 @@ async function main(){
   finish({model:'fixture',usage:{inputTokens:1,outputTokens:1},output:dispatch(read,'Late forbidden dispatch',{channel:'resolve'})});await pending;
   assert.equal((await one('SELECT count(*)::int n FROM specialist_delegations WHERE parent_queue_id=$1',[late.queue])).n,0);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[late.queue])).state.phase,'BLOCKED');
+  console.log('PASS controls: cancel-inflight-model');
   const timeoutProvider:ModelProviderAdapter={...provider,async invoke(){await sleep(150);return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:dispatch(read,'Too late',{channel:'resolve'})};}};
-  const timeoutGoal=await make('late-timeout'),timeoutEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,elapsedMs:80}),gateway:new ModelGateway({[provider.providerId]:timeoutProvider})});
+  const timeoutGoal=await make('late-timeout'),timeoutEngine=await createSpecialistIntelligence({...normal,configs:configs({...limits,modelCallMs:50}),gateway:new ModelGateway({[provider.providerId]:timeoutProvider})});
   await direct(timeoutEngine);await sleep(180);
   assert.equal((await one('SELECT count(*)::int n FROM specialist_delegations WHERE parent_queue_id=$1',[timeoutGoal.queue])).n,0);
   assert.equal((await one('SELECT state FROM specialist_sessions WHERE queue_id=$1',[timeoutGoal.queue])).state.phase,'BLOCKED');
+  console.log('PASS controls: model-timeout');
   const unsafe={...bundle.raw,toolDefinitions:bundle.raw.toolDefinitions.map(d=>({...d,sideEffect:true}))};const bad=validateProductionBundle(unsafe);
   await assert.rejects(()=>createSpecialistIntelligence({...normal,catalog:bad.catalog,tools:bad.tools}),/READ_SCOPE_REQUIRED/);
   const wrongCompany=validateProductionBundle({...bundle.raw,capabilities:bundle.raw.capabilities.map(c=>({...c,companyScopes:[process.env.FIXTURE_FOREIGN!]})),toolDefinitions:bundle.raw.toolDefinitions.map(t=>({...t,companyScopes:[process.env.FIXTURE_FOREIGN!]}))});

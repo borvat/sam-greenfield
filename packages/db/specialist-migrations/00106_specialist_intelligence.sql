@@ -76,6 +76,10 @@ BEGIN
   ELSE
    SELECT root_queue_id INTO root_id FROM specialist_delegations WHERE goal_id=NEW.goal_id;
   END IF;
+  -- A stopped report carries uncertainty and verifies INCONCLUSIVE. Persist it
+  -- for audit even when the budget/deadline caused the stop; successful results
+  -- still require a live family below.
+  IF NEW.evidence ? 'specialist_session' AND NEW.result->>'status'='STOPPED' AND root_id IS NOT NULL THEN RETURN NEW; END IF;
   SELECT NOT b.cancelled AND b.deadline>clock_timestamp() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id
    INTO live FROM specialist_budgets b JOIN work_queue w ON w.id=b.root_queue_id JOIN goals g ON g.id=w.goal_id WHERE b.root_queue_id=root_id;
   IF live IS DISTINCT FROM true OR EXISTS(WITH RECURSIVE lineage(id,parent_goal_id,state,depth) AS (

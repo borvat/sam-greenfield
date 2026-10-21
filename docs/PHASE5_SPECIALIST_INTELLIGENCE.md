@@ -151,10 +151,11 @@ non-DDL runtime boundary. Run the profile only after operator migration/provisio
 review; there is no automatic staging or production activation.
 
 A family-wide durable ledger reserves every provider attempt before invocation,
-including fallback attempts and failed/uncertain responses. All child specialists
+including fallback attempts and failed/uncertain responses. Declared tool-attempt
+monetary ceilings are also reserved before execution. All child specialists
 share it. Limits cover model attempts, **actual read-tool attempts including
 retries**, reasoning iterations, conservatively reserved tokens, monetary upper
-bounds, elapsed time, delegations and depth (three). Before executing child reads,
+bounds, elapsed time, delegations and depth (three), plus separate bounded model/read-call deadlines. Before executing child reads,
 the composition rechecks family cancellation/deadline and reserves a tool attempt.
 No refund follows a crash or ambiguous model outcome. Family advisory locks give
 all fenced mutations one lock order; short ledger row locks use NO KEY UPDATE.
@@ -188,7 +189,8 @@ cancellation, pricing and ambiguous-call accounting before activation.
 
 All available specialist/delegated tools must be explicitly GREEN, sideEffect
 false, and bound to exactly the nominated company in both catalogue and tool
-metadata. Normal tool execution still uses the existing gateway and authorization.
+metadata, with a finite nonnegative operator-reviewed `costUpperBoundUsd` for
+every tool. Normal tool execution still uses the existing gateway and authorization.
 No side-effect specialist capability is supported in this profile. This does not
 alter existing approval or OAuth/MCP boundaries. The application process remains
 a trusted SQL principal, including core verification privileges: separate DB
@@ -230,8 +232,15 @@ Development failure history is retained under
 `.local/verification/phase5-development/`. Initial concurrent tests exposed a
 ledger lock-order deadlock; changing only the row lock was insufficient. A
 consistent family advisory-lock order fixed it while preserving concurrent
-model calls. Final acceptance must come from the exact candidate SHA's full
-report, not these intermediate worktree runs.
+model calls. The first full run at `85b08529fa4ce5a7c333257196a6cf320c078806`
+passed legacy regression/reliability and Phase 4 stages, then failed the new
+specialist stage: the late-result guard also rejected an uncertain STOPPED
+outcome after cancellation/expiry. The guard now retains stopped audit outcomes
+for INCONCLUSIVE verification while rejecting successful late results. Subsequent
+focused checks cover both paths. A timing-sensitive fixture was also changed to
+use a separate 50 ms per-call limit within a sufficient family setup budget.
+Final acceptance must come from the exact candidate SHA's full report, not
+these intermediate worktree runs.
 
 ## Readiness and next authorized gates
 

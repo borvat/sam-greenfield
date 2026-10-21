@@ -11,12 +11,12 @@ export const decisionSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('stop'),reason:text,uncertainties:z.array(text).min(1).max(12)}).strict()
 ]);
 export type Decision=z.infer<typeof decisionSchema>;
-export interface Limits {models:number;tools:number;iterations:number;tokens:number;costUsd:number;elapsedMs:number;delegations:number;maxInputTokens:number;maxOutputTokens:number}
-export const ceiling:Limits={models:40,tools:20,iterations:40,tokens:1_000_000,costUsd:1,elapsedMs:300_000,delegations:16,maxInputTokens:24_000,maxOutputTokens:8_000};
+export interface Limits {models:number;tools:number;iterations:number;tokens:number;costUsd:number;elapsedMs:number;delegations:number;maxInputTokens:number;maxOutputTokens:number;modelCallMs:number;toolCallMs:number}
+export const ceiling:Limits={models:40,tools:20,iterations:40,tokens:1_000_000,costUsd:1,elapsedMs:300_000,delegations:16,maxInputTokens:24_000,maxOutputTokens:8_000,modelCallMs:20_000,toolCallMs:20_000};
 export function validateLimits(l:Limits):Limits{
  for(const [k,v]of Object.entries(ceiling))if(!Number.isFinite(l[k as keyof Limits])||l[k as keyof Limits]<0||l[k as keyof Limits]>v||
   (k!=='costUsd'&&!Number.isSafeInteger(l[k as keyof Limits])))throw Error('SPECIALIST_LIMIT_INVALID');
- if(l.elapsedMs<1||l.maxInputTokens<1||l.maxOutputTokens<1)throw Error('SPECIALIST_LIMIT_INVALID');return {...l};
+ if(l.elapsedMs<1||l.maxInputTokens<1||l.maxOutputTokens<1||l.modelCallMs<1||l.toolCallMs<1)throw Error('SPECIALIST_LIMIT_INVALID');return {...l};
 }
 export interface SpecialistConfig {capabilityId:string;agentId:string;purpose:string;allowedCapabilities:string[];limits:Limits}
 export interface Evidence {id:string;verificationId:string;goalId:string;capabilityId:string;result:Record<string,unknown>;retrievedAt:string;hash:string;fresh:boolean;reliability:'INDEPENDENTLY_VERIFIED';trustBoundary:string}
