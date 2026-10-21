@@ -1,0 +1,80 @@
+{
+  "outcome": "PARTIAL",
+  "capturedAt": "2026-10-21T13:37:23.634Z",
+  "environment": "ISOLATED_LOCAL_STAGING",
+  "productionChanged": false,
+  "autonomousLiveModel": false,
+  "receipts": [
+    {
+      "id": "oss_files",
+      "package": "@modelcontextprotocol/server-filesystem",
+      "version": "2.0.0",
+      "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "upstreamTools": 14,
+      "registeredReads": [
+        "read_text_file",
+        "list_directory",
+        "get_file_info"
+      ],
+      "state": "STDIO_CONNECTED_NOT_PRODUCTION"
+    },
+    {
+      "id": "oss_git",
+      "package": "mcp-server-git",
+      "version": "2026.10.19",
+      "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+      "upstreamTools": 12,
+      "registeredReads": [
+        "git_status",
+        "git_diff_unstaged",
+        "git_log"
+      ],
+      "state": "STDIO_CONNECTED_NOT_PRODUCTION"
+    },
+    {
+      "id": "oss_web",
+      "package": "mcp-server-fetch",
+      "version": "2026.10.19",
+      "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "upstreamTools": 1,
+      "registeredReads": [
+        "fetch"
+      ],
+      "state": "STDIO_CONNECTED_NOT_PRODUCTION"
+    }
+  ],
+  "checks": [
+    {
+      "capability": "research_mcp_oss_files_read_text_file",
+      "state": "READ_EXECUTED",
+      "verification": "VERIFIED",
+      "resultPreview": "{\"content\":[{\"type\":\"text\",\"text\":\"SAM isolated source: verified fixture, no company business data.\\n\"}],\"structuredContent\":{\"content\":\"SAM isolated source: verified fixture, no company business data.\\n\"}}"
+    },
+    {
+      "capability": "research_mcp_oss_git_git_status",
+      "state": "READ_EXECUTED",
+      "verification": "VERIFIED",
+      "resultPreview": "{\"content\":[{\"type\":\"text\",\"text\":\"Repository status:\\nOn branch master\\n\\nNo commits yet\\n\\nUntracked files:\\n  (use \\\"git add <file>...\\\" to include in what will be committed)\\n\\tsource.txt\\n\\nnothing added to commit but untracked files present (use \\\"git add\\\" to track)\"}],\"structuredContent\":null}"
+    },
+    {
+      "capability": "research_mcp_oss_web_fetch",
+      "state": "BLOCKED",
+      "error": "Error: RESEARCH_MCP_TOOL_FAILED:fetch"
+    },
+    {
+      "check": "cross_company_and_outside_path",
+      "state": "DENIED_BEFORE_PROVIDER"
+    },
+    {
+      "check": "filesystem_write_and_sam_readback",
+      "state": "LOCAL_OWNER_ACTION_SUCCEEDED",
+      "productionWriteRegistered": false
+    },
+    {
+      "check": "browser_navigation",
+      "discoveredTools": 25,
+      "state": "BLOCKED",
+      "detail": "{\"content\":[{\"type\":\"text\",\"text\":\"### Error\\nError: async initializeServer: Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome\\nRun \\\"npx playwright install chrome\\\"\"}],\"isError\":true}"
+    }
+  ]
+}

@@ -19,6 +19,8 @@ import {persistPlanAndStartExecution} from '../../apps/kernel/src/orchestrator';
 import {reconcileOneSideEffectAtomic} from '../../apps/tools/src/reconciler';
 import {sha256Hex} from '../../packages/shared/src/stableJson';
 import {pool} from '../../packages/db/src/client';
+import {projectOwnerNotifications} from '../../apps/notifications/src/center';
+import {createChatGPTToolSurface} from '../../apps/chatgpt-tools/src/surface';
 const root=process.env.SAM_OSS_LAB_ROOT;
 
 test('actual upstream file -> SAM goal/planner/worker/verifier/report -> persistent observation and one change event; guarded SAM write/reconcile/dedup', {skip:!root},async()=>{
@@ -31,6 +33,8 @@ test('actual upstream file -> SAM goal/planner/worker/verifier/report -> persist
  const added=await buildOssStdioReadBundle({capabilities:[],toolDefinitions:[],toolAdapters:[]},[{id:'monitor_files',companyId:l.entity,command:process.execPath,args:[serverEntry,work],package:'@modelcontextprotocol/server-filesystem',version:'2.0.0',repository:'https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem',tools:pin.filesystem.filter((t:any)=>t.name==='read_text_file'),parameterConstraints:{read_text_file:{path:{type:'string',enum:[source,target]}}}}]);
  const bundle=validateProductionBundle(await withOssFileAction(added.bundle,{companyId:l.entity,root:work,target,serverEntry,reviewedWriteSchema:actionPin.write_file,reviewedReadSchema:actionPin.read_text_file}));
  process.env.SAM_PERCEPTION_ACTION_ENABLED='true';
+ process.env.SAM_NOTIFICATIONS_ENABLED='true';
+ await l.db.query("INSERT INTO notification_settings(id,enabled_at) VALUES('owner',now()-interval '1 hour')");
  try{
   for(const [cap,write] of [[readCap,false],['oss_files_write_report',true]])await l.db.query('INSERT INTO entity_capability_bindings VALUES($1,$2,true,$3)',[l.entity,cap,write]);
   const sourceId=(await l.db.query("INSERT INTO perception_sources(legal_entity_id,provider,capability_id,params,enabled) VALUES($1,'OSS',$2,$3,true) RETURNING id",[l.entity,readCap,{path:source}])).rows[0].id;
@@ -58,6 +62,29 @@ test('actual upstream file -> SAM goal/planner/worker/verifier/report -> persist
   assert.deepEqual((await l.db.query('SELECT classification FROM perception_observations ORDER BY observed_at')).rows.map((r:any)=>r.classification),['BASELINE','UNCHANGED','CHANGED']);
   assert.equal((await l.db.query("SELECT * FROM event_fabric_events WHERE event_type='PERCEPTION_ATTENTION'")).rows.length,1);
   assert.equal((await runPerceptionTick(bundle)).observations,0);
+  // Exact persisted source observation becomes one internal owner alert.
+  assert.equal((await projectOwnerNotifications()).created,1);
+  assert.equal((await projectOwnerNotifications()).created,0);
+  const alert:any=(await l.db.query('SELECT * FROM owner_notifications')).rows[0];
+  assert.equal(alert.status,'UNROUTED');assert.equal(alert.body.requiredAction,'REVIEW_OBSERVATION');
+  assert.equal(alert.legal_entity_id,l.entity);assert.equal(alert.accepted_at,null);
+  const surface=createChatGPTToolSurface();
+  assert.equal((await surface.invoke('sam_list_notifications',{legal_entity_id:l.entity},{actor:'fixture',systemOwner:false})).ok,false);
+  const inbox:any=await surface.invoke('sam_list_notifications',{legal_entity_id:l.entity},{actor:'fixture',systemOwner:true});
+  assert.equal(inbox.data.length,1);
+  const empty:any=await surface.invoke('sam_list_notifications',{legal_entity_id:l.other},{actor:'fixture',systemOwner:true});
+  assert.equal(empty.data.length,0);
+  // A copied event cannot bypass the persisted observation correlation.
+  const forged:any=(await l.db.query(`INSERT INTO event_fabric_events(event_type,source,payload,occurred_at)
+   SELECT event_type,source,payload,occurred_at FROM event_fabric_events WHERE event_type='PERCEPTION_ATTENTION' LIMIT 1 RETURNING id`)).rows[0];
+  assert.equal((await projectOwnerNotifications()).created,0);
+  await l.db.query('DELETE FROM event_fabric_events WHERE id=$1',[forged.id]);
+  const current:any=(await l.db.query("SELECT * FROM perception_observations WHERE classification='CHANGED'")).rows[0];
+  const later:any=(await l.db.query("INSERT INTO verifications(execution_id,contract_id,verifier,method,result,independent_evidence,plan_hash,execution_hash,checked_at) SELECT execution_id,contract_id,'fixture-later-check',method,'INCONCLUSIVE','{}'::jsonb,plan_hash,execution_hash,now()+interval '1 second' FROM verifications WHERE id=$1 RETURNING id",[current.verification_id])).rows[0];
+  await l.db.query('DELETE FROM owner_notifications WHERE id=$1',[alert.id]);
+  assert.equal((await projectOwnerNotifications()).created,0,'latest inconclusive check suppresses a newly projected alert');
+  await l.db.query('DELETE FROM verifications WHERE id=$1',[later.id]);
+  assert.equal((await projectOwnerNotifications()).created,1);
   // Source contents cannot add a write approval. Approval is a separate fixture owner record.
   const goal=await createGoal({legalEntityId:l.entity,objective:'Write the exact isolated report',actor:'fixture-owner',authorityCeiling:'YELLOW'});
   await l.db.query("UPDATE goals SET state='PLANNING' WHERE id=$1",[goal.id]);
@@ -102,7 +129,7 @@ test('actual upstream file -> SAM goal/planner/worker/verifier/report -> persist
   assert.equal((await interruptedExecutor({...uncertainWork,queueId:freshQueue.id,fencingToken:Number(freshQueue.fencing_token)})).result.deduplicated,true);assert.equal(writes,1);
   assert.equal((await l.db.query("SELECT * FROM outbox_events WHERE event_type='SIDE_EFFECT_OUTCOME_UNKNOWN'")).rows.length,1);
   const classes=(await l.db.query('SELECT classification FROM perception_observations ORDER BY observed_at')).rows.map((row:any)=>row.classification);
-  await writeFile('docs/acceptance/oss-workflow-evidence.json',JSON.stringify({capturedAt:new Date().toISOString(),productionChanged:false,realUpstreamMcp:true,model:'deterministic test gateway',database:'isolated PGlite; advisory locking stubbed',pollIntervals:'simulated by advancing due timestamp; not elapsed scheduling proof',sourceClassifications:classes,attentionEvents:(await l.db.query("SELECT * FROM event_fabric_events WHERE event_type='PERCEPTION_ATTENTION'")).rows.length,normalAction:'written, independently verified and reconciled',tamperedResult:'INCONCLUSIVE',approval:'fixture owner records, exact company/goal/params',unknownOutcome:'actual write then simulated lost receipt; fresh adapter readback CONFIRMED',replannedQueueReplay:'deduplicated with no second provider write',ownerDelivery:'internal event/outbox only; no external notification channel'},null,2)+'\n');
+  await writeFile('docs/acceptance/oss-workflow-evidence.json',JSON.stringify({capturedAt:new Date().toISOString(),productionChanged:false,realUpstreamMcp:true,model:'deterministic test gateway',database:'isolated PGlite; advisory locking stubbed',pollIntervals:'simulated by advancing due timestamp; not elapsed scheduling proof',sourceClassifications:classes,attentionEvents:(await l.db.query("SELECT * FROM event_fabric_events WHERE event_type='PERCEPTION_ATTENTION'")).rows.length,normalAction:'written, independently verified and reconciled',tamperedResult:'INCONCLUSIVE',approval:'fixture owner records, exact company/goal/params',unknownOutcome:'actual write then simulated lost receipt; fresh adapter readback CONFIRMED',replannedQueueReplay:'deduplicated with no second provider write',ownerDelivery:'internal owner inbox tested; UNROUTED; no external notification channel'},null,2)+'\n');
 
- }finally{delete process.env.SAM_PERCEPTION_ACTION_ENABLED;await bundle.raw.closeIntegrations?.();await l.close();await rm(work,{recursive:true,force:true})}
+ }finally{delete process.env.SAM_PERCEPTION_ACTION_ENABLED;delete process.env.SAM_NOTIFICATIONS_ENABLED;await bundle.raw.closeIntegrations?.();await l.close();await rm(work,{recursive:true,force:true})}
 });
