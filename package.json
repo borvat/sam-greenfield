@@ -22,7 +22,10 @@
     "test:mcp-oss": "node --import tsx scripts/oss-mcp-acceptance.ts",
     "test:oss-extended": "node --import tsx --test --test-concurrency=1 tests/phase24/business_reads.ts tests/phase24/oss_monitor_actions.ts",
     "test:oss-live-search": "node --import tsx --test tests/phase24/oss_search.ts",
-    "test:owner-inbox": "node --import tsx --test --test-concurrency=1 tests/phase24/owner_inbox.ts tests/phase24/oss_monitor_actions.ts"
+    "test:owner-inbox": "node --import tsx --test --test-concurrency=1 tests/phase24/owner_inbox.ts tests/phase24/oss_monitor_actions.ts",
+    "test:cloud-contracts": "node --import tsx --test tests/phase24/cloud_acceptance.ts",
+    "cloud:discover": "node --import tsx scripts/cloud-mcp-discover.ts",
+    "cloud:acceptance": "node --import tsx scripts/cloud-mcp-autonomy.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",
