@@ -1,6 +1,7 @@
 import { loadVerifiedWorldModel } from "./worldModel";
 import { recallKnowledge } from "./knowledge";
 import { loadApprovedMemory } from "./memory";
+import { enrichCommercialRecall } from '../../commercial/src/service';
 
 export async function assembleContext(
   client: any,
@@ -18,7 +19,7 @@ export async function assembleContext(
     entity: { type: entityType, id: entityId },
     facts,
     memory,
-    knowledge,
+    knowledge: await enrichCommercialRecall(client,entityId,knowledge),
     assembled_at: new Date().toISOString()
   };
 }
