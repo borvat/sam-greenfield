@@ -1,11 +1,11 @@
-# Free SAM trial; reuse the existing sam-trial-postgres database.
+# Shared configuration and credentials live in existing Render Environment Groups.
+# Secret values are managed only in Render; per-service tokens and DATABASE_URL remain scoped.
 previews:
   generation: 'off'
 services:
 - name: sam-runtime
   type: web
   runtime: node
-  plan: free
   region: frankfurt
   repo: https://github.com/borvat/sam-greenfield
   branch: deploy/sam-free-trial-ready
@@ -14,35 +14,18 @@ services:
   startCommand: sh deploy/render/start.sh runtime
   healthCheckPath: /readyz
   envVars:
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google-client
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-bol
+  - fromGroup: sam-prod-models
   - &id001
-    key: NODE_ENV
-    value: production
-  - &id002
-    key: NODE_VERSION
-    value: '22'
-  - &id003
     key: DATABASE_URL
     fromDatabase:
       name: sam-trial-postgres
       property: connectionString
-  - key: GOOGLE_OAUTH_CLIENT_ID
-    sync: false
-  - key: GOOGLE_OAUTH_CLIENT_SECRET
-    sync: false
   - key: GOOGLE_OAUTH_REFRESH_TOKEN
     sync: false
-  - key: SAM_GOOGLE_READ_ONLY
-    value: 'true'
-  - key: SAM_PRODUCTION_BUNDLE_MODULE
-    value: apps/production/src/defaultBundleModule.ts
-  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
-    value: 73aa81c6-3a23-4369-9408-8bea0956d399
-  - key: SAM_ORG_ID
-    value: 566baa67-5d93-4195-a1d0-18c1649154bf
-  - key: SAM_ORG_NAME
-    value: Surooh Holding Group B.V.
-  - key: SAM_LEGAL_ENTITY_NAME
-    value: QNAN B.V.
   - key: SAM_WORKER_ID
     value: sam-render-1
   - key: SAM_COMPOSITION_MODULE
@@ -63,36 +46,10 @@ services:
   startCommand: sh deploy/render/start.sh command-center
   healthCheckPath: /readyz
   envVars:
+  - fromGroup: sam-prod-common
   - *id001
-  - *id002
-  - *id003
   - key: SAM_GOOGLE_READ_ONLY
     value: 'true'
-  - key: SAM_PRODUCTION_BUNDLE_MODULE
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_PRODUCTION_BUNDLE_MODULE
-  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
-  - key: SAM_ORG_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_ORG_ID
-  - key: SAM_ORG_NAME
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_ORG_NAME
-  - key: SAM_LEGAL_ENTITY_NAME
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_LEGAL_ENTITY_NAME
   - key: SAM_COMMAND_CENTER_BEARER_TOKEN
     generateValue: true
 - name: sam-mcp
@@ -107,42 +64,13 @@ services:
   startCommand: sh deploy/render/start.sh mcp
   healthCheckPath: /livez
   envVars:
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google-client
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-bol
   - *id001
-  - *id002
-  - *id003
-  - key: GOOGLE_OAUTH_CLIENT_ID
-    sync: false
-  - key: GOOGLE_OAUTH_CLIENT_SECRET
-    sync: false
   - key: GOOGLE_OAUTH_REFRESH_TOKEN
     sync: false
-  - key: SAM_GOOGLE_READ_ONLY
-    value: 'true'
-  - key: SAM_PRODUCTION_BUNDLE_MODULE
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_PRODUCTION_BUNDLE_MODULE
-  - key: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
-  - key: SAM_ORG_ID
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_ORG_ID
-  - key: SAM_ORG_NAME
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_ORG_NAME
-  - key: SAM_LEGAL_ENTITY_NAME
-    fromService:
-      type: web
-      name: sam-runtime
-      envVarKey: SAM_LEGAL_ENTITY_NAME
   - key: SAM_MCP_BEARER_TOKEN
     generateValue: true
 databases:
