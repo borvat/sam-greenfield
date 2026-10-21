@@ -72,6 +72,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:core-reliability
       - run: npm run test:core-regression
+      - name: Verify TLS fixture toolchain
+        run: openssl version
       - name: Isolated protocol and security fixtures
         run: |
           for suite in provider_auth postgres_tls contracts synthetic_pilot; do

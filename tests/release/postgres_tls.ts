@@ -41,7 +41,10 @@ async function main(){
           });
         });
       });
-      server.listen(0,"localhost");await once(server,"listening");
+      // Node/libc may bind localhost to ::1 while pg connects over IPv4.
+      // Keep the fixture on IPv4 loopback; the URL below still verifies the
+      // localhost certificate identity and rejects wrong/untrusted certificates.
+      server.listen(0,"127.0.0.1");await once(server,"listening");
       const port=(server.address() as any).port;
       const url=new URL(`postgresql://synthetic_app@localhost:${port}/synthetic?sslmode=require`);
       if(trusted)url.searchParams.set("sslrootcert",join(dir,name+".crt"));
