@@ -2,9 +2,10 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-COPY apps ./apps
-COPY packages ./packages
+# Preserve non-root runtime access even when the checkout uses owner-only modes.
+COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node apps ./apps
+COPY --chown=node:node packages ./packages
 # Optional organization CA for verified installs behind an HTTPS proxy. The CA
 # mount is ephemeral and is never copied into the runtime image.
 RUN --mount=type=secret,id=registry_ca \
