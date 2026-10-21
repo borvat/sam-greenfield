@@ -34,7 +34,9 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
  CREATE TABLE work_queue(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,plan_id UUID,step_id UUID,capability_id TEXT,params JSONB,priority INT,due_at TIMESTAMPTZ,queued_at TIMESTAMPTZ DEFAULT now(),status TEXT DEFAULT 'QUEUED', idempotency_key TEXT,operation_key_ref TEXT);
  CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,capability_id TEXT,params JSONB,result JSONB,actor TEXT,started_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE verifications(execution_id UUID,result TEXT);
- CREATE TABLE outbox_events(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),aggregate_type TEXT,aggregate_id TEXT,event_type TEXT,payload JSONB);`);
+ CREATE TABLE outbox_events(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),aggregate_type TEXT,aggregate_id TEXT,event_type TEXT,payload JSONB);
+ ALTER TABLE goals ADD COLUMN replan_attempts INT DEFAULT 0;
+ CREATE TABLE audit_log(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,action TEXT,after_ref JSONB,timestamp TIMESTAMPTZ DEFAULT now());`);
  await db.exec(await readFile("packages/db/migrations/00101_goal_read_reviews.sql","utf8"));
  let failEnqueue=false;
  const query=async(q:string,args?:any[])=>{if(failEnqueue&&q.includes("INSERT INTO work_queue")){failEnqueue=false;throw new Error("injected queue insert failure")}return q.includes("pg_try_advisory_lock")?{rows:[{locked:true}]}:q.includes("pg_advisory_unlock")?{rows:[{}]}:db.query(q,args)};
@@ -59,8 +61,15 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   await db.query("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[second,id,g.current_plan_id,descriptors[0].capabilityId,{message_id:"actual-message"},{content:[{type:"text",text:"Supplier confirms release."}]}]);
   await db.query("INSERT INTO verifications VALUES($1,'VERIFIED')",[second]);
   const final=review("complete");final.requirements[0].evidenceIds=[second];final.findings[0].executionId=second;
+  await db.query("UPDATE goals SET replan_attempts=1");
+  await db.query("INSERT INTO audit_log(goal_id,action,after_ref) VALUES($1,'RUNTIME_RECOVERY_REQUESTED',$2)",[id,{queue_id:"failed-work",capability_id:"google_mcp_get_drive_file_content",params:{file_id:"missing"},error_code:"READ_SOURCE_NOT_FOUND"}]);
   let calls=0;
-  assert.equal((await reviewNextReadGoal(bundle,sql,async()=>++calls===1?final:{accepted:true,missing:[]})).status,"complete");
+  assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>{
+   assert.equal(input.failedReadAttempts.length,1);
+   assert.equal(input.failedReadAttempts[0].after_ref.error_code,"READ_SOURCE_NOT_FOUND");
+   assert.equal(input.verifiedObservations.length,2);
+   return ++calls===1?final:{accepted:true,missing:[]};
+  })).status,"complete");
   assert.equal((await db.query("SELECT state FROM goals")).rows[0].state,"COMPLETED");
   const reports=await db.query("SELECT * FROM goal_read_reviews ORDER BY round");assert.equal(reports.rows.length,2);assert.equal((reports.rows[1] as any).decision.status,"complete");
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>{throw new Error("must not rerun")})).processed,false);
