@@ -8,6 +8,8 @@ export interface VerificationAdapter{
   verify(input:{
     execution:{
       id:string;
+      legalEntityId?:string|null;
+      result?:Record<string,unknown>;
       capabilityId:string;
       params:Record<string,unknown>;
       evidence:Record<string,unknown>;
@@ -27,6 +29,7 @@ export interface VerificationAdapter{
 }
 
 export interface ProductionBundle{
+  closeIntegrations?:()=>Promise<void>;
   capabilities:CapabilityDefinition[];
   toolDefinitions:ToolDefinition[];
   toolAdapters:ToolAdapter[];

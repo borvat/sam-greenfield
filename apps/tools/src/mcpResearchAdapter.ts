@@ -3,7 +3,7 @@ import type { CapabilityDefinition } from "../../agents/src/capabilityCatalog";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 
 export interface ResearchMcpClient {
-  listTools(): Promise<{ tools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> }>;
+  listTools(params?: { cursor?: string }): Promise<{ tools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> }>;
   callTool(args: { name: string; arguments: Record<string, unknown> }, resultSchema?: unknown, options?: { timeout?: number }): Promise<any>;
   close?(): Promise<void>;
 }

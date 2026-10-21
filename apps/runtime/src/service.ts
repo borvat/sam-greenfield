@@ -4,6 +4,7 @@ import { ReadinessGate } from "./readiness";
 import { runOperationalSupervisorTick } from "../../supervisor/src/runtime";
 
 export interface RuntimeComposition {
+  close?():Promise<void>;
   runWorkTick():Promise<unknown>;
 }
 
@@ -70,6 +71,7 @@ export async function startRuntimeService(input:{
       while(tickInFlight){
         await new Promise((resolve)=>setTimeout(resolve,10));
       }
+      await input.composition.close?.();
       await new Promise<void>((resolve,reject)=>{
         server.close((err)=>err?reject(err):resolve());
       });

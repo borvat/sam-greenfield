@@ -1,4 +1,5 @@
 import { withTransaction } from "../../../packages/db/src/client";
+import { companyCapabilities } from "../../../packages/tool-gateway/src/companyScope";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import { assembleContext } from "./contextAssembler";
@@ -60,7 +61,7 @@ export async function runBrainReplanCycle(input: {
     gateway:input.gateway,
     goalId:input.goalId,
     objective:goal.objective,
-    availableCapabilities:input.availableCapabilities,
+    availableCapabilities:companyCapabilities(input.availableCapabilities,goal.company_scope),
     forbiddenReadSteps:failedReads,
     context:{
       ...context,
