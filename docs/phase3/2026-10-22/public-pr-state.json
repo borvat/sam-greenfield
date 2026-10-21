@@ -1,0 +1,7 @@
+{
+  "number": 46,
+  "state": "DRAFT",
+  "baseBranch": "main",
+  "headBranch": "codex/sam-core-reliability",
+  "headSha": "15e77cc8ca310af2607a2c2580a18007e8fa6c64"
+}

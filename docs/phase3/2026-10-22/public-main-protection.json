@@ -1,0 +1,8 @@
+{
+  "name": "main",
+  "isDefault": true,
+  "mergeQueueEnabled": false,
+  "rulesetsPath": null,
+  "protectedByBranchProtections": false,
+  "scope": "public UI snapshot; does not enumerate inherited rulesets, required checks or review requirements"
+}
