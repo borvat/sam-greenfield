@@ -25,6 +25,15 @@ async function main(){
     SAM_RELEASE_CAPABILITIES:"local.calculate"
   };
   const config=validateRelease(env);
+  const options=new URL(config.databaseUrl).searchParams.get("options")!;
+  assert.match(options,/-c search_path=sam,pg_catalog,pg_temp(?: |$)/);
+  const hostilePath=validateRelease({...env,
+    DATABASE_URL:env.DATABASE_URL+"&options="+encodeURIComponent("-c search_path=pg_temp,public")});
+  assert.equal(new URL(hostilePath.databaseUrl).searchParams.get("options"),options);
+  for(const service of ["worker","command-center","mcp"]){
+    assert.equal(new URL(childEnvironment(env,config,service).DATABASE_URL)
+      .searchParams.get("options"),options);
+  }
   assert.doesNotThrow(()=>validateRelease({...env,REPLIT_DEPLOYMENT:"1",REPLIT_DEV_DOMAIN:"published-metadata.invalid"}));
   for(const patch of [{REPLIT_DEPLOYMENT:"true"},{REPLIT_DEPLOYMENT:""},
     {REPLIT_DEPLOYMENT:"0",REPLIT_DEV_DOMAIN:"editor.invalid"},
