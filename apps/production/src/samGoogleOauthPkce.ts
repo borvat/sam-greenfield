@@ -9,7 +9,7 @@ const CALLBACK_ORIGIN=/^https:\/\/[^/?#]+(?:\/[^?#]*)?$/;
 export async function createPkceRequest(input:{clientId:string;redirectUri:string;stateStore:(state:string,verifier:string)=>Promise<void>|void}){
   if(!input.clientId.trim()) throw new Error("MCP_CLIENT_ID_REQUIRED");
   const redirect=new URL(input.redirectUri);
-  if(redirect.protocol!=="https:" || !CALLBACK_ORIGIN.test(input.redirectUri))throw new Error("HTTPS_REDIRECT_REQUIRED");
+  if(redirect.protocol!=="https:" || !CALLBACK_ORIGIN.test(input.redirectUri) || redirect.username || redirect.password || redirect.hash || redirect.search)throw new Error("HTTPS_REDIRECT_REQUIRED");
   const verifier=randomBytes(32).toString("base64url");
   const challenge=createHash("sha256").update(verifier).digest("base64url");
   const state=randomBytes(24).toString("base64url");
