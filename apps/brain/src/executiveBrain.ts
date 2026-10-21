@@ -71,6 +71,7 @@ export async function runBrainPlanningCycle(input: {
     throw new Error("Candidate plan blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

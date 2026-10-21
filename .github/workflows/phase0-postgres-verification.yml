@@ -5,9 +5,17 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: sam-verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/sam_greenfield
       DATABASE_URL_APP: postgres://app_tenant_test:test_password@localhost:5432/sam_greenfield
@@ -42,6 +50,7 @@ jobs:
 
   core-reliability:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:15-alpine
@@ -63,3 +72,20 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:core-reliability
       - run: npm run test:core-regression
+      - name: Isolated protocol and security fixtures
+        run: |
+          for suite in provider_auth postgres_tls contracts synthetic_pilot; do
+            node scripts/testing/core-reliability.cjs --suite tests/release/$suite.ts
+          done
+          node scripts/testing/core-reliability.cjs --suite tests/release/managed_schema_source.cjs
+
+  clean-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Clean production-dependency image build
+        run: node scripts/development/build-image.cjs sam-core-reliability:ci

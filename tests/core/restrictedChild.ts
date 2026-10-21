@@ -8,8 +8,10 @@ import {createToolExecutors} from '../../apps/tools/src/executorFactory';
 import {runOneSpecialistWork} from '../../apps/agents/src/runtime';
 import {verifyNextExecution} from '../../apps/production/src/verifier';
 import {assertReleaseDatabaseSafety} from '../../packages/db/src/releaseSafety';
+import {assertRuntimeTenantBinding} from '../../packages/db/src/runtimeAccess';
 async function main(){
  await assertReleaseDatabaseSafety(pool);
+ await assertRuntimeTenantBinding(pool);
  const tenant=(await pool.query('SELECT current_legal_entity_id() entity')).rows[0].entity;
  const created=await createOwnerGoal(tenant,{objective:'Restricted synthetic workflow',authorityCeiling:'GREEN',acceptanceContract:{version:1,constraints:[{capabilityId:'echo',params:{value:42},result:{field:'value',equals:42}}]}});
  const g=created.id;

@@ -1,12 +1,12 @@
 import {pool} from "../../../packages/db/src/client";
 import {loadProductionBundle} from "../../production/src/loadBundle";
 import {createProductionComposition} from "../../production/src/composition";
-import {assertReleaseDatabaseSafety} from "../../../packages/db/src/releaseSafety";
+import {assertRuntimeTenantBinding} from "../../../packages/db/src/runtimeAccess";
 import {pilotEnabled,pilotConfiguration} from "../../production/src/syntheticPilotScope";
 
 // No DDL, migration, GRANT, registry mutation, or external operational loop here.
 export default (async()=>{
-await assertReleaseDatabaseSafety(pool);
+await assertRuntimeTenantBinding(pool);
 const bundle=await loadProductionBundle(process.env.SAM_PRODUCTION_BUNDLE_MODULE??"");
 const approved=new Set((process.env.SAM_RELEASE_CAPABILITIES??"").split(","));
 const pilot=pilotEnabled()?pilotConfiguration():undefined;

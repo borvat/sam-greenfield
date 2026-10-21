@@ -83,6 +83,7 @@ export async function runBrainReplanCycle(input: {
     throw new Error("Replanned candidate blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

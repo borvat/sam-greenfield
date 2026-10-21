@@ -1,3 +1,4 @@
+import type {PoolClient} from 'pg';
 import { withTransaction } from "../../../packages/db/src/client";
 
 export type SideEffectState = "PENDING" | "SENT" | "CONFIRMED" | "FAILED";
@@ -9,8 +10,8 @@ export async function beginSideEffectAtomic(input: {
   goalId?: string | null;
   legalEntityId?: string | null;
   idempotencyKey?: string | null;
-}) {
-  return withTransaction(async (client) => {
+}, transactionClient?:PoolClient) {
+  const reserve=async (client:PoolClient) => {
     const inserted = await client.query(
       `INSERT INTO side_effect_operations
         (operation_key, capability_id, goal_id, legal_entity_id, request_hash, idempotency_key,reconciliation_state)
@@ -36,7 +37,8 @@ export async function beginSideEffectAtomic(input: {
       [input.operationKey]
     );
     return { created: false, operation: existing.rows[0] };
-  });
+  };
+  return transactionClient?reserve(transactionClient):withTransaction(reserve);
 }
 
 export async function markSideEffectSentAtomic(
@@ -83,9 +85,10 @@ export async function confirmSideEffectAtomic(operationKey: string): Promise<voi
 
 export async function bindSideEffectToWorkAtomic(
   queueId: string,
-  operationKey: string
+  operationKey: string,
+  transactionClient?:PoolClient
 ): Promise<void> {
-  await withTransaction(async (client) => {
+  const bind=async (client:PoolClient) => {
     const op = await client.query(
       "SELECT operation_key FROM side_effect_operations WHERE operation_key=$1 FOR UPDATE",
       [operationKey]
@@ -103,5 +106,6 @@ export async function bindSideEffectToWorkAtomic(
     if (work.rowCount !== 1) {
       throw new Error("Work item already bound to a different side effect");
     }
-  });
+  };
+  if(transactionClient)await bind(transactionClient);else await withTransaction(bind);
 }
