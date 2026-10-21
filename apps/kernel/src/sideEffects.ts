@@ -13,8 +13,8 @@ export async function beginSideEffectAtomic(input: {
   return withTransaction(async (client) => {
     const inserted = await client.query(
       `INSERT INTO side_effect_operations
-        (operation_key, capability_id, goal_id, legal_entity_id, request_hash, idempotency_key)
-       VALUES($1,$2,$3,$4,$5,$6)
+        (operation_key, capability_id, goal_id, legal_entity_id, request_hash, idempotency_key,reconciliation_state)
+       VALUES($1,$2,$3,$4,$5,$6,'NEEDS_RECONCILIATION')
        ON CONFLICT(operation_key) DO NOTHING
        RETURNING *`,
       [

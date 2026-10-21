@@ -1,0 +1,297 @@
+{
+  "baselineSha": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "branch": "codex/sam-core-reliability",
+  "sourceTestConfigDigest": "ac3d41a2ef3c7e57730db3219337d73c1295e8c4a0f89bafd1b06109ea7dbad4",
+  "digestConvention": "SHA256 of sorted source/test/config path + NUL + bytes + NUL; documentation excluded",
+  "classification": "ISOLATED_SYNTHETIC_LOCAL_POSTGRES_NOT_PRODUCTION",
+  "toolchains": {
+    "hostNode": "24.19.0",
+    "compatibilityNode": "22.23.4",
+    "postgres": "15.19"
+  },
+  "baseline": {
+    "typecheck": "PASS",
+    "phase1Through21Suites": 38,
+    "passed": 38,
+    "source": "git archive of baseline SHA"
+  },
+  "checks": [
+    {
+      "command": "npm run typecheck",
+      "status": "PASS"
+    },
+    {
+      "command": "npm run test:core-regression",
+      "status": "PASS",
+      "passed": 38,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:core-reliability",
+      "status": "PASS",
+      "assertionGroups": 15,
+      "childProcessCrashExitCode": 72
+    },
+    {
+      "command": "Node 22 container: tsc --noEmit and core-reliability runner with sanitized local fixture environment",
+      "status": "PASS",
+      "assertionGroups": 15,
+      "dependencies": "streamed lockfile-installed host dependencies; does not prove clean image installation"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/provider_auth.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/postgres_tls.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/contracts.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/synthetic_pilot.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/managed_schema_source.cjs",
+      "status": "PASS"
+    },
+    {
+      "command": "python3 tests/phase0/phase0_acceptance.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/real_postgres_test.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/test_rls_tenant_isolation.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/test_rls_fail_closed_security.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    },
+    {
+      "command": "docker build (frozen npm ci, optional ephemeral organization CA, TLS verification retained)",
+      "status": "FAILED",
+      "observedFailure": "npm Exit handler never called; npm ci exit 1",
+      "diagnosis": "Initial container registry TLS lacked organization CA; bounded registry probe succeeded after supplying existing public CA. Full image install still failed after CA and network/workspace-layout corrections. No image accepted."
+    }
+  ],
+  "regressionResults": [
+    {
+      "test": "tests/phase1/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/full_vertical_slice.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/kernel_smoke.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/replan_recovery.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/runtime_loop.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/authority_guard.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/brain_kernel_handoff.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/brain_replanning.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/gateway_resilience.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/model_gateway.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/capability_catalog.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/specialist_delegation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/specialist_supervisor.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase4/reconciliation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase4/tool_gateway.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase5/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase5/verified_learning.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/operational_supervision.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/policy_evaluation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase7/production_readiness.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase7/runtime_service.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase8/chatgpt_tool_surface.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase9/production_wiring.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase10/mcp_transport.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase11/model_adapters.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase12/gmail_adapter.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase13/drive_adapters.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase14/eboekhouden_read.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase15/bol_read.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase16/bol_operational_intelligence.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase17/finance_reconciliation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase18/operational_finance_loop.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase19/command_center.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase20/live_golden_chain_gate.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase21/production_deployment.ts",
+      "passed": true,
+      "exit": 0
+    }
+  ],
+  "limitations": [
+    "No lint script or compiled build target configured.",
+    "Hosted CI and current PR reviews unavailable through GitHub API (Forbidden).",
+    "Platform-specific Replit development/service tests not run outside their pinned identity setup.",
+    "No production, Render, live model, business or stability-test execution.",
+    "Production migration/grant/backfill/rollback and continuous load tests not performed."
+  ],
+  "productionChanged": false,
+  "productionDataRead": false,
+  "paidModelCalls": 0,
+  "businessActions": 0,
+  "deploymentPerformed": false,
+  "merged": false
+}

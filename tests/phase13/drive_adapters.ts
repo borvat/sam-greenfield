@@ -61,6 +61,8 @@ async function mock(){
       const q=u.searchParams.get("q")??"";
       assert.ok(q.includes("trashed = false"));
       let result=[...files.values()].filter((f)=>!f.trashed);
+      const name=q.match(/name contains '([^']+)'/);
+      if(name)result=result.filter(f=>f.name.includes(name[1]));
       if(q.includes("appProperties has")){
         const markerMatch=q.match(/value='([^']+)'/);
         const marker=markerMatch?.[1]??"";
@@ -102,7 +104,7 @@ async function main(){
   assert.equal((meta.result as any).file.id,"existing-1");
   const aliasMeta=await metaAdapter.execute({capabilityId:"drive_get_metadata",idempotencyKey:"read-alias",params:{fileId:"existing-1"}});
   assert.equal((aliasMeta.result as any).file.id,"existing-1");
-  const aliasVerified=await new DriveGetMetadataVerifier(client).verify({execution:{id:"alias-e1",capabilityId:"drive_get_metadata",params:{fileId:"existing-1"},evidence:aliasMeta.evidence,operationKeyRef:null},contract:{id:"alias-c1",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
+  const aliasVerified=await new DriveGetMetadataVerifier(client).verify({execution:{id:"alias-e1",capabilityId:"drive_get_metadata",params:{fileId:"existing-1"},result:aliasMeta.result,evidence:aliasMeta.evidence,operationKeyRef:null},contract:{id:"alias-c1",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}});
   assert.equal(aliasVerified.result,"VERIFIED");
 
   const searchAdapter=new DriveSearchAdapter(client);
@@ -144,7 +146,7 @@ async function main(){
       id:"e1",
       capabilityId:"drive_get_metadata",
       params:{file_id:"existing-1"},
-      evidence:meta.evidence,
+      result:meta.result,evidence:meta.evidence,
       operationKeyRef:null
     },
     contract:{id:"c1",method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}
@@ -156,7 +158,7 @@ async function main(){
       id:"e2",
       capabilityId:"drive_search",
       params:{query:"Existing"},
-      evidence:search.evidence,
+      result:search.result,evidence:search.evidence,
       operationKeyRef:null
     },
     contract:{id:"c2",method:"list_search",requiredEvidenceFields:{},independentQueryTemplate:{}}

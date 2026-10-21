@@ -8,6 +8,13 @@ export async function syncProductionModelRegistry(
 
   await withTransaction(async(client)=>{
     for(const provider of configs){
+      if(process.env.NODE_ENV==='production'){
+        const row=(await client.query('SELECT models,capabilities,privacy_class_allowed,cost_per_1k_input,cost_per_1k_output FROM model_providers WHERE provider_id=$1',[provider.providerId])).rows[0];
+        if(!row||JSON.stringify(row.models)!==JSON.stringify(provider.models)||JSON.stringify(row.capabilities)!==JSON.stringify(provider.capabilities)||
+          JSON.stringify(row.privacy_class_allowed)!==JSON.stringify(provider.privacyClasses)||row.cost_per_1k_input!==provider.costPer1kInput||row.cost_per_1k_output!==provider.costPer1kOutput)
+          throw new Error('MODEL_REGISTRY_PROVISIONING_REQUIRED');
+        continue;
+      }
       await client.query(
         `INSERT INTO model_providers
           (provider_id,models,capabilities,cost_per_1k_input,cost_per_1k_output,privacy_class_allowed,health)

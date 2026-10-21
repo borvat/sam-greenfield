@@ -1,3 +1,5 @@
+import {leaseAttemptLimit,stopExhaustedLease} from '../../kernel/src/leaseBudget';
+import {prepareWorkParameters} from '../../kernel/src/dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "../../kernel/src/execution";
@@ -11,11 +13,12 @@ export async function claimNextWorkForSpecialistAtomic(
 ): Promise<ClaimedWork | null> {
   return withTransaction(async (client) => {
     const candidate = await client.query(
-      `SELECT id
+      `SELECT id,goal_id,attempt,fencing_token
          FROM work_queue
         WHERE status IN ('QUEUED','HANDBACK')
           AND capability_id = ANY($1::text[])
           AND (due_at IS NULL OR due_at <= now())
+          AND (plan_id IS NULL OR work_dependencies_ready(id))
         ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
         FOR UPDATE SKIP LOCKED
         LIMIT 1`,
@@ -23,6 +26,8 @@ export async function claimNextWorkForSpecialistAtomic(
     );
     if (candidate.rowCount === 0) return null;
 
+    const limit=leaseAttemptLimit();
+    if(limit!==null&&candidate.rows[0].attempt>=limit){await stopExhaustedLease(client,candidate.rows[0]);return null;}
     const queueId = candidate.rows[0].id as string;
     const leaseOwner = `${agent.agentId}:${workerInstanceId}`;
     const fencingToken = await acquireLease(client,queueId,leaseOwner,ttlSeconds);
@@ -53,11 +58,13 @@ export async function claimNextWorkForSpecialistAtomic(
     if (updated.rowCount !== 1) throw new Error("Specialist handoff persistence failed");
 
     const row = updated.rows[0];
+    const params=await prepareWorkParameters(client,queueId,row.params??{});
+    if(!params)return null;
     return {
       queueId,
       fencingToken,
       capabilityId: row.capability_id,
-      params: row.params ?? {},
+      params,
       goalId: row.goal_id ?? null,
       planId: row.plan_id ?? null
     };

@@ -33,7 +33,7 @@ export function encodeGoalAcceptance(v:unknown):string{
 }
 export function checkGoalAcceptance(definition:string|null,executions:any[]):{passed:boolean;reason:string}{
   if(!definition?.startsWith(ACCEPTANCE_PREFIX)){
-    return {passed:process.env.SAM_REQUIRE_GOAL_ACCEPTANCE!=="1",reason:"GOAL_CONTRACT_MISSING"};
+    return {passed:process.env.SAM_REQUIRE_GOAL_ACCEPTANCE!=="1"&&process.env.NODE_ENV!=="production",reason:"GOAL_CONTRACT_MISSING"};
   }
   try{
     const contract=validateGoalAcceptance(JSON.parse(definition.slice(ACCEPTANCE_PREFIX.length)));

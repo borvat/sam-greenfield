@@ -1,3 +1,5 @@
+import {pool} from '../../../packages/db/src/client';
+import {assertReleaseDatabaseSafety} from '../../../packages/db/src/releaseSafety';
 import { loadRuntimeConfig } from "./config";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { createProductionComposition } from "../../production/src/composition";
@@ -11,6 +13,11 @@ import { createFinanceOperationalTickFromEnv } from "../../production/src/financ
 
 export default (async()=>{
 const config=loadRuntimeConfig();
+if(config.mode==='production'){
+ await assertReleaseDatabaseSafety(pool);
+ const tenant=(await pool.query('SELECT current_org_id() org,current_legal_entity_id() entity')).rows[0];
+ if(!tenant?.org||!tenant?.entity)throw new Error('RUNTIME_TENANT_CONTEXT_REQUIRED');
+}
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
 await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);

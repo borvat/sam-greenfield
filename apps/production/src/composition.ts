@@ -1,3 +1,6 @@
+import {relayOutboxUntilEmpty} from '../../kernel/src/outboxRelay';
+import {processNextKernelEventAtomic} from '../../kernel/src/eventConsumer';
+import {reconcileBlockedDependencies} from '../../kernel/src/dependencies';
 import { createToolExecutors } from "../../tools/src/executorFactory";
 import { reconcilePendingSideEffects } from "../../tools/src/reconciler";
 import { runCatalogSpecialistTick } from "../../agents/src/executiveFlow";
@@ -30,27 +33,36 @@ export function createProductionComposition(input:{
   const ttl=input.bundle.raw.workerLeaseTtlSeconds??60;
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);
 
+  const attempt=async<T>(stage:string,run:()=>Promise<T>):Promise<T|{processed:false;failed:true;reason:string}>=>{
+    try{return await run();}catch{
+      console.error(JSON.stringify({event:'RUNTIME_STAGE_FAILED',stage,details:'withheld'}));
+      return {processed:false,failed:true,reason:'STAGE_FAILED'};
+    }
+  };
   return {
     async runWorkTick(){
       const recovery=await recoverKernelAfterRestart();
-      const reconciliation=hasSideEffects?await reconcilePendingSideEffects({
+      const dependencyRecovery=await reconcileBlockedDependencies();
+      const events={relayed:await relayOutboxUntilEmpty(100),consumed:0};
+      while(events.consumed<100&&(await processNextKernelEventAtomic()).processed)events.consumed++;
+      const reconciliation=hasSideEffects?await attempt("reconciliation",()=>reconcilePendingSideEffects({
         tools:input.bundle.tools,
         limit:25
-      }):null;
-      const earlyVerification=input.bundle.raw.deferVerification?await verifyNextExecution(input.bundle):null;
-      const earlyLearning=input.bundle.raw.deferVerification?await learnNextVerifiedExecution(input.bundle):null;
-      const planning=await planNextNewGoal(input.bundle);
-      const execution=await runCatalogSpecialistTick({
+      })):null;
+      const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle)):null;
+      const earlyLearning=input.bundle.raw.deferVerification?await attempt("learning",()=>learnNextVerifiedExecution(input.bundle)):null;
+      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle));
+      const execution=await attempt("execution",()=>runCatalogSpecialistTick({
         catalog:input.bundle.catalog,
         workerInstanceId:input.workerId,
         ttlSeconds:ttl,
         executors
-      });
-      const verification=earlyVerification??await verifyNextExecution(input.bundle);
-      const learning=earlyLearning??await learnNextVerifiedExecution(input.bundle);
-      const operational=input.operationalTick?await input.operationalTick():null;
+      }));
+      const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle));
+      const learning=earlyLearning??await attempt("learning",()=>learnNextVerifiedExecution(input.bundle));
+      const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
-      return {recovery,reconciliation,planning,execution,verification,learning,operational};
+      return {events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,learning,operational};
     }
   };
 }

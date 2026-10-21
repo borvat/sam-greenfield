@@ -8,13 +8,14 @@ function stableScope(scope?:Record<string,unknown>):string{
 
 async function requireVerifiedExecution(client:any,executionId:string){
   const res=await client.query(
-    `SELECT e.id,e.goal_id,e.capability_id,e.result,e.evidence,
+    `SELECT e.id,e.goal_id,e.capability_id,e.result,e.evidence,g.company_scope,g.state AS goal_state,
+            e.plan_hash,e.execution_hash,
             v.id AS verification_id,v.result AS verification_result
-       FROM executions e
+       FROM executions e JOIN goals g ON g.id=e.goal_id AND g.current_plan_id=e.plan_id
        JOIN LATERAL (
-         SELECT id,result
+         SELECT id,result,plan_hash,execution_hash
            FROM verifications
-          WHERE execution_id=e.id
+          WHERE execution_id=e.id AND verifier<>e.actor AND plan_hash=e.plan_hash AND execution_hash=e.execution_hash
           ORDER BY checked_at DESC,id DESC
           LIMIT 1
        ) v ON true
@@ -22,7 +23,7 @@ async function requireVerifiedExecution(client:any,executionId:string){
     [executionId]
   );
   if(res.rowCount!==1) throw new Error("Execution or verification not found");
-  if(res.rows[0].verification_result!=="VERIFIED"){
+  if(res.rows[0].verification_result!=="VERIFIED"||res.rows[0].goal_state!=="COMPLETED"){
     throw new Error("Learning requires independently VERIFIED execution");
   }
   return res.rows[0];
@@ -42,6 +43,7 @@ export async function learnVerifiedWorldFact(input:{
 },transactionClient?:any):Promise<string>{
   const work=async(client:any)=>{
     const execution=await requireVerifiedExecution(client,input.executionId);
+    if(input.entityType!=='legal_entity'||input.entityId!==execution.company_scope)throw new Error('LEARNING_ENTITY_MISMATCH');
     const scope=input.scope ?? {};
     const now=input.sourceTimestamp ?? new Date();
     const duplicate=await client.query(`SELECT id FROM world_facts WHERE source=$1

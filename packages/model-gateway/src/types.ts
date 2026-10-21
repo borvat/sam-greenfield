@@ -1,6 +1,7 @@
 export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED";
 
 export interface ModelTask {
+  signal?:AbortSignal;
   task: string;
   capability: string;
   dataClassification: DataClassification;

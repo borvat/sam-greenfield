@@ -48,6 +48,7 @@ export class ModelGateway {
     let reservedBudgetUsd = 0;
 
     for (let i = 0; i < candidates.length; i++) {
+      task.signal?.throwIfAborted();
       const candidate = candidates[i];
 
       if (
@@ -81,6 +82,7 @@ export class ModelGateway {
       const started = Date.now();
       try {
         const result = await adapter.invoke(task, candidate.model);
+        task.signal?.throwIfAborted();
         const provider = providers.find((p) => p.providerId === candidate.providerId)!;
         const costUsd =
           (result.usage.inputTokens / 1000) * provider.costPer1kInput +

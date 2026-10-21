@@ -8,7 +8,7 @@ export async function learnNextVerifiedExecution(bundle:ValidatedProductionBundl
   if(!policy)return {processed:false};
   return withTransaction(async client=>{
     const r=await client.query(`SELECT e.id,e.goal_id,e.capability_id,e.result,g.company_scope,g.domain
-      FROM executions e JOIN goals g ON g.id=e.goal_id
+      FROM executions e JOIN goals g ON g.id=e.goal_id AND g.current_plan_id=e.plan_id
       JOIN verifications v ON v.execution_id=e.id
       WHERE v.result='VERIFIED' AND v.verifier<>e.actor
         AND (g.completion_definition IS NULL OR g.completion_definition NOT LIKE 'sam.acceptance/v1:%' OR g.state='COMPLETED')

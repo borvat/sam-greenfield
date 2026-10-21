@@ -39,3 +39,27 @@ jobs:
           python tests/phase0_postgres/real_postgres_test.py
           python tests/phase0_postgres/test_rls_tenant_isolation.py
           python tests/phase0_postgres/test_rls_fail_closed_security.py
+
+  core-reliability:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: sam_core_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: core-ci-fixture
+        ports: ["5432:5432"]
+        options: --health-cmd="pg_isready -U postgres -d sam_core_test" --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      SAM_CORE_TEST_DATABASE_URL: postgres://postgres:core-ci-fixture@127.0.0.1:5432/sam_core_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --include=dev
+      - run: npm run typecheck
+      - run: npm run test:core-reliability
+      - run: npm run test:core-regression

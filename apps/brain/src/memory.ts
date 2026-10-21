@@ -25,14 +25,15 @@ export async function appendMemoryObservation(
   return res.rows[0].id;
 }
 
-export async function loadApprovedMemory(client: any, limit = 200) {
+export async function loadApprovedMemory(client: any, limit = 200, entityId?:string) {
   const res = await client.query(
     `SELECT *
        FROM memory_records
       WHERE status IN ('REINFORCED','APPROVED_RULE')
+        AND ($2::uuid IS NULL OR scope->>'legal_entity_id'=$2::text)
       ORDER BY last_confirmed_at DESC, confidence DESC, id DESC
       LIMIT $1`,
-    [limit]
+    [limit,entityId??null]
   );
   return res.rows;
 }

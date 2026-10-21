@@ -21,7 +21,9 @@
     "start": "tsx apps/runtime/src/main.ts",
     "start:mcp": "tsx apps/mcp/src/main.ts",
     "start:command-center": "tsx apps/command-center/src/main.ts",
-    "live:acceptance": "tsx apps/acceptance/src/main.ts"
+    "live:acceptance": "tsx apps/acceptance/src/main.ts",
+    "test:core-reliability": "node scripts/testing/core-reliability.cjs",
+    "test:core-regression": "node scripts/testing/core-reliability.cjs --regression"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",

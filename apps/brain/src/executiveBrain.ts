@@ -1,3 +1,4 @@
+import {loadReplanContext} from './replanContext';
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
@@ -14,6 +15,7 @@ export async function runBrainPlanningCycle(input: {
   goalId: string;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
   availableCapabilities?: unknown[];
@@ -44,11 +46,11 @@ export async function runBrainPlanningCycle(input: {
     gateway: input.gateway,
     goalId: input.goalId,
     objective: goal.objective,
-    context:goal.replan_reason?{...context,replan_reason:goal.replan_reason}:context,
+    context:goal.replan_reason?{...context,...await loadReplanContext(input.goalId),replan_reason:goal.replan_reason}:context,
     availableCapabilities:input.availableCapabilities,
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
-    preferredProviders: input.preferredProviders
+    signal:input.signal,preferredProviders: input.preferredProviders
   });
 
   const authority = await withTransaction((client) => evaluatePlanAuthority(client, {

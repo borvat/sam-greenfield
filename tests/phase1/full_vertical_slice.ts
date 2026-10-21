@@ -106,7 +106,7 @@ async function main() {
     executionId: execution.executionId,
     verifier: "independent-verifier-phase1",
     contractId: contract.id,
-    independentEvidence: { provider_reference: "provider-ref-phase1", readback: true },
+    independentEvidence: { provider_message_id: "provider-ref-phase1", provider_reference: "provider-ref-phase1", readback: true },
     result: "VERIFIED"
   });
 

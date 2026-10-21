@@ -1,3 +1,5 @@
+import {evaluatePlanAuthority} from '../../brain/src/authorityGuard';
+import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { consumeApproval } from "../../../packages/db/src/approvals";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
@@ -42,8 +44,23 @@ export function createToolExecutors(input:{
 
     executors[capabilityId]=async(work:ClaimedWork)=>{
       const params=work.params ?? {};
+      validateParameters(capability.parameters,params);
+      await withTransaction(async client=>{
+        const row=(await client.query(`SELECT w.id,w.goal_id,w.plan_id,w.capability_id,g.authority_ceiling FROM work_queue w JOIN goals g ON g.id=w.goal_id
+          WHERE w.id=$1 AND w.fencing_token=$2 AND w.status IN ('LEASED','EXECUTING')
+          AND w.lease_expiry>now() AND g.state='EXECUTING' AND g.current_plan_id=w.plan_id`,[work.queueId,work.fencingToken])).rows[0];
+        if(!row||row.goal_id!==work.goalId||row.plan_id!==work.planId||row.capability_id!==work.capabilityId)throw new Error('EXECUTION_LEASE_OR_GOAL_INVALID');
+        const rank={GREEN:0,YELLOW:1,RED:2};
+        if(rank[capability.authorityClass]>rank[row.authority_ceiling as keyof typeof rank])throw new Error('EXECUTION_AUTHORITY_DENIED');
+        if(!tool.sideEffect){
+          const entity=await legalEntityForWork(work.queueId);
+          const authority=await evaluatePlanAuthority(client,{goalId:work.goalId!,legalEntityId:entity,
+            steps:[{capabilityId,params}],capabilityPolicies:input.catalog.authorityPolicies()});
+          if(!authority.authorized)throw new Error('EXECUTION_AUTHORITY_DENIED');
+        }
+      });
       const requestHash=sha256Hex(params);
-      const operationKey=`tool:${work.queueId}:${capabilityId}:${requestHash}`;
+      const operationKey=`tool:${work.goalId??work.queueId}:${capabilityId}:${requestHash}`;
 
       if(!tool.sideEffect){
         const result=await input.tools.adapter(capabilityId).execute({
@@ -82,6 +99,7 @@ export function createToolExecutors(input:{
               provider_reference:sideEffect.operation.provider_reference ?? null
             },
             evidence:{
+              ...(sideEffect.operation.reconciliation_evidence??{}),
               operation_key:operationKey,
               side_effect:true,
               deduplicated:true,
@@ -97,7 +115,7 @@ export function createToolExecutors(input:{
       const approvalAuthority=capability.authorityClass;
       if(approvalAuthority!=="GREEN"){
         await withTransaction((client)=>consumeApproval(client,{
-          capabilityId,
+          goalId:work.goalId,capabilityId,
           params,
           legalEntityId,
           authorityClass:approvalAuthority

@@ -3,11 +3,10 @@ import {insertOutboxEvent} from "../../../packages/db/src/outbox";
 import {canTransition,transitionGoal} from "./stateMachine";
 import type {GoalState} from "../../../packages/shared/src/types";
 
-// Opt-in release contract. Unconfigured original compositions retain their
-// existing behavior; malformed configured limits always fail closed.
+// All workers have a finite default; explicit malformed limits fail closed.
 export function leaseAttemptLimit():number|null {
   const raw=process.env.SAM_WORK_LEASE_MAX_ATTEMPTS;
-  if(raw===undefined)return null;
+  if(raw===undefined)return 3;
   if(!/^[1-9][0-9]?$/.test(raw)||Number(raw)>20)throw new Error("LEASE_ATTEMPT_LIMIT_INVALID");
   return Number(raw);
 }

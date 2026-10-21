@@ -1,3 +1,5 @@
+import {encodeGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import { evaluatePlanAuthority } from "../../brain/src/authorityGuard";
@@ -10,8 +12,11 @@ import type { ValidatedProductionBundle } from "./bundle";
 async function createGoal(input:{
   legalEntityId:string;
   objective:string;
+  acceptanceContract?:unknown;
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
 }):Promise<string>{
+  if((process.env.NODE_ENV==='production'||process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==='1')&&input.acceptanceContract===undefined)throw new Error('GOAL_CONTRACT_REQUIRED');
+  const completion=input.acceptanceContract===undefined?null:encodeGoalAcceptance(input.acceptanceContract);
   return withTransaction(async(client)=>{
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
@@ -27,14 +32,14 @@ async function createGoal(input:{
 
     const inserted=await client.query(
       `INSERT INTO goals
-       (business_id,company_scope,domain,objective,state,authority_ceiling)
-       VALUES($1,$2,'chatgpt_direct',$3,'NEW',$4)
+       (business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
+       VALUES($1,$2,'chatgpt_direct',$3,'NEW',$4,$5)
        RETURNING id`,
       [
         business.rows[0].business_id,
         input.legalEntityId,
         input.objective,
-        input.authorityCeiling
+        input.authorityCeiling,completion
       ]
     );
     return inserted.rows[0].id as string;
@@ -126,11 +131,12 @@ export function createKernelProductionDispatcher(
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
       const capability=bundle.catalog.get(input.capabilityId);
       bundle.tools.definition(input.capabilityId);
+      validateParameters(capability.parameters,input.params);
 
       const goalId=await createGoal({
         legalEntityId:input.legalEntityId,
         objective:input.objective?.trim() || `Execute capability ${input.capabilityId}`,
-        authorityCeiling:capability.authorityClass
+        acceptanceContract:input.acceptanceContract,authorityCeiling:capability.authorityClass
       });
 
       await transitionGoalAtomic(goalId,"NEW","MODELING","chatgpt_direct_observe");
