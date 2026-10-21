@@ -22,3 +22,13 @@ test("unapproved connection registers no Google capabilities",async()=>{
  const bundle=await withSamGoogleConnection({capabilities:[],toolDefinitions:[],toolAdapters:[]},{config:{ownerId:"owner",clientId:"client",store:{tools:async()=>[]}}} as any);
  assert.equal(bundle.capabilities.length,0);
 });
+test("permissions read describes its observed owner/sharing output without becoming a write",async()=>{
+ const connection:any={config:{ownerId:"owner",clientId:"client",store:{tools:async()=>[
+  {name:"get_drive_shareable_link",description:"Gets the shareable link for a Google Drive file or folder.",inputSchema:{type:"object",properties:{file_id:{type:"string"}},required:["file_id"]},annotations:{readOnlyHint:true}}
+ ]}},read:async()=>({content:[{type:"text",text:"Shared: False\nCurrent permissions:\n - User: owner@example.test (owner)"}]})};
+ const bundle=await withSamGoogleConnection({capabilities:[],toolDefinitions:[],toolAdapters:[]},connection);
+ const d=validateProductionBundle(bundle).catalog.planningDescriptors()[0];
+ assert.match(d.description,/permissions.*owner/i);assert.match(d.description,/Does not change sharing/);
+ assert.equal(d.sideEffect,false);assert.equal(d.authorityClass,"GREEN");
+ assert.equal(bundle.toolDefinitions[0].description,d.description);
+});
