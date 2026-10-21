@@ -38,3 +38,15 @@ export async function redeemPkceCode(input:{code:string;state:string;storedState
  if(typeof raw.access_token!=="string"||!raw.access_token)throw new Error("OAUTH_ACCESS_TOKEN_MISSING");
  return raw as {access_token:string;refresh_token?:string;expires_in?:number};
 }
+
+/** Renew an already-authorized SAM-only MCP token. Never use legacy Google tokens. */
+export async function refreshSamMcpAccessToken(input:{clientId:string;refreshToken:string}):Promise<{access_token:string;refresh_token?:string;expires_in?:number}> {
+ if(!input.clientId?.trim()||!input.refreshToken?.trim())throw new Error("SAM_MCP_REFRESH_CREDENTIALS_REQUIRED");
+ const body=new URLSearchParams({grant_type:"refresh_token",client_id:input.clientId,refresh_token:input.refreshToken});
+ const resp=await fetch(SAM_GOOGLE_ISSUER+"/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body,signal:AbortSignal.timeout(15000)});
+ if(resp.status===400||resp.status===401)throw new Error("SAM_MCP_REFRESH_REAUTH_REQUIRED");
+ if(!resp.ok)throw new Error("SAM_MCP_REFRESH_FAILED");
+ const value=await resp.json() as Record<string,unknown>;
+ if(typeof value.access_token!=="string"||!value.access_token)throw new Error("SAM_MCP_REFRESH_TOKEN_RESPONSE_INVALID");
+ return value as {access_token:string;refresh_token?:string;expires_in?:number};
+}
