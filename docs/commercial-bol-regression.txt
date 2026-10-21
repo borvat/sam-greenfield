@@ -1,0 +1,13 @@
+✔ all pages, exact change dates through today, placement timezone, dedup and cancellation arithmetic (20.647892ms)
+✔ failure, malformed/looping pages, missing quantity and invalid date cannot yield a partial report (8.371095ms)
+✔ missing stock stays unknown and cannot produce a replenishment candidate (1.449186ms)
+✔ verification requires independent recomputation and detects source changes and tampering (2.250991ms)
+✔ planner uses the executable report capability and concrete dates (28.77311ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 578.372579

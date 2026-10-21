@@ -1,0 +1,30 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:commercial-learning
+> node --import tsx --test tests/commercial/acceptance.ts
+
+✔ 01 actual local HTTP reads, independent readback, fully costed cents, hypotheses and persisted evidence (2166.389483ms)
+✔ 02 unknown costs stay unknown; partial coverage, negative margin and documented cost credits remain visible (1717.341076ms)
+✔ 03 reject duplicate costs, missing coverage, unsupported currency/tax, non-integer money and unsafe totals (1841.900118ms)
+✔ 04 product mappings, cancelled/open orders, omitted items and source pointers fail closed (1639.00031ms)
+✔ 05 separate entities, explicit grants, account identity and source ownership are enforced (1528.841447ms)
+✔ 06 latest verification, source equality and exact plan/execution linkage are required; writes cannot be evidence (1477.049233ms)
+✔ 07 preregistration, immutable forecasts and observational-only mode; no retrospective experiment (1511.127945ms)
+✔ 08 complete cycle compares a new cohort to locked expectations and saves one scoped uncertain lesson (1521.065587ms)
+✔ 09 adverse outcomes and insufficient evidence are preserved, not promoted to commercial success (4557.820476ms)
+✔ 10 outcomes must match product/window and immutable evidence; failed later verification prevents learning (1494.926786ms)
+✔ 17 experiment result tampering cannot become a remembered lesson (1523.859887ms)
+✔ 11 lesson insert failure rolls back knowledge annotation in the same real database transaction (1464.241195ms)
+✔ 12 durable storage reopening and actual PR37 context assembly recall a lesson in a separate goal (1895.019708ms)
+✔ 15 analysis integrity, independently changed source and closed periods are rechecked before predictions (1510.662032ms)
+✔ 16 legacy bol readback must actually equal its execution and raw source instructions cannot grant authority (1497.907076ms)
+✔ 13 non-owner RLS prevents cross-company reads and database role cannot self-grant privileges (2201.21256ms)
+✔ 14 disabled feature does not touch storage, and learning requires its own permission and memory flag (1972.180767ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32276.664248

@@ -1,0 +1,28 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:knowledge
+> node --import tsx --test tests/isolated/scoped_knowledge.ts tests/isolated/sam_google_review.ts tests/phase22/planner_scope.ts
+
+✔ review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion (31.743057ms)
+✔ isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction (2327.396094ms)
+✔ verified source is learned, recalled in an independent planner, survives storage reopening and remains company scoped (2876.055506ms)
+✔ rejects fabricated quotes, wrong-goal sources, latest failed verification and atomic partial writes (1495.781422ms)
+✔ source instructions cannot create owner authority; inferences remain explicitly uncertain; legacy memory fails closed by company (1462.953371ms)
+✔ explicit corrections enforce same company and forward source time; old evidence remains auditable (1458.298329ms)
+✔ feature is inert before explicit activation and never requires a new table while disabled (0.836571ms)
+✔ only an exact scoped unexpired owner approval can create a decision, and the approval is not execution authority (1472.435437ms)
+✔ database RLS denies missing tenant and cross-company reads/writes for a non-owner role (1457.251035ms)
+✔ knowledge inspection requires owner and explicit company, and disabled inspection does not access storage (2.230968ms)
+✔ explicit narrow bol reads do not force unrelated orders and inventory (48.73822ms)
+✔ explicit multi-specialist reads stay available together (1.637343ms)
+✔ natural-language identity reads are not assigned an arbitrary two-step minimum (0.432335ms)
+✔ unavailable or mutating explicit tools never become executable (1.358353ms)
+✔ identical reads are corrected once instead of posing as independent verification (1.016586ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11265.701697

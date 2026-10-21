@@ -1,0 +1,47 @@
+{
+  "schema": "sam.commercial.local-evidence.v1",
+  "generatedAt": "2026-10-21T04:40:22.692Z",
+  "fixtureOnly": true,
+  "evidence": [
+    {
+      "case": "local-http-cohort",
+      "provider": "LOOPBACK_FIXTURE_NOT_BOL_PRODUCTION",
+      "reads": 8,
+      "writes": 0,
+      "products": 1,
+      "lineage": 4,
+      "netRevenueCents": 8000,
+      "knownCostsCents": 7100,
+      "contributionCents": 900,
+      "hypothesis": "AVAILABILITY_REVIEW"
+    },
+    {
+      "case": "preregistered-observation-cycle",
+      "calendar": "SIMULATED_BUSINESS_DATES_NOT_ELAPSED_TIME",
+      "status": "WITHIN_PREDICTION",
+      "actualCents": 900,
+      "predictedCents": [
+        800,
+        1000
+      ],
+      "errorCents": 0,
+      "lessons": 1,
+      "knowledgeKind": "INFERENCE",
+      "providerWrites": 0
+    },
+    {
+      "case": "durable-PR37-recall",
+      "storage": "PGlite closed and reopened",
+      "separateGoalContext": true,
+      "serviceRestart": false,
+      "knowledgeRows": 1
+    }
+  ],
+  "limits": [
+    "No production reads or writes",
+    "No live model",
+    "Business calendar simulated",
+    "No Render or production migration/restart",
+    "No multiprocess PostgreSQL locking proof"
+  ]
+}
