@@ -17,6 +17,8 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
  const corrected=validateReadReview(cited,[{...source,text:source.text+"\nOwner ceo@example.test"}],"Read",descriptors);
  assert.equal(corrected.findings[0].quote,"Owner ceo@example.test");assert.equal(JSON.stringify(corrected).includes("examplle.test"),false);assert.ok(corrected.limitations.length);
  assert.equal(validateReadReview(review("continue"),[source],"Read the source",descriptors).status,"continue");
+ assert.throws(()=>validateReadReview(review("continue"),[source],"Read the source",descriptors,
+  [{capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}}]),/REPEATED_FAILED_READ/);
  const bad=structuredClone(review("continue"));bad.steps[0].params.message_id="invented";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNOBSERVED_ID/);
  bad.steps[0].capabilityId="send_email";assert.throws(()=>validateReadReview(bad,[source],"Read",descriptors),/UNSAFE/);
  const final=review("complete");final.findings[0].quote="Invented quote";assert.throws(()=>validateReadReview(final,[source],"Read",descriptors),/CITATION/);

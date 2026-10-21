@@ -6,6 +6,7 @@
  * This module is deliberately NOT registered in production until authentication,
  * discovery and independent verification have passed.
  */
+import {ReadSourceNotFoundError} from "../../../packages/shared/src/readSourceFailure";
 export const SAM_GOOGLE_MCP_URL = "https://sam-google-workspace-mcp.onrender.com/mcp";
 export const SAM_GOOGLE_ALLOWED_TOOLS = [
   "search_gmail_messages",
@@ -19,6 +20,19 @@ export const SAM_GOOGLE_ALLOWED_TOOLS = [
 export type SamGoogleTool = typeof SAM_GOOGLE_ALLOWED_TOOLS[number];
 const ALLOW = new Set<string>(SAM_GOOGLE_ALLOWED_TOOLS);
 const unsafe = /(send|delete|update|create|modify|upload|share_file|grant|revoke|trash|write|draft|move|copy|permission)/i;
+
+export function samGoogleReadFailure(name:SamGoogleTool,result:any):Error {
+  const fileRead=["get_drive_file_content","get_drive_file_download_url","get_drive_shareable_link"].includes(name);
+  const text=(Array.isArray(result?.content)?result.content:[])
+    .filter((c:any)=>c?.type==="text"&&typeof c.text==="string").map((c:any)=>c.text).join("\n");
+  // Only an actual MCP error response and an explicit provider 404 qualify.
+  // A successful document containing error examples must never trigger recovery.
+  if(fileRead&&result?.isError===true&&/\bHttpError\s+404\b/.test(text)
+    &&!/\bHttpError\s+(?:401|403)\b/.test(text)){
+    return new ReadSourceNotFoundError("google_mcp_"+name);
+  }
+  return new Error("REMOTE_TOOL_ERROR");
+}
 
 export interface McpTool {name:string;description?:string;inputSchema?:unknown;annotations?:{readOnlyHint?:boolean;destructiveHint?:boolean}}
 export function allowedTool(tool:McpTool):boolean {
@@ -98,7 +112,7 @@ export class SamGoogleMcpBridge {
     const discovered=await this.discover();
     if(!discovered.some(t=>t.name===name))throw new Error("TOOL_NOT_DISCOVERED_OR_NOT_READONLY");
     const result=await this.rpc("tools/call",{name,arguments:args});
-    if(result?.isError)throw new Error("REMOTE_TOOL_ERROR");
+    if(result?.isError)throw samGoogleReadFailure(name,result);
     return result;
   }
 }

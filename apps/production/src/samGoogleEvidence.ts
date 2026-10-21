@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {sha256Hex} from "../../../packages/shared/src/stableJson";
-import {SAM_GOOGLE_MCP_URL,type SamGoogleTool} from "./samGoogleMcpBridge";
+import {SAM_GOOGLE_MCP_URL,samGoogleReadFailure,type SamGoogleTool} from "./samGoogleMcpBridge";
 
 const origin=new URL(SAM_GOOGLE_MCP_URL).origin;
 const maxBytes=10*1024*1024;
@@ -25,11 +25,11 @@ export async function readGoogleArtifact(url:string):Promise<GoogleArtifact>{
 }
 
 export async function googleReadEvidence(name:SamGoogleTool,result:Record<string,unknown>,readArtifact=readGoogleArtifact){
- if(result.isError===true)throw new Error("REMOTE_TOOL_ERROR");
+ if(result.isError===true)throw samGoogleReadFailure(name,result);
  const strings:string[]=[];
  const visit=(v:any)=>{if(typeof v==="string")strings.push(v);else if(Array.isArray(v))v.forEach(visit);else if(v&&typeof v==="object")Object.values(v).forEach(visit)};visit(result);
  const texts=(result.content as any[]??[]).filter(c=>c.type==="text").map(c=>String(c.text));
- if(texts.some(s=>/^\s*(Error:|Error executing tool|Failed to )/i.test(s)))throw new Error("REMOTE_TOOL_ERROR");
+ if(texts.some(s=>/^\s*(Error:|Error executing tool|Error calling tool|Failed to )/i.test(s)))throw new Error("REMOTE_TOOL_ERROR");
  const exports=name==="get_drive_file_download_url"||name==="get_gmail_message_content";
  const urls=exports?[...new Set(texts.flatMap(s=>[...s.matchAll(/(?:^|\n)[^\S\r\n]*(?:📎\s*)?Download URL:\s*(https?:\/\/[^\s<>"'\)]+\/attachments\/[a-f0-9-]{36})/gi)].map(m=>m[1])))]:[];
  if(urls.length>10)throw new Error("SAM_GOOGLE_ARTIFACT_LIMIT");

@@ -1,6 +1,7 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import { transitionGoal } from "./stateMachine";
+import {isReadSourceNotFound} from "../../../packages/shared/src/readSourceFailure";
 
 export function failureMessage(error:unknown):string{
   return (error instanceof Error?error.message:String(error)).slice(0,4000);
@@ -57,8 +58,9 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
         "SELECT state,replan_attempts,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
         [goalId]
       );
-      const safeNotFound=row.capability_id==="drive_get_metadata" &&
-        /^Google Drive API HTTP 404:/.test(detail.error) &&
+      const safeNotFound=!row.operation_key_ref &&
+        ((row.capability_id==="drive_get_metadata" && /^Google Drive API HTTP 404:/.test(detail.error)) ||
+          isReadSourceNotFound(row.capability_id,input.error)) &&
         state.rows[0]?.state==="EXECUTING" &&
         Number(state.rows[0]?.replan_attempts??0)<2;
       if(safeNotFound){
@@ -70,13 +72,13 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
              status IN ('QUEUED','HANDBACK','LEASED','EXECUTING')`,
           [goalId,state.rows[0].current_plan_id]
         );
-        const reason="Drive metadata lookup returned HTTP 404; choose a read-only search fallback instead of retrying the missing file";
+        const reason="Drive source returned HTTP 404; choose a read-only search fallback instead of retrying the missing file";
         await client.query("UPDATE goals SET replan_reason=$2,updated_at=now() WHERE id=$1",[goalId,reason]);
         await transitionGoal(client,goalId,"EXECUTING","REPLANNING","READ_ONLY_NOT_FOUND_REPLAN",{failed_capability:row.capability_id});
         await client.query(
           `INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,after_ref,source,result)
            VALUES('sam-runtime',$1,'RUNTIME_RECOVERY_REQUESTED','goal',$1,$2::jsonb,'runtime','REPLANNING')`,
-          [goalId,JSON.stringify({reason,queue_id:row.id,capability_id:row.capability_id})]
+          [goalId,JSON.stringify({reason,queue_id:row.id,capability_id:row.capability_id,params:row.params??{},error_code:"READ_SOURCE_NOT_FOUND"})]
         );
         return true;
       }
