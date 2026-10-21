@@ -29,24 +29,29 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
 test("isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction",async()=>{
  const db=new PGlite();
  // Minimal real SQL schema for this boundary; no production database or network.
- await db.exec(`CREATE TABLE goals(id UUID PRIMARY KEY,state TEXT,completion_definition TEXT,current_plan_id UUID,objective TEXT,updated_at TIMESTAMPTZ DEFAULT now());
+ await db.exec(`CREATE TABLE legal_entities(id UUID PRIMARY KEY);
+ CREATE TABLE approvals(id UUID PRIMARY KEY);
+ CREATE TABLE goals(id UUID PRIMARY KEY,company_scope UUID,state TEXT,completion_definition TEXT,current_plan_id UUID,objective TEXT,updated_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE plans(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,version INT,goal_assumptions JSONB,constraints JSONB,dependencies JSONB,steps JSONB,plan_hash TEXT);
  CREATE TABLE work_queue(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,plan_id UUID,step_id UUID,capability_id TEXT,params JSONB,priority INT,due_at TIMESTAMPTZ,queued_at TIMESTAMPTZ DEFAULT now(),status TEXT DEFAULT 'QUEUED', idempotency_key TEXT,operation_key_ref TEXT);
  CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,capability_id TEXT,params JSONB,result JSONB,actor TEXT,started_at TIMESTAMPTZ DEFAULT now());
- CREATE TABLE verifications(execution_id UUID,result TEXT);
+ CREATE TABLE verifications(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),execution_id UUID,result TEXT,checked_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE outbox_events(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),aggregate_type TEXT,aggregate_id TEXT,event_type TEXT,payload JSONB);
  ALTER TABLE goals ADD COLUMN replan_attempts INT DEFAULT 0;
  CREATE TABLE audit_log(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,action TEXT,after_ref JSONB,timestamp TIMESTAMPTZ DEFAULT now());`);
  await db.exec(await readFile("packages/db/migrations/00101_goal_read_reviews.sql","utf8"));
- let failEnqueue=false;
- const query=async(q:string,args?:any[])=>{if(failEnqueue&&q.includes("INSERT INTO work_queue")){failEnqueue=false;throw new Error("injected queue insert failure")}return q.includes("pg_try_advisory_lock")?{rows:[{locked:true}]}:q.includes("pg_advisory_unlock")?{rows:[{}]}:db.query(q,args)};
+ await db.exec(await readFile("packages/db/migrations/00102_scoped_knowledge.sql","utf8"));
+ await db.query("INSERT INTO legal_entities VALUES($1)",[id]);
+ let failEnqueue=false,failLearning=false;
+ const query=async(q:string,args?:any[])=>{if(failLearning&&q.includes("INSERT INTO knowledge_records")){failLearning=false;throw new Error("injected learning failure")}if(failEnqueue&&q.includes("INSERT INTO work_queue")){failEnqueue=false;throw new Error("injected queue insert failure")}return q.includes("pg_try_advisory_lock")?{rows:[{locked:true}]}:q.includes("pg_advisory_unlock")?{rows:[{}]}:db.query(q,args)};
  const connection={query,release(){}};const sql={connect:async()=>connection};
  const bundle:any={catalog:{planningDescriptors:()=>descriptors},raw:{}};
  try{
-  await db.query("INSERT INTO goals VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
+  await db.query("INSERT INTO goals(id,state,completion_definition,current_plan_id,objective,updated_at) VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
+  await db.query("UPDATE goals SET company_scope=$1",[id]);
   await db.query("INSERT INTO plans(id,goal_id,version) VALUES($1,$2,1)",[plan,id]);
   await db.query("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[execution,id,plan,source.capabilityId,source.params,{content:[{type:"text",text:source.text}]}]);
-  await db.query("INSERT INTO verifications VALUES($1,'VERIFIED')",[execution]);
+  await db.query("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[execution]);
   failEnqueue=true;
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>review("continue"))).status,"blocked");
   assert.equal((await db.query("SELECT * FROM goal_read_reviews")).rows.length,0);
@@ -59,10 +64,17 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   const second="44444444-4444-4444-8444-444444444444";
   await db.query("UPDATE work_queue SET status='EXECUTED'");await db.query("UPDATE goals SET state='VERIFYING'");
   await db.query("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[second,id,g.current_plan_id,descriptors[0].capabilityId,{message_id:"actual-message"},{content:[{type:"text",text:"Supplier confirms release."}]}]);
-  await db.query("INSERT INTO verifications VALUES($1,'VERIFIED')",[second]);
+  await db.query("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[second]);
   const final=review("complete");final.requirements[0].evidenceIds=[second];final.findings[0].executionId=second;
   await db.query("UPDATE goals SET replan_attempts=1");
   await db.query("INSERT INTO audit_log(goal_id,action,after_ref) VALUES($1,'RUNTIME_RECOVERY_REQUESTED',$2)",[id,{queue_id:"failed-work",capability_id:"google_mcp_get_drive_file_content",params:{file_id:"missing"},error_code:"READ_SOURCE_NOT_FOUND"}]);
+  process.env.SAM_KNOWLEDGE_ENABLED="true";
+  failLearning=true;
+  assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>input.proposedReport?{accepted:true,missing:[]}:final)).status,"blocked");
+  assert.equal((await db.query("SELECT * FROM goal_read_reviews")).rows.length,1,"failed learning rolls back the final report");
+  assert.equal((await db.query("SELECT * FROM knowledge_records")).rows.length,0);
+  assert.equal((await db.query("SELECT state FROM goals")).rows[0].state,"WAITING_EXTERNAL");
+  await db.query("UPDATE goals SET state='VERIFYING'");
   let calls=0;
   assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>{
    assert.equal(input.failedReadAttempts.length,1);
@@ -71,11 +83,13 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
    return ++calls===1?final:{accepted:true,missing:[]};
   })).status,"complete");
   assert.equal((await db.query("SELECT state FROM goals")).rows[0].state,"COMPLETED");
+  assert.equal((await db.query("SELECT * FROM knowledge_records")).rows.length,1,"completion automatically captures verified quotation");
+  delete process.env.SAM_KNOWLEDGE_ENABLED;
   const reports=await db.query("SELECT * FROM goal_read_reviews ORDER BY round");assert.equal(reports.rows.length,2);assert.equal((reports.rows[1] as any).decision.status,"complete");
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>{throw new Error("must not rerun")})).processed,false);
   await db.query("DELETE FROM goal_read_reviews WHERE plan_id=$1",[g.current_plan_id]);
   await db.query("UPDATE goals SET state='VERIFYING'");
   assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>input.proposedReport?{accepted:false,missing:["Original comparison is absent"]}:final)).status,"blocked");
   assert.equal((await db.query("SELECT state FROM goals")).rows[0].state,"WAITING_EXTERNAL");
- }finally{await db.close()}
+ }finally{delete process.env.SAM_KNOWLEDGE_ENABLED;await db.close()}
 });

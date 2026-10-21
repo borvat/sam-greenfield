@@ -41,7 +41,7 @@ export async function runBrainReplanCycle(input: {
     if (!goal.company_scope) {
       return { entity:{type:"legal_entity",id:null},facts:[],memory:[] };
     }
-    return assembleContext(client,"legal_entity",goal.company_scope);
+    return assembleContext(client,"legal_entity",goal.company_scope,goal.objective);
   });
 
   // Capture failed reads from prior plan versions: the planner must not

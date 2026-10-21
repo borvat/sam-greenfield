@@ -1,3 +1,4 @@
+import { knowledgeEnabled } from "../../brain/src/knowledge";
 import { captureHealthSnapshot } from "../../supervisor/src/health";
 import { loadActiveIncidents } from "../../supervisor/src/incidents";
 import { withTransaction } from "../../../packages/db/src/client";
@@ -190,6 +191,16 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
       const limit=clampLimit(args.limit);
       return {ok:true,data:await rows("SELECT * FROM memory_records ORDER BY created_at DESC LIMIT $1",[limit])};
     }),
+
+    readTool("sam_list_knowledge","List scoped knowledge with provenance and freshness; does not change execution authority.",async(args)=>{
+      if(typeof args.legal_entity_id!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.legal_entity_id))return {ok:false,error:"legal_entity_id must be an explicit UUID"};
+      if(!knowledgeEnabled())return {ok:true,data:[],enabled:false};
+      return {ok:true,enabled:true,data:await rows(`SELECT *,
+        CASE WHEN superseded_at IS NOT NULL THEN 'SUPERSEDED'
+             WHEN expires_at<=now() THEN 'EXPIRED' ELSE 'ACTIVE' END AS freshness
+        FROM knowledge_records WHERE legal_entity_id=$1 ORDER BY created_at DESC,id DESC LIMIT $2`,
+        [args.legal_entity_id,clampLimit(args.limit)])};
+    },{type:"object",properties:{legal_entity_id:{type:"string",format:"uuid"},limit:{type:"integer",minimum:1,maximum:200}},required:["legal_entity_id"],additionalProperties:false}),
 
     readTool("sam_list_model_providers","List model providers and health.",async(args)=>{
       const limit=clampLimit(args.limit);

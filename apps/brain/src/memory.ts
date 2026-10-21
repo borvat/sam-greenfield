@@ -25,14 +25,16 @@ export async function appendMemoryObservation(
   return res.rows[0].id;
 }
 
-export async function loadApprovedMemory(client: any, limit = 200) {
+export async function loadApprovedMemory(client: any, limit = 200, legalEntityId?: string) {
+  if (!legalEntityId) return [];
   const res = await client.query(
     `SELECT *
        FROM memory_records
       WHERE status IN ('REINFORCED','APPROVED_RULE')
+        AND scope->>'legal_entity_id'=$2
       ORDER BY last_confirmed_at DESC, confidence DESC, id DESC
       LIMIT $1`,
-    [limit]
+    [limit,legalEntityId]
   );
   return res.rows;
 }
