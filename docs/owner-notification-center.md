@@ -109,3 +109,12 @@ operation and projection failure containment. No real owner message is sent.
 The existing hourly soak automation remains unchanged. A scheduled ChatGPT
 observer is a polling mechanism and must be described separately from direct
 provider delivery or posting to an existing conversation.
+
+## Perception compatibility follow-up
+
+Routine completion of sam_perception polling goals stays quiet. Verified
+PERCEPTION_ATTENTION fabric events create one owner review notification after
+correlating source, company, execution and latest verification. The event-fabric
+sequence is the durable dedup key, distinct from Outbox event receipts. This
+consumes the common event fabric and does not require new perception tables on
+this branch. An attention notification is never permission to execute.

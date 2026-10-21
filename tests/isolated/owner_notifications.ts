@@ -13,11 +13,12 @@ const A=randomUUID(),B=randomUUID();
 async function fixture(path?:string){
  const db=new PGlite(path);
  await db.exec(`CREATE TABLE legal_entities(id UUID PRIMARY KEY);
- CREATE TABLE goals(id UUID PRIMARY KEY,business_id TEXT,company_scope UUID,state TEXT,current_plan_id UUID,replan_attempts INT DEFAULT 0,
+ CREATE TABLE goals(id UUID PRIMARY KEY,business_id TEXT,company_scope UUID,state TEXT,current_plan_id UUID,replan_attempts INT DEFAULT 0,domain TEXT,
    created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE outbox_events(id UUID PRIMARY KEY,aggregate_type TEXT,aggregate_id UUID,event_type TEXT,payload JSONB,
    status TEXT DEFAULT 'PUBLISHED',created_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE goal_read_reviews(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,round INT,decision JSONB,report_hash TEXT,created_at TIMESTAMPTZ DEFAULT now());
+ CREATE TABLE event_fabric_events(event_seq BIGSERIAL PRIMARY KEY,event_type TEXT,source TEXT,payload JSONB,occurred_at TIMESTAMPTZ DEFAULT now(),created_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE work_queue(id UUID PRIMARY KEY,goal_id UUID,capability_id TEXT,wake_reason TEXT,attempt INT,status TEXT,queued_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,started_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE verifications(id UUID PRIMARY KEY,execution_id UUID,result TEXT,checked_at TIMESTAMPTZ DEFAULT now());
@@ -214,4 +215,24 @@ test('a transport deadline is uncertain and a late receipt never causes an autom
   assert.equal((await deliverNextOwnerNotification(pool(db),t)).processed,false);assert.equal(sends,1);
   const row:any=(await db.query('SELECT * FROM owner_notifications WHERE id=$1',[n.id])).rows[0];assert.equal(row.status,'UNKNOWN');assert.equal(row.confirmed_at,null);
  }finally{finish?.({receiptId:'cleanup',status:'CONFIRMED'});await db.close();disable()}
+});
+
+
+test('perception completion stays quiet while a correlated verified change creates one review notification, never authority',async()=>{
+ enable();const db=await fixture();
+ try{
+  const e=await event(db,'COMPLETED');await db.query("UPDATE goals SET domain='sam_perception' WHERE id=$1",[e.goal]);
+  assert.equal((await projectOwnerNotifications(pool(db))).created,0);
+  const execution=randomUUID(),verification=randomUUID(),source=randomUUID();
+  await db.query('INSERT INTO executions(id,goal_id) VALUES($1,$2)',[execution,e.goal]);
+  await db.query("INSERT INTO verifications(id,execution_id,result) VALUES($1,$2,'VERIFIED')",[verification,execution]);
+  const payload={legal_entity_id:A,source_id:source,execution_id:execution,verification_id:verification,previous_hash:'before',fingerprint:'after'};
+  await db.query("INSERT INTO event_fabric_events(event_type,source,payload) VALUES('PERCEPTION_ATTENTION',$1,$2)",['perception:'+A+':'+source,payload]);
+  assert.equal((await projectOwnerNotifications(pool(db))).created,1);assert.equal((await projectOwnerNotifications(pool(db))).created,0);
+  const n:any=(await db.query('SELECT * FROM owner_notifications')).rows[0];assert.equal(n.kind,'PROGRESS');assert.equal(n.body.requiredAction,'REVIEW_OBSERVATION');assert.equal(n.status,'UNROUTED');
+  await db.query("UPDATE goals SET state='EXECUTING' WHERE id=$1",[e.goal]);await projectOwnerNotifications(pool(db));
+  assert.equal((await db.query('SELECT status FROM owner_notifications WHERE id=$1',[n.id])).rows[0].status,'UNROUTED','an evidence review remains relevant when the source-reading goal changes state');
+  await db.query("INSERT INTO event_fabric_events(event_type,source,payload) VALUES('PERCEPTION_ATTENTION',$1,$2)",['perception:'+B+':'+source,{...payload,legal_entity_id:B}]);
+  assert.equal((await projectOwnerNotifications(pool(db))).created,0,'wrong-company evidence is not an owner observation');
+ }finally{await db.close();disable()}
 });

@@ -28,7 +28,7 @@ export async function deliverNextOwnerNotification(db:any,transport:OwnerNotific
     WHERE notification_id=$1 AND attempt=$2 AND outcome='SENDING'`,[row.id,row.attempt]);
   await c.query(`UPDATE owner_notifications n SET status='SUPPRESSED',last_error_code='GOAL_STATE_CHANGED',updated_at=now()
     FROM goals g WHERE n.goal_id=g.id AND n.kind IN ('APPROVAL','PROGRESS') AND n.body->>'state'<>g.state
-      AND n.status IN ('UNROUTED','PENDING','RETRY')`);
+      AND n.status IN ('UNROUTED','PENDING','RETRY') AND n.body->>'requiredAction' IS DISTINCT FROM 'REVIEW_OBSERVATION'`);
   const result=await c.query(`SELECT * FROM owner_notifications WHERE channel=$1 AND recipient_ref=$2
     AND status IN ('PENDING','RETRY') AND next_attempt_at<=now() AND attempt<5
     ORDER BY CASE severity WHEN 'URGENT' THEN 0 WHEN 'WARNING' THEN 1 ELSE 2 END,created_at,id

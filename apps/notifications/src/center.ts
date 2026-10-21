@@ -16,7 +16,7 @@ export async function projectOwnerNotifications(db:any=pool){
   await c.query("INSERT INTO notification_settings(id) VALUES('owner') ON CONFLICT(id) DO NOTHING");
   await c.query(`UPDATE owner_notifications n SET status='SUPPRESSED',last_error_code='GOAL_STATE_CHANGED',updated_at=now()
     FROM goals g WHERE n.goal_id=g.id AND n.kind IN ('APPROVAL','PROGRESS') AND n.body->>'state'<>g.state
-      AND n.status IN ('UNROUTED','PENDING','RETRY')`);
+      AND n.status IN ('UNROUTED','PENDING','RETRY') AND n.body->>'requiredAction' IS DISTINCT FROM 'REVIEW_OBSERVATION'`);
   const events=await c.query(`SELECT o.* FROM outbox_events o
     WHERE o.created_at >= (SELECT enabled_at FROM notification_settings WHERE id='owner')
       AND o.aggregate_type='goal' AND o.event_type='GOAL_STATE_CHANGED'
@@ -30,7 +30,7 @@ export async function projectOwnerNotifications(db:any=pool){
      ['WAITING_EXTERNAL','BLOCKED'].includes(state)?'PROGRESS':null;
    let notificationId:string|null=null;
    // Old requests for approval must not notify after the task has already resumed.
-   if(goal?.company_scope && kind && goal.state===state){
+   if(goal?.company_scope && kind && goal.state===state && !(goal.domain==='sam_perception'&&kind==='COMPLETED')){
     const report=kind==='COMPLETED'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
       WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='complete'
         AND ($3::text IS NULL OR report_hash=$3) ORDER BY round DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id,event.payload?.report_hash??null])).rows[0]:null;
@@ -64,6 +64,28 @@ export async function projectOwnerNotifications(db:any=pool){
    }
    await c.query(`INSERT INTO notification_event_receipts(event_id,notification_id,disposition)
      VALUES($1,$2,$3) ON CONFLICT(event_id) DO NOTHING`,[event.id,notificationId,notificationId?'CREATED':'SKIPPED']);
+  }
+  // Perception uses the existing event fabric, not the Outbox delivery receipt.
+  // Correlate the exact latest verified execution and company before owner review.
+  const attention=await c.query(`SELECT f.event_seq,f.payload,f.occurred_at,e.id AS execution_id,g.id AS goal_id,g.business_id,g.state,g.company_scope
+    FROM event_fabric_events f JOIN executions e ON e.id::text=f.payload->>'execution_id'
+    JOIN goals g ON g.id=e.goal_id
+    JOIN LATERAL(SELECT id,result FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
+    WHERE f.event_type='PERCEPTION_ATTENTION' AND f.created_at >= (SELECT enabled_at FROM notification_settings WHERE id='owner')
+      AND f.source='perception:'||g.company_scope::text||':'||(f.payload->>'source_id')
+      AND f.payload->>'legal_entity_id'=g.company_scope::text
+      AND f.payload->>'verification_id'=v.id::text AND v.result='VERIFIED'
+      AND NOT EXISTS(SELECT 1 FROM owner_notifications n WHERE n.dedup_key='fabric:'||f.event_seq::text)
+    ORDER BY f.event_seq LIMIT 100`);
+  for(const row of attention.rows){
+    const inserted=await c.query(`INSERT INTO owner_notifications(legal_entity_id,goal_id,dedup_key,kind,severity,title,body)
+      VALUES($1,$2,$3,'PROGRESS','WARNING',$4,$5::jsonb) ON CONFLICT(dedup_key) DO NOTHING RETURNING id`,
+      [row.company_scope,row.goal_id,'fabric:'+row.event_seq,`تغيّر في مصدر مراقب يحتاج مراجعة — ${row.business_id}`,
+       JSON.stringify({schema:'sam.owner_notification.v1',goalId:row.goal_id,businessId:row.business_id,state:row.state,
+        summary:'رُصد تغيّر في قراءة متحقق منها. راجع التقرير والمصدر؛ هذا تنبيه للمراجعة ولا يمنح صلاحية التنفيذ.',
+        requiredAction:'REVIEW_OBSERVATION',sourceId:row.payload.source_id,evidenceExecutionIds:[row.execution_id],
+        verificationId:row.payload.verification_id,previousHash:row.payload.previous_hash,fingerprint:row.payload.fingerprint,eventAt:row.occurred_at})]);
+    if(inserted.rowCount)created++;
   }
   // One overdue update per active plan/state, not a message on every runtime tick.
   const overdue=await c.query(`SELECT g.* FROM goals g WHERE company_scope IS NOT NULL
