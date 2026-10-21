@@ -95,3 +95,13 @@
 | `scripts/development/build-image.cjs` | Repeatable clean build through the configured proxy with verified trust and build failure propagation. |
 | `docs/CORE_RELIABILITY_ACCEPTANCE.md` | Commands, actual acceptance results, remaining blockers and manual Draft PR instructions. |
 | `docs/acceptance/2026-10-21/*` | Captured local acceptance outputs and the executed disposable migration upgrade fixture. |
+
+## Phase 2 review additions
+
+The [original 112-file review inventory](reviews/2026-10-22/original-112-files.csv)
+records every original path and evidence hash. Subsequent corrective files/tests
+are listed in [Phase 2 evidence](PHASE2_REVIEW_EVIDENCE.json). The review report
+maps each finding to source, reproduction and regression coverage. New production
+MCP/Command Center/release startup checks attest the same fixed tenant boundary;
+new tests cover concurrency, deadlines, reconciliation, tenant workloads, backlog,
+learning selection and entrypoint refusal. No application migration was added.

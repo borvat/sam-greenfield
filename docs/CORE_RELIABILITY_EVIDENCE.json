@@ -345,5 +345,6 @@
     "docs/acceptance/2026-10-21/test_rls_fail_closed_security.py.log": "4462f04baa86c23293a76b4063b96c861becdf2e3dc3a1bcddda63ac4b26e5d2",
     "docs/acceptance/2026-10-21/test_rls_tenant_isolation.py.log": "a3dbdd5749ccab61a0673a41fe1a1853ed70e79af0d8577d8f09082b4ce51948",
     "docs/acceptance/2026-10-21/typecheck.log": "bdfa048bae1d4de047f903a4810022ee6bc425e179ec8bc21a768c4583049147"
-  }
+  },
+  "subsequentReview": "docs/PHASE2_INDEPENDENT_REVIEW.md (supersedes current-state claims; this file retains Phase 1 historical evidence)"
 }

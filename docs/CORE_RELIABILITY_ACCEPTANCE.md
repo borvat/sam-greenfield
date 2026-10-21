@@ -1,5 +1,9 @@
 # Core reliability acceptance — 2026-10-21 UTC
 
+Historical Phase 1 snapshot at `8b235bd`. Subsequent code corrections and current
+merge assessment are in [Phase 2](PHASE2_INDEPENDENT_REVIEW.md); statements below
+describe this earlier run.
+
 Local engineering checks pass. Production readiness is **not established**.
 GitHub API publication remains blocked; no PR was created automatically.
 

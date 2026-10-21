@@ -1,0 +1,18 @@
+FAIL tests/core/planningDeadline.ts
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ undefined
+- 'PLANNING_DEADLINE_EXCEEDED'
+
+    at main (/tmp/sam-phase2-baseline/tests/core/planningDeadline.ts:19:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: undefined,
+  expected: 'PLANNING_DEADLINE_EXCEEDED',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/planningDeadline.ts","passed":false,"exit":1}]}

@@ -1,0 +1,10 @@
+FAIL tests/core/learningScheduling.ts
+Error: Learning requires independently VERIFIED execution
+    at requireVerifiedExecution (/tmp/sam-phase2-baseline/apps/brain/src/learning.ts:27:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async work (/tmp/sam-phase2-baseline/apps/brain/src/learning.ts:45:21)
+    at async <anonymous> (/tmp/sam-phase2-baseline/apps/production/src/learning.ts:24:20)
+    at async withTransaction (/tmp/sam-phase2-baseline/packages/db/src/client.ts:18:20)
+    at async main (/tmp/sam-phase2-baseline/tests/core/learningScheduling.ts:25:16)
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/learningScheduling.ts","passed":false,"exit":1}]}

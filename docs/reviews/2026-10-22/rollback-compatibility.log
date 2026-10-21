@@ -1,0 +1,4 @@
+PASS tests/core/rollbackCompatibility.ts
+PASS compatibility check detects unsafe rollback: exact main worker SELECT would claim an unverified dependent; current worker refuses. Drain/cancel dependency plans before old workers; no production restore tested.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/rollbackCompatibility.ts","passed":true,"exit":0}]}

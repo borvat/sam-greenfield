@@ -1,5 +1,8 @@
 # Core reliability engineering
 
+Current merge review: [Phase 2 independent review](PHASE2_INDEPENDENT_REVIEW.md).
+The earlier acceptance snapshot is historical; Phase 2 records subsequent fixes.
+
 ## Scope and source baseline
 
 Development branch: `codex/sam-core-reliability`, based on main
@@ -25,8 +28,9 @@ executes them. No additional externally actionable capabilities are registered.
   consecutive attempts, 30-second proposal deadline, exponential backoff from one
   second to one minute. Success resets consecutive failures. Existing two-replan
   budget remains independent. Crash reservations defer another attempt until the
-  deadline. Last-attempt ordering and advisory-lock candidate scanning prevent a
-  repeatedly failing high-priority goal monopolizing planning.
+  deadline. Last-attempt ordering and short row-locked deadline reservations prevent a
+  repeatedly failing high-priority goal monopolizing planning. Connections are
+  released before model work and nested kernel operations.
 - Cancellation reaches standard model HTTP transports; proposal timeout racing
   also prevents a late custom adapter response from persisting a plan. Database
   statements and connection acquisition are bounded. Custom adapters must honor
@@ -46,7 +50,8 @@ executes them. No additional externally actionable capabilities are registered.
   replans. A new PENDING operation is immediately reconcilable; legacy PENDING/NONE
   operations are admitted to reconciliation by the additive migration. Live
   leases are excluded. Confirmed operations reuse evidence without consuming a
-  second approval. Unknown outcomes require owner review and are never resent.
+  second approval. Unknown outcomes require owner review and are never resent. Reservation, approval
+  consumption and live-work binding now commit atomically after lease validation.
 - Standard read verifiers compare original content with a fresh read. Missing
   originals are INCONCLUSIVE; mismatches FAIL. Gmail checks sent label, operation
   identity, recipients, subject and plain-text content, with no existence-only
@@ -201,3 +206,18 @@ command/output evidence are in [the acceptance report](CORE_RELIABILITY_ACCEPTAN
 
 These are local fixture results, not production readiness. No live providers,
 production services/data/credentials or ongoing stability tests were changed.
+
+## Independent review follow-up
+
+Phase 2 corrected pool starvation, reconciliation interleaving, missing fixed-tenant
+startup attestation, post-proposal deadline persistence and learning candidate
+starvation. Production runtime/release compositions, ordinary MCP and Command
+Center refuse missing fixed-principal policies; role memberships are forbidden.
+Provision identities and trusted tenant context through a separately authorized
+operator workflow; startup does not mutate grants or policies.
+
+The default core command now runs eight isolated suites. The clean image passes
+all eight with fresh production dependencies; 38 regression suites, TypeScript,
+Phase 0 and focused security checks pass. Hosted checks remain unverified.
+See the Phase 2 report for exact source SHA, negative original-head reproductions,
+small-workload thresholds, cross-branch conflicts and conditional merge verdict.
