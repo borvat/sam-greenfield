@@ -14,7 +14,9 @@ node deploy/render/initialize-company.mjs
 case "${1:-}" in
   runtime)
     export PORT="${PORT:-10000}"
-    exec npm start
+    # Keep the signal handler in the container's foreground process. npm/tsx
+    # wrappers can leave the old worker ticking during a rolling replacement.
+    exec node --import tsx apps/runtime/src/main.ts
     ;;
   command-center)
     : "${RENDER_EXTERNAL_HOSTNAME:?Render public hostname is required}"
@@ -29,7 +31,7 @@ case "${1:-}" in
     export SAM_MCP_PORT="${PORT:-10000}"
     export SAM_MCP_HOST=0.0.0.0
     export SAM_MCP_ALLOWED_HOSTS="$RENDER_EXTERNAL_HOSTNAME"
-    exec npm run start:mcp
+    exec node --import tsx apps/mcp/src/main.ts
     ;;
   *)
     echo 'Expected runtime, command-center, or mcp' >&2
