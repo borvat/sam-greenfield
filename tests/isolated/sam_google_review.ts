@@ -25,6 +25,10 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
  final.findings[0].quote=source.text;final.requirements[0].fulfilled=false;assert.throws(()=>validateReadReview(final,[source],"Read",descriptors),/UNFULFILLED/);
  const previous={...source,capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}};
  assert.throws(()=>validateReadReview(review("continue"),[previous],"Read",descriptors),/REPEATED_READ/);
+ const researchFinding=review("complete");
+ assert.throws(()=>validateReadReview(researchFinding,[source],"Market research",descriptors,[],true),/CONFIDENCE_REQUIRED/);
+ researchFinding.findings[0].confidence="MEDIUM";researchFinding.findings[0].confidenceBasis="One verified source; no independent publisher cross-check.";
+ assert.equal(validateReadReview(researchFinding,[source],"Market research",descriptors,[],true).findings[0].confidence,"MEDIUM");
 });
 test("isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction",async()=>{
  const db=new PGlite();

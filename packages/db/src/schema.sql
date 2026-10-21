@@ -386,6 +386,7 @@ ALTER TABLE approvals ENABLE ROW LEVEL SECURITY;
 CREATE TABLE verification_contracts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   capability_id TEXT UNIQUE NOT NULL,
+  capability_pattern TEXT UNIQUE,
   description TEXT NOT NULL,
   verification_method TEXT NOT NULL CHECK (verification_method IN ('api_readback','db_query','external_event','list_search')),
   required_evidence_fields JSONB NOT NULL,
@@ -402,6 +403,9 @@ VALUES
 ('gmail_send','Verify email exists in Sent via operation key header search independent of claimed message_id','list_search','{"provider_message_id": "string", "operation_key_header": "string"}'::JSONB,'{"api": "gmail", "method": "list", "query": "in:sent X-SAM-Operation-Key={{operation_key}}"}'::JSONB),
 ('bol_update_price','Verify price via independent get listing','api_readback','{"ean": "string", "expected_price": "number"}'::JSONB,'{"api": "bol", "method": "get_listing", "params": {"ean": "{{ean}}"}}'::JSONB),
 ('supplier_search_own','Verify supplier search via db query','db_query','{"count": "number"}'::JSONB,'{"table": "parties", "count_query": "SELECT count(*) FROM parties"}'::JSONB);
+
+INSERT INTO verification_contracts(capability_id,capability_pattern,description,verification_method,required_evidence_fields,independent_query_template,must_not_trust_execution_result)
+VALUES ('research_mcp_*','^research_mcp_[a-z0-9_]+$','Verify an allowlisted read-only MCP source with an exact fresh readback','api_readback','{"fresh_response_hash":"string","execution_response_hash":"string"}'::JSONB,'{"source":"operator-allowlisted-mcp","method":"repeat same read with identical parameters"}'::JSONB,true);
 
 CREATE TABLE executions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
