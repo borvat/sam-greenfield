@@ -201,3 +201,8 @@ For environments requiring an organization proxy CA, the Dockerfile supports
 `--secret id=registry_ca,src=PATH_TO_PUBLIC_CA_BUNDLE`. Predefined HTTP_PROXY,
 HTTPS_PROXY and NO_PROXY build arguments use the supported proxy route; no proxy
 credentials or CA bundle are committed or copied into the runtime image.
+
+The development branch was pushed successfully. Draft PR creation was attempted
+through both GraphQL and REST using existing authentication; both returned
+`Forbidden`. The prepared description is retained in `CORE_RELIABILITY_PR.md`.
+No PR URL or hosted-CI success is claimed.

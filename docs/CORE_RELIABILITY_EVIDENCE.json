@@ -293,5 +293,13 @@
   "paidModelCalls": 0,
   "businessActions": 0,
   "deploymentPerformed": false,
-  "merged": false
+  "merged": false,
+  "publication": {
+    "branchPushed": true,
+    "draftPullRequestCreated": false,
+    "graphqlCreateAttempt": "Forbidden",
+    "restCreateAttempt": "Forbidden",
+    "preparedDescription": "docs/CORE_RELIABILITY_PR.md",
+    "mergePerformed": false
+  }
 }

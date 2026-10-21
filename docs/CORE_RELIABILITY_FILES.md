@@ -91,3 +91,4 @@
 | `tests/phase5/final_acceptance.ts` | Update fixtures/contracts for stricter verification, tenant scope and additive migrations. |
 | `tests/phase5/verified_learning.ts` | Update fixtures/contracts for stricter verification, tenant scope and additive migrations. |
 | `tests/release/managed_schema_source.cjs` | Update fixtures/contracts for stricter verification, tenant scope and additive migrations. |
+| `docs/CORE_RELIABILITY_PR.md` | Preserve the reviewable draft description because both GitHub API creation routes were Forbidden. |
