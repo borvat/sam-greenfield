@@ -4,6 +4,7 @@ export interface ToolDefinition {
   capabilityId:string;
   authorityClass:AuthorityClass;
   sideEffect:boolean;
+  companyScopes?:string[];
 }
 
 export interface ToolExecutionRequest {

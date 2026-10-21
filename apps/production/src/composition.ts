@@ -17,12 +17,14 @@ export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
   operationalTick?:()=>Promise<unknown>;
+  authorizeWork?:(work:import('../../kernel/src/workerRuntime').ClaimedWork)=>Promise<void>;
 }):RuntimeComposition{
   const ordinaryExecutors=createToolExecutors({
     catalog:input.bundle.catalog,
     tools:input.bundle.tools
   });
   const executors=Object.fromEntries(Object.entries(ordinaryExecutors).map(([id,execute])=>[id,async(work:Parameters<typeof execute>[0])=>{
+    if(input.authorizeWork)await input.authorizeWork(work);
     if(pilotEnabled()){
       if(!work.goalId)throw new Error("PILOT_GOAL_SCOPE_DENIED");
       const objective=await withTransaction(client=>authorizePilotGoal(client,work.goalId!));

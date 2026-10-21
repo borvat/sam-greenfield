@@ -1,0 +1,3951 @@
+{
+  "baseline": "14b24a9ff51cb98de400e197bf2bfad40de96812",
+  "recordedAt": "2026-10-21T22:38:26.802959+00:00",
+  "branches": [
+    {
+      "branch": "deploy/sam-free-trial",
+      "sha": "3257311be80cdffc16ed341defd5772c3f56662c",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 5,
+      "directMergeConflictCount": 1,
+      "directMergeConflictFiles": [
+        "package-lock.json"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "deploy/sam-free-trial-ready",
+      "sha": "af4be2e50215d5646a221fb82068bf939df0f311",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 130,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/autonomous-research-learning-20261021",
+      "sha": "a3c5977a68d7789d1d273eb91964f8340c7fc6d8",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 144,
+      "directMergeConflictCount": 31,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/cloud-mcp-autonomy-acceptance-20261021",
+      "sha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 208,
+      "directMergeConflictCount": 32,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/eboekhoudenBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql",
+        "packages/db/migrations/00104_perception_action.sql",
+        "packages/db/migrations/00105_owner_notifications.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/commercial-learning-innovation-20261021",
+      "sha": "8e79f2515544994017230b390cd63bb8ffa4af91",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 149,
+      "directMergeConflictCount": 30,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00105_commercial_learning.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/complete-bol-analysis-20261020",
+      "sha": "b3fdd9e64588fa5a94cd5c06ddc97bff467ef17f",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 88,
+      "directMergeConflictCount": 23,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/oss-mcp-provider-pack-20261021",
+      "sha": "3cdb5e8f33b8615d39987376ad91684f8aa11d99",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 163,
+      "directMergeConflictCount": 31,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/oss-owner-inbox-integration-20261021",
+      "sha": "72bbf6c63834b381e887945e06d4eb9223a56519",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 196,
+      "directMergeConflictCount": 32,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/eboekhoudenBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql",
+        "packages/db/migrations/00104_perception_action.sql",
+        "packages/db/migrations/00105_owner_notifications.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/oss-search-monitor-actions-20261021",
+      "sha": "7420ac78e9a33d1343e80f7ca79efd454a119bab",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 190,
+      "directMergeConflictCount": 32,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/eboekhoudenBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql",
+        "packages/db/migrations/00104_perception_action.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/owner-notification-center-20261021",
+      "sha": "a95d08462df00d4b369593799fffb348b4b27bda",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 135,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00103_owner_notifications.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/perception-action-layer-20261021",
+      "sha": "af4be2e50215d5646a221fb82068bf939df0f311",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 130,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/sam-bol-76-tools",
+      "sha": "ab01694a7e79329b9c659a0e8126cde4563a3e85",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 57,
+      "directMergeConflictCount": 9,
+      "directMergeConflictFiles": [
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/sam-google-mcp-readonly-bridge",
+      "sha": "aa836c459f4b1ebebb34f96c9c25aa12816944bf",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 118,
+      "directMergeConflictCount": 26,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/scoped-knowledge-cycle-20261021",
+      "sha": "cacc3a0d908223d3ed5d0e394592c5b3714509d7",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 137,
+      "directMergeConflictCount": 30,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feat/scoped-mcp-expansion-20261021",
+      "sha": "9f98503fdfe5c332b05556e11f5e29a06e8ecdf6",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 151,
+      "directMergeConflictCount": 31,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/contextAssembler.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/memory.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts",
+        "tests/phase5/verified_learning.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql",
+        "packages/db/migrations/00102_scoped_knowledge.sql",
+        "packages/db/migrations/00103_research_mcp_verification.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feature/google-readonly-staging",
+      "sha": "6583c8c1d6ec2cd73472968ce2c7ba384cebd9a1",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 1,
+      "directMergeConflictCount": 0,
+      "directMergeConflictFiles": [],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "feature/supplier-research-adapter",
+      "sha": "22809b2b616bb265971362541de18a2305fe9e42",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 3,
+      "directMergeConflictCount": 0,
+      "directMergeConflictFiles": [],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/acceptance-scope-20261021",
+      "sha": "86383f3446e20d063c417dce2916aaa28bb0d587",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 91,
+      "directMergeConflictCount": 23,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/bol-npm-workspace-lock",
+      "sha": "d6e22e7d7d95fb853ee3dd49f84fd56dff51acab",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 57,
+      "directMergeConflictCount": 9,
+      "directMergeConflictFiles": [
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/bol-pagination-analysis-authority",
+      "sha": "b51d30e736524e1f1bedadc64e7579cec434eec8",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 75,
+      "directMergeConflictCount": 19,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/production/src/verifier.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/bol-readonly-mode",
+      "sha": "d43d24b2f06aeeb89135acaf7cee15c1ed87a444",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 22,
+      "directMergeConflictCount": 5,
+      "directMergeConflictFiles": [
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/bol-vendor-outside-workspace",
+      "sha": "8e239e8381999be4393dd9334ccc751d6340fb41",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 57,
+      "directMergeConflictCount": 9,
+      "directMergeConflictFiles": [
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/canonical-email-citations",
+      "sha": "e104567e6386c051886d8f1dd542ee5a3759ebaa",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 128,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/chatgpt-mcp-oauth-return-20261019",
+      "sha": "1b4a4cfc8df5203f3d42d4e8d0fe9167fe8df566",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 22,
+      "directMergeConflictCount": 5,
+      "directMergeConflictFiles": [
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/deploy-drive-param-alias-20261021",
+      "sha": "3cd44ff6b756921d85801059901e56c799e599a0",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 94,
+      "directMergeConflictCount": 24,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/direct-mcp-production",
+      "sha": "43f0c23629c2406447ec1d38e5140f24f997ff2c",
+      "mergeBase": "366d601a043981bb31ae6cef583cbaa1b7145e59",
+      "changedFilesFromMergeBase": 35,
+      "directMergeConflictCount": 5,
+      "directMergeConflictFiles": [
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/production/src/verifier.ts",
+        "package.json",
+        "packages/db/src/client.ts"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/drive-param-alias-recovery-20261021",
+      "sha": "a115856294b7e7b9a47a2514753b3e4cc8d331dd",
+      "mergeBase": "3db05c0e6822e2e4c5b13424bce8a0a8bf5700da",
+      "changedFilesFromMergeBase": 3,
+      "directMergeConflictCount": 1,
+      "directMergeConflictFiles": [
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/drive-read-transient-retries-20261021",
+      "sha": "21b32e50aafa8ce4c1bceff8835391949a43952e",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 99,
+      "directMergeConflictCount": 26,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/google-drive/src/client.ts",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/google-evidence-continuation",
+      "sha": "38b2e4141dddb5e089d0ad092e3116a875c71256",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 127,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/google-mcp-same-goal-recovery-20261021",
+      "sha": "bebc3f2cc932d79143d198e731324210327470d3",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 130,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/google-permissions-read-description-20261021",
+      "sha": "46f478410789415303f469e6e829243171cb1411",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 130,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/managed-schema-backup-admission",
+      "sha": "7d8707c88d944af29ce49ce3e1bc62d9d90daa10",
+      "mergeBase": "366d601a043981bb31ae6cef583cbaa1b7145e59",
+      "changedFilesFromMergeBase": 7,
+      "directMergeConflictCount": 0,
+      "directMergeConflictFiles": [],
+      "featureMigrations": [],
+      "dependencyDifferences": [],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/managed-schema-parity-diagnostics",
+      "sha": "82ae97f56d6ad8fcef3037bc37be434c2dab96ed",
+      "mergeBase": "366d601a043981bb31ae6cef583cbaa1b7145e59",
+      "changedFilesFromMergeBase": 7,
+      "directMergeConflictCount": 0,
+      "directMergeConflictFiles": [],
+      "featureMigrations": [],
+      "dependencyDifferences": [],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/planning-deadline-20261021",
+      "sha": "623604048dd7f79bffd42fc7ae2e1ba5d544a0d2",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 91,
+      "directMergeConflictCount": 23,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/render-chatgpt-mcp-auth-design",
+      "sha": "66188db6b0aa23598a2b5eb394d66055f1ef7481",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 22,
+      "directMergeConflictCount": 5,
+      "directMergeConflictFiles": [
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/render-worker-signals",
+      "sha": "f861f1b6a6bcba2d62d8bfade73bd39944cbd9dd",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 128,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/replan-forbid-failed-reads-20261021",
+      "sha": "f0c8547e8e9a8a3c1d5d1e81d57c903205c558b4",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 97,
+      "directMergeConflictCount": 25,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/report-email-identity",
+      "sha": "c024058c259628ce2d0e1640a7b548ebbc3b7d2b",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 128,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/runtime-recovery-and-planning-20261020",
+      "sha": "9a9efaab7dfb9b2cfb01551254c65a7c5d4fb1ae",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 84,
+      "directMergeConflictCount": 23,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/runtime-tick-error-containment-20261020",
+      "sha": "2a438e26b0d97f068d5d54a4e0aa4cab2c0f0fab",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 72,
+      "directMergeConflictCount": 16,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/safe-drive-404-replan-20261021",
+      "sha": "ab974359d45b86d5f99a08edc7542ce7442d6300",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 96,
+      "directMergeConflictCount": 25,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/sam-submit-goal-e2e",
+      "sha": "102b75f8cf5a70751662a5b65267b80ad6f1c41d",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 62,
+      "directMergeConflictCount": 11,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/sam-submit-goal-shared-provider",
+      "sha": "40aed7c45fe8abee8cf2d0b9694432aa76082332",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 62,
+      "directMergeConflictCount": 11,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "package-lock.json",
+        "package.json"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "fix/verified-source-line-citations",
+      "sha": "c55c6559bd950fd7083d4468a5f75bf2d21e12cc",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 128,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "infra/shared-render-environment-groups-20261021",
+      "sha": "c8c703da9278b0fe43374057f722ff7ff394291d",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 128,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "phase14-eboekhouden-read-adapter",
+      "sha": "3de80b24eaa8d9a02eb4b99b86042f0800022f4b",
+      "mergeBase": "91dc12f778793590734fa868310f9f26d3238071",
+      "changedFilesFromMergeBase": 12,
+      "directMergeConflictCount": 10,
+      "directMergeConflictFiles": [
+        ".env.example",
+        "apps/production/src/defaultBundleModule.ts",
+        "apps/production/src/eboekhoudenBundle.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/tools/src/eboekhoudenAdapters.ts",
+        "docs/PHASE14_SCOPE.md",
+        "docs/PRODUCTION_RUNBOOK.md",
+        "package.json",
+        "packages/eboekhouden/src/client.ts",
+        "tests/phase14/eboekhouden_read.ts"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "fast-xml-parser",
+          "group": "dependencies",
+          "core": null,
+          "branch": "5.3.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "phase14-real-bol-read",
+      "sha": "281ea311a0464062497076e8ec7c487e47197d79",
+      "mergeBase": "91dc12f778793590734fa868310f9f26d3238071",
+      "changedFilesFromMergeBase": 10,
+      "directMergeConflictCount": 8,
+      "directMergeConflictFiles": [
+        ".env.example",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/defaultBundleModule.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/tools/src/bolReadAdapters.ts",
+        "docker-compose.production.yml",
+        "docs/PHASE14_SCOPE.md",
+        "packages/bol/src/client.ts"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "phase15-bol-read-adapter",
+      "sha": "a618a87b889817ab5df1f7de375779f0df74508f",
+      "mergeBase": "e23fd129ba6bc10cac5774d8359f4091d53d77f7",
+      "changedFilesFromMergeBase": 11,
+      "directMergeConflictCount": 9,
+      "directMergeConflictFiles": [
+        ".env.example",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/defaultBundleModule.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "docker-compose.production.yml",
+        "docs/PHASE15_SCOPE.md",
+        "docs/PRODUCTION_RUNBOOK.md",
+        "packages/bol/src/client.ts",
+        "tests/phase15/bol_read.ts"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "phase16-gmail-read",
+      "sha": "209e36fb6f7849a3f1c94ccc0971d8ea4865ff5e",
+      "mergeBase": "fa529f10d6b097d428db697047826d00965b6994",
+      "changedFilesFromMergeBase": 7,
+      "directMergeConflictCount": 3,
+      "directMergeConflictFiles": [
+        "apps/runtime/src/productionCompositionModule.ts",
+        "docs/PHASE16_SCOPE.md",
+        "docs/PRODUCTION_RUNBOOK.md"
+      ],
+      "featureMigrations": [],
+      "dependencyDifferences": [
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "spike/google-workspace-official-mcp-readonly-20261021",
+      "sha": "f173d958cc12343ebc381549a8b2e417ecc876b4",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 100,
+      "directMergeConflictCount": 25,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": false,
+      "codeExecuted": false
+    },
+    {
+      "branch": "test/recovery-report-control-history-20261021",
+      "sha": "ced9bcd1da0cd6d14b5ea22b372d47a6145125e8",
+      "mergeBase": "2ab95b7283f264429a211e0d9d48eef937281cb7",
+      "changedFilesFromMergeBase": 130,
+      "directMergeConflictCount": 27,
+      "directMergeConflictFiles": [
+        ".github/workflows/phase0-postgres-verification.yml",
+        "apps/agents/src/capabilityCatalog.ts",
+        "apps/agents/src/executiveFlow.ts",
+        "apps/agents/src/runtime.ts",
+        "apps/brain/src/executiveBrain.ts",
+        "apps/brain/src/planner.ts",
+        "apps/brain/src/replanner.ts",
+        "apps/chatgpt-tools/src/surface.ts",
+        "apps/kernel/src/orchestrator.ts",
+        "apps/kernel/src/stateMachine.ts",
+        "apps/kernel/src/verification.ts",
+        "apps/kernel/src/workerRuntime.ts",
+        "apps/mcp/src/http.ts",
+        "apps/mcp/src/main.ts",
+        "apps/production/src/bolBundle.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/dispatcher.ts",
+        "apps/production/src/loadBundle.ts",
+        "apps/production/src/planner.ts",
+        "apps/runtime/src/main.ts",
+        "apps/runtime/src/productionCompositionModule.ts",
+        "apps/runtime/src/service.ts",
+        "apps/tools/src/executorFactory.ts",
+        "package-lock.json",
+        "package.json",
+        "packages/tool-gateway/src/validation.ts",
+        "tests/phase13/drive_adapters.ts"
+      ],
+      "featureMigrations": [
+        "packages/db/migrations/00011_mcp_internal_oauth.sql",
+        "packages/db/migrations/00099_sam_google_oauth.sql",
+        "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+        "packages/db/migrations/00101_goal_read_reviews.sql"
+      ],
+      "dependencyDifferences": [
+        {
+          "name": "@modelcontextprotocol/sdk",
+          "group": "dependencies",
+          "core": null,
+          "branch": "^1.26.0"
+        },
+        {
+          "name": "@replit/connectors-sdk",
+          "group": "dependencies",
+          "core": "^0.4.3",
+          "branch": null
+        },
+        {
+          "name": "ajv",
+          "group": "dependencies",
+          "core": null,
+          "branch": "8.20.0"
+        },
+        {
+          "name": "ajv-formats",
+          "group": "dependencies",
+          "core": null,
+          "branch": "3.0.1"
+        },
+        {
+          "name": "tsx",
+          "group": "dependencies",
+          "core": "^4.23.15",
+          "branch": "4.19.2"
+        },
+        {
+          "name": "@electric-sql/pglite",
+          "group": "devDependencies",
+          "core": null,
+          "branch": "0.5.10"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "core": "^20.19.43",
+          "branch": null
+        },
+        {
+          "name": "@types/pg",
+          "group": "devDependencies",
+          "core": "^8.23.1",
+          "branch": null
+        },
+        {
+          "name": "typescript",
+          "group": "devDependencies",
+          "core": "^5.9.3",
+          "branch": null
+        }
+      ],
+      "protectedStabilityBranch": true,
+      "codeExecuted": false
+    }
+  ]
+}

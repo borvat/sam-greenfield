@@ -1,4 +1,3 @@
-import {readFile} from "node:fs/promises";
 import {ChatGPTToolRegistry} from "../../chatgpt-tools/src/registry";
 import type {RegisteredChatGPTTool} from "../../chatgpt-tools/src/types";
 
@@ -25,12 +24,9 @@ export function createReleaseReadSurface(){
       return result;
     }),
     tool("sam_release_test_results",async()=>{
-      // Fixed repository-relative evidence file; no model-controlled file paths.
-      const data=JSON.parse(await readFile(new URL("../../../docs/release/test-summary.json",import.meta.url),"utf8"));
-      const count=(v:unknown)=>Number.isInteger(v)&&Number(v)>=0&&Number(v)<=100000?v:null;
-      return {status:["PASS","FAIL","NOT_RUN"].includes(data.status)?data.status:"NOT_RUN",
-        passedSuites:count(data.passedSuites),failedSuites:count(data.failedSuites),
-        classification:"LOCAL_REGRESSION_NOT_LIVE_MODEL"};
+      // Archived summaries do not attest this image and are not runtime assets.
+      return {status:"NOT_RUN",passedSuites:null,failedSuites:null,
+        classification:"CURRENT_CANDIDATE_REQUIRES_HASHED_INDEPENDENT_REPORT"};
     })
   ],{redactedErrors:true});
 }

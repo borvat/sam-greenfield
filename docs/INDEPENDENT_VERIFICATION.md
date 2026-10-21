@@ -1,5 +1,9 @@
 # Independent engineering verification
 
+The isolated [Phase 4 integration candidate](PHASE4_INTEGRATION_ACCEPTANCE.md)
+adds three required integration stages. Use that document's candidate branch and
+commands when accepting the combined profile; PR #46 remains unchanged.
+
 GitHub stores source and PRs. Engineering acceptance can run in the authorized
 Codex workspace or another approved **local Linux amd64 Docker environment**,
 without GitHub Actions, billing access, Render, a CI provider or production keys.

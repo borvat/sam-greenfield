@@ -37,8 +37,8 @@ export async function runBrainPlanningCycle(input: {
 
   const context = goal.state==="NEW"?await observeAndEnterPlanning(input.goalId):await withTransaction(async client=>{
     if(!goal.company_scope) return {entityType:"legal_entity",entityId:null,facts:[],memory:[]};
-    const assembled=await assembleContext(client,"legal_entity",goal.company_scope);
-    return {entityType:assembled.entity.type,entityId:assembled.entity.id,facts:assembled.facts,memory:assembled.memory};
+    const assembled=await assembleContext(client,"legal_entity",goal.company_scope,goal.objective);
+    return {entityType:assembled.entity.type,entityId:assembled.entity.id,facts:assembled.facts,memory:assembled.memory,...('knowledge' in assembled?{knowledge:assembled.knowledge}:{})};
   });
   if(goal.state==="MODELING")await transitionGoalAtomic(input.goalId,"MODELING","PLANNING","kernel_observe_resumed");
 

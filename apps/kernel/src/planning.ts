@@ -30,11 +30,15 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
   planHash: string;
   queueIds: string[];
 }> {
+  return withTransaction(client=>persistPlanAndDelegate(client,input));
+}
+
+// Shared transaction boundary for atomic report continuation; same engine.
+export async function persistPlanAndDelegate(client:import('pg').PoolClient,input:PersistPlanInput):Promise<{planId:string;planHash:string;queueIds:string[]}>{
   validateStepGraph(input.steps);
   input={...input,steps:normalizeDependencies(input.steps,input.dependencies)};
   validateStepGraph(input.steps);
 
-  return withTransaction(async (client) => {
     const goal = await client.query(
       "SELECT id, state FROM goals WHERE id=$1 FOR UPDATE",
       [input.goalId]
@@ -120,5 +124,4 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
     );
 
     return { planId, planHash, queueIds };
-  });
-}
+  }

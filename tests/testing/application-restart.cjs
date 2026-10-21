@@ -64,6 +64,27 @@ async function main(){
     body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'verification-fixture',version:'1'}}})
    });
    assert.equal(initialized.status,200);assert.match(await initialized.text(),/"result"/);
+   const notification=await fetch('http://127.0.0.1:3001/mcp',{
+    method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json',accept:'application/json, text/event-stream',
+     'mcp-protocol-version':'2025-11-25',...(initialized.headers.get('mcp-session-id')?{'mcp-session-id':initialized.headers.get('mcp-session-id')}:{})},
+    body:JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})
+   });
+   assert([200,202].includes(notification.status));await notification.body?.cancel();
+   let rpcId=2;
+   for(const name of ['sam_service_status','sam_release_test_results']){
+    const id=rpcId++,response=await fetch('http://127.0.0.1:3001/mcp',{
+     method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json',accept:'application/json, text/event-stream',
+      'mcp-protocol-version':'2025-11-25',...(initialized.headers.get('mcp-session-id')?{'mcp-session-id':initialized.headers.get('mcp-session-id')}:{})},
+     body:JSON.stringify({jsonrpc:'2.0',id,method:'tools/call',params:{name,arguments:{}}})
+    });
+    assert.equal(response.status,200);const raw=await response.text();
+    const body=response.headers.get('content-type').includes('text/event-stream')?
+     raw.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>JSON.parse(l.slice(5))).find(j=>j.id===id):JSON.parse(raw);
+    assert(!body.error);assert(!body.result.isError);const payload=JSON.parse(body.result.content[0].text);
+    assert.equal(payload.ok,true);
+    if(name==='sam_service_status'){assert.equal(payload.data.worker,'READY');assert.equal(payload.data['command-center'],'READY');}
+    else assert.equal(payload.data.status,'NOT_RUN','archived/absent evidence must not become current image PASS');
+   }
    await stop();for(const child of children)assert.equal(child.exitCode,0,'graceful application stop');
    assert.equal((await c.query(`SELECT count(*)::int n FROM ${schema}.legal_entities WHERE id=$1`,[entity])).rows[0].n,1);
    console.log('APPLICATION_RESTART_PASS round',round+1,'real runtime/Command Center/MCP ready, auth enforced, graceful stop, sentinel retained');

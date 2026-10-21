@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'migration-upgrade-rollback','postgres-restart','migration-after-restart','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'integration-migrations','integration-oauth-mcp','integration-orchestration','migration-upgrade-rollback','postgres-restart','migration-after-restart','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -223,7 +223,7 @@ async function main(){
   });
   await step('configuration-validation',async s=>{
    await command(s,process.execPath,['tests/testing/runner-contract.cjs'],{cwd:source});
-   for(const file of ['docker-compose.yml','docker-compose.production.yml','deploy/production/docker-compose.live.yml'])
+   for(const file of ['docker-compose.yml','docker-compose.production.yml','deploy/production/docker-compose.live.yml','deploy/staging/docker-compose.integration.yml'])
     await command(s,'docker',['compose','--file',file,'config','--quiet','--no-interpolate','--no-env-resolution'],{cwd:source});
    await node(s,['node','tests/release/build_configuration.cjs']);
    await node(s,['node','tests/release/preparation.cjs']);
@@ -238,6 +238,8 @@ async function main(){
   for(const [name,file] of Object.entries({'provider-auth':'provider_auth.ts','postgres-tls':'postgres_tls.ts','contracts':'contracts.ts','synthetic-pilot':'synthetic_pilot.ts','managed-schema':'managed_schema_source.cjs','local-bundle':'local_bundle.ts','closed-setup':'setup.ts','database-contract':'database_check.ts','prelaunch-gate':'prelaunch.ts'}))
    await step(name,s=>suite(s,'tests/release/'+file));
   const life=['--env','DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test_lifecycle'];
+  for(const [name,file] of [['integration-migrations','migrations.ts'],['integration-oauth-mcp','oauth-mcp.ts'],['integration-orchestration','orchestration.ts']])
+   await step(name,s=>suite(s,'tests/integration/'+file));
   await step('migration-upgrade-rollback',s=>node(s,['node','tests/testing/database-lifecycle.cjs','prepare'],life));
   await step('postgres-restart',async s=>{await command(s,'docker',['restart','--time','10',db]);await ready(s);});
   await step('migration-after-restart',s=>node(s,['node','tests/testing/database-lifecycle.cjs','after-restart'],life));

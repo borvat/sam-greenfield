@@ -10,6 +10,8 @@ export interface CapabilityDefinition {
   specialistVersion: string;
   description?: string;
   parameters?: Record<string,unknown>;
+  sideEffect?: boolean;
+  companyScopes?: string[];
 }
 
 export class CapabilityCatalog {
@@ -67,7 +69,9 @@ export class CapabilityCatalog {
   planningDescriptors(){
     return [...this.definitions.values()].map(item=>({
       capabilityId:item.capabilityId,authorityClass:item.authorityClass,
-      description:item.description??item.capabilityId,parameters:item.parameters??{}
+      description:item.description??item.capabilityId,parameters:item.parameters??{},
+      ...(item.sideEffect===undefined?{}:{sideEffect:item.sideEffect}),
+      ...(item.companyScopes===undefined?{}:{companyScopes:item.companyScopes})
     }));
   }
 }

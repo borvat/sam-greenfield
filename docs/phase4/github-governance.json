@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-10-21T22:38:26.809129+00:00",
+  "pr": {
+    "number": 46,
+    "state": "DRAFT",
+    "baseBranch": "main",
+    "headBranch": "codex/sam-core-reliability",
+    "headSha": "14b24a9ff51cb98de400e197bf2bfad40de96812"
+  },
+  "prHtmlSha256": "64de86950d541fd4eed0ee8f0595713dcde2744ff058c371ab5b585261607799",
+  "publicMainBranchMetadata": {
+    "protectedByBranchProtections": false,
+    "mergeQueueEnabled": false,
+    "rulesetsPath": null
+  },
+  "branchesHtmlSha256": "4f5efa0475e9db5fb7d552dfcd72970169be4dd617cc79b312573589da595ac2",
+  "apiProtectionResult": "Get \"https://api.github.com/repos/borvat/sam-greenfield/branches/main/protection\": Forbidden",
+  "effectiveRequiredChecksAndReviews": "UNVERIFIED: public metadata does not expose inherited rulesets or effective review requirements",
+  "actionsBillingRestriction": "Previously confirmed pre-execution account restriction; no billing or Actions endpoint accessed in Phase 4"
+}

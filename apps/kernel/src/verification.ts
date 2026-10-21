@@ -117,6 +117,11 @@ export async function recordIndependentVerificationAtomic(input: {
              WHERE e.goal_id=$1 AND e.plan_id=$2 AND EXISTS
                (SELECT 1 FROM verifications v WHERE v.execution_id=e.id AND v.result='VERIFIED')`,
             [ex.goal_id,ex.plan_id]);
+          // Integration read reports have a separate atomic evidence/critique
+          // gate. Preserve VERIFYING until that gate commits report + knowledge.
+          if(process.env.SAM_INTEGRATION_ENABLED==='1'&&definition.rows[0].completion_definition==='sam.read_report.v1'){
+            await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:ex.goal_id,eventType:'READ_REPORT_READY',payload:{plan_id:ex.plan_id}});
+          }else{
           const acceptance=checkGoalAcceptance(definition.rows[0].completion_definition,verifiedResults.rows);
           if(!acceptance.passed){
             await transitionGoal(client,ex.goal_id,"VERIFYING","REPLANNING","goal_acceptance_failed",{
@@ -127,6 +132,7 @@ export async function recordIndependentVerificationAtomic(input: {
             verification_id: verificationId,
             verified_executions: verified
           });
+          }
           }
         }
       } else if (input.result === "FAILED") {
