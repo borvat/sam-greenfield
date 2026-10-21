@@ -1,3 +1,4 @@
+import { runOwnerNotificationTick } from "../../notifications/src/center";
 import { recoverKernelAfterRestart } from "../../kernel/src/recovery";
 import { failInterruptedPlanning } from "../../kernel/src/failures";
 import { relayOutboxUntilEmpty } from "../../kernel/src/outboxRelay";
@@ -23,6 +24,7 @@ export function createProductionComposition(input:{
 
   return {
     async runWorkTick(){
+      const notifications=await runOwnerNotificationTick();
       const recovery=await recoverKernelAfterRestart();
       const interruptedPlanning=await failInterruptedPlanning();
       const events=await relayOutboxUntilEmpty(50);
@@ -41,7 +43,7 @@ export function createProductionComposition(input:{
       const review=await reviewNextReadGoal(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,review,operational};
+      return {notifications,recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,review,operational};
     }
   };
 }
