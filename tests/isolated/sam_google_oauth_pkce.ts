@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {createPkceRequest,redeemPkceCode} from "../../apps/production/src/samGoogleOauthPkce";
+import {createPkceRequest,redeemPkceCode,refreshSamMcpAccessToken} from "../../apps/production/src/samGoogleOauthPkce";
 test("SAM authorization URL uses distinct secure callback and read-only Google scopes",()=>{
  let saved:{state:string;verifier:string}|undefined;
  const r=createPkceRequest({clientId:"https://sam.example.com/oauth/client.json",redirectUri:"https://sam.example.com/oauth/callback",stateStore:(state,verifier)=>{saved={state,verifier}}});
@@ -16,4 +16,20 @@ test("SAM authorization URL uses distinct secure callback and read-only Google s
 });
 test("invalid state fails without network request",async()=>{
  await assert.rejects(redeemPkceCode({code:"test",state:"bad",storedState:"expected",verifier:"private",clientId:"x",redirectUri:"https://sam.example.com/cb"}),/OAUTH_STATE_MISMATCH/);
+});
+
+test("refresh flow fails closed on missing SAM-only credential",async()=>{
+ await assert.rejects(refreshSamMcpAccessToken({clientId:"",refreshToken:"secret"}),/CREDENTIALS_REQUIRED/);
+ await assert.rejects(refreshSamMcpAccessToken({clientId:"sam-client",refreshToken:""}),/CREDENTIALS_REQUIRED/);
+});
+test("expired OAuth refresh is reported as explicit reauthorization",async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=(async (_url:any,init:any)=>{
+   const form=init.body as URLSearchParams;
+   assert.equal(form.get("grant_type"),"refresh_token");
+   return new Response("",{status:401});
+ }) as typeof fetch;
+ try{
+  await assert.rejects(refreshSamMcpAccessToken({clientId:"sam-client",refreshToken:"sam-only-refresh-token"}),/REAUTH_REQUIRED/);
+ }finally{globalThis.fetch=original}
 });
