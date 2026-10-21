@@ -15,7 +15,8 @@
     "mcp:password-hash": "node --import tsx scripts/mcp-password-hash.ts",
     "start:command-center": "tsx apps/command-center/src/main.ts",
     "live:acceptance": "tsx apps/acceptance/src/main.ts",
-    "test:sam-google": "node --import tsx --test tests/isolated/sam_google_*.ts tests/phase21/mcp_internal_oauth.ts"
+    "test:sam-google": "node --import tsx --test tests/isolated/sam_google_*.ts tests/phase21/mcp_internal_oauth.ts",
+    "test:notifications": "node --import tsx --test tests/isolated/owner_notifications.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.1",
