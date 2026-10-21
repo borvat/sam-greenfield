@@ -6,7 +6,7 @@ async function main(){
  const root=path.resolve(__dirname,'../..');process.chdir(root);
  const selected=process.argv.indexOf('--suite');
  if(selected>=0&&!/^tests\/[a-zA-Z0-9_/-]+\.(ts|cjs)$/.test(process.argv[selected+1]??''))throw Error('TEST_PATH_INVALID');
- const tests=selected>=0?[process.argv[selected+1]]:process.argv.includes('--regression')?fs.readdirSync('tests').filter(x=>/^phase[1-9][0-9]*$/.test(x)).sort((a,b)=>Number(a.slice(5))-Number(b.slice(5))).flatMap(d=>fs.readdirSync('tests/'+d).filter(x=>x.endsWith('.ts')).map(f=>'tests/'+d+'/'+f)):['tests/core/reliability.ts','tests/core/planningConcurrency.ts','tests/core/reservationRace.ts','tests/core/tenantWorkload.ts','tests/core/eventBacklog.ts','tests/core/learningScheduling.ts','tests/core/startupAdmission.ts'];
+ const tests=selected>=0?[process.argv[selected+1]]:process.argv.includes('--regression')?fs.readdirSync('tests').filter(x=>/^phase[1-9][0-9]*$/.test(x)).sort((a,b)=>Number(a.slice(5))-Number(b.slice(5))).flatMap(d=>fs.readdirSync('tests/'+d).filter(x=>x.endsWith('.ts')).map(f=>'tests/'+d+'/'+f)):['tests/core/reliability.ts','tests/core/planningConcurrency.ts','tests/core/reservationRace.ts','tests/core/tenantWorkload.ts','tests/core/eventBacklog.ts','tests/core/learningScheduling.ts','tests/core/startupAdmission.ts','tests/core/planningDeadline.ts'];
  const admin=new Client({connectionString:url.href});await admin.connect();let results=[];
  try{for(const test of tests){
    const schema='core_'+process.pid+'_'+results.length;
