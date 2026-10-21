@@ -6,14 +6,14 @@
 import {createHash,randomBytes} from "node:crypto";
 export const SAM_GOOGLE_ISSUER="https://sam-google-workspace-mcp.onrender.com";
 const CALLBACK_ORIGIN=/^https:\/\/[^/?#]+(?:\/[^?#]*)?$/;
-export function createPkceRequest(input:{clientId:string;redirectUri:string;stateStore:(state:string,verifier:string)=>void}){
+export async function createPkceRequest(input:{clientId:string;redirectUri:string;stateStore:(state:string,verifier:string)=>Promise<void>|void}){
   if(!input.clientId.trim()) throw new Error("MCP_CLIENT_ID_REQUIRED");
   const redirect=new URL(input.redirectUri);
   if(redirect.protocol!=="https:" || !CALLBACK_ORIGIN.test(input.redirectUri))throw new Error("HTTPS_REDIRECT_REQUIRED");
   const verifier=randomBytes(32).toString("base64url");
   const challenge=createHash("sha256").update(verifier).digest("base64url");
   const state=randomBytes(24).toString("base64url");
-  input.stateStore(state,verifier); // Store securely server-side; one use, 10-minute TTL.
+  await input.stateStore(state,verifier); // Persist before issuing authorization URL; one use, 10-minute TTL.
   const u=new URL("/authorize",SAM_GOOGLE_ISSUER);
   u.searchParams.set("response_type","code");
   u.searchParams.set("client_id",input.clientId);
