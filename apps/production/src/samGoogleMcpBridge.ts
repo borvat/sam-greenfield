@@ -34,6 +34,7 @@ export function filterReadOnlyTools(tools:McpTool[]):McpTool[] {
 export class SamGoogleMcpBridge {
   private id=1;
   private session:string|undefined;
+  private initialized=false;
   constructor(private readonly accessToken:string,private readonly endpoint=SAM_GOOGLE_MCP_URL) {
     if(!accessToken || !accessToken.trim())throw new Error("SAM_GOOGLE_OAUTH_ACCESS_TOKEN_REQUIRED");
     const u=new URL(endpoint);
@@ -70,7 +71,10 @@ export class SamGoogleMcpBridge {
     } finally {clearTimeout(timeout)}
   }
   async discover():Promise<McpTool[]> {
-    await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"sam-google-readonly-pilot",version:"0.1.0"}});
+    if(!this.initialized){
+      await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"sam-google-readonly-pilot",version:"0.1.0"}});
+      this.initialized=true;
+    }
     const results:McpTool[]=[];
     let cursor:string|undefined;
     const seen=new Set<string>();
