@@ -18,7 +18,7 @@ export async function runBrainPlanningCycle(input: {
 }) {
   const goal = await withTransaction(async (client) => {
     const res = await client.query(
-      "SELECT id,objective,state FROM goals WHERE id=$1",
+      "SELECT id,objective,state,completion_definition FROM goals WHERE id=$1",
       [input.goalId]
     );
     if (res.rowCount !== 1) throw new Error("Goal not found");
@@ -35,8 +35,8 @@ export async function runBrainPlanningCycle(input: {
     gateway: input.gateway,
     goalId: input.goalId,
     objective: goal.objective,
-    context,
-    availableCapabilities:input.availableCapabilities,
+    context:goal.completion_definition==="sam.read_report.v1"?{...context,continuation:"After independent verification the executive observes results, plans concrete follow-up reads from returned IDs, and persists an evidence-linked final report. Start with discovery when IDs are unknown; do not invent IDs or declare the remaining deliverables impossible."}:context,
+    availableCapabilities:goal.completion_definition==="sam.read_report.v1"?input.availableCapabilities?.filter((x:any)=>x.sideEffect===false&&x.authorityClass==="GREEN"):input.availableCapabilities,
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
     preferredProviders: input.preferredProviders

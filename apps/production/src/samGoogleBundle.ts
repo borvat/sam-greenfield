@@ -1,5 +1,5 @@
 import type {ProductionBundle} from "./types";
-import {sha256Hex} from "../../../packages/shared/src/stableJson";
+import {googleReadEvidence} from "./samGoogleEvidence";
 import {SamGoogleConnection,samGoogleConfigFromEnv} from "./samGoogleConnection";
 import {filterReadOnlyTools,type SamGoogleTool} from "./samGoogleMcpBridge";
 import type {VerificationContractSpec} from "./verificationContracts";
@@ -16,13 +16,14 @@ export async function withSamGoogleConnection(bundle:ProductionBundle,connection
  capabilities:[...bundle.capabilities,...tools.map(t=>({capabilityId:"google_mcp_"+t.name,authorityClass:"GREEN" as const,sideEffect:false,specialistAgentId:t.name.includes("gmail")?"communications":"documents",specialistVersion:"1.0.0",description:t.description??t.name,parameters:t.inputSchema as Record<string,unknown>}))],
  toolDefinitions:[...bundle.toolDefinitions,...tools.map(t=>({capabilityId:"google_mcp_"+t.name,authorityClass:"GREEN" as const,sideEffect:false,description:t.description??t.name,inputSchema:t.inputSchema as Record<string,unknown>}))],
  toolAdapters:[...bundle.toolAdapters,...tools.map(t=>({capabilityId:"google_mcp_"+t.name,async execute(request){
-  const result=await connection.read(t.name as SamGoogleTool,request.params);
-  return {result,evidence:{responseHash:sha256Hex(result),remoteTool:t.name,transport:"mcp",sideEffect:false}};
+  const checked=await googleReadEvidence(t.name as SamGoogleTool,await connection.read(t.name as SamGoogleTool,request.params));
+  return {result:checked.result,evidence:{responseHash:checked.responseHash,verificationVersion:checked.verificationVersion,artifacts:checked.artifacts.map(({text,...a})=>a),remoteTool:t.name,transport:"mcp",sideEffect:false}};
  }}))],
  verificationAdapters:[...(bundle.verificationAdapters??[]),...tools.map(t=>({capabilityId:"google_mcp_"+t.name,async verify(input){
   if(typeof input.execution.evidence.responseHash!=="string")return {result:"INCONCLUSIVE" as const,evidence:{reason:"missing_response_hash"},verifier:"sam-google-independent-readback"};
   const again=await connection.read(t.name as SamGoogleTool,input.execution.params);
-  const hash=sha256Hex(again),equal=hash===input.execution.evidence.responseHash;
+  const fresh=await googleReadEvidence(t.name as SamGoogleTool,again);
+  const hash=fresh.responseHash,equal=input.execution.evidence.verificationVersion===2&&hash===input.execution.evidence.responseHash;
   return {result:equal?"VERIFIED" as const:"INCONCLUSIVE" as const,evidence:{readback:true,responseHash:hash,method:"fresh_mcp_readback",...(equal?{}:{reason:"remote_response_changed"})},verifier:"sam-google-independent-readback"};
  }}))]
  };

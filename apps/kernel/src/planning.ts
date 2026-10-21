@@ -27,7 +27,12 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
 }> {
   if (input.steps.length === 0) throw new Error("Plan requires at least one step");
 
-  return withTransaction(async (client) => {
+  return withTransaction(client=>persistPlanAndDelegate(client,input));
+}
+
+/** Reuse the caller's transaction for atomic observation -> next-plan commits. */
+export async function persistPlanAndDelegate(client:any,input:PersistPlanInput):Promise<{planId:string;planHash:string;queueIds:string[]}>{
+    if(input.steps.length===0)throw new Error("Plan requires at least one step");
     const goal = await client.query(
       "SELECT id, state FROM goals WHERE id=$1 FOR UPDATE",
       [input.goalId]
@@ -107,5 +112,4 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
     );
 
     return { planId, planHash, queueIds };
-  });
 }

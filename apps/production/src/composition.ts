@@ -8,6 +8,7 @@ import type { RuntimeComposition } from "../../runtime/src/service";
 import type { ValidatedProductionBundle } from "./bundle";
 import { planNextNewGoal } from "./planner";
 import { verifyNextExecution } from "./verifier";
+import { reviewNextReadGoal } from "./readGoalReview";
 
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
@@ -37,9 +38,10 @@ export function createProductionComposition(input:{
         executors
       });
       const verification=await verifyNextExecution(input.bundle);
+      const review=await reviewNextReadGoal(input.bundle);
       const operational=input.operationalTick?await input.operationalTick():null;
 
-      return {recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,operational};
+      return {recovery,interruptedPlanning,events,reconciliation,planning,execution,verification,review,operational};
     }
   };
 }

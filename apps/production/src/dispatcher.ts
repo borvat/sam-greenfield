@@ -13,6 +13,7 @@ async function createGoal(input:{
   actor:string;
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
   domain?:string;
+  completionDefinition?:string;
 }):Promise<{id:string;businessId:string}>{
   return withTransaction(async(client)=>{
     const entity=await client.query(
@@ -29,15 +30,16 @@ async function createGoal(input:{
 
     const inserted=await client.query(
       `INSERT INTO goals
-       (business_id,company_scope,domain,objective,state,authority_ceiling)
-       VALUES($1,$2,$3,$4,'NEW',$5)
+       (business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
+       VALUES($1,$2,$3,$4,'NEW',$5,$6)
        RETURNING id,business_id`,
       [
         business.rows[0].business_id,
         input.legalEntityId,
         input.domain??"chatgpt_direct",
         input.objective,
-        input.authorityCeiling
+        input.authorityCeiling,
+        input.completionDefinition??null
       ]
     );
     await client.query(
@@ -153,9 +155,8 @@ export function createKernelProductionDispatcher(
         legalEntityId:input.legalEntityId,
         objective,
         actor:input.actor,
-        // Let SAM propose a complete plan, while the authority guard still
-        // requires owner approval for every YELLOW/RED step.
-        authorityCeiling:"RED",
+        authorityCeiling:"GREEN",
+        completionDefinition:"sam.read_report.v1",
         domain:"chatgpt_goal_submission"
       });
       return {
