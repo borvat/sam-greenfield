@@ -10,7 +10,7 @@ export const MCP_LIMITS = Object.freeze({ servers:8, toolsPerServer:24, pages:5,
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const id=/^[a-z][a-z0-9_]{1,39}$/;
 const toolName=/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}$/;
-const domains=new Set(['web','files','accounting','warehouse','shipping','browser_read']);
+const domains=new Set(['web','files','accounting','warehouse','shipping','browser_read','github','render']);
 const object=(x:unknown):x is Record<string,any>=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const fail=(code:string):never=>{throw new Error(code)};
 export interface ScopedMcpTool { name:string; description:string; inputSchema:Record<string,unknown> }

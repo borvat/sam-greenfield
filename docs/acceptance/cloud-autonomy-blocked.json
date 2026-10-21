@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-21T13:49:20.850Z",
+  "state": "BLOCKED",
+  "productionChanged": false,
+  "liveAccepted": false,
+  "trials": [],
+  "missing": [
+    "SAM_MCP_SECRET_GITHUB",
+    "SAM_MCP_SECRET_RENDER",
+    "SAM_CLOUD_DB_URL",
+    "SAM_CLOUD_MANIFEST",
+    "SAM_CLOUD_SCOPE",
+    "SAM_CLOUD_REVISION",
+    "LIVE_MODEL_CREDENTIAL_AND_MODEL"
+  ]
+}

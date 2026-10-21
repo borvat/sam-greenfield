@@ -1,0 +1,37 @@
+# GitHub + Render MCP autonomy acceptance (staging only)
+
+This candidate connects SAM's own Node process to official upstream hosted MCPs, independently of ChatGPT connectors. It is not imported by the default production bundle. The current recorded result is **BLOCKED: zero live trials**, not autonomous acceptance.
+
+## What is implemented
+
+- Bounded discovery of the GitHub repository/actions read-only endpoints and Render MCP. Discovery emits an **unreviewed candidate**, not authorization or an accepted connection. Select/review the exact raw schema pins and use only required reads. Unknown/referenced/unsupported schemas fail closed; discovery alone never passes acceptance.
+- Cloud-specific policy rejects write tools and arbitrary hosts before connection. It binds GitHub reads to one owner/repository, and Render reads to an explicit workspace and at most four service IDs. Render schemas without request-scoped workspace support are rejected rather than falling back to a mutable selected workspace. Runtime and fresh-verification calls share the policy. GitHub uses `/readonly`; SAM's Render allowlist includes only `get_service`, `list_deploys`, `get_deploy`, `get_metrics`. No deployment, environment edit, SQL query, restart or resource creation tool is registered.
+- The live runner uses the existing SAM model gateway, production planner, specialist execution, verifier, report reviewer, knowledge capture and notification projector. It has **no fixture model, supplied plan or alternate connector route**. Ten varied objectives contain resource identities and desired outcomes, without tool/capability names or prescribed steps. A single configured live model selects from discovered reviewed capabilities. Its actual output and input/output digests are audited against the active goal; every executed capability must occur in model-selected steps.
+- Acceptance requires ten distinct COMPLETED goals on the same clean Git revision, verified reads of both systems, no unverified execution, a final report and attributed memory from both systems. It checks the Git revision before model calls and between work cycles. A failed/incomplete trial ends the sequence; it is not silently replaced. Raw plans, work, executions, fresh readback verifications, reviews, model audit and knowledge stay in the isolated PostgreSQL database. Report files contain acceptance counters/IDs rather than credentials/source text.
+- After a successful sequence, an extra availability test closes only this process's isolated MCP sessions, submits another outcome-only goal and requires failed provider work plus its own internal FAILED notification. This tests transport failure reporting, **not** semantic classification of every possible deployment/workflow incident. Nothing is inserted as a fabricated cloud incident and no remote service is changed. External delivery is off.
+
+## Required setup
+
+Current environment has no dedicated GitHub/Render runtime tokens, live-model key/model, or PostgreSQL/Docker executable. None were copied from ChatGPT, and no cloud database/service was created. These are genuine live-run blockers.
+
+1. Supply `SAM_MCP_SECRET_GITHUB` and `SAM_MCP_SECRET_RENDER` to an isolated process through its secret mechanism. Use a selected-repository, read-only GitHub credential for contents/pull requests/Actions metadata as needed. Validate the credential's account and effective permissions separately. Render authentication may carry broader underlying account authority; SAM's reviewed read allowlist limits executable tools, but is **not evidence that the API key itself has native read-only scope**. Use the narrowest available account/workspace access and resolve any unmet credential restrictions before production consideration.
+2. Run `npm run cloud:discover` with `SAM_CLOUD_DISCOVERY_REPORT` set to an absolute output path outside the checkout. Review `candidate`, remove unnecessary tools, bind the intended company UUID, and save that exact `{version,servers}` manifest outside the checkout. Set `SAM_CLOUD_MANIFEST` to that file path. No live schema snapshots have been invented or committed.
+3. Copy `scope.example.json` outside the checkout, replace the company placeholder, confirm repository/workspace/service identities, and set `SAM_CLOUD_SCOPE` to its path. The shown service IDs are read targets only, not the staging runtime or database.
+4. Provision a disposable **local** PostgreSQL database named `sam_cloud_acceptance_<unique_suffix>`. Explicitly initialize it with the existing migration runner using that local URL. The live runner requires matching recorded migration checksums and an empty goals table; it does not run production migrations. Set `SAM_CLOUD_DB_URL` to its localhost URL. Never use Render's production database. The runner rejects remote hosts and unrelated database names and replaces any inherited DATABASE_URL only after this validation.
+5. Supply exactly one standard model credential/model pair supported by `standardModels.ts`, with accurate cost metadata. The runner uses the existing gateway budgets (planning ceiling $0.10 per goal; this is not a global provider billing guarantee). Existing model-call budgets do not make a new paid hosting service necessary.
+6. Use a committed, clean checkout. Set `SAM_CLOUD_REVISION` to that exact 40-character commit and `SAM_CLOUD_REPORT` to an absolute path outside the checkout, then run `npm run cloud:acceptance`. Every new sequence needs a fresh disposable database; failed evidence is retained, not wiped/retried into an apparently successful history.
+
+No key values belong in the scope/manifest/report. The only tolerated untracked checkout entry is this workspace's existing node_modules symlink; untracked executable source also invalidates the fixed-revision gate.
+
+## Honest boundaries
+
+- The runner has been executed here **only through its missing-prerequisite path**, returning exit 2, `BLOCKED`, `liveAccepted:false`, zero trials. Its full live PostgreSQL/model/upstream execution and failure-notification path remain unproven.
+- Five deterministic contract tests use fixture MCP responses to exercise policy, readback dispatch, gating and source-version checks. They are mechanism tests, not independent-agent evidence. Existing scope regression passes 13/13 and internal inbox/MCP workflow regression passes 3/3. No live full-path, typecheck or CI pass is claimed.
+- Verification independently re-reads through the same provider MCP and checks exact results; it is not a separate direct REST cross-check. Volatile state may yield INCONCLUSIVE and must remain a failed acceptance trial. No weaker equality is introduced to get a pass.
+- SAM source and reviewed schema pins stay fixed; hosted upstream implementations and model infrastructure are managed externally. Their release binaries are not pinned by this candidate.
+- Logs are excluded from the initial minimal Render surface. Additional reviewed bounded log tools, semantic operational incident detection, or native credential restrictions require separate evidence; none are claimed as completed here.
+- Production Render, the deployed branch, all production credentials and the fixed-version 24-hour soak remain unchanged.
+
+Primary references read on 2026-10-21:
+- https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md
+- https://render.com/docs/mcp-server.md

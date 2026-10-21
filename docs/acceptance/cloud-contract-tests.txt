@@ -1,0 +1,18 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:cloud-contracts
+> node --import tsx --test tests/phase24/cloud_acceptance.ts
+
+✔ cloud policy rejects writes, unknown destinations, wrong company and unscoped old schemas before connection (37.060361ms)
+✔ fixture transport tests scope enforcement and original-schema pins, never evidence of a live cloud connection (16.46502ms)
+✔ acceptance requires ten distinct completed goals, actual model choices, both sources, fresh verification and attributed memory (0.546466ms)
+✔ fixed revision check rejects edits and untracked executable source without changing the inspected checkout (73.542441ms)
+✔ live entry point reports BLOCKED with zero trials before any inherited production DB fallback (395.021227ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1171.751776

@@ -1,0 +1,6 @@
+{
+  "companyId": "REPLACE_WITH_SCOPED_COMPANY_UUID",
+  "repository": {"owner":"borvat","name":"sam-greenfield"},
+  "workspaceId": "tea-db35rbflot8c739g8rhg",
+  "serviceIds": ["srv-db37vbvlk1mc739o0b70","srv-db37vbvlk1mc739o0b7g"]
+}
