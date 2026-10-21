@@ -1,3 +1,4 @@
+import { captureVerifiedKnowledge } from "../../brain/src/knowledge";
 import {pool} from "../../../packages/db/src/client";
 import {sha256Hex} from "../../../packages/shared/src/stableJson";
 import {validateToolParameters} from "../../../packages/tool-gateway/src/validation";
@@ -134,6 +135,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    const current=await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goal.id]);
    if(current.rows[0]?.state!=="VERIFYING"||current.rows[0]?.current_plan_id!==goal.current_plan_id)throw new Error("REVIEW_STALE_PLAN");
    await client.query("INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash) VALUES($1,$2,$3,$4::jsonb,$5)",[goal.id,goal.current_plan_id,round,JSON.stringify(decision),sha256Hex(decision)]);
+   if(decision.status==="complete") await captureVerifiedKnowledge(client,goal.id,decision.findings,sourceText);
    if(decision.status==="continue"){
     await transitionGoal(client,goal.id,"VERIFYING","REPLANNING","verified_observation_continuation");
     await transitionGoal(client,goal.id,"REPLANNING","PLANNING","concrete_observed_reads");

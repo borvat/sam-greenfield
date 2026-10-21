@@ -8,31 +8,34 @@ export async function observeAndEnterPlanning(goalId: string, alreadyModeling=fa
   entityId: string | null;
   facts: unknown[];
   memory: unknown[];
+  knowledge: unknown[];
 }> {
   if(!alreadyModeling) await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
 
   const context = await withTransaction(async (client) => {
     const goal = await client.query(
-      "SELECT company_scope FROM goals WHERE id=$1",
+      "SELECT company_scope,objective FROM goals WHERE id=$1",
       [goalId]
     );
     if (goal.rowCount !== 1) throw new Error("Goal not found");
     const entityId = goal.rows[0].company_scope as string | null;
     if (!entityId) {
-      return { entityType: "legal_entity", entityId: null, facts: [], memory: [] };
+      return { entityType: "legal_entity", entityId: null, facts: [], memory: [], knowledge: [] };
     }
-    const assembled = await assembleContext(client, "legal_entity", entityId);
+    const assembled = await assembleContext(client, "legal_entity", entityId,goal.rows[0].objective);
     return {
       entityType: assembled.entity.type,
       entityId: assembled.entity.id,
       facts: assembled.facts,
-      memory: assembled.memory
+      memory: assembled.memory,
+      knowledge: assembled.knowledge
     };
   });
 
   await transitionGoalAtomic(goalId, "MODELING", "PLANNING", "kernel_observe_complete", {
     fact_count: context.facts.length,
-    memory_count: context.memory.length
+    memory_count: context.memory.length,
+    knowledge_count: context.knowledge.length
   });
 
   return context;
