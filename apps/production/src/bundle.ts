@@ -20,7 +20,7 @@ export function validateProductionBundle(bundle:ProductionBundle):ValidatedProdu
     return {
       ...capability,
       description:tool.description??capability.description,
-      parameters:tool.inputSchema??{},
+      parameters:capability.parameters??tool.inputSchema,
       sideEffect:tool.sideEffect
     };
   }));

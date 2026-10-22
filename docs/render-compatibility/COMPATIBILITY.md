@@ -41,6 +41,10 @@ Under a separate explicit release instruction: freeze the reviewed SHA and reche
 
 If either service fails readback, keep admissions closed and stop new work; use the preapproved compatible runtime/database recovery path, then restore MCP and verify identity/health/auth/catalog. Do not blindly select af4be2e after migration. Main integration is separate: this branch contains main plus deployed history, but merging main alone does not deploy the two services that track the deployment branch with auto-deploy off.
 
+## Reproduced integration defects
+
+The initial full run on `160dd9b694f739f40d31e25a209b7daf6fb962e6` passed all 49 historical suites but failed two core suites. The automatic bundle merge replaced explicit capability schemas with an empty tool schema; preserving explicit capability parameters fixes the existing malformed-parameter regression. The deployed verifier advisory-lock recheck admitted only VERIFYING goals even though selection includes EXECUTING; matching both phases permits dependency verification and prevents an unfinished oldest goal starving completed work. The subsequent core regression also proved that generic failure recording must leave bound side effects to reconciliation/WAITING_OWNER rather than marking an uncertain write FAILED; the binding guard now preserves that path without resending. Existing core reliability/learning tests reproduce these failures; no assertions were removed. The failed full report remains preserved separately from final acceptance.
+
 ## Review and evidence boundaries
 
 AI technical review covers conflict resolution, startup/auth route wiring, tool preservation, fenced recovery, schema adoption and evidence binding. This is not a line-by-line re-audit of all inherited files or a human-only live-evaluation signoff. Owner selected AI review. No additional human-only merge rule is invented. Hosted Actions billing failures remain separate from external acceptance; no check is spoofed or workflow rerun requested. Final exact-source external results are recorded in ACCEPTANCE.md after execution; earlier passes are not inherited by this implementation.

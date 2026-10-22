@@ -15,7 +15,6 @@ export async function verifyNextExecution(
          JOIN verification_contracts vc ON vc.capability_id=e.capability_id
         WHERE g.state IN ('EXECUTING','VERIFYING') AND g.current_plan_id=e.plan_id
           AND e.status='EXECUTED'
-          AND e.plan_id=g.current_plan_id
           AND NOT EXISTS (
             SELECT 1 FROM verifications v WHERE v.execution_id=e.id
           )
@@ -36,7 +35,7 @@ export async function verifyNextExecution(
   if(!locked)return {processed:false};
   // Recheck after acquiring the cross-worker lock; another verifier may have
   // completed the candidate since the initial selection.
-  const eligible=await lease.query(`SELECT e.id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND g.state='VERIFYING' AND e.plan_id=g.current_plan_id AND NOT EXISTS(SELECT 1 FROM verifications v WHERE v.execution_id=e.id)`,[candidate.id]);
+  const eligible=await lease.query(`SELECT e.id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND g.state IN ('EXECUTING','VERIFYING') AND e.status='EXECUTED' AND e.plan_id=g.current_plan_id AND NOT EXISTS(SELECT 1 FROM verifications v WHERE v.execution_id=e.id)`,[candidate.id]);
   if(!eligible.rowCount)return {processed:false};
   const outcome=await verifier.verify({
     execution:{

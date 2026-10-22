@@ -27,8 +27,8 @@ async function createGoal(input:{
     );
     if(entity.rowCount!==1) throw new Error("Legal entity not found");
 
-    // Goal business IDs are globally unique by schema. Use the canonical global
-    // goal sequence (NULL scope), matching the Phase 0 RLS/security paths.
+    // Allocate within the fixed tenant; the canonical function includes its
+    // organization identity in the globally unique business ID.
     const business=await client.query(
       "SELECT next_business_id('goal',current_org_id()) AS business_id"
     );
