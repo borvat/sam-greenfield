@@ -50,8 +50,11 @@ export async function evaluateHypothesis(c:PoolClient,input:{hypothesisId:string
  return {evaluationId:r.rows[0].id as string,supported};
 }
 
-export async function learnNextSpecialistReport(c:PoolClient,entityId:string,supportsClaim:(result:Record<string,unknown>,topic:string,value:string)=>boolean){
-   const row=(await c.query(`SELECT e.result,g.id goal_id FROM executions e JOIN goals g ON g.id=e.goal_id
+/** Per-worker cursor bounds each tick without permanently excluding unsupported reports.
+ * Wraparound also revisits changed evidence; restart simply begins a new pass. */
+export type LearningScanCursor={after?:{finishedAt:string;executionId:string}};
+export async function learnNextSpecialistReport(c:PoolClient,entityId:string,supportsClaim:(result:Record<string,unknown>,topic:string,value:string)=>boolean,cursor:LearningScanCursor){
+   const rows=(await c.query(`SELECT e.result,g.id goal_id,e.finished_at::text finished_at,e.id execution_id FROM executions e JOIN goals g ON g.id=e.goal_id
     JOIN specialist_sessions s ON s.queue_id=e.queue_id
     JOIN LATERAL(SELECT result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
     WHERE g.company_scope=$1 AND g.current_plan_id=e.plan_id AND g.state='COMPLETED' AND v.result='VERIFIED' AND e.result->>'status'='COMPLETE'
@@ -72,16 +75,21 @@ export async function learnNextSpecialistReport(c:PoolClient,entityId:string,sup
          SELECT 1 FROM jsonb_path_query(source.result,'strict $.**') leaf(value)
          WHERE jsonb_typeof(leaf.value) NOT IN ('object','array') AND coalesce(leaf.value #>> '{}','null') = claim->>'value')))
 
-    ORDER BY e.finished_at,e.id LIMIT 1 FOR UPDATE OF g SKIP LOCKED`,[entityId])).rows[0];
-   if(!row)return {learned:0};
-   const report=row.result.report as Report;
-   const current=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
-   let learned=0;
-   for(const claim of report.claims){
-    const source=current.find(e=>claim.evidenceIds.includes(e.id)&&e.fresh&&supportsClaim(e.result,claim.topic,claim.value)&&
-     report.evidence.some(old=>old.id===e.id&&old.verificationId===e.verificationId));
-    if(!source)continue;
-    await learnVerifiedQuote(c,{entityId,goalId:row.goal_id,sourceGoalId:source.goalId,executionId:source.id,statement:claim.value});learned++;
+     AND ($2::timestamptz IS NULL OR (e.finished_at,e.id)>($2::timestamptz,$3::uuid))
+    ORDER BY e.finished_at,e.id LIMIT 16 FOR UPDATE OF g SKIP LOCKED`,[entityId,cursor.after?.finishedAt??null,cursor.after?.executionId??null])).rows;
+   for(const row of rows){
+    cursor.after={finishedAt:row.finished_at,executionId:row.execution_id};
+    const report=row.result.report as Report;
+    const current=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
+    let learned=0;
+    for(const claim of report.claims){
+     const source=current.find(e=>claim.evidenceIds.includes(e.id)&&e.fresh&&supportsClaim(e.result,claim.topic,claim.value)&&
+      report.evidence.some(old=>old.id===e.id&&old.verificationId===e.verificationId));
+     if(!source)continue;
+     await learnVerifiedQuote(c,{entityId,goalId:row.goal_id,sourceGoalId:source.goalId,executionId:source.id,statement:claim.value});learned++;
+    }
+    if(learned)return {learned};
    }
-   return {learned};
+   if(rows.length<16)delete cursor.after;
+   return {learned:0};
 }

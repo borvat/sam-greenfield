@@ -12,7 +12,7 @@ import {transitionGoal} from '../../../kernel/src/stateMachine';
 import type {VerificationAdapter} from '../../../production/src/types';
 import type {CapabilityCatalog} from '../capabilityCatalog';
 import {sourceEnvelope} from '../../../brain/src/research';
-import {recallVerifiedLessons,learnNextSpecialistReport} from './learning';
+import {recallVerifiedLessons,learnNextSpecialistReport,type LearningScanCursor} from './learning';
 import {decisionSchema,validateLimits,reasoningRules,type SpecialistConfig,type SessionState,type Evidence,type Report,type Limits} from './contracts';
 import {assertEvaluationTrial,type EvaluationTrial} from '../evaluation/trial';
 
@@ -41,16 +41,21 @@ export function contradictions(reports:Report[]){
  }
  return [...topics].filter(([,v])=>v.size>1).map(([topic,values])=>({topic,values:[...values].map(([value,ids])=>({value,evidenceIds:[...ids]}))}));
 }
+/** Shared production acceptance predicate, also used by scheduler regressions. */
+export function claimSupportForScenario(scenario?:ReturnType<typeof commercialScenario>){
+ return (result:Record<string,unknown>,topic:string,value:string)=>{
+  if(!scenario)return containsValue(result,value);
+  const source=scenario.sources.find(s=>s.id===result.sourceId);
+  return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
+ };
+}
 export async function createSpecialistIntelligence(input:{configs:SpecialistConfig[];catalog:CapabilityCatalog;tools:ToolRegistry;gateway:ModelGateway;trial?:EvaluationTrial;diagnostic?:(error:unknown)=>void}){
  if(input.trial)assertEvaluationTrial(input.trial);
  if(process.env.SAM_SPECIALIST_INTELLIGENCE!==(input.trial?.permit.mode==='live'?'evaluation':'synthetic'))throw Error('SPECIALIST_SYNTHETIC_PROFILE_REQUIRED');
  const tenant=await withTransaction(assertSpecialistAccess);
  const scenario=input.trial?commercialScenario(input.trial.spec.caseId):undefined;
- const supportsClaim=(result:Record<string,unknown>,topic:string,value:string)=>{
-  if(!scenario)return containsValue(result,value);
-  const source=scenario.sources.find(s=>s.id===result.sourceId);
-  return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
- };
+ const supportsClaim=claimSupportForScenario(scenario);
+ const learningCursor:LearningScanCursor={};
  const configs=new Map(input.configs.map(raw=>[raw.capabilityId,JSON.parse(JSON.stringify({...raw,limits:validateLimits(raw.limits)})) as SpecialistConfig]));
  if(configs.size!==input.configs.length||!configs.size)throw Error('SPECIALIST_CONFIG_INVALID');
  for(const id of Object.keys(input.catalog.authorityPolicies())){
@@ -291,7 +296,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    finally{if(timer)clearTimeout(timer);}
   }
  return {advancers:Object.fromEntries([...configs.keys()].map(id=>[id,advance])) as Record<string,(w:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>>,
-  learnNextReport:()=>withTransaction(c=>learnNextSpecialistReport(c,tenant.entity,supportsClaim)),
+  learnNextReport:()=>withTransaction(c=>learnNextSpecialistReport(c,tenant.entity,supportsClaim,learningCursor)),
   executeRead:(work:ClaimedWork,execute:CapabilityExecutor)=>capturedRead(work,execute),
   verifyRead:async(executionId:string,verify:()=>ReturnType<VerificationAdapter['verify']>)=>{
    try{

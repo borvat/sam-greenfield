@@ -3,8 +3,9 @@ import {randomUUID} from 'node:crypto';
 import {pool,withTransaction} from '../../packages/db/src/client';
 import {applySpecialistProfile} from '../../packages/db/src/specialistProfile';
 import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
-import {learnNextSpecialistReport} from '../../apps/agents/src/intelligence/learning';
-import {containsValue} from '../../apps/agents/src/intelligence/engine';
+import {learnNextSpecialistReport,type LearningScanCursor} from '../../apps/agents/src/intelligence/learning';
+import {claimSupportForScenario} from '../../apps/agents/src/intelligence/engine';
+import {commercialScenario} from '../../apps/agents/src/evaluation/scenarios';
 async function main(){
  const c=await pool.connect();try{
   await applySpecialistProfile(c);
@@ -23,20 +24,24 @@ async function main(){
     VALUES($1,'independent-fixture','api_readback','{}','VERIFIED','fixture-plan',$2) RETURNING id`,[e,randomUUID()])).rows[0].id;
    return {e,v};
   }
+  const scenario=commercialScenario('commercial-market')!,otherScenario=commercialScenario('commercial-profitability')!;
   const fixtures:Record<string,string>={},receipts:Record<string,string>={};
-  for(const [index,kind] of ['expired','revoked','fresh-one','fresh-two'].entries()){
+  for(const [index,kind] of ['expired','revoked',...Array.from({length:18},(_,i)=>'incompatible-'+i),'fresh-one','fresh-two'].entries()){
    const root=await goal(null,'specialist.executive'),source=await goal(root.id,'source.read');
-   const leaf=await execution(source,{value:kind},kind==='expired'?31*24*60:0);
+   const commercial=kind.startsWith('incompatible-')?otherScenario.sources[0]:scenario.sources[0];
+   const leaf=await execution(source,{sourceId:commercial.id,sourceData:commercial.data},kind==='expired'?31*24*60:0);
    if(kind==='revoked')await c.query("UPDATE verifications SET result='FAILED' WHERE id=$1",[leaf.v]);
    await c.query("UPDATE goals SET state='COMPLETED' WHERE id=$1",[source.id]);
    await c.query("INSERT INTO specialist_budgets(root_queue_id,legal_entity_id,limits,deadline) VALUES($1,$2,'{}',now()+interval '1 hour')",[root.queue,entity]);
    await c.query("INSERT INTO specialist_sessions(queue_id,root_queue_id,legal_entity_id,agent_id,config_hash,depth,state,deadline) VALUES($1,$1,$2,'fixture','fixture',0,'{}',now()+interval '1 hour')",[root.queue,entity]);
-   await execution(root,{status:'COMPLETE',report:{claims:[{topic:'value',value:kind,evidenceIds:[leaf.e]}],evidence:[{id:leaf.e,goalId:source.id,verificationId:leaf.v}]}},10-index);
+   await execution(root,{status:'COMPLETE',report:{claims:[{topic:commercial.data.topic,value:commercial.data.value,evidenceIds:[leaf.e]}],evidence:[{id:leaf.e,goalId:source.id,verificationId:leaf.v}]}},100-index);
    await c.query("UPDATE goals SET state='COMPLETED' WHERE id=$1",[root.id]);fixtures[kind]=root.id;receipts[kind]=leaf.v;
   }
-  const tick=()=>withTransaction(c=>learnNextSpecialistReport(c,entity,(result,_topic,value)=>containsValue(result,value)));
-  assert.equal((await withTransaction(c=>learnNextSpecialistReport(c,randomUUID(),(result,_topic,value)=>containsValue(result,value)))).learned,0,'explicit tenant scope also holds for an operator connection');
-  assert.equal((await tick()).learned,1,'old expired/revoked reports must not starve fresh learning');
+  const cursor:LearningScanCursor={};
+  const tick=()=>withTransaction(c=>learnNextSpecialistReport(c,entity,claimSupportForScenario(scenario),cursor));
+  assert.equal((await withTransaction(c=>learnNextSpecialistReport(c,randomUUID(),claimSupportForScenario(scenario),{}))).learned,0,'explicit tenant scope also holds for an operator connection');
+  assert.equal((await tick()).learned,0,'a tick scans at most 16 incompatible reports');
+  assert.equal((await tick()).learned,1,'old incompatible-scenario report must not starve production-predicate learning');
   assert.equal((await tick()).learned,1,'next eligible report must make progress');
   assert.equal((await tick()).learned,0,'completed learning is idempotent');
   const lessons=(await c.query("SELECT goal_id FROM specialist_learning WHERE kind='VERIFIED_LESSON' ORDER BY goal_id")).rows.map(r=>r.goal_id).sort();
@@ -45,7 +50,7 @@ async function main(){
   assert.equal((await tick()).learned,1,'restored current evidence becomes eligible without a permanent skip marker');
   assert.equal((await tick()).learned,0);
   assert.equal((await c.query("SELECT count(*)::int n FROM specialist_learning WHERE kind='VERIFIED_LESSON' AND goal_id=$1",[fixtures.expired])).rows[0].n,0);
-  console.log('PASS learning fairness: expired and revoked oldest reports skipped; both fresh reports learned; no stale promotion or duplicate lessons');
+  console.log('PASS learning fairness: expired, revoked and incompatible-scenario oldest reports skipped; both fresh reports learned; no stale promotion or duplicate lessons');
  }finally{c.release();await pool.end();}
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
