@@ -1,3 +1,5 @@
+import {commercialScenario} from './scenarios';
+import {scoreCommercialCapture} from './scenarioScore';
 import {createHash,createPublicKey,verify,type KeyObject} from 'node:crypto';
 import {stableStringify,sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {validateTrialSpec,zero,type TrialSpec,type Counters} from './trialSpec';
@@ -9,6 +11,10 @@ export function verifyEvaluationTrace(input:unknown,trustedKey:string|KeyObject)
   envelope.keyId!==createHash('sha256').update(key.export({type:'spki',format:'der'})).digest('hex')||
   !verify(null,Buffer.from(stableStringify(envelope.payload)),key,Buffer.from(envelope.signature??'','base64')))throw Error('EVALUATION_TRACE_AUTHENTICATION_FAILED');
  const {trial:t,events}=envelope.payload;const spec=validateTrialSpec(t.spec as TrialSpec);
+ if(typeof t.sealed!=='boolean'||typeof t.cancelled!=='boolean')throw Error('EVALUATION_TRACE_INVALID');
+ const counterKeys=Object.keys(zero());
+ const counters=(c:any)=>{if(!c||typeof c!=='object'||Object.keys(c).length!==counterKeys.length||counterKeys.some(k=>!Number.isFinite(c[k])||c[k]<0||k!=='costUsd'&&!Number.isSafeInteger(c[k])))throw Error('EVALUATION_COUNTERS_INVALID');};
+ counters(t.used);for(const c of Object.values(t.agent_used))counters(c);
  const complete=t.sealed&&envelope.payload.captureStatus==='SEALED_COMPLETE';
  if(!complete&&envelope.payload.captureStatus!=='INCOMPLETE_SNAPSHOT'||t.legal_entity_id!==spec.companyId||!Number.isFinite(Date.parse(t.deadline))||!Number.isFinite(Date.parse(t.created_at))||!Array.isArray(events)||events.length>1000||complete&&(!events.length||events.at(-1).kind!=='SNAPSHOT'))throw Error('EVALUATION_TRACE_INCOMPLETE');
  let previous='0'.repeat(64);const used=zero(),agentUsed:Record<string,Counters>={},reservations=new Map<string,any>(),finished=new Map<string,any>(),invoked=new Set<string>();
@@ -19,13 +25,17 @@ export function verifyEvaluationTrace(input:unknown,trustedKey:string|KeyObject)
   previous=e.hash;
   if(e.kind==='RESERVED'){
    if(reservations.has(e.reservation_id))throw Error('EVALUATION_RESERVATION_REUSED');reservations.set(e.reservation_id,e);
-   const p=e.payload;if(!Object.hasOwn(spec.agents,p.agentId))throw Error('EVALUATION_AGENT_DENIED');const a=agentUsed[p.agentId]??=zero();
+   const p=e.payload;counters(p.reserved);
+   const charge=p.kind==='model'?{models:1}:['tool','readback'].includes(p.kind)?{tools:1}:p.kind==='iteration'?{iterations:1}:p.kind==='delegation'?{delegations:p.reserved.delegations}:null;
+   if(!charge||Object.entries(p.reserved).some(([k,n])=>k!=='costUsd'&&k!=='tokens'&&n!==((charge as any)[k]??0))||p.kind==='model'&&p.reserved.tokens<1||p.kind!=='model'&&p.reserved.tokens!==0||['iteration','delegation'].includes(p.kind)&&p.reserved.costUsd!==0||p.kind==='delegation'&&p.reserved.delegations<1)throw Error('EVALUATION_RESERVATION_INVALID');
+   if(!Object.hasOwn(spec.agents,p.agentId))throw Error('EVALUATION_AGENT_DENIED');const a=agentUsed[p.agentId]??=zero();
    for(const k of Object.keys(used) as (keyof Counters)[]){const n=p.reserved[k];if(!Number.isFinite(n)||n<0||k!=='costUsd'&&!Number.isSafeInteger(n))throw Error('EVALUATION_RESERVATION_INVALID');used[k]+=n;a[k]+=n;}
    if(Date.parse(e.created_at)>Date.parse(t.deadline))throw Error('EVALUATION_LATE_RESERVATION');
    if(!Number.isFinite(Date.parse(t.agent_deadlines[p.agentId]))||Date.parse(e.created_at)>Date.parse(t.agent_deadlines[p.agentId]))throw Error('EVALUATION_LATE_AGENT_RESERVATION');
   }
-  if(e.kind==='INVOKING'){if(!reservations.has(e.reservation_id)||invoked.has(e.reservation_id))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
-  if(e.kind==='FINISHED'){if(!reservations.has(e.reservation_id)||finished.has(e.reservation_id))throw Error('EVALUATION_COMPLETION_INVALID');finished.set(e.reservation_id,e);}
+  if(e.kind==='INVOKING'){const r=reservations.get(e.reservation_id)?.payload;
+   if(!r||invoked.has(e.reservation_id)||finished.has(e.reservation_id)||!['model','tool','readback'].includes(r.kind)||e.payload.kind!==r.kind||e.payload.agentId!==undefined&&e.payload.agentId!==r.agentId||['providerId','model','capabilityId','workGoalId'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r[k])||Date.parse(e.created_at)>Math.min(Date.parse(t.deadline),Date.parse(t.agent_deadlines[r.agentId])))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
+  if(e.kind==='FINISHED'){if(!reservations.has(e.reservation_id)||finished.has(e.reservation_id)||!['success','failure'].includes(e.payload.status)||e.payload.status==='success'&&!['iteration','delegation'].includes(reservations.get(e.reservation_id).payload.kind)&&!invoked.has(e.reservation_id))throw Error('EVALUATION_COMPLETION_INVALID');finished.set(e.reservation_id,e);}
  });
  for(const k of Object.keys(used) as (keyof Counters)[]){if(Math.abs(used[k]-t.used[k])>1e-8||used[k]>spec.limits[k]+1e-12)throw Error('EVALUATION_LEDGER_MISMATCH');}
  if(stableStringify(agentUsed)!==stableStringify(t.agent_used))throw Error('EVALUATION_AGENT_LEDGER_MISMATCH');
@@ -41,6 +51,7 @@ export function scoreAuthenticatedEvaluation(input:unknown,trustedKey:string|Key
  if(spec.commit!==commit)throw Error('EVALUATION_COMMIT_MISMATCH');
  if(!capture.complete)return {schemaVersion:1,commit,status:'FAIL',classification:'AUTHENTICATED_INCOMPLETE_CAPTURE',traceAuthenticated:true,headHash:capture.headHash,wholeTrialUsed:t.used,
   liveReasoningValidated:false,independentHumanReview:'PENDING',pendingReservations:capture.pending,checks:[{name:'complete-trial',status:'FAIL',detail:'Incomplete snapshot; reservations remain charged, outcomes and final report are not certified'}]};
+ if(commercialScenario(spec.caseId))return scoreCommercialCapture(capture);
  const snapshot=events.at(-1).payload,report=snapshot.report;
  const sources=snapshot.sources.filter((s:any)=>s.verification_result==='VERIFIED'&&s.result.sourceId);
  const sourceForExecution=(id:string)=>sources.find((s:any)=>s.id===id)?.result.sourceId as string|undefined;

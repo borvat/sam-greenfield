@@ -8,7 +8,7 @@ import type {SignedEvaluationTrace} from './trace';
 export async function sealEvaluationTrial(c:PoolClient,trialId:string){
  await c.query('BEGIN');try{
   const owner=(await c.query("SELECT current_user=pg_get_userbyid(relowner) permitted FROM pg_class WHERE oid='evaluation_trials'::regclass")).rows[0];if(!owner?.permitted)throw Error('EVALUATION_CAPTURE_OPERATOR_REQUIRED');
-  const t=(await c.query('SELECT * FROM evaluation_trials WHERE id=$1 FOR UPDATE',[trialId])).rows[0];if(!t||t.sealed)throw Error('EVALUATION_TRACE_CLOSED');
+  const t=(await c.query('SELECT * FROM evaluation_trials WHERE id=$1 FOR UPDATE',[trialId])).rows[0];if(!t||t.sealed||t.cancelled)throw Error('EVALUATION_TRACE_CLOSED');
   const pending=await c.query(`SELECT r.reservation_id FROM evaluation_events r WHERE trial_id=$1 AND kind='RESERVED' AND NOT EXISTS(
    SELECT 1 FROM evaluation_events f WHERE f.trial_id=r.trial_id AND f.reservation_id=r.reservation_id AND f.kind='FINISHED')`,[trialId]);
   if(pending.rowCount)throw Error('EVALUATION_UNCERTAIN_ATTEMPTS_REQUIRE_REVIEW');

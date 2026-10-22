@@ -9,6 +9,10 @@ adds trial budgets, adapter gates, authenticated orchestration/capture and check
 around the PostgreSQL restart for **49 required stages**. Live models remain
 unexecuted and are not part of local acceptance. Signed fixture captures and
 public keys are preserved in the full report metadata directory.
+[Phase 8](PHASE8_INDEPENDENT_REVIEW.md) adds independent trace validation and
+three commercial orchestration checks, bringing this candidate to **53 required
+stages**. Commercial captures, negative-case results and protocols are retained
+in metadata. Fixture decisions do not validate live intelligence.
 
 The isolated [Phase 4 integration candidate](PHASE4_INTEGRATION_ACCEPTANCE.md)
 adds three required integration stages. Use that document's candidate branch and

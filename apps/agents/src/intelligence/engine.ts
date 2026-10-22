@@ -1,3 +1,4 @@
+import {commercialScenario,commercialClaimSupported,currentCommercialSource} from '../evaluation/scenarios';
 import type {PoolClient} from 'pg';
 import {withTransaction} from '../../../../packages/db/src/client';
 import {assertSpecialistAccess} from '../../../../packages/db/src/specialistProfile';
@@ -44,6 +45,12 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
  if(input.trial)assertEvaluationTrial(input.trial);
  if(process.env.SAM_SPECIALIST_INTELLIGENCE!==(input.trial?.permit.mode==='live'?'evaluation':'synthetic'))throw Error('SPECIALIST_SYNTHETIC_PROFILE_REQUIRED');
  const tenant=await withTransaction(assertSpecialistAccess);
+ const scenario=input.trial?commercialScenario(input.trial.spec.caseId):undefined;
+ const supportsClaim=(result:Record<string,unknown>,topic:string,value:string)=>{
+  if(!scenario)return containsValue(result,value);
+  const source=scenario.sources.find(s=>s.id===result.sourceId);
+  return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
+ };
  const configs=new Map(input.configs.map(raw=>[raw.capabilityId,JSON.parse(JSON.stringify({...raw,limits:validateLimits(raw.limits)})) as SpecialistConfig]));
  if(configs.size!==input.configs.length||!configs.size)throw Error('SPECIALIST_CONFIG_INVALID');
  for(const id of Object.keys(input.catalog.authorityPolicies())){
@@ -142,7 +149,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   const nestedAllowed=new Set(reports.flatMap(r=>r.evidence.map(e=>e.id+':'+e.verificationId)));
   const evidence=[...sources,...nested.filter(e=>nestedAllowed.has(e.id+':'+e.verificationId))].filter(e=>e.fresh&&!configs.has(e.capabilityId));
   const validReports=reports.filter(r=>r.claims.every(cl=>cl.evidenceIds.every(id=>evidence.some(e=>e.id===id&&
-    r.evidence.some(old=>old.id===id&&old.verificationId===e.verificationId)&&containsValue(e.result,cl.value)))));
+    r.evidence.some(old=>old.id===id&&old.verificationId===e.verificationId)&&supportsClaim(e.result,cl.topic,cl.value)))));
   const missing=all.filter(g=>g.state==='COMPLETED'&&!sources.some(s=>s.goalId===g.id&&s.fresh&&
     (!configs.has(s.capabilityId)||validReports.some(r=>sha256Hex(r)===sha256Hex(s.result.report))))).map(g=>g.id);
   const conflicts=contradictions(validReports).map(conflict=>({...conflict,correctionAfter:Math.max(...sources.filter(s=>
@@ -209,10 +216,11 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
     run.state.history.push({decision,provider:reply.providerId,model:reply.result.model});
     if(decision.action==='stop'){run.state.phase='BLOCKED';run.state.reason=decision.reason;await save(c,run);return outcome(run);}
     if(decision.action==='report'){
+     if(contradictions([{claims:decision.claims} as Report]).length)throw Error('SPECIALIST_CONTRADICTORY_REPORT');
      if(!decision.claims.length||(current.missing.length>0&&!decision.uncertainties.length))throw Error('SPECIALIST_MISSING_EVIDENCE');
      for(const claim of decision.claims)for(const id of claim.evidenceIds){
       const source=current.evidence.find(e=>e.id===id);
-      if(!source||!containsValue(source.result,claim.value))throw Error('SPECIALIST_UNGROUNDED_CLAIM');
+      if(!source||!supportsClaim(source.result,claim.topic,claim.value))throw Error('SPECIALIST_UNGROUNDED_CLAIM');
      }
      // A conflict can only be addressed with a new direct observation, not by
      // choosing one of the conflicting agents or quoting the report itself.
@@ -292,7 +300,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const current=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
    let learned=0;
    for(const claim of report.claims){
-    const source=current.find(e=>claim.evidenceIds.includes(e.id)&&e.fresh&&containsValue(e.result,claim.value)&&
+    const source=current.find(e=>claim.evidenceIds.includes(e.id)&&e.fresh&&supportsClaim(e.result,claim.topic,claim.value)&&
      report.evidence.some(old=>old.id===e.id&&old.verificationId===e.verificationId));
     if(!source)continue;
     await learnVerifiedQuote(c,{entityId:tenant.entity,goalId:row.goal_id,sourceGoalId:source.goalId,executionId:source.id,statement:claim.value});learned++;
@@ -341,11 +349,12 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const r=(await c.query('SELECT s.state,b.cancelled,least(b.deadline,s.deadline) deadline FROM specialist_sessions s JOIN specialist_budgets b USING(root_queue_id) WHERE s.queue_id=$1',[queueId])).rows[0];
    if(!r||r.cancelled||new Date(r.deadline).getTime()<=Date.now()||r.state.phase!=='COMPLETE'||result.status!=='COMPLETE'||sha256Hex(result.report)!==sha256Hex(r.state.report))return false;
    const report=r.state.report as Report;
+   if(contradictions([report]).length)return false;
    try{assertConflictCorrections(report.claims,await context(c,{queue_id:queueId}));}catch{return false;}
    const fresh=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
    return report.claims.length>0&&report.claims.every(cl=>cl.evidenceIds.length>0&&cl.evidenceIds.every(id=>{
     const x=fresh.find(e=>e.id===id),old=report.evidence.find(e=>e.id===id);
-    return x&&old&&x.fresh&&x.verificationId===old.verificationId&&containsValue(x.result,cl.value);
+    return x&&old&&x.fresh&&x.verificationId===old.verificationId&&supportsClaim(x.result,cl.topic,cl.value);
    }));
   })};
 }

@@ -2,8 +2,9 @@ import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {prepareEvaluation,scoreEvaluation} from './harness';
+import {prepareCommercialEvaluation} from './scenarios';
 import {scoreAuthenticatedEvaluation} from './trace';
-const help='npm run evaluate:specialists -- prepare --commit SHA --output NEW_DIRECTORY\n'+
+const help='npm run evaluate:specialists -- prepare-commercial --commit SHA --output NEW_DIRECTORY\n'+'npm run evaluate:specialists -- prepare --commit SHA --output NEW_DIRECTORY\n'+
  'npm run evaluate:specialists -- score --commit SHA --input TRACE_JSON --output NEW_DIRECTORY\n'+
  'npm run evaluate:specialists -- score-authenticated --commit SHA --input SIGNED_TRACE --trusted-key PUBLIC_KEY_PEM --output NEW_DIRECTORY\n'+
  'Offline preparation/scoring only. Live invocation remains disabled; fixture scores never validate model quality.';
@@ -12,14 +13,14 @@ function main(){
  // Deny before reading inputs, credentials or loading any provider transport.
  if(command==='live'||args.includes('--live'))throw Error('LIVE_EVALUATION_NOT_AUTHORIZED: reviewed live gateway adapter and separate scope/spend approval required');
  if(command==='--help'){console.log(help);return;}
- if(!['prepare','score','score-authenticated'].includes(command))throw Error(help);
+ if(!['prepare','prepare-commercial','score','score-authenticated'].includes(command))throw Error(help);
  const options:Record<string,string>={};for(let i=0;i<args.length;i+=2){
   const key=args[i];if(!['--commit','--input','--output','--trusted-key'].includes(key)||!args[i+1]||options[key])throw Error('INVALID_EVALUATION_ARGUMENT');options[key]=args[i+1];
  }
- if(!options['--output']||!options['--commit']||command!=='prepare'&&!options['--input']||command==='prepare'&&options['--input']||command==='score-authenticated'&&!options['--trusted-key'])throw Error(help);
+ if(!options['--output']||!options['--commit']||!command.startsWith('prepare')&&!options['--input']||command.startsWith('prepare')&&options['--input']||command==='score-authenticated'&&!options['--trusted-key'])throw Error(help);
  const plan=prepareEvaluation(options['--commit']);
  const startedAt=new Date().toISOString();let inputHash:string|null=null;
- const result=command==='prepare'?plan:(()=>{
+ const result=command==='prepare-commercial'?prepareCommercialEvaluation(options['--commit']):command==='prepare'?plan:(()=>{
   const bytes=readFileSync(options['--input']);if(bytes.length>(command==='score-authenticated'?8:2)*1024*1024)throw Error('TRACE_TOO_LARGE');
   inputHash=createHash('sha256').update(bytes).digest('hex');return command==='score-authenticated'?
    scoreAuthenticatedEvaluation(JSON.parse(bytes.toString('utf8')),readFileSync(options['--trusted-key'],'utf8'),options['--commit']):scoreEvaluation(JSON.parse(bytes.toString('utf8')),options['--commit']);

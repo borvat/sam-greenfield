@@ -41,6 +41,19 @@ async function worker(){
   await c.query("SELECT set_config('search_path',$1,true)",['pg_temp,'+schema+',public']);
   await cap.t.reserve(c,{goalId:cap.t.rootGoalId,agentId:'executive-bootstrap',delta:{models:1},kind:'model'});
  }),/BUDGET_EXHAUSTED/,'temporary shadow table must not replace the real exhausted ledger');
+ const admissionRace=await run('admission-race');
+ const expiredTicket=await withTransaction(c=>admissionRace.t.reserve(c,{goalId:admissionRace.t.rootGoalId,agentId:'executive-bootstrap',delta:{models:1,tokens:100,costUsd:0.001},kind:'model',metadata:{providerId:'eval-a',model:'fixture'}}));
+ await new Promise(r=>setTimeout(r,100));
+ await assert.rejects(()=>admissionRace.t.begin(expiredTicket,{kind:'model',agentId:'executive-bootstrap',providerId:'eval-a',model:'fixture'}),/AGENT_TIME_EXHAUSTED/,'agent deadline must be rechecked immediately before execution');
+ const finishedAdmission=await run('finished-admission');
+ const finishedTicket=await withTransaction(c=>finishedAdmission.t.reserve(c,{goalId:finishedAdmission.t.rootGoalId,agentId:'executive-bootstrap',delta:{models:1,tokens:100,costUsd:0.001},kind:'model',metadata:{providerId:'eval-a',model:'fixture'}}));
+ await assert.rejects(()=>finishedAdmission.t.finish(finishedTicket,{status:'success'}),/INVOCATION_REQUIRED/);
+ await assert.rejects(()=>finishedAdmission.t.begin(finishedTicket,{kind:'model',providerId:'eval-b'}),/RESERVATION_MISMATCH/);
+ await assert.rejects(()=>finishedAdmission.t.begin(finishedTicket,{kind:'model',model:'other'}),/RESERVATION_MISMATCH/);
+ await finishedAdmission.t.finish(finishedTicket,{status:'failure'});
+ await assert.rejects(()=>finishedAdmission.t.begin(finishedTicket,{kind:'model'}),/ATTEMPT_ALREADY_FINISHED/);
+ const modelRace=await run('model-race'),raceBefore=calls;const modelOutcomes=await Promise.allSettled([modelRace.call(),modelRace.call()]);
+ assert.equal(modelOutcomes.filter(r=>r.status==='fulfilled').length,1);assert.equal(calls-raceBefore,1,'concurrent model admission must consume the shared cap once');
  const agentTime=await run('agent-time');await withTransaction(c=>agentTime.t.reserve(c,{goalId:agentTime.t.rootGoalId,agentId:'executive-bootstrap',delta:{iterations:1},kind:'iteration'}));
  await new Promise(r=>setTimeout(r,80));await assert.rejects(agentTime.call,/AGENT_TIME_EXHAUSTED/);
  for(const name of ['tokens','cost','iterations','agent','expired']){const bounded=await run(name);const before:number=calls;await assert.rejects(bounded.call);assert.equal(calls,before,name+' must deny before provider');}
@@ -75,7 +88,7 @@ async function worker(){
  const slow=fixtureEvaluationAdapter('eval-a',async()=>{entered();return new Promise(r=>release=r);});
  const pending=late.t.gateway(new ModelGateway({'eval-a':slow}),late.t.rootGoalId,'executive-bootstrap').invoke(task);await started;await late.t.cancel();release(reply());await assert.rejects(()=>pending,/CANCELLED_OR_EXPIRED/);
  const live=trials.live;await assert.rejects(()=>openEvaluationTrial(live.id),/OWNER_AUTHORIZATION_REQUIRED/);
- console.log(JSON.stringify({suite:'whole-trial-budget-runtime',status:'PASS',checks:['bootstrap admission','reopen no reset','tokens/cost/iterations/agent/deadline','cancel before call','fallback attempts charged','uncertain first call retained','atomic tool race and readback','one invocation per reservation','delegation cap','tool cost cap','goal scope','populated foreign-company RLS','immutable limits/counters/trace','late response rejected','live authorization absent'],providerCalls:'FIXTURES_ONLY'}));
+ console.log(JSON.stringify({suite:'whole-trial-budget-runtime',status:'PASS',checks:['bootstrap admission','reopen no reset','tokens/cost/iterations/agent/deadline','cancel before call','fallback attempts charged','uncertain first call retained','atomic tool race and readback','one invocation per reservation','agent deadline at execution admission','provider/model ticket binding','no success without invocation','no invocation after completion','delegation cap','tool cost cap','goal scope','populated foreign-company RLS','immutable limits/counters/trace','late response rejected','live authorization absent'],providerCalls:'FIXTURES_ONLY'}));
 }
 async function parent(){
  const c=await pool.connect(),role='sam_eval_budget_'+process.pid;let made=false;
@@ -92,10 +105,10 @@ async function parent(){
   const limits={...ceiling,models:4,tools:4,iterations:8,tokens:10000,costUsd:0.1,elapsedMs:120000,maxInputTokens:1000,maxOutputTokens:1000};
   const prices=[{providerId:'eval-a',model:'fixture',inputPer1k:0.001,outputPer1k:0.001},{providerId:'eval-b',model:'fixture',inputPer1k:0.002,outputPer1k:0.002}];
   const trials:Record<string,any>={};
-  for(const name of ['model','tokens','cost','iterations','agent','agent-time','expired','cancel','fallback','fallback-exhausted','tools','delegation','tool-money','scope','foreign','crash','late','live']){
+  for(const name of ['model','tokens','cost','iterations','agent','agent-time','admission-race','finished-admission','model-race','expired','cancel','fallback','fallback-exhausted','tools','delegation','tool-money','scope','foreign','crash','late','live']){
    const tenant=name==='foreign'?foreign:entity,goal=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Synthetic trial','NEW','GREEN') RETURNING id",[randomUUID(),tenant])).rows[0].id;
-   const l={...limits,...(name==='model'||name==='fallback-exhausted'||name==='crash'?{models:1}:{}),...(name==='tokens'?{tokens:100}:{}),...(name==='cost'?{costUsd:0}:{}),...(name==='iterations'?{iterations:0}:{}),...(name==='expired'?{elapsedMs:1}:{}),...(name==='tools'?{tools:1}:{}),...(name==='delegation'?{delegations:1}: {})};
-   const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(name==='agent-time'?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
+   const l={...limits,...(name==='model'||name==='model-race'||name==='fallback-exhausted'||name==='crash'?{models:1}:{}),...(name==='tokens'?{tokens:100}:{}),...(name==='cost'?{costUsd:0}:{}),...(name==='iterations'?{iterations:0}:{}),...(name==='expired'?{elapsedMs:1}:{}),...(name==='tools'?{tools:1}:{}),...(name==='delegation'?{delegations:1}: {})};
+   const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(['agent-time','admission-race'].includes(name)?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:goal,spec}),goal,entity:tenant};
   }
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='fixture-evaluation-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);

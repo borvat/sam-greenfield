@@ -6,6 +6,7 @@ import {fixtureEvaluationPermit,authorizeLiveEvaluation} from '../../../../packa
 import {withTransaction} from '../../../../packages/db/src/client';
 import {assertEvaluationAccess} from '../../../../packages/db/src/evaluationProfile';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
+import {commercialScenario} from './scenarios';
 import {evaluationCases} from './cases';
 import {validateTrialSpec,zero,type TrialSpec,type Counters} from './trialSpec';
 export {validateTrialSpec,zero,type TrialSpec,type Counters} from './trialSpec';
@@ -65,7 +66,10 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
   if(['iteration','delegation'].includes(input.kind))await appendTrialEvent(c,trialId,'FINISHED',{status:'success'},id);
   return id;
  }
- async function finish(id:string|void,result:Record<string,unknown>){if(!id)throw Error('EVALUATION_RESERVATION_REQUIRED');await withTransaction(async c=>{await fixedPath(c);return appendTrialEvent(c,trialId,'FINISHED',result,id);});}
+ async function finish(id:string|void,result:Record<string,unknown>){if(!id)throw Error('EVALUATION_RESERVATION_REQUIRED');await withTransaction(async c=>{await fixedPath(c);
+  if(!['success','failure'].includes(String(result.status)))throw Error('EVALUATION_COMPLETION_INVALID');
+  if(result.status==='success'&&!(await c.query("SELECT 1 FROM evaluation_events WHERE trial_id=$1 AND reservation_id=$2 AND kind='INVOKING'",[trialId,id])).rowCount)throw Error('EVALUATION_INVOCATION_REQUIRED');
+  return appendTrialEvent(c,trialId,'FINISHED',result,id);});}
  async function begin(id:string|void,metadata:Record<string,unknown>){
   if(!id)throw Error('EVALUATION_RESERVATION_REQUIRED');
   await withTransaction(async c=>{
@@ -73,6 +77,9 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
    await live(c);const r=(await c.query("SELECT payload FROM evaluation_events WHERE trial_id=$1 AND reservation_id=$2 AND kind='RESERVED'",[trialId,id])).rows[0]?.payload;
    if(!r||r.kind!==metadata.kind||metadata.agentId&&r.agentId!==metadata.agentId||metadata.tokens!==undefined&&r.reserved.tokens!==metadata.tokens||
     metadata.costUsd!==undefined&&r.reserved.costUsd!==metadata.costUsd)throw Error('EVALUATION_RESERVATION_MISMATCH');
+   await live(c,r.agentId); // Recheck the reserved agent at execution admission.
+   if(['providerId','model','capabilityId','workGoalId'].some(k=>metadata[k]!==undefined&&r[k]!==metadata[k]))throw Error('EVALUATION_RESERVATION_MISMATCH');
+   if((await c.query("SELECT 1 FROM evaluation_events WHERE trial_id=$1 AND reservation_id=$2 AND kind='FINISHED'",[trialId,id])).rowCount)throw Error('EVALUATION_ATTEMPT_ALREADY_FINISHED');
    await appendTrialEvent(c,trialId,'INVOKING',metadata,id);
   });
  }
@@ -120,7 +127,7 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
   begin,record:(c:PoolClient,kind:string,payload:unknown)=>appendTrialEvent(c,trialId,kind,payload),
   cancel:()=>withTransaction(async c=>{await fixedPath(c);await c.query('UPDATE evaluation_trials SET cancelled=true WHERE id=$1',[trialId]);await appendTrialEvent(c,trialId,'CANCELLED',{});}),
   checkSource:(value:Record<string,unknown>)=>{
-   const source=evaluationCases.find(c=>c.id===spec.caseId)!.sources.find(s=>s.id===value.sourceId);
+   const source=(commercialScenario(spec.caseId)??evaluationCases.find(c=>c.id===spec.caseId))!.sources.find(s=>s.id===value.sourceId);
    if(!source||sha256Hex(source.data)!==sha256Hex(value.sourceData))throw Error('EVALUATION_FROZEN_SOURCE_REQUIRED');
    // Forward only enrolled corpus bytes. An adapter cannot smuggle extra
    // company fields alongside an otherwise valid sourceData envelope.
