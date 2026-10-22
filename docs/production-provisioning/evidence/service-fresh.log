@@ -1,0 +1,1 @@
+PASS fresh core 12, integration 8, service 1; restart idempotent; service hash mismatch denied
