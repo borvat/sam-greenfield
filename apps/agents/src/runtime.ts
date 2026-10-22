@@ -9,7 +9,8 @@ import type { SpecialistAgentDefinition } from "./types";
 export async function claimNextWorkForSpecialistAtomic(
   agent: SpecialistAgentDefinition,
   workerInstanceId: string,
-  ttlSeconds: number
+  ttlSeconds: number,
+  rootGoalId?:string
 ): Promise<ClaimedWork | null> {
   return withTransaction(async (client) => {
     const candidate = await client.query(
@@ -17,12 +18,15 @@ export async function claimNextWorkForSpecialistAtomic(
          FROM work_queue
         WHERE status IN ('QUEUED','HANDBACK')
           AND capability_id = ANY($1::text[])
+          AND ($2::uuid IS NULL OR goal_id IN (WITH RECURSIVE scope(id,depth) AS (
+            SELECT id,0 FROM goals WHERE id=$2 UNION ALL SELECT g.id,s.depth+1 FROM goals g JOIN scope s ON g.parent_goal_id=s.id WHERE s.depth<4
+          ) SELECT id FROM scope))
           AND (due_at IS NULL OR due_at <= now())
           AND (plan_id IS NULL OR work_dependencies_ready(id))
         ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
         FOR UPDATE SKIP LOCKED
         LIMIT 1`,
-      [agent.capabilities]
+      [agent.capabilities,rootGoalId??null]
     );
     if (candidate.rowCount === 0) return null;
 
@@ -75,13 +79,14 @@ export async function runOneSpecialistWork(input: {
   agent: SpecialistAgentDefinition;
   workerInstanceId: string;
   ttlSeconds: number;
+  rootGoalId?:string;
   executors: Record<string, CapabilityExecutor>;
   advancers?:Record<string,CapabilityExecutor|((work:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>)>;
 }): Promise<{ processed: boolean; queueId?: string; executionId?: string; deferred?:boolean }> {
   const work = await claimNextWorkForSpecialistAtomic(
     input.agent,
     input.workerInstanceId,
-    input.ttlSeconds
+    input.ttlSeconds,input.rootGoalId
   );
   if (!work) return { processed:false };
 

@@ -1,16 +1,28 @@
+import {contentHash} from '../../apps/agents/src/evaluation/harness';
 import assert from 'node:assert/strict';
 import {spawn,spawnSync} from 'node:child_process';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,generateKeyPairSync} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {applyEvaluationProfile,provisionEvaluationAccess,enrollEvaluationCompany} from '../../packages/db/src/evaluationProfile';
+import {createEvaluationTrial} from '../../apps/agents/src/evaluation/trial';
+import {sealEvaluationTrial,exportEvaluationTrace} from '../../apps/agents/src/evaluation/capture';
+import {scoreAuthenticatedEvaluation,verifyEvaluationTrace} from '../../apps/agents/src/evaluation/trace';
+import {sha256Hex} from '../../packages/shared/src/stableJson';
+import {publicCases,evaluationCases} from '../../apps/agents/src/evaluation/cases';
+import {mkdtempSync,writeFileSync,readFileSync,rmSync,copyFileSync,chmodSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {pool} from '../../packages/db/src/client';
 import {provisionRuntimeAccess} from '../../packages/db/src/runtimeAccess';
 import {applyIntegrationProfile} from '../../packages/db/src/integrationProfile';
 import {applySpecialistProfile,provisionSpecialistAccess} from '../../packages/db/src/specialistProfile';
 import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
-async function main(){
+export async function runSpecialistAcceptance(phase7=false){
  const c=await pool.connect(),role='sam_specialist_'+process.pid;let created=false;
  try{
   assert.equal((await applyIntegrationProfile(c)).length,8);
   const manifest=await applySpecialistProfile(c);assert.deepEqual(await applySpecialistProfile(c),manifest);
+  if(phase7)await applyEvaluationProfile(c);
   await c.query("UPDATE sam_specialist_migrations SET sha256='tampered'");await assert.rejects(()=>applySpecialistProfile(c),/HASH_MISMATCH/);
   for(const receipt of manifest.migrations)await c.query('UPDATE sam_specialist_migrations SET sha256=$1 WHERE filename=$2',[receipt.sha256,receipt.filename]);
   assert.equal((await c.query('SELECT count(*)::int n FROM sam_schema_migrations')).rows[0].n,12);
@@ -18,10 +30,12 @@ async function main(){
   const org=randomUUID(),entity=randomUUID(),foreign=randomUUID(),otherOrg=randomUUID(),otherEntity=randomUUID();
   await c.query("INSERT INTO organizations(id,name) VALUES($1,'Synthetic specialist company'),($2,'Other company')",[org,otherOrg]);
   await c.query("INSERT INTO legal_entities(id,org_id,name) VALUES($1,$2,'Our company'),($3,$2,'Sibling'),($4,$5,'Other')",[entity,org,foreign,otherEntity,otherOrg]);
+  if(phase7)await enrollEvaluationCompany(c,entity);
   await c.query(`CREATE ROLE ${role} LOGIN PASSWORD 'synthetic-specialist-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);created=true;
   await c.query('BEGIN');try{
    await provisionRuntimeAccess(c,{schema,role,orgId:org,legalEntityId:entity});
-   await provisionSpecialistAccess(c,{schema,role,orgId:org,legalEntityId:entity});await c.query('COMMIT');
+   await provisionSpecialistAccess(c,{schema,role,orgId:org,legalEntityId:entity});
+   if(phase7)await provisionEvaluationAccess(c,{schema,role,orgId:org,legalEntityId:entity});await c.query('COMMIT');
   }catch(e){await c.query('ROLLBACK');throw e;}
   await c.query(`INSERT INTO model_providers(provider_id,models,capabilities,privacy_class_allowed,health,cost_per_1k_input,cost_per_1k_output)
    VALUES('specialist-fixture','["fixture"]','["planning","specialist_reasoning"]','["INTERNAL"]','HEALTHY',0.001,0.001)`);
@@ -37,6 +51,41 @@ async function main(){
    const r=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts',mode],{env:{...env,...extra},encoding:'utf8',timeout:65000});
    process.stdout.write(r.stdout+r.stderr);console.log(JSON.stringify({worker:mode,exit:r.status,signal:r.signal,error:r.error?.message??null}));assert.equal(r.status,0,'restricted specialist worker '+mode);
   };
+  if(phase7){
+   const extra={FIXTURE_PHASE7:'1'};
+   const described=spawnSync(process.execPath,['--import','tsx','tests/specialists/worker.ts','describe'],{env:{...env,...extra},encoding:'utf8',timeout:8000});
+   assert.equal(described.status,0,described.stderr);const description=JSON.parse(described.stdout.trim());
+   const goal=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,$3,'NEW','GREEN') RETURNING id",[randomUUID(),entity,evaluationCases[0].objective])).rows[0].id;
+   const commit=process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+   const limits={...description.configs[0].limits,elapsedMs:120000,models:20,tokens:400000,costUsd:0.5};
+   const trial=await createEvaluationTrial(c,{rootGoalId:goal,spec:{version:1,mode:'fixture',syntheticOnly:true,commit,caseId:evaluationCases[0].id,corpusHash:contentHash(publicCases()),companyId:entity,
+    rootCapabilityId:'specialist.executive',limits,agents:{'executive-bootstrap':limits,...Object.fromEntries(description.configs.map((s:any)=>[s.agentId,s.limits]))},prices:[{providerId:'specialist-fixture',model:'fixture',inputPer1k:0.001,outputPer1k:0.001}],capabilityHash:description.capabilityHash}});
+   const unrelated=await make('unrelated-synthetic-work');
+   run('collaboration',{...extra,FIXTURE_GOAL:goal,FIXTURE_TRIAL:trial});
+   assert.equal((await c.query('SELECT status FROM work_queue WHERE id=$1',[unrelated.queue])).rows[0].status,'QUEUED','trial must not claim unrelated work');
+   await sealEvaluationTrial(c,trial);const keys=generateKeyPairSync('ed25519');const capture=JSON.parse(JSON.stringify(await exportEvaluationTrace(c,trial,keys.privateKey)));
+   verifyEvaluationTrace(capture,keys.publicKey);const scored=scoreAuthenticatedEvaluation(capture,keys.publicKey,commit);
+   console.log(JSON.stringify({score:scored.status,checks:scored.checks}));assert.equal(scored.status,'PASS');assert.equal(scored.liveReasoningValidated,false);
+   const changed=structuredClone(capture);changed.payload.trial.used.models=0;assert.throws(()=>verifyEvaluationTrace(changed,keys.publicKey),/AUTHENTICATION_FAILED/);
+   assert.throws(()=>verifyEvaluationTrace(capture,generateKeyPairSync('ed25519').publicKey),/AUTHENTICATION_FAILED/);
+   const corrupt=structuredClone(capture);corrupt.payload.events[1].hash='0'.repeat(64);
+   const {sign}=await import('node:crypto');const {stableStringify}=await import('../../packages/shared/src/stableJson');
+   corrupt.signature=sign(null,Buffer.from(stableStringify(corrupt.payload)),keys.privateKey).toString('base64');
+   assert.throws(()=>verifyEvaluationTrace(corrupt,keys.publicKey),/HASH_CHAIN_INVALID/);
+   await assert.rejects(()=>c.query("UPDATE evaluation_events SET payload='{}' WHERE trial_id=$1",[trial]),/IMMUTABLE/);
+   const temporary=mkdtempSync(join(tmpdir(),'sam-authenticated-trace-'));
+   try{
+    writeFileSync(join(temporary,'trace.json'),JSON.stringify(capture));writeFileSync(join(temporary,'public.pem'),keys.publicKey.export({format:'pem',type:'spki'}));
+    const cli=spawnSync(process.execPath,['--import','tsx','apps/agents/src/evaluation/cli.ts','score-authenticated','--commit',commit,'--input',join(temporary,'trace.json'),'--trusted-key',join(temporary,'public.pem'),'--output',join(temporary,'score')],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:10000});
+    assert.equal(cli.status,0,cli.stdout+cli.stderr);
+    if(process.env.SAM_EVALUATION_ARTIFACT_DIR){
+     for(const [from,to]of [['trace.json','evaluation-signed-trace.json'],['public.pem','evaluation-fixture-public.pem'],['score/report.json','evaluation-authenticated-score.json'],['score/report.md','evaluation-authenticated-score.md']]){
+      const target=join(process.env.SAM_EVALUATION_ARTIFACT_DIR,to);copyFileSync(join(temporary,from),target);chmodSync(target,0o644);
+     }
+    }
+   }finally{rmSync(temporary,{recursive:true,force:true});}
+   console.log(JSON.stringify({suite:'authenticated-end-to-end-trial',status:'PASS',wholeTrialUsed:scored.wholeTrialUsed,headHash:scored.headHash,commit,liveCalls:0}));return;
+  }
   run('collaboration');
   // Kill a real process only after its model attempt has a durable reservation.
   const crash=await make('crash-recovery');
@@ -65,4 +114,4 @@ async function main(){
    coverage:['independent reasoning','parallel delegation','verified result passing','failure replan','contradiction correction','executive synthesis','SIGKILL durable recovery','tenant/company fences','side-effect refusal','typed learning/revocation','budgets','cancellation']}));
  }finally{if(created){await c.query('DROP OWNED BY '+role);await c.query('DROP ROLE '+role);}c.release();await pool.end();}
 }
-main().catch(e=>{console.error(e);process.exitCode=1;});
+if(process.argv[1]?.endsWith('tests/specialists/acceptance.ts'))runSpecialistAcceptance().catch(e=>{console.error(e);process.exitCode=1;});

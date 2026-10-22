@@ -8,6 +8,7 @@ export async function runSpecialistSupervisorTick(input:{
   ttlSeconds:number;
   executors:Record<string,CapabilityExecutor>;
   maxConcurrency?:number;
+  rootGoalId?:string;
   advancers?:Parameters<typeof runOneSpecialistWork>[0]['advancers'];
 }):Promise<{
   processed:boolean;
@@ -22,7 +23,7 @@ export async function runSpecialistSupervisorTick(input:{
   for(let i=0;i<ids.length;i+=concurrency){
     const settled=await Promise.allSettled(ids.slice(i,i+concurrency).map(async agentId=>{
       const result=await runOneSpecialistWork({agent:input.catalog.specialists.getAgent(agentId),workerInstanceId:input.workerInstanceId,
-        ttlSeconds:input.ttlSeconds,executors:input.executors,advancers:input.advancers});
+        ttlSeconds:input.ttlSeconds,executors:input.executors,advancers:input.advancers,rootGoalId:input.rootGoalId});
       return {...result,agentId};
     }));
     const failure=settled.find(r=>r.status==='rejected');

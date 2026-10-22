@@ -8,6 +8,8 @@ import type { ProbePhase } from "../../../apps/development/src/syntheticProbe";
 import type { ModelProviderAdapter, ModelTask, ProviderResult } from "./types";
 import { cyclePlanningTask, consumeCycleTask, type DevelopmentCyclePermit } from "../../../apps/development/src/cyclePermit";
 import { isAutonomyPermit,type AutonomyPermit } from "../../../apps/development/src/autonomyPermit";
+import {assertEvaluationPermit,assertEvaluationPrice} from './evaluationPermit';
+import {assertRegisteredEvaluationAdapter} from './evaluationAdapter';
 
 export class ModelGateway {
   constructor(
@@ -37,7 +39,9 @@ export class ModelGateway {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);
     });
-    const bounded=task.boundedSynthetic;
+    if(task.boundedSynthetic&&task.boundedEvaluation)throw Error('MODEL_BOUNDARY_CONFLICT');
+    if(task.boundedEvaluation)assertEvaluationPermit(task.boundedEvaluation.permit);
+    const bounded=task.boundedEvaluation??task.boundedSynthetic;
     if(bounded){
       if(!Number.isSafeInteger(bounded.maxInputTokens)||!Number.isSafeInteger(bounded.maxOutputTokens)||
         bounded.maxInputTokens<1||bounded.maxOutputTokens<1||
@@ -71,6 +75,7 @@ export class ModelGateway {
       const adapter = this.adapters[candidate.providerId];
       if (!adapter) {
         lastError = new Error(`No adapter configured for provider ${candidate.providerId}`);
+        if(bounded?.note)await bounded.note({kind:'ADAPTER_MISSING',providerId:candidate.providerId,model:candidate.model});
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
           provider: candidate.providerId,
@@ -85,19 +90,27 @@ export class ModelGateway {
         continue;
       }
 
+      let ticket:string|void=undefined;let finished=false;
       if(bounded){
-        if(adapter.executionMode!=='synthetic'||adapter.supportsUsageLimits!==true)throw Error('BOUNDED_SYNTHETIC_ADAPTER_REQUIRED');
-        await bounded.reserveAttempt({providerId:candidate.providerId,model:candidate.model,
+        if(task.boundedEvaluation){
+          assertRegisteredEvaluationAdapter(adapter,task.boundedEvaluation.permit.mode);
+          const provider=providers.find(p=>p.providerId===candidate.providerId)!;
+          assertEvaluationPrice(task.boundedEvaluation.permit,candidate.providerId,candidate.model,provider.costPer1kInput,provider.costPer1kOutput);
+          if(adapter.executionMode!==(task.boundedEvaluation.permit.mode==='fixture'?'evaluation-fixture':'evaluation-live')||adapter.supportsUsageLimits!==true)throw Error('EVALUATION_ADAPTER_REQUIRED');
+        }else if(adapter.executionMode!=='synthetic'||adapter.supportsUsageLimits!==true)throw Error('BOUNDED_SYNTHETIC_ADAPTER_REQUIRED');
+        ticket=await bounded.reserveAttempt({providerId:candidate.providerId,model:candidate.model,
           tokens:bounded.maxInputTokens+bounded.maxOutputTokens,costUsd:candidate.estimatedCostUsd});
       }
       const started = Date.now();
       try {
+        task.signal?.throwIfAborted();
         const result = await adapter.invoke(task, candidate.model);
         task.signal?.throwIfAborted();
         if(bounded&&(!Number.isSafeInteger(result.usage.inputTokens)||!Number.isSafeInteger(result.usage.outputTokens)||
           result.usage.inputTokens<0||result.usage.outputTokens<0||result.usage.inputTokens>bounded.maxInputTokens||
           result.usage.outputTokens>bounded.maxOutputTokens||Buffer.byteLength(JSON.stringify(result.output),'utf8')>bounded.maxOutputTokens))
           throw Error('MODEL_USAGE_LIMIT_VIOLATION');
+        if(task.boundedEvaluation&&result.model!==candidate.model)throw Error('EVALUATION_MODEL_MISMATCH');
         const provider = providers.find((p) => p.providerId === candidate.providerId)!;
         const costUsd =
           (result.usage.inputTokens / 1000) * provider.costPer1kInput +
@@ -107,6 +120,7 @@ export class ModelGateway {
           throw new Error(`Actual model cost ${costUsd} exceeds ceiling ${task.maxCostUsd}`);
         }
 
+        if(bounded?.finishAttempt){finished=true;await bounded.finishAttempt(ticket,{status:'success',result});}
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
           provider: candidate.providerId,
@@ -125,6 +139,7 @@ export class ModelGateway {
         return { providerId: candidate.providerId, result, attempts: i + 1 };
       } catch (err) {
         lastError = err;
+        if(bounded?.finishAttempt&&!finished){finished=true;await bounded.finishAttempt(ticket,{status:'failure'});}
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
           provider: candidate.providerId,
@@ -137,6 +152,7 @@ export class ModelGateway {
             err instanceof Error ? err.message : "UNKNOWN_FAILURE",
           dataClassification: task.dataClassification
         }));
+        if(task.boundedEvaluation&&(task.signal?.aborted||err instanceof Error&&/^EVALUATION_/.test(err.message)))throw err;
       }
     }
 

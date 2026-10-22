@@ -17,6 +17,8 @@ export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
   specialistConcurrency?:number;
+  specialistScopeGoalId?:string;
+  planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
   excludeDelegatedSpecialistPlanning?:boolean;
   specialistAdvancers?:Parameters<typeof runCatalogSpecialistTick>[0]['advancers'];
   operationalTick?:()=>Promise<unknown>;
@@ -57,12 +59,12 @@ export function createProductionComposition(input:{
       })):null;
       const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle)):null;
       const earlyLearning=input.bundle.raw.deferVerification?await attempt("learning",()=>learnNextVerifiedExecution(input.bundle)):null;
-      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle,{excludeDelegatedSpecialistTasks:input.excludeDelegatedSpecialistPlanning}));
+      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle,{...input.planning,excludeDelegatedSpecialistTasks:input.excludeDelegatedSpecialistPlanning}));
       const execution=await attempt("execution",()=>runCatalogSpecialistTick({
         catalog:input.bundle.catalog,
         workerInstanceId:input.workerId,
         ttlSeconds:ttl,
-        executors,advancers:input.specialistAdvancers,maxConcurrency:input.specialistConcurrency
+        executors,advancers:input.specialistAdvancers,maxConcurrency:input.specialistConcurrency,rootGoalId:input.specialistScopeGoalId
       }));
       const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle));
       const learning=earlyLearning??await attempt("learning",()=>learnNextVerifiedExecution(input.bundle));

@@ -4,8 +4,11 @@ The opt-in [Phase 5 specialist candidate](PHASE5_SPECIALIST_INTELLIGENCE.md)
 added four required stages, including reasoning, Gateway budgets and specialist
 state checks around the existing PostgreSQL restart. The
 [Phase 6 review](PHASE6_REVIEW_AND_LIVE_EVALUATION.md) adds provenance-upgrade and
-offline evaluation-contract checks for **44 required stages**. Live models remain
-unexecuted and are not part of local acceptance.
+offline evaluation-contract checks. [Phase 7](PHASE7_EVALUATION_INFRASTRUCTURE.md)
+adds trial budgets, adapter gates, authenticated orchestration/capture and checks
+around the PostgreSQL restart for **49 required stages**. Live models remain
+unexecuted and are not part of local acceptance. Signed fixture captures and
+public keys are preserved in the full report metadata directory.
 
 The isolated [Phase 4 integration candidate](PHASE4_INTEGRATION_ACCEPTANCE.md)
 adds three required integration stages. Use that document's candidate branch and

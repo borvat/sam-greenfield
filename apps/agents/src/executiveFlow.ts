@@ -54,6 +54,7 @@ export async function runCatalogSpecialistTick(input:{
   ttlSeconds:number;
   executors:Record<string,CapabilityExecutor>;
   maxConcurrency?:number;
+  rootGoalId?:string;
   advancers?:Parameters<typeof runSpecialistSupervisorTick>[0]['advancers'];
 }){
   return runSpecialistSupervisorTick(input);

@@ -6,8 +6,11 @@ export interface ModelTask {
   boundedSynthetic?: {
     maxInputTokens: number;
     maxOutputTokens: number;
-    reserveAttempt(input:{providerId:string;model:string;tokens:number;costUsd:number}):Promise<void>;
+    reserveAttempt(input:{providerId:string;model:string;tokens:number;costUsd:number}):Promise<string|void>;
+    finishAttempt?(id:string|void,result:{status:'success'|'failure';result?:ProviderResult}):Promise<void>;
+    note?(event:{kind:'ADAPTER_MISSING';providerId:string;model:string}):Promise<void>;
   };
+  boundedEvaluation?: NonNullable<ModelTask['boundedSynthetic']>&{permit:import('./evaluationPermit').EvaluationPermit};
   task: string;
   capability: string;
   dataClassification: DataClassification;
@@ -36,12 +39,13 @@ export interface ProviderResult {
   output: unknown;
   model: string;
   modelVersion?: string;
+  providerRequestId?: string;
   usage: ModelUsage;
 }
 
 export interface ModelProviderAdapter {
   providerId: string;
-  executionMode?: "synthetic";
+  executionMode?: "synthetic"|"evaluation-fixture"|"evaluation-live";
   supportsUsageLimits?: boolean;
   invoke(task: ModelTask, model: string): Promise<ProviderResult>;
 }

@@ -56,6 +56,10 @@ No second executive, model router, tool gateway or permission system was added.
 
 ## Remaining security and live-readiness blockers
 
+Historical Phase 6 assessment: the [Phase 7 implementation](PHASE7_EVALUATION_INFRASTRUCTURE.md)
+addresses the whole-trial ledger and gated adapter/capture infrastructure. Live
+activation and independent model-quality evaluation remain unexecuted.
+
 1. **Whole-evaluation budget is not enforced.** The Executive Brain's bootstrap
    planning has separate attempt/deadline/cost controls in the existing
    production planner. It precedes creation of the specialist family; its model

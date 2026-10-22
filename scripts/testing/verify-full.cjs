@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-evaluation','migration-upgrade-rollback','specialist-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -107,9 +107,10 @@ function runArgs(image,cmd,{install=false,extra=[]}={}){
   ...(install?[]:['--network','container:'+db]),...mounts(),...extra,image,...cmd];
 }
 async function node(s,cmd,extra=[]){return command(s,'docker',runArgs(pins.node,cmd,{extra}),{timeout:600000});}
-const coreEnv=()=>['--env','SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test'];
-async function suite(s,file){
- const r=await node(s,['node','scripts/testing/core-reliability.cjs','--suite',file],coreEnv());
+const coreEnv=()=>['--env','SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test','--env','SAM_VERIFICATION_SOURCE_SHA='+report.source.sha];
+const evaluationEvidence=()=>['--mount','type=bind,source='+path.join(output,'metadata')+',target=/evidence','--env','SAM_EVALUATION_ARTIFACT_DIR=/evidence'];
+async function suite(s,file,extra=[]){
+ const r=await node(s,['node','scripts/testing/core-reliability.cjs','--suite',file],[...coreEnv(),...extra]);
  const result=r.text.split('\n').flatMap(l=>{try{const j=JSON.parse(l);return Array.isArray(j.results)?[j]:[];}catch{return [];}}).at(-1);
  if(!result||result.failed||result.passed!==1)throw Error('SUITE_RESULT_MISSING_OR_FAILED');s.suiteResults=result;
 }
@@ -244,11 +245,16 @@ async function main(){
   await step('specialist-gateway',s=>suite(s,'tests/specialists/gateway.ts'));
   await step('specialist-provenance',s=>suite(s,'tests/specialists/provenance.ts'));
   await step('specialist-evaluation',s=>node(s,['node','--import','tsx','tests/specialists/evaluation.ts']));
+  await step('evaluation-budget',s=>suite(s,'tests/evaluation/budgets.ts',evaluationEvidence()));
+  await step('evaluation-adapter',s=>suite(s,'tests/evaluation/adapters.ts'));
+  await step('evaluation-orchestration',s=>suite(s,'tests/evaluation/orchestration.ts',evaluationEvidence()));
   await step('migration-upgrade-rollback',s=>node(s,['node','tests/testing/database-lifecycle.cjs','prepare'],life));
   await step('specialist-restart-prepare',s=>node(s,['node','--import','tsx','tests/specialists/restart.ts','prepare'],life));
+  await step('evaluation-restart-prepare',s=>node(s,['node','--import','tsx','tests/evaluation/restart.ts','prepare'],[...life,'--env','SAM_VERIFICATION_SOURCE_SHA='+report.source.sha]));
   await step('postgres-restart',async s=>{await command(s,'docker',['restart','--time','10',db]);await ready(s);});
   await step('migration-after-restart',s=>node(s,['node','tests/testing/database-lifecycle.cjs','after-restart'],life));
   await step('specialist-restart-check',s=>node(s,['node','--import','tsx','tests/specialists/restart.ts','after-restart'],life));
+  await step('evaluation-restart-check',s=>node(s,['node','--import','tsx','tests/evaluation/restart.ts','after-restart'],life));
   await step('phase0-migrations',async s=>{
    // Preserve the Phase 0 workflow's SQL-only profile (no ledger table/RLS drift).
    await command(s,'docker',['cp',path.join(source,'packages/db/migrations'),db+':/migrations']);

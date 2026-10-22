@@ -14,6 +14,8 @@ async function main(){
    try{
      const target=new URL(url);target.searchParams.set('options','-c search_path='+schema+',public');
      const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'test',DATABASE_URL:target.href};
+     if(/^[0-9a-f]{40}$/.test(process.env.SAM_VERIFICATION_SOURCE_SHA||''))env.SAM_VERIFICATION_SOURCE_SHA=process.env.SAM_VERIFICATION_SOURCE_SHA;
+     if(process.env.SAM_EVALUATION_ARTIFACT_DIR==='/evidence')env.SAM_EVALUATION_ARTIFACT_DIR='/evidence';
      const commands=[];
      const execute=(args,timeout)=>{
        const start=new Date().toISOString(),r=spawnSync(process.execPath,args,{env,encoding:'utf8',timeout});

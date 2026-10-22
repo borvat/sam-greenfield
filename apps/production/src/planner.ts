@@ -6,7 +6,7 @@ import {transitionGoal} from '../../kernel/src/stateMachine';
 import {insertOutboxEvent} from '../../../packages/db/src/outbox';
 import type {ValidatedProductionBundle} from './bundle';
 
-export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{deadlineMs?:number;maxAttempts?:number;backoffMs?:number;excludeDelegatedSpecialistTasks?:boolean}={})
+export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{deadlineMs?:number;maxAttempts?:number;backoffMs?:number;excludeDelegatedSpecialistTasks?:boolean;goalId?:string;gatewayForGoal?:(goalId:string)=>ModelGateway}={})
  :Promise<{processed:boolean;goalId?:string;failed?:boolean;reason?:string}>{
   const adapters=bundle.raw.modelAdapters??[];
   if(!adapters.length)return {processed:false};
@@ -18,10 +18,11 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   const reservation=await withTransaction(async client=>{
     const next=(await client.query(`SELECT id,state,planning_attempts FROM goals
       WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
+      AND ($1::uuid IS NULL OR id=$1)
       AND (planning_retry_at IS NULL OR planning_retry_at<=now())
       AND ${options.excludeDelegatedSpecialistTasks?'NOT EXISTS(SELECT 1 FROM specialist_delegations d WHERE d.goal_id=goals.id)':'true'}
       ORDER BY last_planning_at ASC NULLS FIRST,priority DESC,created_at,id
-      LIMIT 1 FOR UPDATE SKIP LOCKED`)).rows[0];
+      LIMIT 1 FOR UPDATE SKIP LOCKED`,[options.goalId??null])).rows[0];
     if(!next)return null;
     if(next.planning_attempts>=maxAttempts){
       await transitionGoal(client,next.id,next.state,'FAILED','planning_attempts_exhausted');
@@ -44,7 +45,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   const next=reservation.next!,current=next;
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),deadlineMs);
   try{
-    const input={catalog:bundle.catalog,gateway:bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
+    const input={catalog:bundle.catalog,gateway:options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
       goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal};
     if(current.state==='REPLANNING')await runCatalogReplanCycle({...input,reason:'independent_verification_failed'});
     else await runCatalogPlanningCycle(input);
@@ -56,7 +57,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
     const classified=['PROVIDER_AUTH_REJECTED','PROVIDER_ACCESS_REJECTED','PROVIDER_RATE_LIMITED','PROVIDER_UNAVAILABLE'].includes(known??'')?known!:
       /PLAN_|Planner output|Planner step|TOOL_PARAMETER/.test(message)?'PLAN_CONTRACT_INVALID':
       /authority|AUTHORITY/.test(message)?'PLAN_AUTHORITY_REQUIRED':'PLANNING_PROPOSAL_REJECTED';
-    const reason=controller.signal.aborted?'PLANNING_DEADLINE_EXCEEDED':classified;
+    const reason=controller.signal.aborted?'PLANNING_DEADLINE_EXCEEDED':/^EVALUATION_[A-Z_]+(?::[a-zA-Z]+)?$/.test(message)?message:classified;
     return withTransaction(async client=>{
     const row=(await client.query('SELECT state,planning_attempts FROM goals WHERE id=$1 FOR UPDATE',[next.id])).rows[0];
     if(row.planning_attempts!==current.planning_attempts+1)return {processed:true,goalId:next.id,failed:true,reason:'PLANNING_RESERVATION_SUPERSEDED'};
