@@ -1,8 +1,8 @@
 import type {PoolClient} from 'pg';
 import {assertReleaseDatabaseSafety} from './releaseSafety';
 
-const runtimeTables=['goals','plans','work_queue','executions','verifications','world_facts','memory_records','side_effect_operations','approvals','outbox_events','inbox_events','event_fabric_events','model_calls','audit_log','business_id_sequences'];
-const principalTables=[...runtimeTables,'organizations','legal_entities','model_providers','verification_contracts'];
+export const runtimeTables=['goals','plans','work_queue','executions','verifications','world_facts','memory_records','side_effect_operations','approvals','outbox_events','inbox_events','event_fabric_events','model_calls','audit_log','business_id_sequences'];
+export const principalTables=[...runtimeTables,'organizations','legal_entities','model_providers','verification_contracts'];
 
 // Read-only startup admission: ordinary non-owner flags and nonempty GUCs alone
 // do not prove an immutable tenant binding. Require the operator's fixed policies.
@@ -46,7 +46,7 @@ export async function provisionRuntimeAccess(client:PoolClient,input:{schema:str
   if(!entity)throw new Error('RUNTIME_TENANT_MISMATCH');
   const tables=runtimeTables;
   await client.query(`GRANT USAGE ON SCHEMA "${input.schema}" TO "${input.role}"`);
-  await client.query(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA "${input.schema}" TO "${input.role}"`);
+  await client.query(`GRANT USAGE,SELECT ON SEQUENCE "${input.schema}".global_event_seq_seq TO "${input.role}"`);
   for(const table of [...tables,'organizations','legal_entities','model_providers','verification_contracts']){
     // Restrictive policies bind a dedicated LOGIN to one immutable principal;
     // session GUC spoofing cannot switch it to another tenant.
