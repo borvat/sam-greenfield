@@ -1,12 +1,13 @@
-import {handleGoogleOauth} from "./googleOauth";
-import type {SamGoogleConnection} from "../../production/src/samGoogleConnection";
-import {timingSafeEqual} from "node:crypto";
+import {handleGoogleOauth} from './googleOauth';
+import type {SamGoogleConnection} from '../../production/src/samGoogleConnection';
+import type {InternalOAuthServer} from './internalOAuth';
+import { timingSafeEqual } from "node:crypto";
 import { createServer,type IncomingMessage,type Server,type ServerResponse } from "node:http";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { ChatGPTToolRegistry } from "../../chatgpt-tools/src/registry";
 import { buildSamMcpServer } from "./server";
-import type {InternalOAuthServer} from "./internalOAuth";
+import {authenticateOAuth,oauthRequest,protectedResourceMetadata,syntheticScopes,type OAuthResourceConfig} from "./oauthResource";
 
 function csv(values:string[]|string|undefined):string[]{
   if(Array.isArray(values)) return values.map((v)=>v.trim()).filter(Boolean);
@@ -39,15 +40,15 @@ function deny(res:ServerResponse,status:number,message:string){
   res.end(JSON.stringify({error:message}));
 }
 
-
 export interface McpHttpServerOptions{
-  googleConnection?:SamGoogleConnection;
   surface:ChatGPTToolRegistry;
   actor:string;
   port:number;
   host?:string;
   bearerToken?:string;
+  oauth?:OAuthResourceConfig;
   internalOAuth?:InternalOAuthServer;
+  googleConnection?:SamGoogleConnection;
   allowedHosts?:string[]|string;
   allowedOrigins?:string[]|string;
 }
@@ -59,38 +60,79 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
   const allowedHosts=new Set(csv(options.allowedHosts).map((v)=>v.toLowerCase()));
   const allowedOrigins=new Set(csv(options.allowedOrigins));
   const expectedToken=options.bearerToken??"";
+  if(options.oauth&&(expectedToken||options.surface.definitions().map(t=>t.name).join(",")!==
+    "sam_get_goal_result,sam_get_goal_status,sam_submit_synthetic_goal")){
+    throw new Error("MCP_SYNTHETIC_SURFACE_REQUIRED");
+  }
 
+  if(options.internalOAuth&&(options.oauth||expectedToken))throw Error("CHOOSE_ONE_MCP_AUTH_MODE");
+  if(options.googleConnection&&options.oauth)throw Error("MCP_SYNTHETIC_SURFACE_REQUIRED");
   const handler=createMcpHandler(
     ()=>buildSamMcpServer({
       surface:options.surface,
-      actor:options.actor
+      actor:options.actor,
+      syntheticOnly:Boolean(options.oauth)
     })
   );
   const nodeHandler=toNodeHandler(handler);
 
   const server=createServer(async(req,res)=>{
     try{
-      const pathname=new URL(req.url??"/","http://localhost").pathname;
-      if(allowedHosts.size>0&&!allowedHosts.has(hostname(req))){deny(res,403,"host_not_allowed");return;}
-      const origin=req.headers.origin;
-      if(origin&&allowedOrigins.size>0&&!allowedOrigins.has(origin)){deny(res,403,"origin_not_allowed");return;}
-      const supplied=bearer(req);
-      const ownerAuthorized=options.internalOAuth
-        ? options.internalOAuth.authenticate(supplied)
-        : !!expectedToken&&safeTokenEqual(supplied,expectedToken);
-      if(options.googleConnection&&await handleGoogleOauth(req,res,options.googleConnection,ownerAuthorized))return;
-      if(options.internalOAuth&&await options.internalOAuth.handle(req,res,pathname))return;
-      if(req.method==="GET"&&pathname==="/livez"){
-        res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify({status:"alive"}));return;
+    if(req.method==="GET"&&req.url==="/livez"){
+      res.statusCode=200;
+      res.setHeader("content-type","application/json");
+      res.end(JSON.stringify({status:"alive"}));
+      return;
+    }
+
+    if(allowedHosts.size>0&&!allowedHosts.has(hostname(req))){
+      deny(res,403,"host_not_allowed");
+      return;
+    }
+
+    const origin=req.headers.origin;
+    if(origin&&allowedOrigins.size>0&&!allowedOrigins.has(origin)){
+      deny(res,403,"origin_not_allowed");
+      return;
+    }
+
+    const pathname=new URL(req.url??"/","http://localhost").pathname;
+    const ownerAuthorized=options.internalOAuth?options.internalOAuth.authenticate(bearer(req)):!!expectedToken&&safeTokenEqual(bearer(req),expectedToken);
+    if(options.googleConnection&&await handleGoogleOauth(req,res,options.googleConnection,ownerAuthorized))return;
+    if(options.internalOAuth&&await options.internalOAuth.handle(req,res,pathname))return;
+    if(options.internalOAuth&&pathname==="/mcp"&&!ownerAuthorized){
+      const metadata=new URL("/.well-known/oauth-protected-resource/mcp",options.internalOAuth.resourceUrl()).href;
+      res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="sam:access offline_access"`);
+      res.setHeader("cache-control","no-store");deny(res,401,"unauthorized");return;
+    }
+    if(options.oauth&&req.method==="GET"&&
+      ["/.well-known/oauth-protected-resource","/.well-known/oauth-protected-resource/mcp"].includes(req.url??"")){
+      res.setHeader("content-type","application/json");
+      res.setHeader("cache-control","no-store");
+      res.end(JSON.stringify(protectedResourceMetadata(options.oauth)));
+      return;
+    }
+    if(req.url!=="/mcp"){deny(res,404,"not_found");return;}
+    if(options.oauth){
+      try{
+        const principal=authenticateOAuth(bearer(req),options.oauth);
+        oauthRequest.run(principal,()=>{void nodeHandler(req,res);});
+      }catch{
+        const metadata=new URL("/.well-known/oauth-protected-resource/mcp",options.oauth.resource).href;
+        res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="${syntheticScopes.join(" ")}"`+
+          (bearer(req)?', error="invalid_token"':""));
+        res.setHeader("cache-control","no-store");
+        deny(res,401,"unauthorized");
       }
-      if(pathname!=="/mcp"){deny(res,404,"not_found");return;}
-      if(options.internalOAuth&&!ownerAuthorized){
-        const metadata=new URL("/.well-known/oauth-protected-resource/mcp",options.internalOAuth.resourceUrl()).href;
-        res.setHeader("www-authenticate",`Bearer resource_metadata="${metadata}", scope="sam:access offline_access"`);
-        res.setHeader("cache-control","no-store");deny(res,401,"unauthorized");return;
-      }
-      if(expectedToken&&!safeTokenEqual(supplied,expectedToken)){deny(res,401,"unauthorized");return;}
-      await nodeHandler(req,res);
+      return;
+    }
+
+    if(expectedToken&&!safeTokenEqual(bearer(req),expectedToken)){
+      deny(res,401,"unauthorized");
+      return;
+    }
+
+    await nodeHandler(req,res);
     }catch{if(!res.headersSent)deny(res,500,"request_failed");else res.end();}
   });
 

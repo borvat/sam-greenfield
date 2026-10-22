@@ -1,0 +1,13 @@
+Entities: Org 5122cac3-27f0-4b41-9466-f7e1dfd9f338, A d390246f-b935-4204-ac11-c4c3879174ce, B 21a194d8-d593-40fd-8b91-709db5ef450e
+Docs: A 67c66f9f-815f-4326-9cac-b788b7959687, B 049a6410-94f8-4f07-a03b-4fa02cabf1a2
+Using NOSUPERUSER NOBYPASSRLS role app_tenant_test to prove superuser bypass avoided
+No context SELECT financial_documents (app role): count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed, app role)
+✓ PASS: Tenant A cannot read B doc (app role)
+✓ PASS: Tenant A can read own doc (app role)
+✓ PASS: Tenant A cannot UPDATE B doc (app role, rowcount 0)
+✓ PASS: Tenant B cannot read A doc (app role)
+✓ PASS: Tenant B can read own doc (app role)
+
+=== RLS Tenant Isolation Real Test PASS (NOSUPERUSER role) ===
+Proves isolation with actual RLS policies, superuser bypass avoided

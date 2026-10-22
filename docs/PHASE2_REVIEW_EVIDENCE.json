@@ -1,0 +1,595 @@
+{
+  "reviewDateClient": "2026-10-22",
+  "clientTimezone": "Asia/Damascus",
+  "logTimezone": "UTC",
+  "repository": "borvat/sam-greenfield",
+  "pr": 46,
+  "prUrl": "https://github.com/borvat/sam-greenfield/pull/46",
+  "branch": "codex/sam-core-reliability",
+  "originalHead": "8b235bd887c2d86414a11bed5ffa625cba5b5d58",
+  "main": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "originalTestMerge": "bf587997c343d7d7a2f859289ede4b0099396b69",
+  "testedSourceSha": "bdab0758c130d6f499a40437f43a12798beb857c",
+  "sourceTestConfigDigest": "0eb157401cb8d5d4fddfc2ee19055840da7ae74640e62d84b695737c344b8b9f",
+  "digestConvention": "SHA256 sorted tracked non-doc path + NUL + bytes + NUL",
+  "originalChangedFilesReviewed": 112,
+  "correctiveFiles": [
+    ".github/workflows/phase0-postgres-verification.yml",
+    "apps/brain/src/executiveBrain.ts",
+    "apps/brain/src/replanner.ts",
+    "apps/command-center/src/main.ts",
+    "apps/kernel/src/sideEffects.ts",
+    "apps/mcp/src/main.ts",
+    "apps/production/src/learning.ts",
+    "apps/production/src/planner.ts",
+    "apps/runtime/src/productionCompositionModule.ts",
+    "apps/runtime/src/releaseCompositionModule.ts",
+    "apps/tools/src/executorFactory.ts",
+    "packages/db/src/runtimeAccess.ts",
+    "scripts/testing/core-reliability.cjs",
+    "tests/core/eventBacklog.ts",
+    "tests/core/learningScheduling.ts",
+    "tests/core/planningConcurrency.ts",
+    "tests/core/planningDeadline.ts",
+    "tests/core/reservationRace.ts",
+    "tests/core/restrictedChild.ts",
+    "tests/core/reviewFixture.ts",
+    "tests/core/startupAdmission.ts",
+    "tests/core/tenantWorkload.ts"
+  ],
+  "verdict": "CONDITIONAL",
+  "productionReadiness": "NOT_ESTABLISHED",
+  "reproducedStandaloneP0P1Remaining": [],
+  "resolvedFindings": [
+    {
+      "id": "R1",
+      "severity": "P1",
+      "subject": "nested-transaction connection starvation"
+    },
+    {
+      "id": "R2",
+      "severity": "P1",
+      "subject": "unbound pending reservation / reconciliation race"
+    },
+    {
+      "id": "R3",
+      "severity": "P1",
+      "subject": "missing fixed-principal startup attestation"
+    },
+    {
+      "id": "R4",
+      "severity": "P1",
+      "subject": "deadline after model response but before persistence"
+    },
+    {
+      "id": "R5",
+      "severity": "P2",
+      "subject": "unfinished legacy learning candidate starvation"
+    }
+  ],
+  "checks": {
+    "coreHost": {
+      "passed": 8,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/core/reliability.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningConcurrency.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/reservationRace.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/tenantWorkload.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/eventBacklog.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/learningScheduling.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/startupAdmission.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningDeadline.ts",
+          "passed": true,
+          "exit": 0
+        }
+      ]
+    },
+    "coreCleanImageAfterPostgresRestart": {
+      "passed": 8,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/core/reliability.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningConcurrency.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/reservationRace.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/tenantWorkload.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/eventBacklog.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/learningScheduling.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/startupAdmission.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningDeadline.ts",
+          "passed": true,
+          "exit": 0
+        }
+      ]
+    },
+    "regression": {
+      "passed": 38,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/phase1/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/full_vertical_slice.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/kernel_smoke.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/replan_recovery.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/runtime_loop.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/authority_guard.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/brain_kernel_handoff.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/brain_replanning.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/gateway_resilience.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/model_gateway.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/capability_catalog.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/specialist_delegation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/specialist_supervisor.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase4/reconciliation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase4/tool_gateway.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase5/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase5/verified_learning.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/operational_supervision.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/policy_evaluation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase7/production_readiness.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase7/runtime_service.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase8/chatgpt_tool_surface.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase9/production_wiring.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase10/mcp_transport.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase11/model_adapters.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase12/gmail_adapter.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase13/drive_adapters.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase14/eboekhouden_read.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase15/bol_read.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase16/bol_operational_intelligence.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase17/finance_reconciliation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase18/operational_finance_loop.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase19/command_center.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase20/live_golden_chain_gate.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase21/production_deployment.ts",
+          "passed": true,
+          "exit": 0
+        }
+      ]
+    },
+    "typecheck": "PASS",
+    "focusedSecurityProtocolSuites": 5,
+    "phase0Commands": 4,
+    "cleanNoCacheBuild": "PASS",
+    "migrationUpgradeRepeatApply": "PASS;12 receipts",
+    "migrationRollbackTransaction": "PASS;baseline schema/data preserved",
+    "applicationRollback": "UNSAFE_FOR_DEPENDENCY_PLANS_WITHOUT_DRAIN;exact main worker SELECT demonstrates issue",
+    "postgresRestart": "PASS;baseline sentinel and12 receipts retained",
+    "combinedSqlSets": 5,
+    "combinedCodeSets": 0,
+    "workflowParse": "PASS;contents read permission,3 jobs,10 minute timeouts",
+    "hostedCI": "UNVERIFIED_API_FORBIDDEN"
+  },
+  "metrics": {
+    "host": [
+      {
+        "check": "concurrent planning with failures and two DB connections",
+        "healthy": 12,
+        "failed": 4,
+        "invokes": 16,
+        "ms": 159,
+        "thresholdMs": 3000,
+        "poolMax": 2
+      },
+      {
+        "check": "parallel fixed-principal workload",
+        "tenants": 4,
+        "rows": 80,
+        "crossTenantReads": 0,
+        "ms": 919,
+        "thresholdMs": 3000,
+        "unboundRoleRejected": true
+      },
+      {
+        "check": "bounded event backlog",
+        "events": 350,
+        "ticks": 4,
+        "batches": [
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 50,
+            "consumed": 50
+          }
+        ],
+        "ms": 2270,
+        "thresholdMs": 5000
+      }
+    ],
+    "cleanImage": [
+      {
+        "check": "concurrent planning with failures and two DB connections",
+        "healthy": 12,
+        "failed": 4,
+        "invokes": 16,
+        "ms": 142,
+        "thresholdMs": 3000,
+        "poolMax": 2
+      },
+      {
+        "check": "parallel fixed-principal workload",
+        "tenants": 4,
+        "rows": 80,
+        "crossTenantReads": 0,
+        "ms": 33,
+        "thresholdMs": 3000,
+        "unboundRoleRejected": true
+      },
+      {
+        "check": "bounded event backlog",
+        "events": 350,
+        "ticks": 4,
+        "batches": [
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 100,
+            "consumed": 100
+          },
+          {
+            "relayed": 50,
+            "consumed": 50
+          }
+        ],
+        "ms": 1417,
+        "thresholdMs": 5000
+      }
+    ]
+  },
+  "image": "sha256:40889aea03b70679ad04ee8184689a6a42bd1274a488b77db7af01165297eeb1",
+  "negativeArchivedHeadReproductions": {
+    "planningConcurrency-baseline.log": {
+      "passed": 0,
+      "failed": 1,
+      "results": [
+        {
+          "test": "tests/core/planningConcurrency.ts",
+          "passed": false,
+          "exit": 1
+        }
+      ]
+    },
+    "reservationRace-baseline.log": {
+      "passed": 0,
+      "failed": 1,
+      "results": [
+        {
+          "test": "tests/core/reservationRace.ts",
+          "passed": false,
+          "exit": 1
+        }
+      ]
+    },
+    "learningScheduling-baseline.log": {
+      "passed": 0,
+      "failed": 1,
+      "results": [
+        {
+          "test": "tests/core/learningScheduling.ts",
+          "passed": false,
+          "exit": 1
+        }
+      ]
+    },
+    "deadline-baseline.log": {
+      "passed": 0,
+      "failed": 1,
+      "results": [
+        {
+          "test": "tests/core/planningDeadline.ts",
+          "passed": false,
+          "exit": 1
+        }
+      ]
+    }
+  },
+  "publication": {
+    "prExistsRequesterReported": true,
+    "originalPRHeadVerifiedViaGit": true,
+    "draftStateVerifiedViaAPI": false,
+    "bodyUpdate": "BLOCKED_GraphQL_Forbidden",
+    "preparedBody": "docs/CORE_RELIABILITY_PR.md",
+    "branchPush": "PUSHED_TESTED_SOURCE_AND_VERIFIED_VIA_LS_REMOTE",
+    "merge": false,
+    "prHeadAfterSourcePushVerifiedViaGit": "bdab0758c130d6f499a40437f43a12798beb857c"
+  },
+  "securityLimits": [
+    "No production/live-company evidence",
+    "Provider credentials are process-configured; company-account association unverified",
+    "Approval/execution/verifier database identity separation not implemented",
+    "Independent readback is trusted-code boundary, not independent secured process",
+    "Sibling feature tables need separately reviewed fixed-principal grants/policies",
+    "No full external exactly-once guarantee",
+    "No sustained soak, host-loss or production restore test"
+  ],
+  "safety": {
+    "productionDeployment": false,
+    "productionDatabaseReadOrWrite": false,
+    "credentialChange": false,
+    "paidModelCalls": 0,
+    "newPaidServices": 0,
+    "businessActions": 0,
+    "externalMessages": 0,
+    "protectedStabilityBranchesChanged": false,
+    "merged": false
+  },
+  "report": "docs/PHASE2_INDEPENDENT_REVIEW.md",
+  "evidenceFiles": {
+    "docs/reviews/2026-10-22/branches.json": "6c7959440289ad2c8e0f65f4ebf1804c1db4c89e9729ea1e0080eb9fb2db9810",
+    "docs/reviews/2026-10-22/ci-api.log": "e7c7a99bad5c9bd3d1f6c863f8a584313fd762f9a87fd322828d96a6a058d980",
+    "docs/reviews/2026-10-22/combinations.log": "bd12c931539b1fc8797b89363ebf5c0b332b39a0352efdc68e3722a6894dd50f",
+    "docs/reviews/2026-10-22/combined-migration-fixture.cjs": "4e81fff08cfe98906e6b6b8f5a5892306e410480e4700aa09d3cbe4bffcc140e",
+    "docs/reviews/2026-10-22/contracts.log": "b079802adc53349e7960a9a13db7a0ecbddad508868aa542d1f160bc3e72711f",
+    "docs/reviews/2026-10-22/core-final.log": "78be9a3c365d74635d43dd9e4a8dcb198d94158ae2cb4529f33d3e4cac549139",
+    "docs/reviews/2026-10-22/deadline-baseline.log": "87d67044f7367ef7072282cf5d591636bfe11a6670c41022fb63265f1d120349",
+    "docs/reviews/2026-10-22/deadline-final.log": "22d231bb2837045d75f0cc5a8888ce2020845e6e5cb736b2b51a23931ef56077",
+    "docs/reviews/2026-10-22/docker-final.log": "512e2c94aea473cd35b6b5c58c50407a22bb804f111ea54436d9320b5dec7bfa",
+    "docs/reviews/2026-10-22/image-core-final.log": "47ee34d16fce50b7e2b43a97815414dcb43503b1ddafaf2b7e87f10e75e66e45",
+    "docs/reviews/2026-10-22/learningScheduling-baseline.log": "f3496727d1e210ca6a0e9d606dd94883674507baa4ad3cdaf71522a542cee126",
+    "docs/reviews/2026-10-22/managed-schema.log": "a46e9720f573e6f26e713ca420f4f170186db6dd6963313dc4b3da7e78734a40",
+    "docs/reviews/2026-10-22/original-112-files.csv": "ec0af7356c35a468aab24422a22e0d356398df64510871d0830ad479c0d3635b",
+    "docs/reviews/2026-10-22/original-merge-ref.log": "f2eb51483f927739c71092788689f15cc47dd2d733c75e1d0e0afb5eb2bd93dc",
+    "docs/reviews/2026-10-22/phase0_acceptance.py.log": "1604c8583344ee2dca7aca30f3b8e7957394c0f90f8216a06708aa49016bbf59",
+    "docs/reviews/2026-10-22/planningConcurrency-baseline.log": "1e9027552a38299cefda1829fea7725c40cc6139370de51b48cebe0b290ccc3b",
+    "docs/reviews/2026-10-22/postgres_tls.log": "bee70a7d2378bf548490fe3a11e3308633aa679b927a0c3bf2728145f9e8e7cf",
+    "docs/reviews/2026-10-22/pr-api-blocked.log": "d36208d68a3cbcb1041d711be061f87dea2856fd6ccd4593b796dd1a467e7f37",
+    "docs/reviews/2026-10-22/pr-edit-blocked.log": "682deed6ccd21e66582c7f0e0efdffb3363feeac4c8b58f35a46d43dc240c725",
+    "docs/reviews/2026-10-22/provider_auth.log": "c3fa8e78ffea06f96519131541e841854048a3abe72ec51bd080db865f86a552",
+    "docs/reviews/2026-10-22/real_postgres_test.py.log": "a5b337a7e14300452c1af1ffa8e104456dfdf3b15b0bcb69b1919119e2ab9bf7",
+    "docs/reviews/2026-10-22/regression-final.log": "60e5bf43dac69ddfd964c626bc88466c8dcc87f439860d11ac179724681d1527",
+    "docs/reviews/2026-10-22/remote-verification.log": "9e94fd33b6b509f46a888ab14f1320cf3bd4b3a8ab5073852660e9c11ff36119",
+    "docs/reviews/2026-10-22/reservationRace-baseline.log": "3bf5fd71ec87f3b0ad024f0700582d4eff4898128765eec0234b040f62e16d83",
+    "docs/reviews/2026-10-22/restart.log": "58498133e71fcfbd61473dafd005a4f58f5356874368ac4fc81dfbcc1c5387fa",
+    "docs/reviews/2026-10-22/reviewed-merge.log": "e4bf509776ba9e5139286b8bcbee540e4deef0891a219da2fef37a548f968347",
+    "docs/reviews/2026-10-22/rollback-compatibility-fixture.ts": "3c89a7ec2df17081e03cec4065db8cffc98115e494ccac505bd759fdf427d294",
+    "docs/reviews/2026-10-22/rollback-compatibility.log": "983a3faf32e801d91c1adec0ab4040034d04a4cafb126f1b4891f2a8f33ed8c0",
+    "docs/reviews/2026-10-22/source-confirmed.log": "0eb8789a225dd8026ebc3d8cb0490258eaa11cf948e8940969cef9f33a008a0c",
+    "docs/reviews/2026-10-22/source-push.log": "e5ad2bf32a3d1dcd8e32b84f4fbfbbc01de0a80a6d33be0aac3ea89c80f651b0",
+    "docs/reviews/2026-10-22/synthetic_pilot.log": "665df1455805f1862ad87775b8b21c59d78be9b6e188224757f8f9596d4ec527",
+    "docs/reviews/2026-10-22/test_rls_fail_closed_security.py.log": "78091ca38aaa867be1aa0b4d289a095ad2f45517edb27bf9021377128187ecfc",
+    "docs/reviews/2026-10-22/test_rls_tenant_isolation.py.log": "1aa7238913c1dba750fb433f584cf8500f1f08e27b184f8aebacab1376c61b79",
+    "docs/reviews/2026-10-22/typecheck-final.log": "bdfa048bae1d4de047f903a4810022ee6bc425e179ec8bc21a768c4583049147",
+    "docs/reviews/2026-10-22/upgrade-fixture.cjs": "2093bb10bc4695dfadfc662fac2835be87e2225765671c7f194837c4ca4df85d",
+    "docs/reviews/2026-10-22/upgrade.log": "f8466d3dfb45c813e84b1e70bf4c9da708455e21d5dafac0a31b7d621f9a3659"
+  },
+  "cleanup": {
+    "removedContainer": "sam-phase2-pg",
+    "verifiedLabel": "sam.scope=phase2-review",
+    "disposableVolumeRemoved": true,
+    "imageRetained": "sam-phase2:review"
+  },
+  "reviewedTestMerge": {
+    "sha": "ddec2fc99e507f789d7cdaf50ec0822b9254c928",
+    "parents": [
+      "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+      "bdab0758c130d6f499a40437f43a12798beb857c"
+    ],
+    "tree": "667b73866d7830ba500d918483ea6da278e0f960",
+    "matchesTestedHeadTree": true
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "source": "Requester-supplied report from authorized GitHub integration; not a direct API result in this session",
+  "runId": "39678917418",
+  "workflow": "Phase 0 Real PostgreSQL Verification",
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "clean-image",
+      "id": "119495946017",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [],
+      "separateStepsRequest": []
+    },
+    {
+      "name": "core-reliability",
+      "id": "119495946164",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [],
+      "separateStepsRequest": []
+    },
+    {
+      "name": "test",
+      "id": "119495946386",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [],
+      "separateStepsRequest": []
+    }
+  ],
+  "logRetrievalPerJob": {
+    "httpStatus": 404,
+    "error": "BlobNotFound"
+  },
+  "fieldsUnavailableNotConfirmedNull": [
+    "runner_id",
+    "runner_name",
+    "started_at",
+    "completed_at",
+    "check-run annotations",
+    "platform setup errors"
+  ],
+  "requesterInterpretationAtTimeOfExport": "Zero steps is consistent with pre-step/infrastructure failure; root cause not conclusive from this export alone",
+  "laterIndependentEvidence": "Public GitHub run and job annotations explicitly state account billing lock prevented job start"
+}

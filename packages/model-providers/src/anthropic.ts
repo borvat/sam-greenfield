@@ -14,7 +14,7 @@ export class AnthropicMessagesAdapter implements ModelProviderAdapter{
     const body=await fetchJson(
       `${(this.options.baseUrl??"https://api.anthropic.com").replace(/\/$/,"")}/v1/messages`,
       {
-        method:"POST",
+        method:"POST",signal:task.signal,
         headers:{
           "x-api-key":this.options.apiKey,
           "anthropic-version":"2023-06-01",

@@ -11,6 +11,7 @@ export class GoogleRefreshTokenProvider implements AccessTokenProvider{
     refreshToken:string;
     tokenUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
   }){}
 
   async getAccessToken():Promise<string>{
@@ -21,7 +22,7 @@ export class GoogleRefreshTokenProvider implements AccessTokenProvider{
     const response=await fetchImpl(
       this.options.tokenUrl??"https://oauth2.googleapis.com/token",
       {
-        method:"POST",
+        method:"POST",signal:AbortSignal.timeout(this.options.timeoutMs??20000),
         headers:{"content-type":"application/x-www-form-urlencoded"},
         body:new URLSearchParams({
           client_id:this.options.clientId,
@@ -35,7 +36,7 @@ export class GoogleRefreshTokenProvider implements AccessTokenProvider{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok || typeof body?.access_token!=="string"){
       throw new Error(
-        `Google OAuth refresh failed: HTTP ${response.status} ${String(body?.error_description??body?.error??"unknown").slice(0,300)}`
+        `Google OAuth refresh failed: HTTP ${response.status} upstream_details_withheld`
       );
     }
 

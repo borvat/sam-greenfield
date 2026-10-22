@@ -71,6 +71,7 @@ async function main(){
   assert.ok(fact1);
 
   const goal2=await createGoal();
+  await pool.query('UPDATE goals SET company_scope=$2 WHERE id=$1',[goal2.goalId,goal1.legalEntityId]);
   const exec2=await verifiedExecution(goal2.goalId,"p5_observe_b","worker-b",20);
   const fact2=await learnVerifiedWorldFact({
     executionId:exec2,
@@ -98,7 +99,7 @@ async function main(){
     executionId:exec1,
     type:"OPERATIONAL",
     statement:"Synthetic supplier responds faster in the morning",
-    scope:{supplier:"synthetic"}
+    scope:{legal_entity_id:goal1.legalEntityId,supplier:"synthetic"}
   });
   assert.equal(m1.status,"OBSERVED");
   assert.equal(m1.supportCount,1);
@@ -107,7 +108,7 @@ async function main(){
     executionId:exec1,
     type:"OPERATIONAL",
     statement:"Synthetic supplier responds faster in the morning",
-    scope:{supplier:"synthetic"}
+    scope:{legal_entity_id:goal1.legalEntityId,supplier:"synthetic"}
   });
   assert.equal(mDuplicate.supportCount,1);
 
@@ -115,7 +116,7 @@ async function main(){
     executionId:exec2,
     type:"OPERATIONAL",
     statement:"Synthetic supplier responds faster in the morning",
-    scope:{supplier:"synthetic"}
+    scope:{legal_entity_id:goal1.legalEntityId,supplier:"synthetic"}
   });
   assert.equal(m2.status,"REINFORCED");
   assert.equal(m2.supportCount,2);
@@ -123,7 +124,7 @@ async function main(){
   const ownerRule=await recordOwnerRule({
     type:"FORMAL_RULE",
     statement:"Synthetic formal rule for Phase 5 acceptance",
-    scope:{domain:"synthetic"},
+    scope:{legal_entity_id:goal1.legalEntityId,domain:"synthetic"},
     source:"owner_test",
     approvedBy:"owner"
   });

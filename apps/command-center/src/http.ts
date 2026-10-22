@@ -1,6 +1,8 @@
 import {timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
+import { autonomyEnabled } from "../../development/src/autonomyBoundary";
+import {commandCenterDevelopmentTelemetry} from "./developmentTelemetry";
 import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
@@ -34,7 +36,33 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
 
       if(hosts.size>0&&!hosts.has(host(req))){json(res,403,{error:"host_not_allowed"});return}
-      if(req.method==="GET"&&req.url==="/"){res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");res.setHeader("cache-control","no-store");res.end(commandCenterHtml);return}
+      if(req.method==="GET"&&req.url==="/"){
+        const html=process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"
+          ? commandCenterHtml.replace("<body>",'<body data-development-safe="true">')
+              .replace("Owner view of goals, execution, verification and finance.",
+                autonomyEnabled()?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled.":
+                "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
+          : commandCenterHtml;
+        const syntheticRelease=process.env.SAM_RELEASE_SYNTHETIC_PLANNER==="1";
+        let scopedHtml=autonomyEnabled()||syntheticRelease?html.replace('<input id="domain" value="owner_command"',
+          `<input id="domain" value="${syntheticRelease?"release_synthetic":"development_probe"}" readonly`)
+          .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>'):html;
+        if(syntheticRelease){
+          scopedHtml=scopedHtml
+            .replace("Owner view of goals, execution, verification and finance.",
+              "Synthetic pilot: bounded planning, local tools and independent verification. Finance and external operations disabled.")
+            .replace("Example: Review current bol sales and accounting differences and produce a verified owner brief.",
+              '{"synthetic":true,"operation":"max","values":[2,8,5]}'.replaceAll('"',"&quot;"))
+            .replace("Optional owner acceptance contract (JSON; required by release profile)",
+              "Required owner acceptance contract (JSON; verified independently)")
+            .replace('id="acceptance" placeholder=', 'id="acceptance" required placeholder=')
+            .replace("Number(value||0)",'(value==null?"DISABLED":Number(value||0))')
+            .replace('"LIVE"','"SYNTHETIC PILOT · CONNECTED"')
+            .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
+        }
+        res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
+        res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
+      }
       const origin=req.headers.origin;
       if(origin&&origins.size>0&&!origins.has(origin)){json(res,403,{error:"origin_not_allowed"});return}
       if(token&&!safeEqual(bearer(req),token)){json(res,401,{error:"unauthorized"});return}
@@ -52,6 +80,12 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       if(req.method==="GET"&&req.url==="/api/overview"){
         json(res,200,{ok:true,data:await commandCenterOverview(options.legalEntityId)});return;
       }
+      if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
+        if(!token){json(res,401,{error:"unauthorized"});return;}
+        try{json(res,200,{ok:true,data:await commandCenterDevelopmentTelemetry(options.legalEntityId,token)});}
+        catch{json(res,503,{error:"telemetry_unavailable",details:"withheld"});}
+        return;
+      }
       if(req.method==="GET"&&req.url?.startsWith("/api/goals?")||req.method==="GET"&&req.url==="/api/goals"){
         const u=new URL(req.url??"/api/goals","http://local");
         json(res,200,{ok:true,data:await commandCenterGoals(options.legalEntityId,Number(u.searchParams.get("limit")??100))});return;
@@ -67,11 +101,13 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
       if(req.method==="POST"&&req.url==="/api/goals"){
         const body=await readJson(req);
+        if(autonomyEnabled()&&Object.keys(body).some(k=>!["objective","domain","priority","authority_ceiling"].includes(k)))throw new Error("AUTONOMY_INTAKE_FIELDS");
         const data=await createOwnerGoal(options.legalEntityId,{
           objective:body.objective,
           domain:body.domain,
           priority:body.priority,
-          authorityCeiling:body.authority_ceiling
+          authorityCeiling:body.authority_ceiling,
+          acceptanceContract:body.acceptance_contract
         });
         json(res,201,{ok:true,data});return;
       }

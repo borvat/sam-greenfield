@@ -14,8 +14,12 @@ test("only discovered read tools register with specialist, schema, adapter and f
  validateProductionBundle(bundle);assert.equal(bundle.capabilities.length,1);assert.equal(bundle.capabilities[0].specialistAgentId,"communications");assert.equal(bundle.toolDefinitions[0].sideEffect,false);
  const execution=await bundle.toolAdapters[0].execute({capabilityId:bundle.capabilities[0].capabilityId,params:{query:"in:inbox"},idempotencyKey:"test"});
  assert.equal(execution.evidence.responseHash,sha256Hex(result));assert.equal(reads,1);
- const input:any={execution:{id:"test",capabilityId:bundle.capabilities[0].capabilityId,params:{query:"in:inbox"},evidence:execution.evidence,operationKeyRef:null},contract:{}};
+ const input:any={execution:{id:"test",capabilityId:bundle.capabilities[0].capabilityId,params:{query:"in:inbox"},result:execution.result,evidence:execution.evidence,operationKeyRef:null},contract:{}};
  assert.equal((await bundle.verificationAdapters![0].verify(input)).result,"VERIFIED");assert.equal(reads,2);
+ const tampered={...input,execution:{...input.execution,result:{invented:"claim"}}};
+ assert.equal((await bundle.verificationAdapters![0].verify(tampered)).result,"INCONCLUSIVE");assert.equal(reads,2);
+ const legacy={...input,execution:{...input.execution,evidence:{...execution.evidence,resultHash:undefined}}};
+ assert.equal((await bundle.verificationAdapters![0].verify(legacy)).result,"INCONCLUSIVE");assert.equal(reads,2);
  changed=true;assert.equal((await bundle.verificationAdapters![0].verify(input)).result,"INCONCLUSIVE");
 });
 test("unapproved connection registers no Google capabilities",async()=>{

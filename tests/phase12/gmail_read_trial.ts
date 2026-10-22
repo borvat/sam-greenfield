@@ -30,7 +30,7 @@ async function main(){
   assert.equal(readBundle.raw.capabilities.length,2);
   assert.ok(readBundle.raw.toolDefinitions.every(d=>!d.sideEffect&&d.authorityClass==="GREEN"));
   Object.assign(process.env,env,{SAM_GOOGLE_READ_ONLY:"true"});
-  const bundle=(await import("../../apps/production/src/defaultBundleModule")).default;
+  const bundle=await (await import("../../apps/production/src/defaultBundleModule")).default();
   validateProductionBundle(bundle);
   assert.ok(bundle.capabilities.some(c=>c.capabilityId==="gmail_list_messages"));
   assert.ok(bundle.capabilities.some(c=>c.capabilityId==="drive_search"));

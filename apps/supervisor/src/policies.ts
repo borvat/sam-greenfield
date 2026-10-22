@@ -68,7 +68,7 @@ export function evaluateHealth(
     });
   }
 
-  if(snapshot.unresolvedSideEffects>policy.unresolvedSideEffectLimit){
+  if(snapshot.unresolvedSideEffects!==null&&snapshot.unresolvedSideEffects>policy.unresolvedSideEffectLimit){
     incidents.push({
       incidentKey:"runtime:side_effect_reconciliation",
       severity:"CRITICAL",

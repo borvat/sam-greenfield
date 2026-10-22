@@ -1,0 +1,4 @@
+PASS tests/core/planningDeadline.ts
+PASS deadline expiring after proposal but before persistence creates no plan
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/planningDeadline.ts","passed":true,"exit":0}]}

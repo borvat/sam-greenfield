@@ -1,3 +1,4 @@
+import {loadReplanContext} from './replanContext';
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
@@ -7,6 +8,8 @@ import { beginReplanAtomic } from "../../kernel/src/replanning";
 import { persistPlanAndStartExecution } from "../../kernel/src/orchestrator";
 import { evaluatePlanAuthority, type CapabilityAuthorityPolicy } from "./authorityGuard";
 import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
+import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
+import {pilotEnabled,authorizePilotGoal} from "../../production/src/syntheticPilotScope";
 
 export async function runBrainReplanCycle(input: {
   alreadyStarted?:boolean;
@@ -15,11 +18,14 @@ export async function runBrainReplanCycle(input: {
   reason: string;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
-  availableCapabilities?:unknown[];
+  availableCapabilities?: unknown[];
 }) {
   const goal = await withTransaction(async (client) => {
+    if(pilotEnabled())await authorizePilotGoal(client,input.goalId);
+    await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
       "SELECT id,objective,state,company_scope FROM goals WHERE id=$1",
       [input.goalId]
@@ -41,21 +47,15 @@ export async function runBrainReplanCycle(input: {
     if (!goal.company_scope) {
       return { entity:{type:"legal_entity",id:null},facts:[],memory:[] };
     }
-    return assembleContext(client,"legal_entity",goal.company_scope);
+    return assembleContext(client,"legal_entity",goal.company_scope,goal.objective);
   });
 
-  // Capture failed reads from prior plan versions: the planner must not
-  // replay the same failing request while attempting same-goal recovery.
   const failedReads=await withTransaction(async client=>{
-    const r=await client.query(
-      `SELECT DISTINCT w.capability_id,w.params FROM work_queue w
-       WHERE w.goal_id=$1 AND w.status='FAILED'`,
-      [input.goalId]
-    );
+    const r=await client.query("SELECT DISTINCT capability_id,params FROM work_queue WHERE goal_id=$1 AND status='FAILED'",[input.goalId]);
     const readOnly=new Set((input.availableCapabilities??[]).filter((x:any)=>x?.sideEffect===false).map((x:any)=>String(x.capabilityId)));
     return r.rows.filter((x:any)=>readOnly.has(String(x.capability_id))).map((x:any)=>({capabilityId:String(x.capability_id),params:x.params??{}}));
   });
-
+  const history=await loadReplanContext(input.goalId);
   const candidate = await proposePlan({
     gateway:input.gateway,
     goalId:input.goalId,
@@ -64,11 +64,12 @@ export async function runBrainReplanCycle(input: {
     forbiddenReadSteps:failedReads,
     context:{
       ...context,
+      ...history,
       replan_reason:input.reason
     },
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    preferredProviders:input.preferredProviders
+    signal:input.signal,preferredProviders:input.preferredProviders
   });
 
   const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
@@ -89,6 +90,7 @@ export async function runBrainReplanCycle(input: {
     throw new Error("Replanned candidate blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

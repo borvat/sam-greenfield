@@ -62,7 +62,7 @@ test("same-goal replanner can discover a search fallback despite an explicitly n
  assert.equal(p.goalId,"same-goal");assert.ok(offered.includes("google_mcp_search_drive_files"));assert.ok(!offered.includes("delete_drive_file"));
  await assert.rejects(()=>proposePlan({goalId:"same-goal",objective:`read-only ${capability}`,context:{},dataClassification:"INTERNAL",maxCostUsd:0.1,
   availableCapabilities:capabilities,forbiddenReadSteps:[{capabilityId:capability,params:{file_id:"missing"}}],
-  gateway:{async invoke(){return {result:{output:{steps:[{capabilityId:capability,params:{file_id:"missing"}}]}}}}} as any}),/Previously failed read/);
+  gateway:{async invoke(){return {result:{output:{steps:[{capabilityId:capability,params:{file_id:"missing"}}]}}}}} as any}),/PLAN_FAILED_READ_REPLAY/);
 });
 
 test("isolated PostgreSQL: 404 transitions the same goal; budget, fencing, writes and atomic rollback stay enforced",async()=>{
@@ -74,29 +74,32 @@ test("isolated PostgreSQL: 404 transitions the same goal; budget, fencing, write
  const saved=pool.connect;let failAudit=false;
  (pool as any).connect=async()=>({query:async(q:string,p?:any[])=>{
   if(failAudit&&q.includes("INSERT INTO audit_log")){failAudit=false;throw new Error("injected audit failure")}
-  const r=await db.query(q,p);return {...r,rowCount:r.rows.length||r.affectedRows||0};
+  const r=await db.query<any>(q,p);return {...r,rowCount:r.rows.length||r.affectedRows||0};
  },release(){}});
  const seed=async(id:string,cap=capability,attempts=0,operation:string|null=null)=>{
-  await db.query("INSERT INTO goals(id,state,current_plan_id,replan_attempts) VALUES($1,'EXECUTING',$2,$3)",[id,id+"-plan",attempts]);
-  await db.query("INSERT INTO work_queue(id,goal_id,plan_id,capability_id,status,fencing_token,operation_key_ref) VALUES($1,$2,$3,$4,'LEASED',2,$5)",[id+"-work",id,id+"-plan",cap,operation]);
+  await db.query<any>("INSERT INTO goals(id,state,current_plan_id,replan_attempts) VALUES($1,'EXECUTING',$2,$3)",[id,id+"-plan",attempts]);
+  await db.query<any>("INSERT INTO work_queue(id,goal_id,plan_id,capability_id,status,fencing_token,operation_key_ref) VALUES($1,$2,$3,$4,'LEASED',2,$5)",[id+"-work",id,id+"-plan",cap,operation]);
  };
- const state=async(id:string)=>(await db.query("SELECT * FROM goals WHERE id=$1",[id])).rows[0] as any;
+ const state=async(id:string)=>(await db.query<any>("SELECT * FROM goals WHERE id=$1",[id])).rows[0] as any;
  const fail=async(id:string,error:unknown=new ReadSourceNotFoundError(capability),token=2)=>recordWorkFailure({queueId:id+"-work",fencingToken:token,actor:"documents@test",error});
  try{
   await seed("recovered");assert.equal(await fail("recovered"),true);
   assert.equal((await state("recovered")).state,"REPLANNING");
-  assert.equal((await db.query("SELECT status FROM work_queue WHERE id='recovered-work'")).rows[0].status,"FAILED");
+  assert.equal((await db.query<any>("SELECT status FROM work_queue WHERE id='recovered-work'")).rows[0].status,"FAILED");
   assert.equal(await beginReplanAtomic("recovered","missing read"),"PLANNING");
   assert.equal((await state("recovered")).replan_attempts,1);
-  assert.equal((await db.query("SELECT * FROM audit_log WHERE action='RUNTIME_RECOVERY_REQUESTED'")).rows.length,1);
+  assert.equal((await db.query<any>("SELECT * FROM audit_log WHERE action='RUNTIME_RECOVERY_REQUESTED'")).rows.length,1);
   await seed("exhausted",capability,2);await fail("exhausted");assert.equal((await state("exhausted")).state,"FAILED");
   await seed("write","gmail_send");await fail("write");assert.equal((await state("write")).state,"FAILED");
-  await seed("ledger",capability,0,"write-ledger-ref");await fail("ledger");assert.equal((await state("ledger")).state,"FAILED");
+  await seed("ledger",capability,0,"write-ledger-ref");assert.equal(await fail("ledger"),false);
+  assert.equal((await state("ledger")).state,"EXECUTING","bound writes remain under reconciliation, not missing-read recovery");
+  assert.equal((await db.query<any>("SELECT status FROM work_queue WHERE id='ledger-work'")).rows[0].status,"LEASED");
+  assert.equal((await db.query<any>("SELECT * FROM outbox_events WHERE aggregate_id='ledger-work'")).rows.length,0);
   await seed("generic");await fail("generic",new Error("REMOTE_TOOL_ERROR HttpError 404"));assert.equal((await state("generic")).state,"FAILED");
   await seed("stale");assert.equal(await fail("stale",undefined,1),false);assert.equal((await state("stale")).state,"EXECUTING");
   await seed("rollback");failAudit=true;await assert.rejects(fail("rollback"),/injected audit/);
   assert.equal((await state("rollback")).state,"EXECUTING");
-  assert.equal((await db.query("SELECT status FROM work_queue WHERE id='rollback-work'")).rows[0].status,"LEASED");
-  assert.equal((await db.query("SELECT * FROM outbox_events WHERE aggregate_id='rollback-work'")).rows.length,0);
+  assert.equal((await db.query<any>("SELECT status FROM work_queue WHERE id='rollback-work'")).rows[0].status,"LEASED");
+  assert.equal((await db.query<any>("SELECT * FROM outbox_events WHERE aggregate_id='rollback-work'")).rows.length,0);
  }finally{(pool as any).connect=saved;await db.close()}
 });

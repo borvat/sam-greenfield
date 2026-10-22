@@ -1,0 +1,4 @@
+PASS tests/release/contracts.ts
+RELEASE_CONTRACTS PASS: config/refusal, credential stripping, owner criteria, read-only MCP, one-port proxy, bounded real-child restart, graceful stop, output withholding. Classification=LOCAL_PROCESS_WITH_FIXTURE_BACKENDS.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/contracts.ts","passed":true,"exit":0}]}

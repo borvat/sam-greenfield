@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { BolClient } from "../../vendor/bol-mcp-upstream/src/bol-client";
-import { withBolRetailerFromEnv } from "../../apps/production/src/bolBundle";
+import { withBolRetailerFromEnv } from "../../apps/production/src/bolMcpBundle";
 import { validateProductionBundle } from "../../apps/production/src/bundle";
 import { businessDate } from "../../apps/production/src/bolAnalysis";
 

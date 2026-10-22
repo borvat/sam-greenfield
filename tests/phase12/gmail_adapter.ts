@@ -39,14 +39,17 @@ async function mock(){
       const match=raw.match(/^Message-ID: (.+)$/mi);
       assert.ok(match);
       assert.match(raw,/^X-SAM-Operation-Key:/mi);
-      const item={id:`gmail-${++sendCount}`,threadId:"thread-1"};
+      const [head,...body]=raw.split('\r\n\r\n');
+      const item={id:`gmail-${++sendCount}`,threadId:"thread-1",labelIds:['SENT'],payload:{mimeType:'text/plain',
+        headers:head.split('\r\n').map(line=>({name:line.slice(0,line.indexOf(':')),value:line.slice(line.indexOf(':')+1).trim()})),
+        body:{data:Buffer.from(body.join('\r\n\r\n')).toString('base64url')}}};
       sentById.set(item.id,item);
       sentByMessageId.set(match![1].trim(),item);
       res.end(JSON.stringify(item));
       return;
     }
 
-    if(req.url?.startsWith("/gmail/v1/users/me/messages/")&&req.url.includes("?format=minimal")){
+    if(req.url?.startsWith("/gmail/v1/users/me/messages/")&&/\?format=(minimal|full)/.test(req.url)){
       const id=decodeURIComponent(req.url.split("/messages/")[1].split("?")[0]);
       const item=sentById.get(id);
       if(!item){
@@ -134,7 +137,7 @@ async function main(){
     execution:{
       id:"execution-1",
       capabilityId:"gmail_send",
-      params:{},
+      params:{to:["supplier@example.com"],subject:"Quotation request",text:"Please send your current quotation and lead time."},
       evidence:first.evidence,
       operationKeyRef:opKey
     },
@@ -152,7 +155,7 @@ async function main(){
     execution:{
       id:"execution-2",
       capabilityId:"gmail_send",
-      params:{},
+      params:{to:["supplier@example.com"],subject:"Quotation request",text:"Please send your current quotation and lead time."},
       evidence:{},
       operationKeyRef:opKey
     },
@@ -166,7 +169,7 @@ async function main(){
   assert.equal(verifiedBySearch.result,"VERIFIED");
   assert.equal(
     (verifiedBySearch.evidence as any).method,
-    "gmail_rfc822msgid_search"
+    "gmail_content_readback"
   );
 
   let aiWordingBlocked=false;

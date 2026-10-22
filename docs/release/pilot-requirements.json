@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "approvedSourceSha": null,
+  "records": {},
+  "status": "BLOCKED_OWNER_DECISIONS_AND_REAL_PRODUCTION_EVIDENCE_REQUIRED",
+  "notice": "Do not place secrets, connection strings, tokens or business data here. This is not a Publish authorization."
+}

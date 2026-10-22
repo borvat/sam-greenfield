@@ -1,0 +1,15 @@
+{
+  "tool": "actionlint",
+  "version": "1.7.7",
+  "source": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz",
+  "checksumManifest": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_checksums.txt",
+  "archiveSha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757",
+  "checksumVerified": true,
+  "command": "/tmp/sam-phase3-actionlint/actionlint -no-color .github/workflows/phase0-postgres-verification.yml",
+  "originalExit": 0,
+  "fixedExit": 0,
+  "findings": [],
+  "notHostedExecution": true,
+  "originalWorkflowSha256": "a5e8a51d4abd086297bb988aee037d6c6e2701909653d33c344f2b456d7b7a5f",
+  "fixedWorkflowSha256": "7baac861c31ca10a277f59c4553ca53b723bf63d2379c292838dde58008e1cf9"
+}

@@ -1,0 +1,15 @@
+{
+  "source": "7df84a3913125896256c5b3039cf7f8cae28b8e1",
+  "archiveSha256": "8ab8d602b6a6f76dd61d9709247d062d60dbfa047127d5e44688b8de6dd685b7",
+  "paths": [
+    "apps",
+    "packages",
+    "scripts/release",
+    "deploy/render",
+    "vendor",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json"
+  ],
+  "classification": "Immutable PR50 rollback application source; no dependencies, credentials or production data"
+}

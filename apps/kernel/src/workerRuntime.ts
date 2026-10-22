@@ -1,7 +1,8 @@
-import { recordWorkFailure } from "./failures";
+import {prepareWorkParameters} from './dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "./execution";
+import {leaseAttemptLimit,stopExhaustedLease} from "./leaseBudget";
 
 export interface ClaimedWork {
   queueId: string;
@@ -20,19 +21,22 @@ export async function claimNextWorkAtomic(
   owner: string,
   ttlSeconds: number
 ): Promise<ClaimedWork | null> {
+  const limit=leaseAttemptLimit();
   return withTransaction(async (client) => {
     const candidate = await client.query(
-      `SELECT w.id
-         FROM work_queue w
-         LEFT JOIN goals g ON g.id=w.goal_id
-        WHERE (w.goal_id IS NULL OR (g.state='EXECUTING' AND w.plan_id=g.current_plan_id))
-          AND status IN ('QUEUED','HANDBACK')
+      `SELECT id,goal_id,attempt,fencing_token
+         FROM work_queue
+        WHERE status IN ('QUEUED','HANDBACK')
           AND (due_at IS NULL OR due_at <= now())
-        ORDER BY w.priority DESC,w.due_at ASC NULLS FIRST,w.queued_at ASC,w.id ASC
-        FOR UPDATE OF w SKIP LOCKED
+          AND (plan_id IS NULL OR work_dependencies_ready(id))
+        ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
+        FOR UPDATE SKIP LOCKED
         LIMIT 1`
     );
     if (candidate.rowCount === 0) return null;
+    if(limit!==null&&Number(candidate.rows[0].attempt)>=limit){
+      await stopExhaustedLease(client,candidate.rows[0]);return null;
+    }
 
     const queueId = candidate.rows[0].id as string;
     const fencingToken = await acquireLease(client, queueId, owner, ttlSeconds);
@@ -41,11 +45,13 @@ export async function claimNextWorkAtomic(
       [queueId]
     );
 
+    const params=await prepareWorkParameters(client,queueId,row.rows[0].params??{});
+    if(!params)return null;
     return {
       queueId,
       fencingToken,
       capabilityId: row.rows[0].capability_id,
-      params: row.rows[0].params ?? {},
+      params,
       goalId: row.rows[0].goal_id ?? null,
       planId: row.rows[0].plan_id ?? null
     };
@@ -56,32 +62,27 @@ export async function runOneClaimedWork(
   owner: string,
   ttlSeconds: number,
   executors: Record<string, CapabilityExecutor>
-): Promise<{ processed: boolean; executionId?: string; queueId?: string; failed?:boolean }> {
+): Promise<{ processed: boolean; executionId?: string; queueId?: string }> {
   const work = await claimNextWorkAtomic(owner, ttlSeconds);
   if (!work) return { processed: false };
 
-  try{
-    const executor = executors[work.capabilityId];
-    if (!executor) {
-      throw new Error(`No executor registered for capability ${work.capabilityId}`);
-    }
-
-    const outcome = await executor(work);
-    const execution = await recordExecutionAndRequestVerificationAtomic({
-      queueId: work.queueId,
-      fencingToken: work.fencingToken,
-      actor: owner,
-      result: outcome.result,
-      evidence: outcome.evidence
-    });
-
-    return {
-      processed: true,
-      executionId: execution.executionId,
-      queueId: work.queueId
-    };
-  }catch(error){
-    await recordWorkFailure({queueId:work.queueId,fencingToken:work.fencingToken,error,actor:owner});
-    return {processed:true,queueId:work.queueId,failed:true};
+  const executor = executors[work.capabilityId];
+  if (!executor) {
+    throw new Error(`No executor registered for capability ${work.capabilityId}`);
   }
+
+  const outcome = await executor(work);
+  const execution = await recordExecutionAndRequestVerificationAtomic({
+    queueId: work.queueId,
+    fencingToken: work.fencingToken,
+    actor: owner,
+    result: outcome.result,
+    evidence: outcome.evidence
+  });
+
+  return {
+    processed: true,
+    executionId: execution.executionId,
+    queueId: work.queueId
+  };
 }

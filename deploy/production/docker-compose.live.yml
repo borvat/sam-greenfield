@@ -1,6 +1,6 @@
 x-sam-env: &sam-env
   NODE_ENV: production
-  DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  DATABASE_URL: ${SAM_APP_DATABASE_URL:?Restricted application DATABASE_URL with trusted tenant context is required}
   SAM_PRODUCTION_BUNDLE_MODULE: /app/apps/production/src/defaultBundleModule.ts
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   OPENAI_MODEL: ${OPENAI_MODEL:-}
@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile
     command: ["npm","run","db:migrate","--","--apply"]
     environment:
-      <<: *sam-env
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres:
         condition: service_healthy

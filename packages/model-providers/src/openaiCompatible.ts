@@ -9,14 +9,16 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
       baseUrl:string;
       timeoutMs?:number;
       extraHeaders?:Record<string,string>;
+      // Optional transport injection; ordinary provider behavior is unchanged.
+      transport?:typeof fetchJson;
     }
   ){}
 
   async invoke(task:ModelTask,model:string):Promise<ProviderResult>{
-    const body=await fetchJson(
+    const body=await (this.options.transport??fetchJson)(
       `${this.options.baseUrl.replace(/\/$/,"")}/chat/completions`,
       {
-        method:"POST",
+        method:"POST",signal:task.signal,
         headers:{
           authorization:`Bearer ${this.options.apiKey}`,
           "content-type":"application/json",

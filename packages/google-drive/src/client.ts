@@ -6,15 +6,27 @@ export class GoogleDriveApiClient{
     tokens:AccessTokenProvider;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
+  } | {
+    // Scoped authenticated transport; original OAuth clients retain their behavior.
+    readOnlyRequest:(path:string)=>Promise<any>;
+    readOnlyTextRequest?:(path:string)=>Promise<string>;
   }){}
 
   private async request(path:string,init:RequestInit={}):Promise<any>{
+    if ("readOnlyRequest" in this.options) {
+      if ((init.method ?? "GET") !== "GET" || init.body !== undefined || init.headers !== undefined) {
+        throw new Error("READ_ONLY_DRIVE_METHOD_DENIED");
+      }
+      return this.options.readOnlyRequest(path);
+    }
     const token=await this.options.tokens.getAccessToken();
     const fetchImpl=this.options.fetchImpl??fetch;
     const response=await fetchImpl(
       `${(this.options.baseUrl??"https://www.googleapis.com/drive/v3").replace(/\/$/,"")}${path}`,
       {
         ...init,
+        signal:AbortSignal.timeout(this.options.timeoutMs??20000),
         headers:{
           authorization:`Bearer ${token}`,
           ...(init.body?{"content-type":"application/json"}:{}),
@@ -25,7 +37,7 @@ export class GoogleDriveApiClient{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok){
       throw new Error(
-        `Google Drive API HTTP ${response.status}: ${String(body?.error?.message??body?.message??"unknown").slice(0,500)}`
+        `Google Drive API HTTP ${response.status}: upstream_details_withheld`
       );
     }
     return body;
@@ -35,6 +47,14 @@ export class GoogleDriveApiClient{
     return this.request(
       `/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,parents,trashed,modifiedTime,webViewLink`
     );
+  }
+
+  exportPlainText(fileId:string):Promise<string>{
+    // Opt-in scoped transport only; existing OAuth clients and writes are unchanged.
+    if (!("readOnlyRequest" in this.options) || !this.options.readOnlyTextRequest) {
+      throw new Error("SCOPED_DRIVE_TEXT_TRANSPORT_REQUIRED");
+    }
+    return this.options.readOnlyTextRequest(`/files/${encodeURIComponent(fileId)}/export?mimeType=text%2Fplain`);
   }
 
   async search(input:{

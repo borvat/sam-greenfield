@@ -102,7 +102,7 @@ async function main(){
   });
   assert.equal(sendRun.processed,true);
   assert.equal(sendCalls,1);
-  assert.ok(lastIdempotencyKey.startsWith(`tool:${sendPlan.queueIds[0]}:p4_send:`));
+  assert.ok(lastIdempotencyKey.startsWith(`tool:${sendGoal.goalId}:p4_send:`));
 
   const approval=await one(
     "SELECT used_count,status FROM approvals WHERE goal_id=$1 AND capability_id='p4_send'",
@@ -156,9 +156,8 @@ async function main(){
     goalId:sendGoal.goalId,
     planId:sendPlan.planId
   };
-  const dedupResult=await dedupExecutor.p4_send(work as any);
-  assert.equal(duplicateSendCalls,0);
-  assert.equal(dedupResult.result.deduplicated,true);
+  await assert.rejects(()=>dedupExecutor.p4_send(work as any),/EXECUTION_LEASE_OR_GOAL_INVALID/);
+  assert.equal(duplicateSendCalls,0); // stale completed work cannot invoke even a deduplicated executor.
 
   const mismatchCatalog=new CapabilityCatalog([
     {capabilityId:"x",authorityClass:"GREEN",specialistAgentId:"xagent",specialistVersion:"1"}

@@ -10,13 +10,15 @@ export async function runOperationalSupervisorTick(input:{
   oldOutboxMinutes?:number;
   modelLookbackMinutes?:number;
   actor?:string;
+  monitorSideEffects?:boolean;
 }={}){
   return withTransaction(async(client)=>{
     const snapshot=await captureHealthSnapshot(client,{
       staleGoalMinutes:input.staleGoalMinutes,
       staleVerificationMinutes:input.staleVerificationMinutes,
       oldOutboxMinutes:input.oldOutboxMinutes,
-      modelLookbackMinutes:input.modelLookbackMinutes
+      modelLookbackMinutes:input.modelLookbackMinutes,
+      monitorSideEffects:input.monitorSideEffects
     });
 
     const candidates=evaluateHealth(snapshot,input.policy ?? DEFAULT_SUPERVISOR_POLICY);
@@ -29,6 +31,7 @@ export async function runOperationalSupervisorTick(input:{
       candidates,
       incidentDelta,
       ownerBrief:{
+        coverage:snapshot.excludedMetrics?.length?"PARTIAL":"FULL",
         generatedAt:new Date().toISOString(),
         overallStatus:activeIncidents.some((i)=>i.severity==="CRITICAL")
           ? "CRITICAL"

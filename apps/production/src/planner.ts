@@ -1,59 +1,76 @@
-import { recordPlanningFailure } from "../../kernel/src/failures";
-import { withTransaction } from "../../../packages/db/src/client";
-import { transitionGoal } from "../../kernel/src/stateMachine";
-import { beginReplan } from "../../kernel/src/replanning";
-import { ModelGateway } from "../../../packages/model-gateway/src/gateway";
-import { runCatalogPlanningCycle,runCatalogReplanCycle } from "../../agents/src/executiveFlow";
-import type { ValidatedProductionBundle } from "./bundle";
+import {withTransaction} from '../../../packages/db/src/client';
+import {ModelGateway} from '../../../packages/model-gateway/src/gateway';
+import {runCatalogPlanningCycle,runCatalogReplanCycle} from '../../agents/src/executiveFlow';
+import {autonomyEnabled} from '../../development/src/autonomyBoundary';
+import {transitionGoal} from '../../kernel/src/stateMachine';
+import {insertOutboxEvent} from '../../../packages/db/src/outbox';
+import type {ValidatedProductionBundle} from './bundle';
 
-export async function planNextNewGoal(
-  bundle:ValidatedProductionBundle,
-  deadlineMs=120_000
-):Promise<{processed:boolean;goalId?:string;failed?:boolean}>{
-  if(!Number.isFinite(deadlineMs)||deadlineMs<=0)throw new Error("Planning deadline must be positive");
+export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{deadlineMs?:number;maxAttempts?:number;backoffMs?:number;excludeDelegatedSpecialistTasks?:boolean;goalId?:string;gatewayForGoal?:(goalId:string)=>ModelGateway}={})
+ :Promise<{processed:boolean;goalId?:string;failed?:boolean;reason?:string}>{
   const adapters=bundle.raw.modelAdapters??[];
-  if(adapters.length===0) return {processed:false};
-
-  // Claim the planning state atomically before making a model request. A second
-  // runtime cannot plan this goal while the first one's request is in flight.
-  const next=await withTransaction(async client=>{
-    const res=await client.query(
-      `SELECT id,state,replan_reason FROM goals
-        WHERE state IN ('NEW','REPLANNING')
-        ORDER BY priority DESC,created_at,id
-        FOR UPDATE SKIP LOCKED LIMIT 1`
-    );
-    const row=res.rows[0] as {id:string;state:string;replan_reason:string|null}|undefined;
-    if(!row) return null;
-    if(row.state==="REPLANNING"){
-      const result=await beginReplan(client,row.id,row.replan_reason??"independent verification failed");
-      return {...row,exhausted:result==="FAILED"};
+  if(!adapters.length)return {processed:false};
+  const deadlineMs=options.deadlineMs??30000,maxAttempts=options.maxAttempts??3,backoffMs=options.backoffMs??1000;
+  if(!Number.isSafeInteger(deadlineMs)||deadlineMs<1||deadlineMs>120000||!Number.isSafeInteger(maxAttempts)||maxAttempts<1||maxAttempts>10||
+    !Number.isSafeInteger(backoffMs)||backoffMs<1||backoffMs>60000)throw new Error('PLANNING_POLICY_INVALID');
+  // A short row-locked transaction commits the durable deadline reservation.
+  // No pool connection is held while nested kernel transactions or models run.
+  const reservation=await withTransaction(async client=>{
+    const next=(await client.query(`SELECT id,state,planning_attempts FROM goals
+      WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
+      AND ($1::uuid IS NULL OR id=$1)
+      AND (planning_retry_at IS NULL OR planning_retry_at<=now())
+      AND ${options.excludeDelegatedSpecialistTasks?'NOT EXISTS(SELECT 1 FROM specialist_delegations d WHERE d.goal_id=goals.id)':'true'}
+      ORDER BY last_planning_at ASC NULLS FIRST,priority DESC,created_at,id
+      LIMIT 1 FOR UPDATE SKIP LOCKED`,[options.goalId??null])).rows[0];
+    if(!next)return null;
+    if(next.planning_attempts>=maxAttempts){
+      await transitionGoal(client,next.id,next.state,'FAILED','planning_attempts_exhausted');
+      return {result:{processed:true,goalId:next.id,failed:true,reason:'PLANNING_ATTEMPTS_EXHAUSTED'}};
     }
-    await transitionGoal(client,row.id,"NEW","MODELING","runtime_claimed_planning");
-    return {...row,exhausted:false};
+    if(next.state==='REPLANNING'&&bundle.raw.replanPolicy){
+      const failure=await client.query(`SELECT v.independent_evidence FROM verifications v JOIN executions e ON e.id=v.execution_id
+        WHERE e.goal_id=$1 AND v.result='FAILED' ORDER BY v.checked_at DESC,v.id DESC LIMIT 1`,[next.id]);
+      if(!bundle.raw.replanPolicy.recoverableEvidenceReasons.includes(failure.rows[0]?.independent_evidence?.reason)){
+        await transitionGoal(client,next.id,'REPLANNING','BLOCKED','nonrecoverable_verification_failure');
+        return {result:{processed:true,goalId:next.id}};
+      }
+    }
+    await client.query(`UPDATE goals SET planning_attempts=planning_attempts+1,last_planning_at=now(),
+      planning_retry_at=now()+($2::double precision*interval '1 millisecond') WHERE id=$1`,[next.id,deadlineMs]);
+    return {next};
   });
-  if(!next) return {processed:false};
-  if(next.exhausted) return {processed:true,goalId:next.id,failed:true};
-
-  const gateway=new ModelGateway(Object.fromEntries(adapters.map(adapter=>[adapter.providerId,adapter])));
-  const planningInput={
-    catalog:bundle.catalog,gateway,goalId:next.id,
-    dataClassification:bundle.raw.dataClassification??"INTERNAL",
-    maxCostUsd:bundle.raw.planningMaxCostUsd??0.25
-  };
-  let deadline:NodeJS.Timeout|undefined;
+  if(!reservation)return {processed:false};
+  if(reservation.result)return reservation.result;
+  const next=reservation.next!,current=next;
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),deadlineMs);
   try{
-    const planning=next.state==="REPLANNING"
-      ?runCatalogReplanCycle({...planningInput,alreadyStarted:true,reason:next.replan_reason??"independent verification failed"})
-      :runCatalogPlanningCycle({...planningInput,alreadyModeling:true});
-    await Promise.race([planning,new Promise<never>((_,reject)=>{
-      deadline=setTimeout(()=>reject(new Error(`PLANNING_DEADLINE_EXCEEDED: no completed plan within ${deadlineMs}ms`)),deadlineMs);
-    })]);
+    const input={catalog:bundle.catalog,gateway:options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
+      goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal};
+    if(current.state==='REPLANNING')await runCatalogReplanCycle({...input,reason:'independent_verification_failed'});
+    else await runCatalogPlanningCycle(input);
+    await withTransaction(client=>client.query('UPDATE goals SET planning_attempts=0,last_planning_at=now(),planning_retry_at=NULL,planning_failure=NULL WHERE id=$1 AND planning_attempts=$2',[next.id,current.planning_attempts+1]));
     return {processed:true,goalId:next.id};
   }catch(error){
-    const failed=await recordPlanningFailure(next.id,error);
-    return {processed:true,goalId:next.id,failed};
-  }finally{
-    if(deadline)clearTimeout(deadline);
-  }
+    const message=error instanceof Error?error.message:'';
+    const known=(error as {code?:string})?.code;
+    const classified=['PROVIDER_AUTH_REJECTED','PROVIDER_ACCESS_REJECTED','PROVIDER_RATE_LIMITED','PROVIDER_UNAVAILABLE'].includes(known??'')?known!:
+      /PLAN_|Planner output|Planner step|TOOL_PARAMETER/.test(message)?'PLAN_CONTRACT_INVALID':
+      /authority|AUTHORITY/.test(message)?'PLAN_AUTHORITY_REQUIRED':'PLANNING_PROPOSAL_REJECTED';
+    const reason=controller.signal.aborted?'PLANNING_DEADLINE_EXCEEDED':/^EVALUATION_[A-Z_]+(?::[a-zA-Z]+)?$/.test(message)?message:classified;
+    return withTransaction(async client=>{
+    const row=(await client.query('SELECT state,planning_attempts FROM goals WHERE id=$1 FOR UPDATE',[next.id])).rows[0];
+    if(row.planning_attempts!==current.planning_attempts+1)return {processed:true,goalId:next.id,failed:true,reason:'PLANNING_RESERVATION_SUPERSEDED'};
+    const state=row.state;
+    const attempt=current.planning_attempts+1;
+    await client.query(`UPDATE goals SET planning_attempts=$2,last_planning_at=now(),
+      planning_retry_at=now()+($3::double precision*interval '1 millisecond'),planning_failure=$4::jsonb WHERE id=$1`,
+      [next.id,attempt,Math.min(60000,backoffMs*2**(attempt-1)),JSON.stringify({code:reason,attempt,maxAttempts,deadlineMs})]);
+    if(state==='PLANNING'&&autonomyEnabled())await transitionGoal(client,next.id,state,'WAITING_OWNER','planning_failed_closed');
+    else if(['NEW','MODELING','PLANNING','REPLANNING'].includes(state)&&attempt>=maxAttempts)
+      await transitionGoal(client,next.id,state,'FAILED','planning_attempts_exhausted');
+    await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:next.id,eventType:'PLANNING_ATTEMPT_FAILED',payload:{code:reason,attempt}});
+    return {processed:true,goalId:next.id,failed:true,reason};
+    });
+  }finally{clearTimeout(timer);}
 }

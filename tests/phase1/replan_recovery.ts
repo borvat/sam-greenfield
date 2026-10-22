@@ -51,13 +51,13 @@ async function main() {
   const contract = await one("SELECT id FROM verification_contracts WHERE capability_id='gmail_send' LIMIT 1");
   await recordIndependentVerificationAtomic({
     executionId:e1.executionId,verifier:"verify-1",contractId:contract.id,
-    independentEvidence:{readback:true,step:1},result:"VERIFIED"
+    independentEvidence:{provider_message_id:"fixture",readback:true,step:1},result:"VERIFIED"
   });
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[multi.goalId])).state,"VERIFYING");
 
   await recordIndependentVerificationAtomic({
     executionId:e2.executionId,verifier:"verify-2",contractId:contract.id,
-    independentEvidence:{readback:true,step:2},result:"VERIFIED"
+    independentEvidence:{provider_message_id:"fixture",readback:true,step:2},result:"VERIFIED"
   });
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[multi.goalId])).state,"COMPLETED");
 

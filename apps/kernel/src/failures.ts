@@ -46,6 +46,10 @@ export async function recordWorkFailure(input:{queueId:string;fencingToken:numbe
     const row=locked.rows[0];
     if(!row||Number(row.fencing_token)!==Number(input.fencingToken)||!["LEASED","EXECUTING"].includes(row.status)) return false;
     if(goal && goal.rows[0]?.current_plan_id!==row.plan_id) return false;
+    // A durable operation binding means a write may have reached its provider.
+    // Preserve Phase8 reconciliation/WAITING_OWNER recovery, never relabel an
+    // unknown write outcome as an ordinary deterministic tool failure.
+    if(row.operation_key_ref)return false;
     const detail={queue_id:row.id,capability_id:row.capability_id,actor:input.actor,
       operation_key_ref:row.operation_key_ref,error:failureMessage(input.error)};
     await insertOutboxEvent(client,{aggregateType:"work_queue",aggregateId:row.id,eventType:"WORK_FAILED",payload:detail});

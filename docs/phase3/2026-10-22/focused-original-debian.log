@@ -1,0 +1,51 @@
+Unable to find image 'node:22-bookworm' locally
+22-bookworm: Pulling from library/node
+8a051559ff62: Pulling fs layer
+55f3510f14ae: Pulling fs layer
+e0959ba39613: Pulling fs layer
+8145ffc7a2f0: Pulling fs layer
+c989958b006c: Pulling fs layer
+536933331502: Pulling fs layer
+fc8fca04e403: Pulling fs layer
+2371d54c8ec8: Pulling fs layer
+536933331502: Waiting
+8145ffc7a2f0: Waiting
+c989958b006c: Waiting
+fc8fca04e403: Waiting
+2371d54c8ec8: Waiting
+55f3510f14ae: Verifying Checksum
+55f3510f14ae: Download complete
+8a051559ff62: Verifying Checksum
+8a051559ff62: Download complete
+c989958b006c: Verifying Checksum
+c989958b006c: Download complete
+e0959ba39613: Verifying Checksum
+e0959ba39613: Download complete
+fc8fca04e403: Verifying Checksum
+fc8fca04e403: Download complete
+2371d54c8ec8: Verifying Checksum
+2371d54c8ec8: Download complete
+536933331502: Verifying Checksum
+536933331502: Download complete
+8a051559ff62: Pull complete
+55f3510f14ae: Pull complete
+e0959ba39613: Pull complete
+8145ffc7a2f0: Verifying Checksum
+8145ffc7a2f0: Download complete
+8145ffc7a2f0: Pull complete
+c989958b006c: Pull complete
+536933331502: Pull complete
+fc8fca04e403: Pull complete
+2371d54c8ec8: Pull complete
+Digest: sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+Status: Downloaded newer image for node:22-bookworm
+v22.23.4
+OpenSSL 3.0.22 25 Aug 2026 (Library: OpenSSL 3.0.22 25 Aug 2026)
+PASS tests/release/provider_auth.ts
+PROVIDER_AUTH PASS: local HTTP 401/403/429/503 fixtures, one request per case, typed redacted errors; not a live-provider authentication test.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/provider_auth.ts","passed":true,"exit":0}]}
+FAIL tests/release/postgres_tls.ts
+POSTGRES_TLS_LOCAL_FAILED ERR_ASSERTION ECONNREFUSED
+
+{"passed":0,"failed":1,"results":[{"test":"tests/release/postgres_tls.ts","passed":false,"exit":1}]}

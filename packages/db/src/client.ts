@@ -1,12 +1,17 @@
 
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 
+if(!process.env.DATABASE_URL?.trim()){
+  throw new Error(process.env.NODE_ENV==="production" ?
+    "DATABASE_URL_REQUIRED_IN_PRODUCTION" : "DATABASE_URL_REQUIRED");
+}
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/sam_greenfield'
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis:5000,statement_timeout:30000
 });
 
 // Transactional helper for outbox pattern
-export async function withTransaction<T>(fn: (client: any) => Promise<T>): Promise<T> {
+export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -22,7 +27,7 @@ export async function withTransaction<T>(fn: (client: any) => Promise<T>): Promi
 }
 
 export async function setTenantContext(
-  client: any,
+  client: PoolClient,
   context: { orgId?: string | null; legalEntityId?: string | null }
 ): Promise<void> {
   await client.query(
@@ -33,7 +38,7 @@ export async function setTenantContext(
 
 export async function withTenantTransaction<T>(
   context: { orgId?: string | null; legalEntityId?: string | null },
-  fn: (client: any) => Promise<T>
+  fn: (client: PoolClient) => Promise<T>
 ): Promise<T> {
   return withTransaction(async (client) => {
     await setTenantContext(client, context);

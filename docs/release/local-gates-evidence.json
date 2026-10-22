@@ -1,0 +1,273 @@
+{
+  "baselineSha": "068b1d142cd837b713a3f7d4d9ce13daca7aefc0",
+  "status": "PASS_LOCAL_REVIEWED_SAST_BLOCKED_PRODUCTION",
+  "assembledAt": "2026-10-09T05:52:20.414Z",
+  "regressionSuites": 28,
+  "typecheck": "PASS",
+  "externalModelCalls": 0,
+  "publishPerformed": false,
+  "productionChanged": false,
+  "restore": {
+    "status": "PASS",
+    "classification": "REAL_PG_DUMP_RESTORE_SYNTHETIC_ONLY_NOT_PRODUCTION",
+    "checkedAt": "2026-10-09T05:50:46.771Z",
+    "sourceDatabase": "sam_replit_restore_src_1791525043155",
+    "restoreDatabase": "sam_replit_restore_dst_1791525043155",
+    "tablesCompared": 23,
+    "dataHashesMatched": true,
+    "rlsMetadataMatched": true,
+    "actualNonOwnerNonBypassLogin": true,
+    "foreignAndMissingContextDenied": true,
+    "queueAndOutboxReadWriteDenied": true,
+    "pendingRowsPreservedWithoutExecution": true,
+    "restoredExecutionCount": 0,
+    "externalCalls": 0,
+    "elapsedMs": 3616,
+    "rollbackCycle": [
+      {
+        "build": "45294e263f497fb7a6e69e86264d0709756d5e16",
+        "auditCount": 1,
+        "receiptCount": 1,
+        "goalCount": 1,
+        "auditHash": "66d736504f6a743c27d02480e4e8fb3deab59bc68dacd243f0055927f80e525b",
+        "receiptHash": "8d0158d50842867a5e222c99e985a0a944fcdebb694ff6e56c88a21392828f05",
+        "nativeIncidentReader": true,
+        "queueOutboxDenied": true,
+        "directNonBypassLogin": true
+      },
+      {
+        "build": "068b1d142cd837b713a3f7d4d9ce13daca7aefc0",
+        "auditCount": 1,
+        "receiptCount": 1,
+        "goalCount": 1,
+        "auditHash": "66d736504f6a743c27d02480e4e8fb3deab59bc68dacd243f0055927f80e525b",
+        "receiptHash": "8d0158d50842867a5e222c99e985a0a944fcdebb694ff6e56c88a21392828f05",
+        "nativeIncidentReader": true,
+        "queueOutboxDenied": true,
+        "directNonBypassLogin": true
+      },
+      {
+        "build": "WORKTREE_CODE_DIGEST:5b3b5dd5fc13452f5d0132b2c783c06ee7c5430a7c09daed8cd5862660c8a891",
+        "auditCount": 1,
+        "receiptCount": 1,
+        "goalCount": 1,
+        "auditHash": "66d736504f6a743c27d02480e4e8fb3deab59bc68dacd243f0055927f80e525b",
+        "receiptHash": "8d0158d50842867a5e222c99e985a0a944fcdebb694ff6e56c88a21392828f05",
+        "nativeIncidentReader": true,
+        "queueOutboxDenied": true,
+        "directNonBypassLogin": true
+      },
+      {
+        "build": "068b1d142cd837b713a3f7d4d9ce13daca7aefc0",
+        "auditCount": 1,
+        "receiptCount": 1,
+        "goalCount": 1,
+        "auditHash": "66d736504f6a743c27d02480e4e8fb3deab59bc68dacd243f0055927f80e525b",
+        "receiptHash": "8d0158d50842867a5e222c99e985a0a944fcdebb694ff6e56c88a21392828f05",
+        "nativeIncidentReader": true,
+        "queueOutboxDenied": true,
+        "directNonBypassLogin": true
+      }
+    ],
+    "rollbackDataUnchanged": true,
+    "rollbackWorkersStarted": 0,
+    "testedCodeDigest": "5b3b5dd5fc13452f5d0132b2c783c06ee7c5430a7c09daed8cd5862660c8a891",
+    "baselineToCurrentToBaselineReadOnlyCycle": true,
+    "schemaCompatibleAcrossBuilds": true,
+    "nonEmptyAuditAndReceiptPreserved": true,
+    "aclDdlAndAuditReceiptWritesDenied": true,
+    "businessIdCounterRestoredAndAdvanced": true,
+    "uuidIdsUnique": true,
+    "sqlSequencesCompared": 1,
+    "sqlSequenceStatesMatched": true,
+    "nonInitialSqlSequenceStatesSeeded": true,
+    "restoredNextSequenceValuesValidated": true,
+    "restoredAuditAppendOnlyTriggerEnforced": true,
+    "publicConnectRevokedOnRestoreClones": true,
+    "fixturePoliciesOnlyNotProductionRlsProof": true,
+    "rollbackSurface": "ARCHIVED_NATIVE_DATABASE_CLIENT_AND_INCIDENT_READERS_NOT_FULL_RELEASE_WORKERS",
+    "identityStrategy": "UUID_DEFAULTS_AND_TRANSACTIONAL_BUSINESS_ID_COUNTER",
+    "productionBackupRestore": "NOT_RUN",
+    "productionRpoRto": "NOT_ESTABLISHED",
+    "fixtureDatabasesDropped": 3,
+    "fixtureRoleDropped": true
+  },
+  "faultMatrix": {
+    "status": "PASS",
+    "checkedAt": "2026-10-09T05:43:15.316Z",
+    "classification": "REAL_PROCESS_POSTGRES_NATIVE_ADAPTERS_WITH_SYNTHETIC_PLAN_FIXTURES",
+    "cases": [
+      {
+        "phase": "BEFORE_ACT",
+        "realSigkill": true,
+        "artifactCount": 1,
+        "executionCount": 1,
+        "independentVerificationCount": 1,
+        "completed": true
+      },
+      {
+        "phase": "AFTER_EXECUTION_COMMIT",
+        "realSigkill": true,
+        "artifactCount": 1,
+        "executionCount": 1,
+        "independentVerificationCount": 1,
+        "completed": true
+      },
+      {
+        "phase": "DURING_VERIFY_READ",
+        "realSigkill": true,
+        "artifactCount": 1,
+        "executionCount": 1,
+        "independentVerificationCount": 1,
+        "completed": true
+      },
+      {
+        "phase": "AFTER_VERIFY_COMMIT",
+        "realSigkill": true,
+        "artifactCount": 1,
+        "executionCount": 1,
+        "independentVerificationCount": 1,
+        "completed": true
+      },
+      {
+        "phase": "CONCURRENT_VERIFY",
+        "nativeReaders": 2,
+        "firstExecutionVerificationCount": 1,
+        "sharedVerificationId": true,
+        "planCompleted": true
+      },
+      {
+        "phase": "LEASE_RETRY_BUDGET",
+        "naturalExpiryCycles": 2,
+        "attempts": 2,
+        "terminalFailed": true,
+        "staleFencingDenied": true,
+        "staleBudgetStopDenied": true,
+        "adversarialBoundParameterCases": 2,
+        "duplicateRecoveryEvents": 0,
+        "executionCount": 0,
+        "invalidBudgetDenied": true,
+        "originalUnconfiguredBehaviorPreserved": true
+      }
+    ],
+    "sandboxPerCase": true,
+    "originalTwoGoalGuardPreserved": true,
+    "externalModelCalls": 0,
+    "productionChanges": 0,
+    "leaseRecoveryRetryBound": "OPT_IN_MAX_ATTEMPTS_FAIL_CLOSED"
+  },
+  "observability": {
+    "status": "PASS",
+    "classification": "REAL_POSTGRES_SCOPE_TEST_WITH_PROVIDER_USAGE_FIXTURES",
+    "checkedAt": "2026-10-09T05:43:03.077Z",
+    "foreignQueueAndProviderReceiptsExcluded": true,
+    "tenantMismatchDenied": true,
+    "reasoningNotDoubleCharged": true,
+    "unknownCostNotZero": true,
+    "localActionableAlertCodes": [
+      "WORKER_HEARTBEAT_STALE",
+      "ACT_STALLED",
+      "WORKER_DEPENDENCY_FAILURE",
+      "QUEUE_STUCK",
+      "LEASE_EXPIRED",
+      "WORK_FAILED",
+      "PROVIDER_AUTH_REJECTED",
+      "COST_UNKNOWN"
+    ],
+    "futureHeartbeatRejected": true,
+    "receiptBoundaryCounts": [
+      1000,
+      1001
+    ],
+    "truncatedTotalUnknownNotZero": true,
+    "provider503And429AlertedWithFixtures": true,
+    "fixtureProviderRequestsNotLiveCalls": true,
+    "rawIdentifiersAndCanaryNotExposed": true,
+    "outboxWrites": 0,
+    "externalCalls": 0
+  },
+  "nativeFaults": {
+    "status": "PASS",
+    "checkedAt": "2026-10-09T05:42:53.197Z",
+    "classification": "LOCAL_REAL_PROCESS_AND_POSTGRES_WITH_OWNER_PLAN_FIXTURE",
+    "externalModelCalls": 0,
+    "productionChanges": 0,
+    "proofs": [
+      "real PostgreSQL: independently correct mean=5 rejected for owner max=8 intent; not completed or learned",
+      "actual process SIGKILL during ACT after artifact commit before execution commit; real lease expiry, native recovery/delegation, stale fence denied; one artifact/execution; independent hashes and completion",
+      "single exposed local envelope with three actual native production-mode service processes; PostgreSQL non-owner/non-bypass RLS preflight, authenticated goals/UI HTML, protected tick/error status, no model keys, graceful stop; not published or visual-browser proof",
+      "real local connection-refused dependency probe: readiness 503 and ACT paused; PostgreSQL recovery restores readiness/ticks; private status denies anonymous access"
+    ]
+  },
+  "health": {
+    "checkedAt": "2026-10-09T05:48:41.516Z",
+    "anonymousTelemetryStatus": 401,
+    "authenticatedTelemetryStatus": 200,
+    "heartbeat": {
+      "startedAt": "2026-10-09T05:44:33.279Z",
+      "lastStartedAt": "2026-10-09T05:48:33.436Z",
+      "lastFinishedAt": "2026-10-09T05:48:33.459Z",
+      "ageSeconds": 8.051,
+      "clockInvalid": false,
+      "ticks": 24,
+      "errors": 0,
+      "dependencyFailures": 0,
+      "inFlight": false,
+      "inFlightSeconds": 0
+    },
+    "readyQueue": 0,
+    "failedQueue": 0,
+    "expiredLeases": 0,
+    "alertCodes": [],
+    "providerRequestsClassification": "HISTORICAL_SCOPED_RECEIPTS_NOT_THIS_TASK_CALLS",
+    "worker": {
+      "path": "readyz",
+      "status": 200
+    },
+    "mcp": {
+      "path": "livez",
+      "status": 200
+    }
+  },
+  "secrets": {
+    "checkedAt": "2026-10-09T05:43:21.197Z",
+    "checkedFiles": 367,
+    "currentSecretMatches": [],
+    "potentialTokenLiterals": [],
+    "trackedConfigHistoryCurrentSecretMatch": false,
+    "trackedConfigHistoryPotentialKeyCount": 0,
+    "allHistory": {
+      "requested": true,
+      "checkedBlobs": 653,
+      "skippedLargeBlobs": 0,
+      "currentSecretMatches": 0,
+      "unexpectedTokenBlobs": 0
+    },
+    "scope": "Working tree, safe JSON evidence, optional log and all reachable Git blobs up to 2MB when --history is set; unknown secret formats not guaranteed",
+    "valuesNeverPrinted": true
+  },
+  "testedCodeDigest": "5b3b5dd5fc13452f5d0132b2c783c06ee7c5430a7c09daed8cd5862660c8a891",
+  "security": {
+    "currentCritical": 39,
+    "currentMedium": 0,
+    "reviewedFalsePositiveCritical": 39,
+    "rawScannerClean": false,
+    "dependencySummary": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0
+    },
+    "privacyFindings": 0,
+    "ledger": "docs/release/SECURITY.md",
+    "scannerSnapshot": "docs/release/security-scanners.json"
+  },
+  "verificationTiming": {
+    "fullRegression": "2026-10-09T05:43:15.316Z",
+    "restoreCompletenessLatest": "2026-10-09T05:50:46.771Z",
+    "typecheckAfterSequenceTest": "PASS",
+    "signedInUiVisual": "NOT_VERIFIED",
+    "publicAuthPageScreenshot": "PASS_EXPECTED_UNAUTHORIZED_NO_SECRET"
+  }
+}

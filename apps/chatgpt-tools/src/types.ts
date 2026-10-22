@@ -52,6 +52,7 @@ export interface ProductionActionDispatcher{
     actor:string;
     legalEntityId?:string;
     objective?:string;
+    acceptanceContract?:unknown;
   }):Promise<unknown>;
   reconcile?(input:{
     operationKey?:string;

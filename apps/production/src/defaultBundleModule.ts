@@ -5,7 +5,7 @@ import { withGmailFromEnv } from "./gmailBundle";
 import { withGmailReadFromEnv } from "./gmailReadBundle";
 import { withGoogleDriveFromEnv } from "./driveBundle";
 import { withEBoekhoudenFromEnv } from "./eboekhoudenBundle";
-import { withBolRetailerFromEnv } from "./bolBundle";
+import { withBolRetailerFromEnv } from "./bolMcpBundle";
 import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle";
 
 async function buildBundle():Promise<ProductionBundle>{
