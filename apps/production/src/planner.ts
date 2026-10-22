@@ -6,7 +6,7 @@ import {transitionGoal} from '../../kernel/src/stateMachine';
 import {insertOutboxEvent} from '../../../packages/db/src/outbox';
 import type {ValidatedProductionBundle} from './bundle';
 
-export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{deadlineMs?:number;maxAttempts?:number;backoffMs?:number}={})
+export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{deadlineMs?:number;maxAttempts?:number;backoffMs?:number;excludeDelegatedSpecialistTasks?:boolean}={})
  :Promise<{processed:boolean;goalId?:string;failed?:boolean;reason?:string}>{
   const adapters=bundle.raw.modelAdapters??[];
   if(!adapters.length)return {processed:false};
@@ -19,6 +19,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
     const next=(await client.query(`SELECT id,state,planning_attempts FROM goals
       WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
       AND (planning_retry_at IS NULL OR planning_retry_at<=now())
+      AND ${options.excludeDelegatedSpecialistTasks?'NOT EXISTS(SELECT 1 FROM specialist_delegations d WHERE d.goal_id=goals.id)':'true'}
       ORDER BY last_planning_at ASC NULLS FIRST,priority DESC,created_at,id
       LIMIT 1 FOR UPDATE SKIP LOCKED`)).rows[0];
     if(!next)return null;

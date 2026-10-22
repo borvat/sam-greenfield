@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "evaluate:specialists": "tsx apps/agents/src/evaluation/cli.ts",
     "verify:full": "node scripts/testing/verify-full.cjs",
     "typecheck": "tsc --noEmit",
     "start:release": "node scripts/release/main.cjs",

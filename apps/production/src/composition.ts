@@ -16,7 +16,11 @@ import {pilotEnabled,authorizePilotGoal,assertPilotStep} from "./syntheticPilotS
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
+  specialistConcurrency?:number;
+  excludeDelegatedSpecialistPlanning?:boolean;
+  specialistAdvancers?:Parameters<typeof runCatalogSpecialistTick>[0]['advancers'];
   operationalTick?:()=>Promise<unknown>;
+  executeTool?:(work:import('../../kernel/src/workerRuntime').ClaimedWork,execute:import('../../kernel/src/workerRuntime').CapabilityExecutor)=>ReturnType<import('../../kernel/src/workerRuntime').CapabilityExecutor>;
   authorizeWork?:(work:import('../../kernel/src/workerRuntime').ClaimedWork)=>Promise<void>;
 }):RuntimeComposition{
   const ordinaryExecutors=createToolExecutors({
@@ -30,7 +34,7 @@ export function createProductionComposition(input:{
       const objective=await withTransaction(client=>authorizePilotGoal(client,work.goalId!));
       assertPilotStep(objective,work.capabilityId,work.params);
     }
-    return execute(work);
+    return input.executeTool?input.executeTool(work,execute):execute(work);
   }]));
   const ttl=input.bundle.raw.workerLeaseTtlSeconds??60;
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);
@@ -53,12 +57,12 @@ export function createProductionComposition(input:{
       })):null;
       const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle)):null;
       const earlyLearning=input.bundle.raw.deferVerification?await attempt("learning",()=>learnNextVerifiedExecution(input.bundle)):null;
-      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle));
+      const planning=await attempt("planning",()=>planNextNewGoal(input.bundle,{excludeDelegatedSpecialistTasks:input.excludeDelegatedSpecialistPlanning}));
       const execution=await attempt("execution",()=>runCatalogSpecialistTick({
         catalog:input.bundle.catalog,
         workerInstanceId:input.workerId,
         ttlSeconds:ttl,
-        executors
+        executors,advancers:input.specialistAdvancers,maxConcurrency:input.specialistConcurrency
       }));
       const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle));
       const learning=earlyLearning??await attempt("learning",()=>learnNextVerifiedExecution(input.bundle));

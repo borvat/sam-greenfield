@@ -7,34 +7,30 @@ export async function runSpecialistSupervisorTick(input:{
   workerInstanceId:string;
   ttlSeconds:number;
   executors:Record<string,CapabilityExecutor>;
+  maxConcurrency?:number;
+  advancers?:Parameters<typeof runOneSpecialistWork>[0]['advancers'];
 }):Promise<{
   processed:boolean;
   agentId?:string;
   queueId?:string;
   executionId?:string;
 }>{
-  const seen=new Set<string>();
-  for(const capabilityId of Object.keys(input.executors)){
-    const definition=input.catalog.get(capabilityId);
-    if(seen.has(definition.specialistAgentId)) continue;
-    seen.add(definition.specialistAgentId);
-
-    const agent=input.catalog.specialists.getAgent(definition.specialistAgentId);
-    const result=await runOneSpecialistWork({
-      agent,
-      workerInstanceId:input.workerInstanceId,
-      ttlSeconds:input.ttlSeconds,
-      executors:input.executors
-    });
-    if(result.processed){
-      return {
-        processed:true,
-        agentId:agent.agentId,
-        queueId:result.queueId,
-        executionId:result.executionId
-      };
-    }
+  const concurrency=input.maxConcurrency??1;
+  if(!Number.isInteger(concurrency)||concurrency<1||concurrency>4)throw Error('SPECIALIST_CONCURRENCY_INVALID');
+  const ids=[...new Set(Object.keys(input.executors).map(id=>input.catalog.get(id).specialistAgentId))];
+  let deferred=false;
+  for(let i=0;i<ids.length;i+=concurrency){
+    const settled=await Promise.allSettled(ids.slice(i,i+concurrency).map(async agentId=>{
+      const result=await runOneSpecialistWork({agent:input.catalog.specialists.getAgent(agentId),workerInstanceId:input.workerInstanceId,
+        ttlSeconds:input.ttlSeconds,executors:input.executors,advancers:input.advancers});
+      return {...result,agentId};
+    }));
+    const failure=settled.find(r=>r.status==='rejected');
+    if(failure?.status==='rejected')throw failure.reason;
+    const results=settled.flatMap(r=>r.status==='fulfilled'?[r.value]:[]);
+    deferred ||= results.some(r=>r.deferred===true);
+    const done=results.find(r=>r.processed&&!r.deferred);
+    if(done)return done;
   }
-
-  return {processed:false};
+  return {processed:deferred};
 }

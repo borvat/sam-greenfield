@@ -2,6 +2,12 @@ export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTR
 
 export interface ModelTask {
   signal?:AbortSignal;
+  /** Fail closed: only explicitly synthetic adapters with usage-limit support. */
+  boundedSynthetic?: {
+    maxInputTokens: number;
+    maxOutputTokens: number;
+    reserveAttempt(input:{providerId:string;model:string;tokens:number;costUsd:number}):Promise<void>;
+  };
   task: string;
   capability: string;
   dataClassification: DataClassification;
@@ -35,6 +41,8 @@ export interface ProviderResult {
 
 export interface ModelProviderAdapter {
   providerId: string;
+  executionMode?: "synthetic";
+  supportsUsageLimits?: boolean;
   invoke(task: ModelTask, model: string): Promise<ProviderResult>;
 }
 

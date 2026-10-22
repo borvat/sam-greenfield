@@ -37,7 +37,13 @@ export class ModelGateway {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);
     });
-    const candidates = routeModel(task, providers)
+    const bounded=task.boundedSynthetic;
+    if(bounded){
+      if(!Number.isSafeInteger(bounded.maxInputTokens)||!Number.isSafeInteger(bounded.maxOutputTokens)||
+        bounded.maxInputTokens<1||bounded.maxOutputTokens<1||
+        Buffer.byteLength(JSON.stringify(task.input),'utf8')>bounded.maxInputTokens)throw Error('MODEL_INPUT_BUDGET_INVALID');
+    }
+    const candidates = routeModel(task, providers,bounded?{inputTokens:bounded.maxInputTokens,outputTokens:bounded.maxOutputTokens}:{})
       .filter(candidate => !restrictedDevelopment || candidate.providerId === "deepseek" && candidate.model === "deepseek-flash")
       .slice(0, restrictedDevelopment ? 1 : undefined);
     if (candidates.length === 0) {
@@ -79,10 +85,19 @@ export class ModelGateway {
         continue;
       }
 
+      if(bounded){
+        if(adapter.executionMode!=='synthetic'||adapter.supportsUsageLimits!==true)throw Error('BOUNDED_SYNTHETIC_ADAPTER_REQUIRED');
+        await bounded.reserveAttempt({providerId:candidate.providerId,model:candidate.model,
+          tokens:bounded.maxInputTokens+bounded.maxOutputTokens,costUsd:candidate.estimatedCostUsd});
+      }
       const started = Date.now();
       try {
         const result = await adapter.invoke(task, candidate.model);
         task.signal?.throwIfAborted();
+        if(bounded&&(!Number.isSafeInteger(result.usage.inputTokens)||!Number.isSafeInteger(result.usage.outputTokens)||
+          result.usage.inputTokens<0||result.usage.outputTokens<0||result.usage.inputTokens>bounded.maxInputTokens||
+          result.usage.outputTokens>bounded.maxOutputTokens||Buffer.byteLength(JSON.stringify(result.output),'utf8')>bounded.maxOutputTokens))
+          throw Error('MODEL_USAGE_LIMIT_VIOLATION');
         const provider = providers.find((p) => p.providerId === candidate.providerId)!;
         const costUsd =
           (result.usage.inputTokens / 1000) * provider.costPer1kInput +
@@ -118,7 +133,7 @@ export class ModelGateway {
           latencyMs: Date.now() - started,
           retryCount: i,
           success: false,
-          verificationResult: restrictedDevelopment ? "DEVELOPMENT_PROVIDER_REJECTED" :
+          verificationResult: bounded ? "BOUNDED_MODEL_PROVIDER_REJECTED" : restrictedDevelopment ? "DEVELOPMENT_PROVIDER_REJECTED" :
             err instanceof Error ? err.message : "UNKNOWN_FAILURE",
           dataClassification: task.dataClassification
         }));

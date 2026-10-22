@@ -76,7 +76,8 @@ export async function runOneSpecialistWork(input: {
   workerInstanceId: string;
   ttlSeconds: number;
   executors: Record<string, CapabilityExecutor>;
-}): Promise<{ processed: boolean; queueId?: string; executionId?: string }> {
+  advancers?:Record<string,CapabilityExecutor|((work:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>)>;
+}): Promise<{ processed: boolean; queueId?: string; executionId?: string; deferred?:boolean }> {
   const work = await claimNextWorkForSpecialistAtomic(
     input.agent,
     input.workerInstanceId,
@@ -93,7 +94,18 @@ export async function runOneSpecialistWork(input: {
     throw new Error(`No executor registered for capability ${work.capabilityId}`);
   }
 
-  const outcome = await executor(work);
+  const outcome = await (input.advancers?.[work.capabilityId]??executor)(work);
+  if(!outcome){
+    // A normal cooperative yield is not a failed lease attempt. A crash still
+    // consumes the attempt and is recovered by the existing kernel recovery.
+    await withTransaction(async c=>{
+      const released=await c.query(`UPDATE work_queue SET status='HANDBACK',lease_owner=NULL,lease_expiry=NULL,
+        due_at=now()+interval '100 milliseconds',attempt=greatest(attempt-1,0) WHERE id=$1 AND fencing_token=$2
+        AND status IN ('LEASED','EXECUTING') AND lease_expiry>now() RETURNING id`,[work.queueId,work.fencingToken]);
+      if(released.rowCount!==1)throw Error('SPECIALIST_YIELD_FENCE_REJECTED');
+    });
+    return {processed:true,queueId:work.queueId,deferred:true};
+  }
   const actor = `${input.agent.agentId}@${input.agent.version}`;
   const execution = await recordExecutionAndRequestVerificationAtomic({
     queueId:work.queueId,

@@ -4,6 +4,8 @@ export interface ToolDefinition {
   capabilityId:string;
   authorityClass:AuthorityClass;
   sideEffect:boolean;
+  /** Operator-reviewed per-attempt ceiling; required by bounded specialist profile. */
+  costUpperBoundUsd?:number;
   companyScopes?:string[];
 }
 
