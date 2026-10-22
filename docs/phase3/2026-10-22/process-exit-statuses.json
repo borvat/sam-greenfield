@@ -1,0 +1,23 @@
+{
+  "coreInitial": {
+    "exitCode": 1
+  },
+  "phase0": {
+    "exitCode": 0
+  },
+  "focusedOriginalDebian": {
+    "exitCode": 1
+  },
+  "focusedFixed": {
+    "exitCode": 0
+  },
+  "cleanImage": {
+    "exitCode": 0
+  },
+  "freshNodeInstall": {
+    "exitCode": 0
+  },
+  "pythonInstall": {
+    "exitCode": 0
+  }
+}

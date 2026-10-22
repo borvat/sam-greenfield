@@ -24,7 +24,7 @@ export async function applyRecentFailureCircuitBreaker(
     [lookbackMinutes, threshold]
   );
 
-  const stats = new Map(
+  const stats = new Map<string,{recentFailures:number;recentSuccesses:number}>(
     res.rows.map((row: any) => [
       row.provider,
       {

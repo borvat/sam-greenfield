@@ -1,3 +1,4 @@
+import {applyIntegrationProfile} from "../../packages/db/src/integrationProfile";
 import assert from "node:assert/strict";
 import { pool } from "../../packages/db/src/client";
 import type { ModelProviderAdapter,ProviderConfig } from "../../packages/model-gateway/src/types";
@@ -8,6 +9,8 @@ import { syncProductionModelRegistry } from "../../apps/production/src/modelRegi
 import { createChatGPTToolSurface } from "../../apps/chatgpt-tools/src/surface";
 
 async function main(){
+  const schemaClient=await pool.connect();
+  try{await applyIntegrationProfile(schemaClient);}finally{schemaClient.release();}
   const suffix=Date.now().toString();
   const org=await pool.query("INSERT INTO organizations(name) VALUES($1) RETURNING id",[`P22-${suffix}`]);
   const entity=await pool.query("INSERT INTO legal_entities(org_id,name) VALUES($1,$2) RETURNING id",[org.rows[0].id,`P22-QNAN-${suffix}`]);
@@ -38,7 +41,7 @@ async function main(){
       if(review?.proposedReport)return {model,usage:{inputTokens:80,outputTokens:50},output:{accepted:true,missing:[]}};
       if(review?.verifiedObservations){
         const sources=review.verifiedObservations;
-        return {model,usage:{inputTokens:80,outputTokens:100},output:{status:"complete",summary:"Sales and inventory reads combined",requirements:[{requirement:"Read and combine both sources",fulfilled:true,evidenceIds:sources.map((s:any)=>s.id)}],findings:sources.map((s:any)=>({text:"Verified read completed",executionId:s.id,quoteLine:0})),limitations:["Synthetic data only"],steps:[]}};
+        return {model,usage:{inputTokens:80,outputTokens:100},output:{status:"complete",summary:"Sales and inventory reads combined",requirements:[{requirement:"Read and combine both sources",fulfilled:true,evidenceIds:sources.map((s:any)=>s.id)}],findings:sources.map((s:any)=>({text:"Verified read completed",executionId:s.id,quoteLine:1})),limitations:["Synthetic data only"],steps:[]}};
       }
       return {
         model,
@@ -102,7 +105,7 @@ async function main(){
     const row=await pool.query("SELECT state FROM goals WHERE id=$1",[goalId]);
     state=row.rows[0].state as string;
   }
-  assert.equal(state,"COMPLETED");
+  assert.equal(state,"COMPLETED",JSON.stringify((await pool.query("SELECT decision FROM goal_read_reviews WHERE goal_id=$1",[goalId])).rows));
 
   const plan=await pool.query("SELECT steps FROM plans WHERE goal_id=$1 ORDER BY version DESC LIMIT 1",[goalId]);
   assert.equal(plan.rows[0].steps.length,2);

@@ -1,0 +1,100 @@
+{
+  "checkedAt": "2026-10-10T00:34:29.251Z",
+  "scope": "LOCAL_SETUP_MODE_ONLY",
+  "classification": "LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE",
+  "regression": {
+    "passedSuites": 31,
+    "failedSuites": 0,
+    "log": ".local/sam-dev/setup-regression.log",
+    "originalAgentCoveredByRegression": true,
+    "liveModelAcceptanceRerun": false,
+    "setupRerunAfterAdditionalNormalCliAssertions": "PASS",
+    "defaultAndExplicitOffNormalReleaseContract": "PASS_SYNTHETIC_CONFIGURATION_NO_DB_CONNECTION"
+  },
+  "typecheck": "PASS",
+  "setupProcess": {
+    "configurationRefusals": 16,
+    "businessMethodsDenied": [
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "businessPathsDenied": true,
+    "forbiddenModuleLoadingGuard": "PASS",
+    "outboundSocketsAndFetchGuard": "PASS",
+    "childProcessCreationGuard": "PASS",
+    "nativeChildPidCount": 0,
+    "dbTripwireConnections": 0,
+    "sensitiveSentinelsWithheld": true,
+    "rootStatus": 200,
+    "livenessStatus": 200,
+    "readinessStatus": 503,
+    "sigtermExit": 0,
+    "stoppedEndpointUnavailable": true,
+    "visualPageInspected": true,
+    "temporaryVisualProcessStopped": true
+  },
+  "security": {
+    "dependency": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0
+    },
+    "sastCritical": 40,
+    "sastMedium": 0,
+    "sastChangedFingerprints": 0,
+    "privacy": 0,
+    "rawSastClean": false
+  },
+  "productionPlatform": {
+    "additionalUrls": [],
+    "deploymentType": "",
+    "hasSuccessfulBuild": false,
+    "isDeployed": false,
+    "primaryUrl": "",
+    "success": true,
+    "visibility": ""
+  },
+  "actions": {
+    "publishRequests": 0,
+    "resourcePurchaseRequests": 0,
+    "productionDatabaseCreationRequests": 0,
+    "productionDatabaseWrites": 0,
+    "externalIntegrationsAdded": 0,
+    "modelRequests": 0,
+    "persistentEnvironmentChanges": 0,
+    "deploymentConfigChanges": 0,
+    "newWorkflows": 0
+  },
+  "boundaries": {
+    "totalPilotBudgetUsd": 5,
+    "budgetEnforcementImplemented": false,
+    "publishAuthorized": false,
+    "executiveActivationAuthorized": false,
+    "productionProvisioningAcceptance": "NOT_RUN",
+    "productionRlsRestoreAcceptance": "NOT_RUN",
+    "existingDevelopmentServicesUnchanged": true
+  },
+  "source": "Exact code SHA is the local Git commit containing this receipt; no push requested",
+  "secretScan": {
+    "checkedAt": "2026-10-10T00:36:14.997Z",
+    "checkedFiles": 399,
+    "currentSecretMatches": [],
+    "potentialTokenLiterals": [],
+    "trackedConfigHistoryCurrentSecretMatch": false,
+    "trackedConfigHistoryPotentialKeyCount": 0,
+    "allHistory": {
+      "requested": true,
+      "checkedBlobs": 707,
+      "skippedLargeBlobs": 0,
+      "currentSecretMatches": 0,
+      "unexpectedTokenBlobs": 0
+    },
+    "scope": "Working tree, safe JSON evidence, optional log and all reachable Git blobs up to 2MB when --history is set; unknown secret formats not guaranteed",
+    "valuesNeverPrinted": true
+  }
+}

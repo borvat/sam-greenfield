@@ -27,7 +27,7 @@ export async function recordModelCall(client: any, input: {
       input.modelVersion ?? null,
       input.reasonSelected,
       tokens,
-      input.costUsd ?? 0,
+      input.costUsd ?? null,
       input.latencyMs,
       input.retryCount,
       input.success,

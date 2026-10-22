@@ -14,6 +14,13 @@ export async function syncVerificationContracts(
   if(specs.length===0) return;
   await withTransaction(async(client)=>{
     for(const spec of specs){
+      if(process.env.NODE_ENV==='production'){
+        const row=(await client.query('SELECT required_evidence_fields,verification_method,must_not_trust_execution_result FROM verification_contracts WHERE capability_id=$1',[spec.capabilityId])).rows[0];
+        const {sha256Hex}=await import('../../../packages/shared/src/stableJson');
+        if(!row||!row.must_not_trust_execution_result||row.verification_method!==spec.verificationMethod||sha256Hex(row.required_evidence_fields)!==sha256Hex(spec.requiredEvidenceFields))
+          throw new Error('VERIFICATION_CONTRACT_PROVISIONING_REQUIRED');
+        continue;
+      }
       await client.query(
         `INSERT INTO verification_contracts
           (capability_id,description,verification_method,required_evidence_fields,independent_query_template,must_not_trust_execution_result)

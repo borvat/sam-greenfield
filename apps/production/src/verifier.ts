@@ -7,13 +7,13 @@ export async function verifyNextExecution(
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
-      `SELECT e.id,e.capability_id,e.params,e.evidence,e.operation_key_ref,
+      `SELECT e.id,e.capability_id,e.params,e.result,e.evidence,e.operation_key_ref,
               vc.id AS contract_id,vc.verification_method,
               vc.required_evidence_fields,vc.independent_query_template
          FROM executions e
          JOIN goals g ON g.id=e.goal_id
          JOIN verification_contracts vc ON vc.capability_id=e.capability_id
-        WHERE g.state='VERIFYING'
+        WHERE g.state IN ('EXECUTING','VERIFYING') AND g.current_plan_id=e.plan_id
           AND e.status='EXECUTED'
           AND e.plan_id=g.current_plan_id
           AND NOT EXISTS (
@@ -43,6 +43,7 @@ export async function verifyNextExecution(
       id:candidate.id,
       capabilityId:candidate.capability_id,
       params:candidate.params??{},
+      result:candidate.result??{},
       evidence:candidate.evidence??{},
       operationKeyRef:candidate.operation_key_ref??null
     },

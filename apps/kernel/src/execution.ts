@@ -29,6 +29,7 @@ export async function recordExecutionAndRequestVerificationAtomic(input: {
     if (Number(row.fencing_token) !== Number(input.fencingToken)) {
       throw new Error("Stale fencing token");
     }
+    if(row.lease_expiry&&new Date(row.lease_expiry).getTime()<=Date.now())throw new Error('EXECUTION_LEASE_EXPIRED');
     if (!["LEASED", "EXECUTING"].includes(row.status)) {
       throw new Error(`Work item must be LEASED/EXECUTING, got ${row.status}`);
     }

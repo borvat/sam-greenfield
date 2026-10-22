@@ -1,0 +1,6 @@
+FAIL tests/release/postgres_tls.ts
+TLS_FIXTURE_BIND {"address":"::1","family":"IPv6","port":46085}
+TLS_FIXTURE_RESULT {"name":"good","trusted":true,"code":"ECONNREFUSED"}
+POSTGRES_TLS_LOCAL_FAILED ERR_ASSERTION ECONNREFUSED
+
+{"passed":0,"failed":1,"results":[{"test":"tests/release/postgres_tls.ts","passed":false,"exit":1}]}

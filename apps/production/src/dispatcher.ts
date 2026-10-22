@@ -1,3 +1,5 @@
+import {encodeGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import { evaluatePlanAuthority } from "../../brain/src/authorityGuard";
@@ -14,7 +16,10 @@ async function createGoal(input:{
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
   domain?:string;
   completionDefinition?:string;
+  acceptanceContract?:unknown;
 }):Promise<{id:string;businessId:string}>{
+  if(input.completionDefinition!=="sam.read_report.v1"&&(process.env.NODE_ENV==='production'||process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==='1')&&input.acceptanceContract===undefined)throw Error("GOAL_CONTRACT_REQUIRED");
+  const completion=input.acceptanceContract===undefined?input.completionDefinition??null:encodeGoalAcceptance(input.acceptanceContract);
   return withTransaction(async(client)=>{
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
@@ -25,7 +30,7 @@ async function createGoal(input:{
     // Goal business IDs are globally unique by schema. Use the canonical global
     // goal sequence (NULL scope), matching the Phase 0 RLS/security paths.
     const business=await client.query(
-      "SELECT next_business_id('goal',NULL) AS business_id"
+      "SELECT next_business_id('goal',current_org_id()) AS business_id"
     );
 
     const inserted=await client.query(
@@ -39,7 +44,7 @@ async function createGoal(input:{
         input.domain??"chatgpt_direct",
         input.objective,
         input.authorityCeiling,
-        input.completionDefinition??null
+        completion
       ]
     );
     await client.query(
@@ -141,7 +146,7 @@ export function createKernelProductionDispatcher(
             LIMIT 1`,
           [JSON.stringify([classification])]
         );
-        return result.rowCount>0;
+        return (result.rowCount??0)>0;
       });
       if(!planningReady){
         return {
@@ -190,12 +195,13 @@ export function createKernelProductionDispatcher(
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
       const capability=bundle.catalog.get(input.capabilityId);
       bundle.tools.definition(input.capabilityId);
+      validateParameters(capability.parameters,input.params);
 
       const goal=await createGoal({
         legalEntityId:input.legalEntityId,
         objective:input.objective?.trim() || `Execute capability ${input.capabilityId}`,
         actor:input.actor,
-        authorityCeiling:capability.authorityClass
+        acceptanceContract:input.acceptanceContract,authorityCeiling:capability.authorityClass
       });
       const goalId=goal.id;
 

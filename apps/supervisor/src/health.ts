@@ -12,6 +12,7 @@ export async function captureHealthSnapshot(
     staleVerificationMinutes?:number;
     oldOutboxMinutes?:number;
     modelLookbackMinutes?:number;
+    monitorSideEffects?:boolean;
   }={}
 ):Promise<HealthSnapshot>{
   const staleGoalMinutes=options.staleGoalMinutes ?? 30;
@@ -63,7 +64,7 @@ export async function captureHealthSnapshot(
     [oldOutboxMinutes]
   );
 
-  const unresolvedSideEffects=await count(
+  const unresolvedSideEffects=options.monitorSideEffects===false?null:await count(
     client,
     `SELECT COUNT(*)::int AS count
        FROM side_effect_operations
@@ -96,6 +97,7 @@ export async function captureHealthSnapshot(
     staleVerifications,
     oldPendingOutbox,
     unresolvedSideEffects,
+    excludedMetrics:options.monitorSideEffects===false?["unresolvedSideEffects"]:[],
     downProviders,
     recentModelCalls,
     recentModelFailures,

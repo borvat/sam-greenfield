@@ -6,6 +6,9 @@ export interface ToolDefinition {
   sideEffect:boolean;
   description?:string;
   inputSchema?:Record<string,unknown>;
+  /** Operator-reviewed per-attempt ceiling; required by bounded specialist profile. */
+  costUpperBoundUsd?:number;
+  companyScopes?:string[];
 }
 
 export interface ToolExecutionRequest {

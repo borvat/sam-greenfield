@@ -6,10 +6,9 @@ case "${1:-}" in
   *) echo "Expected runtime, command-center, or mcp" >&2; exit 2 ;;
 esac
 
-# Free services have no pre-deploy command. Migrations serialize using the
-# existing database advisory lock; company initialization is idempotent.
-npm run db:migrate -- --apply
-node deploy/render/initialize-company.mjs
+# Schema, company identity and restricted principals are provisioned separately.
+# Runtime startup never obtains operator authority or reruns legacy migrations.
+# Both application entrypoints perform read-only production admission.
 
 case "${1:-}" in
   runtime)

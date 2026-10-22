@@ -1,0 +1,88 @@
+{
+  "liveCheckTimeUtc": "2026-10-11T02:45:47.602127+00:00",
+  "liveBaseUrlFromPlatform": "https://sam-greenfield.replit.app",
+  "platformHasSuccessfulBuild": true,
+  "liveObservedStatus": {
+    "/.well-known/oauth-protected-resource": 502,
+    "/.well-known/oauth-protected-resource/mcp": 502,
+    "/mcp": 502,
+    "/readyz": 502
+  },
+  "runtimeLogEvidence": [
+    "RELEASE_SETUP_PRODUCTION_CONTEXT_REQUIRED",
+    "crash loop detected"
+  ],
+  "specificFailedEnvironmentCondition": "NOT_PROVEN_ORIGINAL_ERROR_COMBINED_MULTIPLE_CHECKS",
+  "localVerification": {
+    "classification": "LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE",
+    "setupTest": "PASS",
+    "configurationRefusals": 24,
+    "metadataHttpRoutes": 2,
+    "mcpHttpMethodsAlways401": 6,
+    "missingIssuer503": "PASS",
+    "noFakeLocalAuthorizationServer": "PASS",
+    "readyz503": "PASS",
+    "outboundAndChildProcessTripwires": "PASS",
+    "databaseTripwireConnections": 0,
+    "withheldSyntheticSentinels": "PASS",
+    "sigterm": "PASS",
+    "productionLaunchAndBuildConfiguration": "PASS",
+    "typecheck": "PASS",
+    "diffCheck": "PASS"
+  },
+  "actualAuth0Issuer": "https://dev-izt2dymhavtig3p5.eu.auth0.com/",
+  "auth0PublicDiscovery": {
+    "oidcHttpStatus": 200,
+    "rfc8414HttpStatus": 200,
+    "issuerMatchesOwnerInput": true,
+    "authorizationTokenAndJwksEndpointsVerifiedHttpsSameOrigin": true,
+    "pkceMethodsAdvertised": ["S256", "plain"],
+    "authorizationResponseIssuerSupported": true,
+    "tokensOrClientRegistrationRequested": false
+  },
+  "configuredNativeHttpVerification": {
+    "timeUtc": "2026-10-11T03:01:43.015686+00:00",
+    "classification": "LOCAL_NATIVE_PRODUCTION_CONFIG_PUBLIC_DISCOVERY_ONLY",
+    "rootResourceMetadata": 200,
+    "mcpResourceMetadata": 200,
+    "protectedMcpChallenge": 401,
+    "readiness": 503,
+    "outboundDbChildTripwires": "PASS",
+    "sigtermExit": 0
+  },
+  "latestOldPublishedSnapshotCheck": {
+    "timeUtc": "2026-10-11T03:02:19.671963+00:00",
+    "mcpResourceMetadata": 500,
+    "mcp": 500,
+    "readiness": 500,
+    "discoveryChallengePresent": false
+  },
+  "actualAuth0ConsentAndTokenAcceptance": "NOT_TESTED",
+  "setupDeploymentGuardCorrection": {
+    "observedLiveFailureCode": "RELEASE_SETUP_DEV_DOMAIN_FORBIDDEN",
+    "runtimeIndicator": "REPLIT_DEPLOYMENT must equal string 1 supplied by platform",
+    "productionModeAlsoRequired": true,
+    "developmentDomainPresenceAloneIsNotDevelopment": true,
+    "localTestModeForbiddenInMarkedDeployment": true,
+    "missingMalformedMarkerOrDevelopmentFlagsRefused": true,
+    "platformMarkerNotWrittenToUserConfigurationOrLaunchCommand": true,
+    "offlinePreparationSeparatedFromRuntimeAdmission": true,
+    "configurationRefusalsTested": 36,
+    "nativeHttpWithProductionMarkerAndDevelopmentDomainMetadata": {
+      "rootResourceMetadata": 200,
+      "mcpResourceMetadata": 200,
+      "mcpChallenge": 401,
+      "readiness": 503
+    },
+    "outboundDbChildTripwires": "PASS",
+    "databaseTripwireConnections": 0,
+    "typecheck": "PASS",
+    "buildAndOfflinePreparationRegression": "PASS",
+    "executiveReleaseAdmissionUnchanged": true,
+    "classification": "LOCAL_REAL_SETUP_PROCESS_NOT_PUBLISHED_ACCEPTANCE",
+    "liveAfterCorrection": "NOT_PROVEN_REQUIRES_OWNER_REPUBLISH"
+  },
+  "publicationPerformedByAgent": false,
+  "newPaidResourcesOrProviderCalls": false,
+  "postFixDeployedEndpointSuccess": "NOT_PROVEN_REQUIRES_OWNER_REPUBLISH"
+}

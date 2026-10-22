@@ -14,7 +14,7 @@ async function main(){
     await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
     base=`http://127.0.0.1:${(server.address() as any).port}`;
   }
-  async function stop(){await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
+  async function stop(){if(!server.listening)return;await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}
   await start();
   async function source(path:string){
     try{const response=await fetch(`${base}/${path}`,{signal:AbortSignal.timeout(1000)});return (await response.json()).value as number;}
@@ -56,6 +56,12 @@ async function main(){
     const logs=(await pool.query("SELECT after_ref FROM audit_log WHERE goal_id=$1 AND action='RUNTIME_FAILURE'",[id])).rows;
     assert.equal(logs.length,1);assert.match(logs[0].after_ref.error,reason);
   }
+  async function planningFailure(id:string,code:string){
+    assert.equal(await state(id),"FAILED");
+    assert.equal((await pool.query("SELECT count(*)::int n FROM executions WHERE goal_id=$1",[id])).rows[0].n,0);
+    const record=(await pool.query("SELECT planning_failure FROM goals WHERE id=$1",[id])).rows[0].planning_failure;
+    assert.equal(record.code,code);assert.equal(record.attempt,1);assert.equal(record.maxAttempts,1);
+  }
   try{
     const normal=await goal("normal two-specialist fixture");await drain(normal);assert.equal(await state(normal),"COMPLETED");
     const agents=(await pool.query("SELECT DISTINCT handoff->>'agent_id' agent FROM work_queue WHERE goal_id=$1",[normal])).rows.map(r=>r.agent).sort();
@@ -74,12 +80,12 @@ async function main(){
     const afterTool=await goal("healthy after tool failure");await drain(afterTool);assert.equal(await state(afterTool),"COMPLETED");
     console.log("ISOLATED_TOOL_FAILURE PASS failed, siblings stopped, later healthy goal completed");
 
-    const empty=await goal("empty plan");await drain(empty);await failure(empty,/non-empty steps/);
+    const empty=await goal("empty plan");await planNextNewGoal(bundle,{goalId:empty,maxAttempts:1});await planningFailure(empty,"PLAN_CONTRACT_INVALID");
     const afterEmpty=await goal("healthy after invalid plan");await drain(afterEmpty);assert.equal(await state(afterEmpty),"COMPLETED");
     console.log("ISOLATED_EMPTY_PLAN PASS failed after bounded correction, later healthy goal completed");
     const pending=await goal("pending model request");
-    const bounded=await planNextNewGoal(bundle,100);
-    assert.equal(bounded.failed,true);await failure(pending,/PLANNING_DEADLINE_EXCEEDED/);
+    const bounded=await planNextNewGoal(bundle,{deadlineMs:100,maxAttempts:1});
+    assert.equal(bounded.failed,true);await planningFailure(pending,"PLANNING_DEADLINE_EXCEEDED");
     assert.ok(finishLate,"fixture model request must have started before the deadline");
     finishLate!({model:"fixture-planner",usage:{inputTokens:1,outputTokens:1},output:{steps:ids.map(capabilityId=>({capabilityId,params:{}}))}});
     await new Promise(resolve=>setTimeout(resolve,50));

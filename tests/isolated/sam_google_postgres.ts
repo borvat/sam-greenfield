@@ -17,8 +17,8 @@ test("PostgreSQL SQL: encrypted persistence, one-use state, refresh rotation, ca
  const pool:any={query:(q:string,args?:any[])=>db.query(q,args),connect:async()=>({query:(q:string,args?:any[])=>db.query(q,args),release(){}})};
  const original=globalThis.fetch;
  try{
-  await db.exec(await readFile("packages/db/migrations/00099_sam_google_oauth.sql","utf8"));
-  await db.exec(await readFile("packages/db/migrations/00100_sam_google_oauth_runtime.sql","utf8"));
+  await db.exec(await readFile("packages/db/integration-migrations/00099_sam_google_oauth.sql","utf8"));
+  await db.exec(await readFile("packages/db/integration-migrations/00100_sam_google_oauth_runtime.sql","utf8"));
   const store=new PostgresSamGoogleOauthStore(pool,key);
   const state="test-state",id=hashState(state);
   await store.put(id,{stateHash:id,verifier:"private-verifier",createdAt:Date.now(),redirectUri:"https://sam.example.com/cb",ownerId:"owner",clientId:"client"});

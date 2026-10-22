@@ -1,0 +1,13 @@
+- [Development database identity](development-database-identity.md) — environment labels can be misleading; independently verify the database target before writing.
+- [Data release consent](data-release-consent.md) — read-only access does not authorize disclosure; widen development data scope only after an explicit owner decision.
+- [Managed AI availability](managed-ai-availability.md) — missing credentials do not prove unavailability; investigate Replit-managed setup before requesting a personal provider key.
+- [Credential inspection](credential-inspection.md) — credential-named settings may be ordinary variables; report presence only, never their values.
+- [One-shot inference evidence](one-shot-inference-evidence.md) — retain safe, separate validation diagnostics before discarding a single approved response.
+- [RLS proof boundaries](rls-proof-boundaries.md) — administrative tests can hide missing policies; prove enforcement with a real non-bypass application role.
+- [GitHub write proof](github-write-proof.md) — healthy OAuth and automatic Git authentication descriptions are not proof that workspace pushes work.
+- [Autonomy evidence](autonomy-evidence.md) — use ordinary intake, a frozen build, verified provenance reuse and actual process recovery; fixtures are not LIVE proof.
+- [Release readiness](release-readiness.md) — confirm native child startup and progress, allocate loopback ports, and separate arithmetic correctness from owner goal acceptance.
+- [Pilot budget boundary](pilot-budget-boundary.md) — the 24-hour pilot now targets $10, not a guaranteed cap or permission to purchase, Publish or auto-top-up.
+- [Database candidate consent](database-candidate-consent.md) — Replit-managed DB is now preferred if compatible; provisioning, secret use and spending still need separate consent.
+- [Interaction architecture](interaction-architecture.md) — ChatGPT via existing MCP is the sole conversation surface; keep Replit SAM and GitHub, without a separate app chat.
+- [Release environment tooling](release-environment-behavior.md) — published metadata and RLS schema-restore quirks; distinguish wizard drafts from effective configuration.

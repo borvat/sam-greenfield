@@ -23,8 +23,7 @@ export function internalOAuthConfig(env:NodeJS.ProcessEnv):InternalOAuthConfig|u
   const resource=env.SAM_MCP_PUBLIC_RESOURCE_URL?.trim();
   const ownerEmail=env.SAM_MCP_OAUTH_OWNER_EMAIL?.trim().toLowerCase();
   const suppliedPasswordHash=env.SAM_MCP_OAUTH_OWNER_PASSWORD_HASH?.trim();
-  const bearerPassword=env.SAM_MCP_BEARER_TOKEN?.trim()??"";
-  const ownerPasswordHash=suppliedPasswordHash||(bearerPassword?makePasswordHash(bearerPassword):"");
+  const ownerPasswordHash=suppliedPasswordHash; // No reuse of a service bearer as an owner password.
   const privateKeyPem=env.SAM_MCP_OAUTH_SIGNING_PRIVATE_KEY?.replace(/\\n/g,"\n").trim();
   if(!resource||!ownerEmail||!ownerPasswordHash||!privateKeyPem)throw new Error("MCP_INTERNAL_OAUTH_CONFIG_REQUIRED");
   if(!/^scrypt\$32768\$8\$1\$[A-Za-z0-9_-]{16,64}\$[A-Za-z0-9_-]{80,100}$/.test(ownerPasswordHash))throw new Error("MCP_INTERNAL_OAUTH_PASSWORD_HASH_INVALID");

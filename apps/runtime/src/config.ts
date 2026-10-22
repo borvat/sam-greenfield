@@ -4,6 +4,7 @@ export interface RuntimeConfig{
   mode:RuntimeMode;
   databaseUrl:string;
   port:number;
+  host:string;
   workerId:string;
   tickIntervalMs:number;
   shutdownGraceMs:number;
@@ -39,6 +40,7 @@ export function loadRuntimeConfig(env:NodeJS.ProcessEnv=process.env):RuntimeConf
     mode,
     databaseUrl:databaseUrl || "postgres://postgres:postgres@localhost:5432/sam_greenfield",
     port:positiveInt("PORT",env.PORT,8080),
+    host:env.SAM_RUNTIME_HOST?.trim()||"0.0.0.0",
     workerId:env.SAM_WORKER_ID?.trim() || "sam-local",
     tickIntervalMs:positiveInt("SAM_TICK_INTERVAL_MS",env.SAM_TICK_INTERVAL_MS,1000),
     shutdownGraceMs:positiveInt("SAM_SHUTDOWN_GRACE_MS",env.SAM_SHUTDOWN_GRACE_MS,15000),

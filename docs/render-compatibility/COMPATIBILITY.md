@@ -1,0 +1,46 @@
+# Render compatibility candidate
+
+This isolated branch merges corrected Phase8 `99672635c51b000a16c5c3d6c69c95768cc319f5` into deployed source `af4be2e50215d5646a221fb82068bf939df0f311`. The merge retains both histories. Its Draft PR targets `deploy/sam-free-trial-ready` so reviewers see the change to the currently configured source. It does not merge or deploy anything. PR46–49 and their branches remain unchanged. PR49 public lookup additions are excluded.
+
+## Resolution and compatibility matrix
+
+| Contract | Resolution and source | Meaningful verification |
+| --- | --- | --- |
+| Render runtime/MCP commands | [start.sh](../../deploy/render/start.sh) retains `runtime` and `mcp`, port/host handling and foreground exec; automatic operator migrations/company creation removed | [application-restart.cjs](../../tests/testing/application-restart.cjs) boots both through this exact wrapper, two rounds, health/auth checks, maintenance tick and graceful shutdown; synthetic maintenance configuration, not live production composition |
+| MCP owner OAuth / Google connection | [main](../../apps/mcp/src/main.ts), [HTTP](../../apps/mcp/src/http.ts) retain internal OAuth and Google routes/tools alongside Phase8 isolated synthetic/read-only modes | 37 isolated Google/OAuth/surface tests use fixture servers/stores; no real OAuth grant or provider call |
+| Direct bol and submit-goal | [actionTools](../../apps/chatgpt-tools/src/actionTools.ts), [dispatcher](../../apps/production/src/dispatcher.ts); async default bundle retains [bol MCP bridge](../../apps/production/src/bolMcpBundle.ts) separately from Phase8 direct API adapter | 77 direct bol tool names, 54 GREEN / 23 approval-gated; report bridge rereads; submit-goal plans, independently verifies both fixture reads and persists cited report |
+| Google verification | [samGoogleBundle](../../apps/production/src/samGoogleBundle.ts) retains discovery/read-only filter/fresh readback and binds persisted result to its captured hash | Tampered result and old missing-result-hash evidence are INCONCLUSIVE before reread; no fabricated acceptance of pre-upgrade executions |
+| Core execution/recovery | Phase8 dependency, fencing, deadline, durable planning retry, tenant and authority guards retained; ordinary adapter failures invoke deployed fenced failure/recovery recording; cooperative specialist continuations retain their own durable recovery | Legacy outage, sibling-stop, missing-source recovery, stale-fence, independent continuation and bounded planning tests; core reliability and specialist regressions |
+| Planner | Retains dependency/result references and abort signal; restores deployed scope filtering, forbidden-read history and one validation correction, splitting total proposal ceiling between two attempts | Duplicate/read-schema correction, no unavailable capability, half-budget ceiling; local development remains a single attempt |
+| Read-report completion | Existing `sam.read_report.v1` enters cited independent review; Phase8 source/provenance checks remain; integration-only knowledge capture stays gated | Combined fixture report test; malformed/unsubstantiated reports remain blocked |
+| Migrations | [core runner](../../packages/db/src/migrate.js) recognizes only four pinned relocated hashes; [integration profile](../../packages/db/src/integrationProfile.ts) adopts matching historical entries without replaying SQL | [renderMigrations](../../tests/compatibility/renderMigrations.ts): fresh 12 core + 8 integration; deployed 14 becomes 16 core + 8 integration; OAuth sentinel retained; repeated apply; mismatched hashes fail |
+| Disabled evaluations | Phase8 live-launch, budget, signing, tenant and owner gates unchanged | Full evaluation tests remain scripted/frozen; no new public lookup adapters or live calls |
+
+Direct bol tool names remain, but production execution now requires the Phase8 acceptance contract. `acceptance_contract` is forwarded separately from provider parameters. Clients lacking it receive a refusal, not an inferred success criterion. Existing `sam_submit_goal` read-report requests use their explicit report completion contract. The internal OAuth configuration requires its dedicated password hash; it no longer accepts the bearer token as an owner password. Neither change is worked around for compatibility.
+
+## Migration procedure and rollback limit
+
+Operator action is separate from startup. First compare read-only ledger/principal metadata using [PRODUCTION_PREFLIGHT.sql](PRODUCTION_PREFLIGHT.sql); no production query has been executed by this task. Stop if any hash, schema, principal or policy differs. Preserve a recoverable database snapshot and deployment identities before authorizing schema changes.
+
+On a disposable copy, apply the core operator runner, then `applyIntegrationProfile` using a dedicated operator session. Production use of existing staging-only CLI must not be enabled by falsifying its environment checks. The function is the reviewed migration API; execution and access remain a separate operator gate. The four relocated rows stay in the historical core ledger, with their original hashes/timestamps. Their integration-ledger records acknowledge adoption; their DDL is not repeated. No ledger rows are deleted. Fresh databases apply each profile normally. Core new migrations are additive 00012/00013; integration additions are 00102–00105. Specialist/evaluation profiles are separate and are not automatically activated by this bridge.
+
+A return to the original deployed artifact after upgrade is **not a safe automatic rollback**: its launcher reruns migrations expecting 14 entries, whereas the upgraded historical core ledger has 16. The regression proves this count incompatibility. Before release, nominate and validate either a compatible rollback artifact or an approved database recovery procedure. This task does not pretend old artifact retention reverses database state, delete migration history, or supply an untested down migration.
+
+## Exact remaining production preflight
+
+- Confirm actual schema, 14-file ledger hashes (or document the actual shape), absence/presence of integration ledger, and a recoverable backup. Synthetic ledger shape is evidence of compatibility, not proof of production state.
+- Run candidate `assertRuntimeTenantBinding` read-only on each nominated existing application login. Preserve no-owner/no-membership/no-DDL/fixed-tenant guards. Confirm core registry/verification contracts are pre-provisioned; startup no longer writes these registries in production.
+- Confirm scoped access required by existing OAuth/Google stores and `goal_read_reviews`. Core provisioning intentionally grants no OAuth token access; compatibility code is not proof that the current login has appropriate grants and tenant isolation. Inspect only policy/ACL metadata. Any required provisioning is a separately reviewed operator action; do not broaden runtime permissions automatically.
+- Confirm presence (not values) of the dedicated internal OAuth password hash and the existing Google configuration. No credential extraction, generation or replacement is requested.
+- Drain or explicitly disposition pre-upgrade in-flight Google executions lacking result binding; they cannot be silently marked VERIFIED.
+- Confirm rollback artifact/database recovery plan before rollout. No new arbitrary endurance test is imposed. Final old 24-hour PASS artifact remains absent; elapsed time on af4be2e does not certify this candidate.
+
+## Proposed two-service rollout, not executed
+
+Under a separate explicit release instruction: freeze the reviewed SHA and recheck deployment branch/Render configuration; close new admissions and drain the worker without replaying writes; complete the approved backup/migration/provisioning plan; start the runtime at that exact SHA while admissions remain closed, then MCP at the same SHA. Read back both service/deploy SHAs, `/readyz` runtime and `/livez` MCP, authenticated status, unauthorized refusal, OAuth metadata and the expected capability catalog. Catalog registration is not proof of successful live Google/bol execution. Keep auto-deploy off and reopen admissions only within the owner's authorized scope. New evaluation/provider activation remains excluded.
+
+If either service fails readback, keep admissions closed and stop new work; use the preapproved compatible runtime/database recovery path, then restore MCP and verify identity/health/auth/catalog. Do not blindly select af4be2e after migration. Main integration is separate: this branch contains main plus deployed history, but merging main alone does not deploy the two services that track the deployment branch with auto-deploy off.
+
+## Review and evidence boundaries
+
+AI technical review covers conflict resolution, startup/auth route wiring, tool preservation, fenced recovery, schema adoption and evidence binding. This is not a line-by-line re-audit of all inherited files or a human-only live-evaluation signoff. Owner selected AI review. No additional human-only merge rule is invented. Hosted Actions billing failures remain separate from external acceptance; no check is spoofed or workflow rerun requested. Final exact-source external results are recorded in ACCEPTANCE.md after execution; earlier passes are not inherited by this implementation.

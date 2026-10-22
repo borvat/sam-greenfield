@@ -1,0 +1,86 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "-pnHicR2e1IQnq9iAJhf4"
+uri = "file://reports/sam-development-goal-audit.html"
+type = "html"
+title = "تقرير إثبات دورة هدف سام"
+description = "دليل التخطيط الحي والخطة والتنفيذ والتحقق وRLS، مع آخر حالة الخدمات وGit وفحص الأسرار وحدود الإثبات."
+logical_id = "399fd657-6845-4249-b340-adcac0581794"
+content_hash = "sha256:313f8eb121deb75c396eaf14ec89d43e9db33e6810222701016ef4ae5242e2fc"
+size = 13041
+mtime_ms = 1791502286135
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/399fd657-6845-4249-b340-adcac0581794/9691fbc6-9817-4add-bc8b-3f654a69db07"
+storage_version_token = "1791502287155002"
+content_type = "text/html"
+
+[[outputs]]
+id = "8vhWuPn0zeM0WLi6zRrVY"
+uri = "file://.local/sam-dev/drive-read-report.html"
+type = "html"
+title = "دليل SAM: دورة قراءة Drive الحية"
+description = "تقرير عربي منقح: طلبا GET حيان، حفظ الخطة والتنفيذ والتحقق المستقل، حدود القراءة وسجل التدقيق؛ دون رابط المورد أو أسرار."
+logical_id = "31b56a5c-5893-4176-8c8f-201fa9f27755"
+content_hash = "sha256:25ee889dce4f7d338a5d4e40aaad95a1890f41267a5f4b7fe428740f5779362c"
+size = 6133
+mtime_ms = 1791505851836
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/31b56a5c-5893-4176-8c8f-201fa9f27755/21e7c0e3-32e5-456c-a11d-55c6906acbec"
+storage_version_token = "1791505938642590"
+content_type = "text/html"
+
+[[outputs]]
+id = "xN8K9vNazWAGWZ8P3ueOk"
+uri = "file://.local/sam-dev/drive-content-acceptance.html"
+type = "html"
+title = "SAM: دليل قبول قراءة النص الحية"
+description = "دليل منقح للطلبات الأربعة، مطابقة السطر والبصمات، الخطة والتنفيذ والتحقق المستقل في PostgreSQL. لا يحتوي نص المستند أو معرّفه أو أسراراً."
+logical_id = "80e82094-8748-4896-8735-50eee49bb05e"
+content_hash = "sha256:158b1d33ef4a730542e2ff9780946bc0d8f69b877ddde849941bf5bca40526c8"
+size = 4171
+mtime_ms = 1791508882090
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/80e82094-8748-4896-8735-50eee49bb05e/1a376486-3335-4088-bc90-9a797d0cde34"
+storage_version_token = "1791508943532518"
+content_type = "text/html"
+
+[[outputs]]
+id = "Z1iNrhtAyyuzIBSsCZlTK"
+uri = "file://.local/sam-dev/autonomy-acceptance-report.html"
+type = "html"
+title = "تقرير قبول استقلالية SAM — النتائج والأدلة"
+description = "الدورتان الحيتان، الطلبات الأربعة، التحقق والتعلم، بوابة البناء المجمد الفاشلة وعائق GitHub، دون أسرار."
+logical_id = "38e064d0-38a0-4ac0-a3f0-f4f4c13461f1"
+content_hash = "sha256:f90443f1ed3db244ba335e388b1eecc1ed1c41a3d761a48d446f24f46a9f15e3"
+size = 15064
+mtime_ms = 1791513126453
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/38e064d0-38a0-4ac0-a3f0-f4f4c13461f1/bf65ccbb-7e44-4adc-8f22-fcf51adbe02a"
+storage_version_token = "1791513181562880"
+content_type = "text/html"
+
+[[outputs]]
+id = "U7w7EPlZcSIga4f8JrBuF"
+uri = "file://.local/sam-dev/autonomy-frozen-acceptance-report.html"
+type = "html"
+title = "قبول استقلالية SAM على بناء مجمد — الأدلة والحدود"
+description = "هدفان اصطناعيان عبر المسار الأصلي؛ 3 طلبات DeepSeek حية، إعادة تخطيط وتعلم واستعادة مثبتة في VERIFYING. GitHub push متعطل عند اعتماد HTTPS؛ لا نشر."
+logical_id = "3feb0d2f-5c6c-4f5b-97f4-e614ec3492bc"
+content_hash = "sha256:9c52179354b0637d68afa791ae25066ad6958d7098b39e168e7e856ede6ada21"
+size = 12108
+mtime_ms = 1791515314447
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/3feb0d2f-5c6c-4f5b-97f4-e614ec3492bc/27025293-000e-4e43-b5c8-abd55e616195"
+storage_version_token = "1791515349764168"
+content_type = "text/html"
+
+[[outputs]]
+id = "YJJR31T9Cg35JZtmNw6rJ"
+uri = "file://.local/sam-dev/release-readiness.html"
+type = "html"
+title = "SAM Greenfield — حزمة جاهزية الإصدار"
+description = "تقرير عربي ببوابات PASS/FAIL، أدلة الاختبارات المحلية، حدود LIVE وfixtures، حالة GitHub، وخطة PostgreSQL والأسرار والمراقبة والاستعادة والتراجع. لم يُنشر المشروع."
+logical_id = "e3021b14-16dd-48d0-b353-3db40e1afa11"
+content_hash = "sha256:3f7074cbc19696fe06d1c6749b113319939cff5a3f8b4514fa794c5f4eec6528"
+size = 14799
+mtime_ms = 1791519076042
+storage_uri = "gcs://replit-rams-assets-archer/rams/assets/repl:58a7a83b-76fa-4668-aecc-ad072469f947/e3021b14-16dd-48d0-b353-3db40e1afa11/4c47d1c6-e654-4c75-be30-c2fe645bb993"
+storage_version_token = "1791519099963748"
+content_type = "text/html"

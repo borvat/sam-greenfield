@@ -1,0 +1,4 @@
+PASS tests/release/postgres_tls.ts
+POSTGRES_TLS_LOCAL_PASS: real pg SSL negotiation; trusted matching certificate reaches synthetic startup; untrusted and hostname-mismatch certificates denied before startup. NOT_PROVIDER_OR_DB_AUTH_PROOF.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/postgres_tls.ts","passed":true,"exit":0}]}

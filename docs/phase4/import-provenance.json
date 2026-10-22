@@ -1,0 +1,146 @@
+[
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/brain/src/knowledge.ts",
+    "candidatePath": "apps/brain/src/knowledge.ts",
+    "originalSha256": "eb86fc4d137dba45993844db2fe67c5645d4051f57f26695a6e3a07756af9a64"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/brain/src/research.ts",
+    "candidatePath": "apps/brain/src/research.ts",
+    "originalSha256": "93dd4e388e417ab0eca9235f8717c43a5ab614df12b1983357ba4c51babfc51e"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/notifications/src/center.ts",
+    "candidatePath": "apps/notifications/src/center.ts",
+    "originalSha256": "dd2f61e9373addc654ac6be8fb4c0403e485d01a2770b1b16dc54ebb7807bec3"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/perception/src/monitor.ts",
+    "candidatePath": "apps/perception/src/monitor.ts",
+    "originalSha256": "3a0012288e55e82d82c0cbe3cfd1f4f2d5cd3f7834048832808a8d85936ca246"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/perception/src/policy.ts",
+    "candidatePath": "apps/perception/src/policy.ts",
+    "originalSha256": "b3b4bbbf37616e973f4b35a66809e4d1122469d64fb9890fb5d6318be6a47119"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/mcp/src/internalOAuth.ts",
+    "candidatePath": "apps/mcp/src/internalOAuth.ts",
+    "originalSha256": "ebf125814ed71a1ad3ed4f25c759298c6adfda642fe7a28b2d5c17e1b479fa27"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/readGoalReview.ts",
+    "candidatePath": "apps/production/src/readGoalReview.ts",
+    "originalSha256": "4226545c175122a4bdddb14f2df988cafb7830173b463e5e2ef21ee7c9788efe"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/tools/src/mcpResearchAdapter.ts",
+    "candidatePath": "apps/tools/src/mcpResearchAdapter.ts",
+    "originalSha256": "d992c5380f0abefbd585a2558fbef991cefcb12f0dbe7d87df6f6c95f545c106"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/shared/src/readSourceFailure.ts",
+    "candidatePath": "packages/shared/src/readSourceFailure.ts",
+    "originalSha256": "d86fc56263a749bd3653fa7962d81add16562505a9fdd09dd9222e0d34a49041"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleOauthPkce.ts",
+    "candidatePath": "apps/production/src/samGoogleOauthPkce.ts",
+    "originalSha256": "b9ea75be107bdb7b399edebe85ab7829ebdff81df38c8a05ed40029b54c4f54f"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleOauthState.ts",
+    "candidatePath": "apps/production/src/samGoogleOauthState.ts",
+    "originalSha256": "f10017ea62b3cd5d43bcf15e672cd49df0734496af7c75ae872d59682b49d902"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleOauthFlow.ts",
+    "candidatePath": "apps/production/src/samGoogleOauthFlow.ts",
+    "originalSha256": "fbf7d3a3f9af1e5ae56ca4a342c3a99b5756a0d05e0407cb7edb15969a27a53c"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleOauthPostgres.ts",
+    "candidatePath": "apps/production/src/samGoogleOauthPostgres.ts",
+    "originalSha256": "4def1a04094a7bd066a14dcf8a23fad1a7acd8e8d39ef48630148eb29f4c02a5"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleTokenCrypto.ts",
+    "candidatePath": "apps/production/src/samGoogleTokenCrypto.ts",
+    "originalSha256": "36521e97a1f282c0cba61c7c9f6cca50f6492c8a5fd6334665c371a3e6eec5a7"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleMcpBridge.ts",
+    "candidatePath": "apps/production/src/samGoogleMcpBridge.ts",
+    "originalSha256": "da09673e340893ec23bf3c9531cf8a5d48043e116bf68b1ca2a9ddaacc42a57c"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "apps/production/src/samGoogleEvidence.ts",
+    "candidatePath": "apps/production/src/samGoogleEvidence.ts",
+    "originalSha256": "acc591c3d59c9c4608addcc9dc48a80eb0baf13d4814f2f50b805c830704d65f"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00011_mcp_internal_oauth.sql",
+    "candidatePath": "packages/db/integration-migrations/00011_mcp_internal_oauth.sql",
+    "originalSha256": "9bceae24618447455ca05351d401b94d529f6c18559cb91ad328be043618ec92"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00099_sam_google_oauth.sql",
+    "candidatePath": "packages/db/integration-migrations/00099_sam_google_oauth.sql",
+    "originalSha256": "e8890c451c732238f82c8729d47c6a250d1fbe2b986192afb2f6743d07050a76"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00100_sam_google_oauth_runtime.sql",
+    "candidatePath": "packages/db/integration-migrations/00100_sam_google_oauth_runtime.sql",
+    "originalSha256": "ffcfc08b3d16972d6aa1a7a8834029d4054de497d4a0d3f0e1767b1d273aa210"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00101_goal_read_reviews.sql",
+    "candidatePath": "packages/db/integration-migrations/00101_goal_read_reviews.sql",
+    "originalSha256": "a118d796178147db17fa4839b20863dbd2191e41e951657571fc4c03cd3b008d"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00102_scoped_knowledge.sql",
+    "candidatePath": "packages/db/integration-migrations/00102_scoped_knowledge.sql",
+    "originalSha256": "701cc4bc6afbe8622d1f0e67df80128d6a56b5867abbaca4060289afb1c3138a"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00103_research_mcp_verification.sql",
+    "candidatePath": "packages/db/integration-migrations/00103_research_mcp_verification.sql",
+    "originalSha256": "d1bdaf8386d1aba5de117f2a06d59e62be415d0f3a9c33faaf4b8e1f54b45597"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00104_perception_action.sql",
+    "candidatePath": "packages/db/integration-migrations/00104_perception_action.sql",
+    "originalSha256": "442c6ac219317e7b6b7fbb6297fd03c8aa0e8f2887ca3e3050fc6e25bed8dc88"
+  },
+  {
+    "sourceSha": "583f71db38c9d9f6231f25d96e3a2a1be429463c",
+    "sourcePath": "packages/db/migrations/00105_owner_notifications.sql",
+    "candidatePath": "packages/db/integration-migrations/00105_owner_notifications.sql",
+    "originalSha256": "ac9e7661be5889149b5fabd05f79ac09d085418fce79fc8f63f0151c1ef1c122"
+  }
+]

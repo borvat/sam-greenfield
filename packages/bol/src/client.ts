@@ -34,6 +34,7 @@ export class BolRetailerClient{
     tokenUrl?:string;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
   }){}
 
   private async accessToken(force=false):Promise<string>{
@@ -53,7 +54,7 @@ export class BolRetailerClient{
       const response=await fetchImpl(
         this.options.tokenUrl??"https://login.bol.com/token",
         {
-          method:"POST",
+          method:"POST",signal:AbortSignal.timeout(this.options.timeoutMs??20000),
           headers:{
             authorization:`Basic ${basic}`,
             accept:"application/json",
@@ -65,7 +66,7 @@ export class BolRetailerClient{
       const body:any=await response.json().catch(()=>({}));
       if(!response.ok||typeof body?.access_token!=="string"){
         throw new Error(
-          `bol OAuth HTTP ${response.status}: ${String(body?.error_description??body?.error??"unknown").slice(0,500)}`
+          `bol OAuth HTTP ${response.status}: upstream_details_withheld`
         );
       }
 
@@ -92,6 +93,7 @@ export class BolRetailerClient{
     const token=await this.accessToken();
     const fetchImpl=this.options.fetchImpl??fetch;
     const response=await fetchImpl(`${this.baseUrl}${path}`,{
+      signal:AbortSignal.timeout(this.options.timeoutMs??20000),
       headers:{
         authorization:`Bearer ${token}`,
         accept:ACCEPT
@@ -106,7 +108,7 @@ export class BolRetailerClient{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok){
       throw new Error(
-        `bol Retailer API HTTP ${response.status}: ${String(body?.detail??body?.title??body?.message??"unknown").slice(0,500)}`
+        `bol Retailer API HTTP ${response.status}: upstream_details_withheld`
       );
     }
     return body;

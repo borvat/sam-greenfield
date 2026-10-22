@@ -15,17 +15,17 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
       availability:item.availability,
       inputSchema:{
         ...(item.inputSchema??{type:"object",additionalProperties:true}),
-        properties:{...((item.inputSchema?.properties as Record<string,unknown>|undefined)??{}),legal_entity_id:{type:"string",description:"SAM legal entity ID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}}
+        properties:{acceptance_contract:{type:"object",description:"Owner-supplied completion criteria; required for production direct execution."},...((item.inputSchema?.properties as Record<string,unknown>|undefined)??{}),legal_entity_id:{type:"string",description:"SAM legal entity ID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}}
       }
     },
     handler:async(args,context)=>{
       if(!dispatcher) return {ok:false,unavailable:true,error:"Production capability dispatcher is not registered"};
-      const {legal_entity_id,...params}=args;
+      const {legal_entity_id,acceptance_contract,...params}=args;
       const legalEntityId=String(legal_entity_id??process.env.SAM_DEFAULT_LEGAL_ENTITY_ID??process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID??process.env.SAM_FINANCE_LEGAL_ENTITY_ID??"").trim();
       if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
       return {ok:true,data:await dispatcher.execute({
         capabilityId:item.capabilityId,
-        params,
+        acceptanceContract:acceptance_contract,params,
         actor:context.actor,
         legalEntityId,
         objective:`Execute bol.com capability ${item.capabilityId}`
@@ -89,6 +89,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
             capability_id:{type:"string"},
             legal_entity_id:{type:"string"},
             objective:{type:"string"},
+            acceptance_contract:{type:"object"},
             params:{type:"object"}
           },
           required:["capability_id","legal_entity_id","params"],
@@ -112,7 +113,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           params,
           actor:context.actor,
           legalEntityId,
-          objective
+          objective,acceptanceContract:args.acceptance_contract
         })};
       }
     },

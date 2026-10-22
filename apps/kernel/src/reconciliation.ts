@@ -1,10 +1,12 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
+import {leaseAttemptLimit,stopExhaustedLease} from "./leaseBudget";
 
 export async function reconcileExpiredLeases(limit = 100): Promise<string[]> {
+  const attemptLimit=leaseAttemptLimit();
   return withTransaction(async (client) => {
     const res = await client.query(
-      `SELECT id, fencing_token
+      `SELECT id, goal_id, attempt, fencing_token
          FROM work_queue
         WHERE status IN ('LEASED','EXECUTING')
           AND lease_expiry IS NOT NULL
@@ -17,6 +19,9 @@ export async function reconcileExpiredLeases(limit = 100): Promise<string[]> {
 
     const recovered: string[] = [];
     for (const row of res.rows) {
+      if(attemptLimit!==null&&Number(row.attempt)>=attemptLimit){
+        await stopExhaustedLease(client,row);recovered.push(row.id);continue;
+      }
       await client.query(
         `UPDATE work_queue
             SET status='HANDBACK',

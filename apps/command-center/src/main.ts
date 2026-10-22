@@ -1,4 +1,5 @@
 import {pool} from "../../../packages/db/src/client";
+import {assertRuntimeTenantBinding} from '../../../packages/db/src/runtimeAccess';
 import {startCommandCenterHttpServer} from "./http";
 
 function positiveInt(name:string,value:string|undefined,fallback:number){
@@ -15,6 +16,7 @@ async function main(){
   if(production&&!token)throw new Error("SAM_COMMAND_CENTER_BEARER_TOKEN is required in production");
   if(production&&!allowedHosts)throw new Error("SAM_COMMAND_CENTER_ALLOWED_HOSTS is required in production");
   if(!legalEntityId)throw new Error("SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required");
+  if(production&&(await assertRuntimeTenantBinding(pool)).entity!==legalEntityId)throw new Error('RUNTIME_TENANT_CONTEXT_MISMATCH');
 
   const service=await startCommandCenterHttpServer({
     legalEntityId,
@@ -30,9 +32,9 @@ async function main(){
     if(stopping)return;stopping=true;
     process.stderr.write("SAM Command Center shutdown requested: "+signal+"\n");
     try{await service.close();await pool.end();process.exit(0)}
-    catch(err){process.stderr.write("SAM Command Center shutdown failed: "+(err instanceof Error?err.message:"unknown")+"\n");process.exit(1)}
+    catch(err){process.stderr.write("SAM Command Center shutdown failed: details withheld\n");process.exit(1)}
   };
   process.on("SIGTERM",()=>void stop("SIGTERM"));
   process.on("SIGINT",()=>void stop("SIGINT"));
 }
-main().catch(async err=>{process.stderr.write("SAM Command Center startup failed: "+(err instanceof Error?err.message:"unknown")+"\n");try{await pool.end()}catch{}process.exit(1)});
+main().catch(async err=>{process.stderr.write("SAM Command Center startup failed: details withheld\n");try{await pool.end()}catch{}process.exit(1)});

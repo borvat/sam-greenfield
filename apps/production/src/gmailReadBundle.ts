@@ -33,11 +33,11 @@ export function withGmailReadFromEnv(bundle:ProductionBundle,env:NodeJS.ProcessE
   return {...bundle,
     capabilities:[...bundle.capabilities,...ids.map(capabilityId=>({capabilityId,authorityClass:"GREEN" as const,specialistAgentId:"communications",specialistVersion:"1.0.0"}))],
     toolDefinitions:[...bundle.toolDefinitions,...ids.map(capabilityId=>({capabilityId,authorityClass:"GREEN" as const,sideEffect:false}))],
-    toolAdapters:[...bundle.toolAdapters,...ids.map(capabilityId=>({capabilityId,async execute(request){
+    toolAdapters:[...bundle.toolAdapters,...ids.map(capabilityId=>({capabilityId,async execute(request:import("../../../packages/tool-gateway/src/types").ToolExecutionRequest){
       const result=await read(capabilityId,request.params);
-      return {result,evidence:{readback:true,provider_message_ids:capabilityId==="gmail_get_metadata"?[result.id]:result.messages.map(m=>m.id)}};
+      return {result,evidence:{readback:true,provider_message_ids:capabilityId==="gmail_get_metadata"?[result.id]:result.messages.map((m:any)=>m.id)}};
     }}))],
-    verificationAdapters:[...(bundle.verificationAdapters??[]),...ids.map(capabilityId=>({capabilityId,async verify(input){
+    verificationAdapters:[...(bundle.verificationAdapters??[]),...ids.map(capabilityId=>({capabilityId,async verify(input:Parameters<import("./types").VerificationAdapter["verify"]>[0]){
       const expected=input.execution.evidence?.provider_message_ids;
       if(!Array.isArray(expected)) return {result:"INCONCLUSIVE" as const,evidence:{reason:"missing_message_ids"},verifier:"gmail-independent-readback"};
       if(expected.some(id=>typeof id!=="string")) throw new Error("Invalid Gmail verification message id");

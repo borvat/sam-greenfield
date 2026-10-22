@@ -110,10 +110,10 @@ async function main(){
   await syncProductionModelRegistry([modelConfig]);
   const planningGoal=await goal("NEW");
   const planningBundle=validateProductionBundle({...bundle.raw,modelProviderConfigs:[modelConfig],modelAdapters:[{providerId:suffix,async invoke(){return {model:"test",usage:{inputTokens:1,outputTokens:1},output:{steps:[]}}}}]});
-  const planned=await planNextNewGoal(planningBundle);
+  const planned=await planNextNewGoal(planningBundle,{maxAttempts:1});
   assert.equal(planned.failed,true);
   assert.equal(await state(planningGoal),"FAILED");
-  assert.match((await pool.query("SELECT after_ref FROM audit_log WHERE goal_id=$1 AND action='RUNTIME_FAILURE'",[planningGoal])).rows[0].after_ref.error,/non-empty steps/);
+  assert.equal((await pool.query("SELECT planning_failure FROM goals WHERE id=$1",[planningGoal])).rows[0].planning_failure.code,"PLAN_CONTRACT_INVALID");
 
   const replanningGoal=await goal("REPLANNING");
   const replanBundle=validateProductionBundle({...bundle.raw,modelProviderConfigs:[modelConfig],modelAdapters:[{providerId:suffix,async invoke(){return {model:"test",usage:{inputTokens:1,outputTokens:1},output:{steps:[{capabilityId:"recovery_read",params:{name:"replanned"}}]}}}}]});

@@ -13,7 +13,7 @@ async function main(){
   assert.equal(bol.length,77,"SAM production bundle must register all 76 upstream bol tools plus the report");
   assert.equal(bundle.raw.toolAdapters.filter((item)=>item.capabilityId.startsWith("bol_")).length,77);
   assert.equal(bundle.verifiers.size>=77,true);
-  const {BOL_VERIFICATION_CONTRACTS}=require("../../apps/production/src/bolBundle");
+  const {BOL_VERIFICATION_CONTRACTS}=require("../../apps/production/src/bolMcpBundle");
   assert.equal(BOL_VERIFICATION_CONTRACTS.length,77,"Verification contract catalog must cover all bol tools and report");
   const read=bol.filter((item)=>item.authorityClass==="GREEN");
   const approvalGated=bol.filter((item)=>item.authorityClass!=="GREEN");

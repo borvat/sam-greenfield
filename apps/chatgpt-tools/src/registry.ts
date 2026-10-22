@@ -8,7 +8,7 @@ import type {
 export class ChatGPTToolRegistry{
   private readonly tools=new Map<string,RegisteredChatGPTTool>();
 
-  constructor(items:readonly RegisteredChatGPTTool[]){
+  constructor(items:readonly RegisteredChatGPTTool[], private readonly options:{redactedErrors?:boolean}={}){
     for(const item of items){
       if(!item.definition.name.trim()) throw new Error("Tool name is required");
       if(this.tools.has(item.definition.name)){
@@ -26,7 +26,7 @@ export class ChatGPTToolRegistry{
 
   definition(name:string):ChatGPTToolDefinition{
     const tool=this.tools.get(name);
-    if(!tool) throw new Error(`Unknown ChatGPT tool: ${name}`);
+    if(!tool) throw new Error(this.options.redactedErrors?"Tool is not permitted.":`Unknown ChatGPT tool: ${name}`);
     return tool.definition;
   }
 
@@ -37,7 +37,7 @@ export class ChatGPTToolRegistry{
   ):Promise<ChatGPTToolResult>{
     const tool=this.tools.get(name);
     if(!tool){
-      return {ok:false,error:`Unknown ChatGPT tool: ${name}`};
+      return {ok:false,error:this.options.redactedErrors?"Tool is not permitted.":`Unknown ChatGPT tool: ${name}`};
     }
     if(!context.systemOwner){
       return {ok:false,error:"System-owner context is required"};
@@ -49,6 +49,8 @@ export class ChatGPTToolRegistry{
         error:`Tool ${name} is unavailable in the current production composition`
       };
     }
-    return tool.handler(args,context);
+    if(!this.options.redactedErrors) return tool.handler(args,context);
+    try{return await tool.handler(args,context)}
+    catch{return {ok:false,error:"Local read check is unavailable."}}
   }
 }

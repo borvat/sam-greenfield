@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-09T05:42:53.197Z",
+  "classification": "LOCAL_REAL_PROCESS_AND_POSTGRES_WITH_OWNER_PLAN_FIXTURE",
+  "externalModelCalls": 0,
+  "productionChanges": 0,
+  "proofs": [
+    "real PostgreSQL: independently correct mean=5 rejected for owner max=8 intent; not completed or learned",
+    "actual process SIGKILL during ACT after artifact commit before execution commit; real lease expiry, native recovery/delegation, stale fence denied; one artifact/execution; independent hashes and completion",
+    "single exposed local envelope with three actual native production-mode service processes; PostgreSQL non-owner/non-bypass RLS preflight, authenticated goals/UI HTML, protected tick/error status, no model keys, graceful stop; not published or visual-browser proof",
+    "real local connection-refused dependency probe: readiness 503 and ACT paused; PostgreSQL recovery restores readiness/ticks; private status denies anonymous access"
+  ]
+}

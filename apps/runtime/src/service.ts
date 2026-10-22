@@ -5,6 +5,7 @@ import { runOperationalSupervisorTick } from "../../supervisor/src/runtime";
 
 export interface RuntimeComposition {
   runWorkTick():Promise<unknown>;
+  supervisorOptions?:{monitorSideEffects?:boolean};
 }
 
 export interface RuntimeService {
@@ -19,27 +20,34 @@ export async function startRuntimeService(input:{
   tickIntervalMs:number;
   composition:RuntimeComposition;
   supervisorActor?:string;
+  dependencyProbe?:()=>Promise<unknown>;
 }):Promise<RuntimeService>{
   const gate=new ReadinessGate();
-  const server=createHealthServer(gate);
+  const counters={startedAt:new Date().toISOString(),ticks:0,errors:0,dependencyFailures:0,lastStartedAt:null as string|null,lastFinishedAt:null as string|null};
+  const server=createHealthServer(gate,()=>({...counters,inFlight:tickInFlight}));
 
   let stopped=false;
   let timer:NodeJS.Timeout|null=null;
   let tickInFlight=false;
 
   const tick=async()=>{
-    if(stopped||tickInFlight||!gate.snapshot().ready) return;
+    if(stopped||tickInFlight) return;
     tickInFlight=true;
+    counters.lastStartedAt=new Date().toISOString();
     try{
+      if(!await gate.refresh(input.dependencyProbe)){counters.dependencyFailures++;return;}
       await input.composition.runWorkTick();
       await runOperationalSupervisorTick({
-        actor:input.supervisorActor ?? "operational-supervisor"
+        actor:input.supervisorActor ?? "operational-supervisor",
+        ...input.composition.supervisorOptions
       });
-    }catch(err){
-      const message=err instanceof Error ? (err.stack ?? err.message) : String(err);
-      process.stderr.write(`[sam-runtime] work tick failed: ${message}\n`);
+      counters.ticks++;
+    }catch(error){
+      counters.errors++;
+      throw error;
     }finally{
       tickInFlight=false;
+      counters.lastFinishedAt=new Date().toISOString();
     }
   };
 
@@ -53,7 +61,11 @@ export async function startRuntimeService(input:{
     });
   });
 
-  timer=setInterval(()=>{ void tick(); },input.tickIntervalMs);
+  timer=setInterval(()=>{ void tick().catch(()=>{
+    // Goal/model guards still fail closed. A refused proposal must not kill
+    // unrelated kernel maintenance or log a provider response/credential.
+    console.error(JSON.stringify({service:"sam-runtime",event:"WORK_TICK_FAILED",details:"withheld",continuation:"next_bounded_tick"}));
+  }); },input.tickIntervalMs);
   timer.unref?.();
 
   return {

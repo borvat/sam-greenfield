@@ -6,6 +6,7 @@ export class GmailApiClient{
     userId?:string;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
   }){}
 
   private async request(path:string,init:RequestInit={}):Promise<any>{
@@ -15,6 +16,7 @@ export class GmailApiClient{
       `${(this.options.baseUrl??"https://gmail.googleapis.com/gmail/v1").replace(/\/$/,"")}/users/${encodeURIComponent(this.options.userId??"me")}${path}`,
       {
         ...init,
+        signal:AbortSignal.timeout(this.options.timeoutMs??20000),
         headers:{
           authorization:`Bearer ${token}`,
           ...(init.body?{"content-type":"application/json"}:{}),
@@ -25,15 +27,17 @@ export class GmailApiClient{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok){
       throw new Error(
-        `Gmail API HTTP ${response.status}: ${String(body?.error?.message??body?.message??"unknown").slice(0,500)}`
+        `Gmail API HTTP ${response.status}: upstream_details_withheld`
       );
     }
     return body;
   }
 
+  getMessageContent(id:string):Promise<any>{return this.request(`/messages/${encodeURIComponent(id)}?format=full`);}
+
   sendRaw(raw:string):Promise<any>{
     return this.request("/messages/send",{
-      method:"POST",
+      method:"POST",signal:AbortSignal.timeout(this.options.timeoutMs??20000),
       body:JSON.stringify({raw})
     });
   }

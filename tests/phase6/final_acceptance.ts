@@ -90,7 +90,7 @@ async function main(){
         AND action='INCIDENT_OPENED'`,
     [actor]
   );
-  assert.ok(opened.rowCount>=3);
+  assert.ok((opened.rowCount ?? 0)>=3);
 
   const outboxOpened=Number((await one(
     `SELECT COUNT(*)::int AS count

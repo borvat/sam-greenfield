@@ -7,6 +7,7 @@ export class EBoekhoudenClient{
     source?:string;
     baseUrl?:string;
     fetchImpl?:typeof fetch;
+    timeoutMs?:number;
   }){
     const source=(options.source??"SAM").trim();
     if(!/^[A-Za-z0-9_ ]{1,10}$/.test(source)){
@@ -30,7 +31,7 @@ export class EBoekhoudenClient{
     this.sessionPromise=(async()=>{
       const fetchImpl=this.options.fetchImpl??fetch;
       const response=await fetchImpl(`${this.baseUrl}/v1/session`,{
-        method:"POST",
+        method:"POST",signal:AbortSignal.timeout(this.options.timeoutMs??20000),
         headers:{"content-type":"application/json"},
         body:JSON.stringify({
           accessToken:this.options.apiToken,
@@ -40,7 +41,7 @@ export class EBoekhoudenClient{
       const body:any=await response.json().catch(()=>({}));
       if(!response.ok||typeof body?.token!=="string"){
         throw new Error(
-          `e-Boekhouden session HTTP ${response.status}: ${String(body?.message??body?.error??"unknown").slice(0,500)}`
+          `e-Boekhouden session HTTP ${response.status}: upstream_details_withheld`
         );
       }
 
@@ -63,6 +64,7 @@ export class EBoekhoudenClient{
     const token=await this.startSession();
     const fetchImpl=this.options.fetchImpl??fetch;
     const response=await fetchImpl(`${this.baseUrl}${path}`,{
+      signal:AbortSignal.timeout(this.options.timeoutMs??20000),
       headers:{authorization:token}
     });
 
@@ -74,7 +76,7 @@ export class EBoekhoudenClient{
     const body:any=await response.json().catch(()=>({}));
     if(!response.ok){
       throw new Error(
-        `e-Boekhouden API HTTP ${response.status}: ${String(body?.message??body?.error??"unknown").slice(0,500)}`
+        `e-Boekhouden API HTTP ${response.status}: upstream_details_withheld`
       );
     }
     return body;
