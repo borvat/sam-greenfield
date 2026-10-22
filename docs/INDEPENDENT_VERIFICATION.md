@@ -159,3 +159,5 @@ execute GitHub-hosted jobs, discover private branch rules or prove runner OS par
 
 PR #46 remains a Draft and must not be merged by this workflow. The account lock,
 effective merge rules and staging/production authorization remain external gates.
+
+The Phase8 verifier-fix continuation adds `specialist-learning-fairness`, for **54 required stages**. Signed-trace review now covers 21 hostile cases; the new PostgreSQL stage checks progress past expired/revoked reports without stale promotion. See [fix review](PHASE8_VERIFIER_FIX_REVIEW.md).

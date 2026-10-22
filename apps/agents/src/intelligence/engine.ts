@@ -12,7 +12,7 @@ import {transitionGoal} from '../../../kernel/src/stateMachine';
 import type {VerificationAdapter} from '../../../production/src/types';
 import type {CapabilityCatalog} from '../capabilityCatalog';
 import {sourceEnvelope} from '../../../brain/src/research';
-import {recallVerifiedLessons,learnVerifiedQuote} from './learning';
+import {recallVerifiedLessons,learnNextSpecialistReport,type LearningScanCursor} from './learning';
 import {decisionSchema,validateLimits,reasoningRules,type SpecialistConfig,type SessionState,type Evidence,type Report,type Limits} from './contracts';
 import {assertEvaluationTrial,type EvaluationTrial} from '../evaluation/trial';
 
@@ -41,16 +41,21 @@ export function contradictions(reports:Report[]){
  }
  return [...topics].filter(([,v])=>v.size>1).map(([topic,values])=>({topic,values:[...values].map(([value,ids])=>({value,evidenceIds:[...ids]}))}));
 }
+/** Shared production acceptance predicate, also used by scheduler regressions. */
+export function claimSupportForScenario(scenario?:ReturnType<typeof commercialScenario>){
+ return (result:Record<string,unknown>,topic:string,value:string)=>{
+  if(!scenario)return containsValue(result,value);
+  const source=scenario.sources.find(s=>s.id===result.sourceId);
+  return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
+ };
+}
 export async function createSpecialistIntelligence(input:{configs:SpecialistConfig[];catalog:CapabilityCatalog;tools:ToolRegistry;gateway:ModelGateway;trial?:EvaluationTrial;diagnostic?:(error:unknown)=>void}){
  if(input.trial)assertEvaluationTrial(input.trial);
  if(process.env.SAM_SPECIALIST_INTELLIGENCE!==(input.trial?.permit.mode==='live'?'evaluation':'synthetic'))throw Error('SPECIALIST_SYNTHETIC_PROFILE_REQUIRED');
  const tenant=await withTransaction(assertSpecialistAccess);
  const scenario=input.trial?commercialScenario(input.trial.spec.caseId):undefined;
- const supportsClaim=(result:Record<string,unknown>,topic:string,value:string)=>{
-  if(!scenario)return containsValue(result,value);
-  const source=scenario.sources.find(s=>s.id===result.sourceId);
-  return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
- };
+ const supportsClaim=claimSupportForScenario(scenario);
+ const learningCursor:LearningScanCursor={};
  const configs=new Map(input.configs.map(raw=>[raw.capabilityId,JSON.parse(JSON.stringify({...raw,limits:validateLimits(raw.limits)})) as SpecialistConfig]));
  if(configs.size!==input.configs.length||!configs.size)throw Error('SPECIALIST_CONFIG_INVALID');
  for(const id of Object.keys(input.catalog.authorityPolicies())){
@@ -205,9 +210,12 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
     prior:run.state.history.slice(-12),verifiedContext:projectedContext,trustedMemory:{classification:"VERIFIED_QUOTATIONS_ONLY",records:memory,trustBoundary:untrusted},trustBoundary:untrusted};
    if(Buffer.byteLength(JSON.stringify(payload))>maxContext)throw Error('SPECIALIST_CONTEXT_EXHAUSTED');
    const gateway=input.trial?input.trial.gateway(input.gateway,work.goalId!,cfg.agentId):input.gateway;
+   const trialAgent=input.trial?.spec.agents[cfg.agentId];
+   const maxInputTokens=Math.min(run.limits.maxInputTokens,input.trial?.spec.limits.maxInputTokens??Infinity,trialAgent?.maxInputTokens??Infinity);
+   const maxOutputTokens=Math.min(run.limits.maxOutputTokens,input.trial?.spec.limits.maxOutputTokens??Infinity,trialAgent?.maxOutputTokens??Infinity);
    const model=gateway.invoke({task:'specialist_reasoning',capability:'specialist_reasoning',dataClassification:'INTERNAL',input:payload,
-    signal:controller.signal,maxCostUsd:run.limits.costUsd,boundedSynthetic:{maxInputTokens:run.limits.maxInputTokens,maxOutputTokens:run.limits.maxOutputTokens,
-     reserveAttempt:async a=>withTransaction(async c=>{await fence(c,work);return reserve(c,run,{models:1,tokens:a.tokens,costUsd:a.costUsd},'model',{...a,input:payload,maxInputTokens:run.limits.maxInputTokens,maxOutputTokens:run.limits.maxOutputTokens});})}});
+    signal:controller.signal,maxCostUsd:run.limits.costUsd,boundedSynthetic:{maxInputTokens,maxOutputTokens,
+     reserveAttempt:async a=>withTransaction(async c=>{await fence(c,work);return reserve(c,run,{models:1,tokens:a.tokens,costUsd:a.costUsd},'model',{...a,input:payload,maxInputTokens,maxOutputTokens});})}});
    const reply=await Promise.race([model,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('SPECIALIST_MODEL_TIMEOUT'));},timeout);})]);
    const decision=decisionSchema.parse(reply.result.output);
    return await withTransaction(async c=>{
@@ -288,25 +296,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    finally{if(timer)clearTimeout(timer);}
   }
  return {advancers:Object.fromEntries([...configs.keys()].map(id=>[id,advance])) as Record<string,(w:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>>,
-  learnNextReport:async()=>withTransaction(async c=>{
-   const row=(await c.query(`SELECT e.result,g.id goal_id FROM executions e JOIN goals g ON g.id=e.goal_id
-    JOIN specialist_sessions s ON s.queue_id=e.queue_id
-    JOIN LATERAL(SELECT result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
-    WHERE g.current_plan_id=e.plan_id AND g.state='COMPLETED' AND v.result='VERIFIED' AND e.result->>'status'='COMPLETE'
-     AND NOT EXISTS(SELECT 1 FROM specialist_learning l WHERE l.goal_id=g.id AND l.kind='VERIFIED_LESSON')
-    ORDER BY e.finished_at,e.id LIMIT 1 FOR UPDATE OF g SKIP LOCKED`)).rows[0];
-   if(!row)return {learned:0};
-   const report=row.result.report as Report;
-   const current=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
-   let learned=0;
-   for(const claim of report.claims){
-    const source=current.find(e=>claim.evidenceIds.includes(e.id)&&e.fresh&&supportsClaim(e.result,claim.topic,claim.value)&&
-     report.evidence.some(old=>old.id===e.id&&old.verificationId===e.verificationId));
-    if(!source)continue;
-    await learnVerifiedQuote(c,{entityId:tenant.entity,goalId:row.goal_id,sourceGoalId:source.goalId,executionId:source.id,statement:claim.value});learned++;
-   }
-   return {learned};
-  }),
+  learnNextReport:()=>withTransaction(c=>learnNextSpecialistReport(c,tenant.entity,supportsClaim,learningCursor)),
   executeRead:(work:ClaimedWork,execute:CapabilityExecutor)=>capturedRead(work,execute),
   verifyRead:async(executionId:string,verify:()=>ReturnType<VerificationAdapter['verify']>)=>{
    try{

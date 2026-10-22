@@ -17,9 +17,15 @@ export function verifyEvaluationTrace(input:unknown,trustedKey:string|KeyObject)
  counters(t.used);for(const c of Object.values(t.agent_used))counters(c);
  const complete=t.sealed&&envelope.payload.captureStatus==='SEALED_COMPLETE';
  if(!complete&&envelope.payload.captureStatus!=='INCOMPLETE_SNAPSHOT'||t.legal_entity_id!==spec.companyId||!Number.isFinite(Date.parse(t.deadline))||!Number.isFinite(Date.parse(t.created_at))||!Array.isArray(events)||events.length>1000||complete&&(!events.length||events.at(-1).kind!=='SNAPSHOT'))throw Error('EVALUATION_TRACE_INCOMPLETE');
+ // PostgreSQL timestamps are captured as JavaScript ISO milliseconds. Permit
+ // at most one millisecond of truncation, never an inflated execution window.
+ const createdAt=Date.parse(t.created_at),deadline=Date.parse(t.deadline),precisionMs=1;
+ if(deadline<createdAt||deadline>createdAt+spec.limits.elapsedMs+precisionMs)throw Error('EVALUATION_TRIAL_DURATION_INVALID');
+ let previousAt=createdAt;
  let previous='0'.repeat(64);const used=zero(),agentUsed:Record<string,Counters>={},reservations=new Map<string,any>(),finished=new Map<string,any>(),invoked=new Set<string>();
  events.forEach((e:any,i:number)=>{
-  const canonical=JSON.parse(e.canonical);
+  const canonical=JSON.parse(e.canonical),at=Date.parse(e.created_at);
+  if(!Number.isFinite(at)||at<previousAt)throw Error('EVALUATION_EVENT_TIME_INVALID');previousAt=at;
   if(e.trial_id!==t.id||Number(e.sequence)!==i+1||e.previous_hash!==previous||e.hash!==createHash('sha256').update(previous+e.canonical).digest('hex')||
    canonical.trialId!==t.id||canonical.sequence!==i+1||canonical.kind!==e.kind||canonical.reservationId!==e.reservation_id||stableStringify(canonical.payload)!==stableStringify(e.payload)||Date.parse(canonical.at)!==Date.parse(e.created_at))throw Error('EVALUATION_HASH_CHAIN_INVALID');
   previous=e.hash;
@@ -28,14 +34,29 @@ export function verifyEvaluationTrace(input:unknown,trustedKey:string|KeyObject)
    const p=e.payload;counters(p.reserved);
    const charge=p.kind==='model'?{models:1}:['tool','readback'].includes(p.kind)?{tools:1}:p.kind==='iteration'?{iterations:1}:p.kind==='delegation'?{delegations:p.reserved.delegations}:null;
    if(!charge||Object.entries(p.reserved).some(([k,n])=>k!=='costUsd'&&k!=='tokens'&&n!==((charge as any)[k]??0))||p.kind==='model'&&p.reserved.tokens<1||p.kind!=='model'&&p.reserved.tokens!==0||['iteration','delegation'].includes(p.kind)&&p.reserved.costUsd!==0||p.kind==='delegation'&&p.reserved.delegations<1)throw Error('EVALUATION_RESERVATION_INVALID');
-   if(!Object.hasOwn(spec.agents,p.agentId))throw Error('EVALUATION_AGENT_DENIED');const a=agentUsed[p.agentId]??=zero();
+   if(!Object.hasOwn(spec.agents,p.agentId))throw Error('EVALUATION_AGENT_DENIED');
+   const agent=spec.agents[p.agentId],agentDeadline=Date.parse(t.agent_deadlines[p.agentId]);
+   if(!Number.isFinite(agentDeadline)||agentDeadline>deadline||!Object.hasOwn(agentUsed,p.agentId)&&agentDeadline>at+agent.elapsedMs+precisionMs)throw Error('EVALUATION_AGENT_DURATION_INVALID');
+   if(p.kind==='model'){
+    const price=spec.prices.find(x=>x.providerId===p.providerId&&x.model===p.model);
+    if(!price||!Number.isSafeInteger(p.maxInputTokens)||!Number.isSafeInteger(p.maxOutputTokens)||p.maxInputTokens<1||p.maxOutputTokens<1||
+     p.maxInputTokens>Math.min(spec.limits.maxInputTokens,agent.maxInputTokens)||p.maxOutputTokens>Math.min(spec.limits.maxOutputTokens,agent.maxOutputTokens)||
+     p.reserved.tokens!==p.maxInputTokens+p.maxOutputTokens||
+     Math.abs(p.reserved.costUsd-(p.maxInputTokens*price.inputPer1k+p.maxOutputTokens*price.outputPer1k)/1000)>1e-12)throw Error('EVALUATION_MODEL_RESERVATION_INVALID');
+   }
+   const a=agentUsed[p.agentId]??=zero();
    for(const k of Object.keys(used) as (keyof Counters)[]){const n=p.reserved[k];if(!Number.isFinite(n)||n<0||k!=='costUsd'&&!Number.isSafeInteger(n))throw Error('EVALUATION_RESERVATION_INVALID');used[k]+=n;a[k]+=n;}
    if(Date.parse(e.created_at)>Date.parse(t.deadline))throw Error('EVALUATION_LATE_RESERVATION');
    if(!Number.isFinite(Date.parse(t.agent_deadlines[p.agentId]))||Date.parse(e.created_at)>Date.parse(t.agent_deadlines[p.agentId]))throw Error('EVALUATION_LATE_AGENT_RESERVATION');
   }
   if(e.kind==='INVOKING'){const r=reservations.get(e.reservation_id)?.payload;
-   if(!r||invoked.has(e.reservation_id)||finished.has(e.reservation_id)||!['model','tool','readback'].includes(r.kind)||e.payload.kind!==r.kind||e.payload.agentId!==undefined&&e.payload.agentId!==r.agentId||['providerId','model','capabilityId','workGoalId'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r[k])||Date.parse(e.created_at)>Math.min(Date.parse(t.deadline),Date.parse(t.agent_deadlines[r.agentId])))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
-  if(e.kind==='FINISHED'){if(!reservations.has(e.reservation_id)||finished.has(e.reservation_id)||!['success','failure'].includes(e.payload.status)||e.payload.status==='success'&&!['iteration','delegation'].includes(reservations.get(e.reservation_id).payload.kind)&&!invoked.has(e.reservation_id))throw Error('EVALUATION_COMPLETION_INVALID');finished.set(e.reservation_id,e);}
+   if(!r||invoked.has(e.reservation_id)||finished.has(e.reservation_id)||!['model','tool','readback'].includes(r.kind)||e.payload.kind!==r.kind||e.payload.agentId!==undefined&&e.payload.agentId!==r.agentId||['providerId','model','capabilityId','workGoalId','maxInputTokens','maxOutputTokens'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r[k])||['tokens','costUsd'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r.reserved[k])||Date.parse(e.created_at)>Math.min(Date.parse(t.deadline),Date.parse(t.agent_deadlines[r.agentId])))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
+  if(e.kind==='FINISHED'){if(!reservations.has(e.reservation_id)||finished.has(e.reservation_id)||!['success','failure'].includes(e.payload.status)||e.payload.status==='success'&&!['iteration','delegation'].includes(reservations.get(e.reservation_id).payload.kind)&&!invoked.has(e.reservation_id))throw Error('EVALUATION_COMPLETION_INVALID');const r=reservations.get(e.reservation_id).payload;
+   if(r.kind==='model'&&e.payload.status==='success'){
+    const result=e.payload.result,u=result?.usage;
+    if(result?.model!==r.model||!u||!Number.isSafeInteger(u.inputTokens)||!Number.isSafeInteger(u.outputTokens)||u.inputTokens<0||u.outputTokens<0||u.inputTokens>r.maxInputTokens||u.outputTokens>r.maxOutputTokens)throw Error('EVALUATION_MODEL_USAGE_INVALID');
+   }
+   finished.set(e.reservation_id,e);}
  });
  for(const k of Object.keys(used) as (keyof Counters)[]){if(Math.abs(used[k]-t.used[k])>1e-8||used[k]>spec.limits[k]+1e-12)throw Error('EVALUATION_LEDGER_MISMATCH');}
  if(stableStringify(agentUsed)!==stableStringify(t.agent_used))throw Error('EVALUATION_AGENT_LEDGER_MISMATCH');

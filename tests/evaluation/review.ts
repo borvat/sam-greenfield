@@ -18,9 +18,9 @@ function fixture(){
  const limits={...ceiling},reserved={...zero(),models:1,tokens:100,costUsd:0.001};
  const trial={id:randomUUID(),root_goal_id:randomUUID(),legal_entity_id:randomUUID(),sealed:false,cancelled:false,
   created_at:at,deadline:new Date(Date.parse(at)+120000).toISOString(),used:{...reserved},agent_used:{'executive-bootstrap':{...reserved}},agent_deadlines:{'executive-bootstrap':new Date(Date.parse(at)+60000).toISOString()},spec:{} as any};
- trial.spec={version:1,mode:'fixture',syntheticOnly:true,commit:'a'.repeat(40),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:trial.legal_entity_id,rootCapabilityId:'specialist.executive',limits,agents:{'executive-bootstrap':limits},prices:[{providerId:'fixture',model:'fixture',inputPer1k:0,outputPer1k:0}],capabilityHash:'f'.repeat(64)};
+ trial.spec={version:1,mode:'fixture',syntheticOnly:true,commit:'a'.repeat(40),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:trial.legal_entity_id,rootCapabilityId:'specialist.executive',limits,agents:{'executive-bootstrap':limits},prices:[{providerId:'fixture',model:'fixture',inputPer1k:0.01,outputPer1k:0.01}],capabilityHash:'f'.repeat(64)};
  const id=randomUUID();
- return {captureStatus:'INCOMPLETE_SNAPSHOT',exportedAt:at,trial,events:[{kind:'RESERVED',reservation_id:id,payload:{kind:'model',goalId:trial.root_goal_id,agentId:'executive-bootstrap',reserved},created_at:at}] as any[]};
+ return {captureStatus:'INCOMPLETE_SNAPSHOT',exportedAt:at,trial,events:[{kind:'RESERVED',reservation_id:id,payload:{kind:'model',goalId:trial.root_goal_id,agentId:'executive-bootstrap',providerId:'fixture',model:'fixture',maxInputTokens:60,maxOutputTokens:40,reserved},created_at:at}] as any[]};
 }
 function envelope(payload:any){
  let previous='0'.repeat(64);payload.events=payload.events.map((e:any,i:number)=>{
@@ -30,7 +30,24 @@ function envelope(payload:any){
  return {format:'sam-evaluation-v1',keyId:createHash('sha256').update(keys.publicKey.export({type:'spki',format:'der'})).digest('hex'),payload,signature:sign(null,Buffer.from(stableStringify(payload)),keys.privateKey).toString('base64')};
 }
 assert.equal(verifyEvaluationTrace(envelope(fixture()),keys.publicKey).pending.length,1);
+// A later operator export does not extend execution admission or invalidate a
+// previously completed time window. Explicit zero-priced fixture models remain valid.
+const free=fixture();free.trial.spec.prices[0].inputPer1k=0;free.trial.spec.prices[0].outputPer1k=0;
+free.events[0].payload.reserved.costUsd=0;free.trial.used.costUsd=0;free.trial.agent_used['executive-bootstrap'].costUsd=0;
+free.exportedAt=new Date(Date.parse(at)+86400_000).toISOString();
+assert.equal(verifyEvaluationTrace(envelope(free),keys.publicKey).pending.length,1);
+
 const edits:Record<string,(p:any)=>void>={
+ 'underreserved tokens':p=>{p.events[0].payload.reserved.tokens=1;p.trial.used.tokens=1;p.trial.agent_used['executive-bootstrap'].tokens=1;},
+ 'underreserved cost':p=>{p.events[0].payload.reserved.costUsd=0;p.trial.used.costUsd=0;p.trial.agent_used['executive-bootstrap'].costUsd=0;},
+ 'unpinned model':p=>p.events[0].payload.model='unapproved',
+ 'oversized input bound':p=>p.events[0].payload.maxInputTokens=ceiling.maxInputTokens+1,
+ 'missing input bound':p=>delete p.events[0].payload.maxInputTokens,
+ 'trial duration mismatch':p=>p.trial.spec.limits.elapsedMs=1,
+ 'agent duration mismatch':p=>p.trial.spec.agents['executive-bootstrap']={...p.trial.spec.agents['executive-bootstrap'],elapsedMs:1},
+ 'invocation token mismatch':p=>p.events.push({kind:'INVOKING',reservation_id:p.events[0].reservation_id,payload:{kind:'model',tokens:1},created_at:at}),
+ 'invocation cost mismatch':p=>p.events.push({kind:'INVOKING',reservation_id:p.events[0].reservation_id,payload:{kind:'model',costUsd:0},created_at:at}),
+ 'usage beyond reservation':p=>p.events.push({kind:'INVOKING',reservation_id:p.events[0].reservation_id,payload:{kind:'model'},created_at:at},{kind:'FINISHED',reservation_id:p.events[0].reservation_id,payload:{status:'success',result:{model:'fixture',usage:{inputTokens:61,outputTokens:40}}},created_at:at}),
  'missing global counter':p=>delete p.trial.used.models,
  'non-numeric global counter':p=>p.trial.used.models='1',
  'extra reservation counter':p=>p.events[0].payload.reserved.unmetered=99,
