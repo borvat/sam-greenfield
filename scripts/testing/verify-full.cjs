@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'render-migration-compatibility','render-google-oauth-contracts','integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-learning-fairness','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'service-provisioning','provisioning-backup-recovery','render-migration-compatibility','render-google-oauth-contracts','integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-learning-fairness','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -238,6 +238,8 @@ async function main(){
   });
   for(const [name,file] of Object.entries({'provider-auth':'provider_auth.ts','postgres-tls':'postgres_tls.ts','contracts':'contracts.ts','synthetic-pilot':'synthetic_pilot.ts','managed-schema':'managed_schema_source.cjs','local-bundle':'local_bundle.ts','closed-setup':'setup.ts','database-contract':'database_check.ts','prelaunch-gate':'prelaunch.ts'}))
    await step(name,s=>suite(s,'tests/release/'+file));
+  await step('service-provisioning',s=>suite(s,'tests/compatibility/serviceProvisioning.ts'));
+  await step('provisioning-backup-recovery',s=>command(s,process.execPath,['scripts/testing/provisioning-backup.cjs',db,id],{cwd:source,timeout:120000}));
   await step('render-migration-compatibility',s=>suite(s,'tests/compatibility/renderMigrations.ts'));
   await step('render-google-oauth-contracts',s=>node(s,['node','--import','tsx','--test',
     ...fs.readdirSync(path.join(source,'tests/isolated')).filter(f=>/^sam_google_.*\.ts$/.test(f)).sort().map(f=>'tests/isolated/'+f),
