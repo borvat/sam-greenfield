@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-learning-fairness','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -244,6 +244,7 @@ async function main(){
   await step('specialist-reasoning',s=>suite(s,'tests/specialists/acceptance.ts'));
   await step('specialist-gateway',s=>suite(s,'tests/specialists/gateway.ts'));
   await step('specialist-provenance',s=>suite(s,'tests/specialists/provenance.ts'));
+  await step('specialist-learning-fairness',s=>suite(s,'tests/specialists/learningFairness.ts'));
   await step('specialist-evaluation',s=>node(s,['node','--import','tsx','tests/specialists/evaluation.ts']));
   await step('evaluation-budget',s=>suite(s,'tests/evaluation/budgets.ts',evaluationEvidence()));
   await step('evaluation-adapter',s=>suite(s,'tests/evaluation/adapters.ts'));
