@@ -1,3 +1,4 @@
+import {recordWorkFailure} from "../../kernel/src/failures";
 import {reviewNextReadGoal} from './readGoalReview';
 import {relayOutboxUntilEmpty} from '../../kernel/src/outboxRelay';
 import {processNextKernelEventAtomic} from '../../kernel/src/eventConsumer';
@@ -17,6 +18,7 @@ import {pilotEnabled,authorizePilotGoal,assertPilotStep} from "./syntheticPilotS
 export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
+  ordinaryFailurePolicy?:"retry"|"record";
   specialistConcurrency?:number;
   specialistScopeGoalId?:string;
   planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
@@ -37,7 +39,13 @@ export function createProductionComposition(input:{
       const objective=await withTransaction(client=>authorizePilotGoal(client,work.goalId!));
       assertPilotStep(objective,work.capabilityId,work.params);
     }
-    return input.executeTool?input.executeTool(work,execute):execute(work);
+    try{return await (input.executeTool?input.executeTool(work,execute):execute(work));}
+    catch(error){
+      // Deployed ordinary tools record deterministic failures. Phase8 and
+      // integration compositions retain bounded lease recovery by default.
+      if(input.ordinaryFailurePolicy==="record")await recordWorkFailure({queueId:work.queueId,fencingToken:work.fencingToken,error,actor:input.workerId});
+      throw error;
+    }
   }]));
   const ttl=input.bundle.raw.workerLeaseTtlSeconds??60;
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);

@@ -13,7 +13,7 @@ export function createReleaseReadSurface(){
   return new ChatGPTToolRegistry([
     tool("sam_service_status",async()=>{
       const result:Record<string,string>={};
-      for(const [name,port] of [["worker",Number(process.env.PORT)],["command-center",Number(process.env.SAM_COMMAND_CENTER_PORT)]] as const){
+      for(const [name,port] of [["worker",Number(process.env.SAM_RUNTIME_PORT??process.env.PORT)],["command-center",Number(process.env.SAM_COMMAND_CENTER_PORT)]] as const){
         if(!Number.isInteger(port)||port<1||port>65535){result[name]="UNAVAILABLE";continue;}
         try{
           const r=await fetch(`http://127.0.0.1:${port}/${name==="worker"?"readyz":"livez"}`,

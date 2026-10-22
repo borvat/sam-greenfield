@@ -1,4 +1,3 @@
-import {recordWorkFailure} from "../../kernel/src/failures";
 import {leaseAttemptLimit,stopExhaustedLease} from '../../kernel/src/leaseBudget';
 import {prepareWorkParameters} from '../../kernel/src/dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
@@ -100,14 +99,7 @@ export async function runOneSpecialistWork(input: {
     throw new Error(`No executor registered for capability ${work.capabilityId}`);
   }
 
-  let outcome;
-  try{outcome=await (input.advancers?.[work.capabilityId]??executor)(work);}
-  catch(error){
-    // Cooperative specialist continuations retain their own durable recovery.
-    // Ordinary tool failures stop siblings under the existing fencing token.
-    if(!input.advancers?.[work.capabilityId])await recordWorkFailure({queueId:work.queueId,fencingToken:work.fencingToken,error,actor:input.workerInstanceId});
-    throw error;
-  }
+  const outcome=await (input.advancers?.[work.capabilityId]??executor)(work);
   if(!outcome){
     // A normal cooperative yield is not a failed lease attempt. A crash still
     // consumes the attempt and is recovered by the existing kernel recovery.

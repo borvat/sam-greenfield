@@ -98,7 +98,7 @@ async function main(){
   assert.equal(before.rows[0].state,"NEW");
   assert.equal(Number((await pool.query("SELECT COUNT(*)::int n FROM plans WHERE goal_id=$1",[goalId])).rows[0].n),0);
 
-  const composition=createProductionComposition({bundle,workerId:"phase22-worker"});
+  const composition=createProductionComposition({ordinaryFailurePolicy:"record",bundle,workerId:"phase22-worker"});
   let state="NEW";
   for(let i=0;i<8&&state!=="COMPLETED";i++){
     await composition.runWorkTick();

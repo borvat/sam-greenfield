@@ -8,6 +8,8 @@ COPY --chown=node:node apps ./apps
 COPY --chown=node:node packages ./packages
 # Runtime/MCP imports and start:release require these existing contract helpers.
 COPY --chown=node:node scripts/release ./scripts/release
+# Test and preserve the actual configured Render runtime/MCP entrypoint.
+COPY --chown=node:node deploy/render/start.sh ./deploy/render/start.sh
 # Optional organization CA for verified installs behind an HTTPS proxy. The CA
 # mount is ephemeral and is never copied into the runtime image.
 RUN --mount=type=secret,id=registry_ca \

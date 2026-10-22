@@ -53,7 +53,7 @@ async function main(){
     verificationAdapters:[{capabilityId:"recovery_read",async verify(){return {result:"VERIFIED",evidence:{independent:true},verifier:"independent-test"};}}]
   });
   await pool.query("INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES('recovery_read','test','db_query','{}','{}')");
-  const composition=createProductionComposition({bundle,workerId:"recovery-test"});
+  const composition=createProductionComposition({ordinaryFailurePolicy:"record",bundle,workerId:"recovery-test"});
 
   // Recover a lease that expires after the service has already started.
   await composition.runWorkTick();
@@ -117,7 +117,7 @@ async function main(){
 
   const replanningGoal=await goal("REPLANNING");
   const replanBundle=validateProductionBundle({...bundle.raw,modelProviderConfigs:[modelConfig],modelAdapters:[{providerId:suffix,async invoke(){return {model:"test",usage:{inputTokens:1,outputTokens:1},output:{steps:[{capabilityId:"recovery_read",params:{name:"replanned"}}]}}}}]});
-  const replanComposition=createProductionComposition({bundle:replanBundle,workerId:"replanner"});
+  const replanComposition=createProductionComposition({ordinaryFailurePolicy:"record",bundle:replanBundle,workerId:"replanner"});
   await replanComposition.runWorkTick();
   assert.equal(await state(replanningGoal),"COMPLETED");
   assert.equal((await pool.query("SELECT replan_attempts FROM goals WHERE id=$1",[replanningGoal])).rows[0].replan_attempts,1);

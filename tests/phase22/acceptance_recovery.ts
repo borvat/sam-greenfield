@@ -45,7 +45,7 @@ async function main(){
       return {result:value===input.execution.evidence.value?"VERIFIED" as const:"FAILED" as const,evidence:{independent_http_value:value},verifier:"independent-http-reader"};
     }}))
   });
-  const composition=createProductionComposition({bundle,workerId:"isolated-acceptance"});
+  const composition=createProductionComposition({ordinaryFailurePolicy:"record",bundle,workerId:"isolated-acceptance"});
   let n=0;
   async function goal(objective:string){return (await pool.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,$3,'NEW','GREEN') RETURNING id",[`${tag}-${++n}`,entity.rows[0].id,objective])).rows[0].id as string;}
   async function state(id:string){return (await pool.query("SELECT state FROM goals WHERE id=$1",[id])).rows[0].state;}

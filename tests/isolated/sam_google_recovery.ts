@@ -91,7 +91,10 @@ test("isolated PostgreSQL: 404 transitions the same goal; budget, fencing, write
   assert.equal((await db.query<any>("SELECT * FROM audit_log WHERE action='RUNTIME_RECOVERY_REQUESTED'")).rows.length,1);
   await seed("exhausted",capability,2);await fail("exhausted");assert.equal((await state("exhausted")).state,"FAILED");
   await seed("write","gmail_send");await fail("write");assert.equal((await state("write")).state,"FAILED");
-  await seed("ledger",capability,0,"write-ledger-ref");await fail("ledger");assert.equal((await state("ledger")).state,"FAILED");
+  await seed("ledger",capability,0,"write-ledger-ref");assert.equal(await fail("ledger"),false);
+  assert.equal((await state("ledger")).state,"EXECUTING","bound writes remain under reconciliation, not missing-read recovery");
+  assert.equal((await db.query<any>("SELECT status FROM work_queue WHERE id='ledger-work'")).rows[0].status,"LEASED");
+  assert.equal((await db.query<any>("SELECT * FROM outbox_events WHERE aggregate_id='ledger-work'")).rows.length,0);
   await seed("generic");await fail("generic",new Error("REMOTE_TOOL_ERROR HttpError 404"));assert.equal((await state("generic")).state,"FAILED");
   await seed("stale");assert.equal(await fail("stale",undefined,1),false);assert.equal((await state("stale")).state,"EXECUTING");
   await seed("rollback");failAudit=true;await assert.rejects(fail("rollback"),/injected audit/);
