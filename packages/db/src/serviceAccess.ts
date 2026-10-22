@@ -8,6 +8,12 @@ export type ServicePrincipal={schema:string;role:string;kind:'runtime'|'mcp';org
 const ident=(s:string)=>{if(!/^[a-z_][a-z0-9_]{0,62}$/.test(s))throw Error('SERVICE_IDENTIFIER_INVALID');return '"'+s+'"';};
 const literal=(s:string)=>"'"+s.replaceAll("'","''")+"'";
 const uuid=/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+// The owning operator also obeys FORCE RLS. Require explicit reviewed context
+// before any mutation, even on the first call before FORCE RLS is enabled.
+async function assertServiceTenantContext(c:PoolClient,p:{orgId:string;legalEntityId:string}){
+ const context=(await c.query('SELECT current_org_id() org,current_legal_entity_id() entity')).rows[0];
+ if(context.org!==p.orgId||context.entity!==p.legalEntityId)throw Error('SERVICE_OPERATOR_TENANT_CONTEXT_REQUIRED');
+}
 export const oauthTables=['mcp_oauth_clients','mcp_oauth_requests','mcp_oauth_codes','mcp_oauth_refresh_tokens'];
 export async function applyServiceProfile(c:PoolClient){
  const filename='00109_service_principals.sql',sql=readFileSync('packages/db/service-migrations/'+filename,'utf8');
@@ -30,6 +36,7 @@ export async function provisionServiceAccess(c:PoolClient,p:ServicePrincipal){
  for(const value of [p.googleOwner,p.googleClient,p.oauthResource])if(!value||value.length>2048||value.includes('\0'))throw Error('SERVICE_BINDING_INVALID');
  for(const value of [p.googleClient,p.oauthResource]){const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw Error('SERVICE_BINDING_INVALID');}
  if((await c.query('SELECT current_schema() s')).rows[0].s!==p.schema)throw Error('SERVICE_SEARCH_PATH_MISMATCH');
+ await assertServiceTenantContext(c,p);
  await c.query("SELECT pg_advisory_xact_lock(hashtext('sam-service-provision'))");
  if((await c.query('SELECT 1 FROM sam_service_bindings WHERE role_name=$1',[p.role])).rowCount)throw Error('SERVICE_ROLE_ALREADY_BOUND');
  const roleFlags=(await c.query('SELECT rolcanlogin FROM pg_roles WHERE rolname=$1',[p.role])).rows[0];
@@ -87,6 +94,7 @@ export async function provisionServiceAccess(c:PoolClient,p:ServicePrincipal){
 // already-mapped or foreign mappings fail; no wildcard/default tenant backfill.
 export async function adoptOAuthClients(c:PoolClient,p:{clientIds:string[];orgId:string;legalEntityId:string}){
  if(!uuid.test(p.orgId)||!uuid.test(p.legalEntityId)||!p.clientIds.length||new Set(p.clientIds).size!==p.clientIds.length)throw Error('OAUTH_ADOPTION_INVALID');
+ await assertServiceTenantContext(c,p);
  if(!(await c.query('SELECT 1 FROM legal_entities WHERE id=$1 AND org_id=$2',[p.legalEntityId,p.orgId])).rowCount)throw Error('OAUTH_ADOPTION_TENANT_INVALID');
  const updated=await c.query('UPDATE mcp_oauth_clients SET sam_org_id=$1,sam_entity_id=$2 WHERE client_id=ANY($3::text[]) AND sam_org_id IS NULL AND sam_entity_id IS NULL RETURNING client_id',[p.orgId,p.legalEntityId,p.clientIds]);
  if(updated.rowCount!==p.clientIds.length)throw Error('OAUTH_ADOPTION_MAPPING_MISMATCH');

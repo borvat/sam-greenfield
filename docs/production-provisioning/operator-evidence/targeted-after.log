@@ -1,0 +1,8 @@
+PASS tests/compatibility/operatorProvisioning.ts
+PROVISIONED runtime
+PROVISIONED MCP
+ROLLBACK_PR50 PASS round 1 7df84a3913125896256c5b3039cf7f8cae28b8e1 unchanged production entrypoints; restricted principals; no migrations or live adapters
+ROLLBACK_PR50 PASS round 2 7df84a3913125896256c5b3039cf7f8cae28b8e1 unchanged production entrypoints; restricted principals; no migrations or live adapters
+OPERATOR_PROVISIONING PASS: constrained owning operator; 14→16/8/1; sequential runtime/MCP; explicit local tenant; missing/wrong tenant denied; repeat inspection/restart; registry parity; unchanged PR50 recovery; FORCE RLS retained; default full backup fails closed
+
+{"passed":1,"failed":0,"results":[{"test":"tests/compatibility/operatorProvisioning.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-22T20:30:20.664Z","completedAt":"2026-10-22T20:30:23.407Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-22T20:30:20.667Z","completedAt":"2026-10-22T20:30:20.838Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/compatibility/operatorProvisioning.ts"],"startedAt":"2026-10-22T20:30:20.838Z","completedAt":"2026-10-22T20:30:23.407Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

@@ -44,8 +44,8 @@ async function main(){
   assert.equal((await c.query("SELECT count(*)::int n FROM mcp_oauth_clients WHERE client_id='retained-client'")).rows[0].n,1);
   for(const role of roles)await c.query(`CREATE ROLE ${role} LOGIN PASSWORD 'synthetic-provisioning-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
   const principal=(i:number):ServicePrincipal=>({schema,role:roles[i],kind:i===0?'runtime':'mcp',orgId:i===2?orgB:org,legalEntityId:i===2?entityB:entity,googleOwner:i===2?'owner-b':'owner-a',googleClient:`https://fixture-${i===2?'b':'a'}.invalid/google/oauth/client.json`,oauthResource:`https://fixture-${i===2?'b':'a'}.invalid/mcp`});
-  await c.query('BEGIN');await adoptOAuthClients(c as any,{clientIds:['retained-client'],orgId:org,legalEntityId:entity});await c.query('COMMIT');
-  for(let i=0;i<3;i++){await c.query('BEGIN');try{await provisionServiceAccess(c as any,principal(i));await c.query('COMMIT');}catch(e){await c.query('ROLLBACK');throw e;}}
+  await c.query('BEGIN');await c.query("SELECT set_config('app.current_org_id',$1,true),set_config('app.current_legal_entity_id',$2,true)",[org,entity]);await adoptOAuthClients(c as any,{clientIds:['retained-client'],orgId:org,legalEntityId:entity});await c.query('COMMIT');
+  for(let i=0;i<3;i++){await c.query('BEGIN');try{await c.query("SELECT set_config('app.current_org_id',$1,true),set_config('app.current_legal_entity_id',$2,true)",[principal(i).orgId,principal(i).legalEntityId]);await provisionServiceAccess(c as any,principal(i));await c.query('COMMIT');}catch(e){await c.query('ROLLBACK');throw e;}}
   for(let i=0;i<3;i++){
    const p=principal(i),u=new URL(scoped);u.username=p.role;u.password='synthetic-provisioning-only';u.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${p.orgId} -c app.current_legal_entity_id=${p.legalEntityId}`);
    const db=new Pool({connectionString:u.href,max:2});clients.push(db);const client=await db.connect();try{await assertIntegrationAccess(client);}finally{client.release();}

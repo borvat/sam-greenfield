@@ -52,3 +52,27 @@ For database recovery, `provisioning-backup.cjs` uses `pg_dump`/`pg_restore` of 
 ## Evidence and remaining gates
 
 See ACCEPTANCE.md for final exact tested/published sources and external results. Existing PR50 acceptance remains preserved. New tests use disposable PostgreSQL, synthetic encrypted tokens and static adapters; no production principal, live model reasoning, Google authorization or real business transaction is certified. Hosted Actions billing is an external limitation, not a reason to rerun unchanged test bodies or claim hosted success. Actual MCP configuration/principal, reviewed tenant mappings, complete registry parity and approved production backup/cutover actions remain prerequisites. No arbitrary additional soak or invented human-only review is required by this work.
+
+## Render-like operator correction
+
+The original 58-stage rehearsal used a superuser test operator; that did not establish compatibility with Render's actual migration operator. Parent's later read-only metadata identifies NOSUPERUSER, NOBYPASSRLS, CREATEDB, CREATEROLE, INHERIT and sole effective membership `pg_database_owner` (itself NOLOGIN/NOSUPERUSER/NOBYPASSRLS). Ownership does not bypass FORCE RLS. The new `operatorProvisioning.ts` creates an isolated database owned by an operator with exactly these flags/membership; all migrations, application data setup and provisioning run through that login. The bootstrap administrator only creates/removes disposable fixture infrastructure.
+
+Before correction, first runtime provisioning succeeded and the second MCP call failed with `RUNTIME_TENANT_MISMATCH`. The missing operator tenant context hid `legal_entities` after the first call forced RLS. Both `adoptOAuthClients` and `provisionServiceAccess` now require matching organization/entity settings before any mutation, including the first call. For **each** approved adoption/provisioning transaction, use this pattern through the owning migration operator, with reviewed UUID parameters:
+
+```sql
+BEGIN;
+SELECT set_config('app.current_org_id', $1, true),
+       set_config('app.current_legal_entity_id', $2, true);
+-- Call adoptOAuthClients OR provisionServiceAccess on this same connection.
+-- Parameters must match the transaction-local tenant context exactly.
+COMMIT;
+-- On any error, ROLLBACK instead. Do not continue a partly failed transaction.
+```
+
+The same explicit local context is required for operator tenant/registry inspection after FORCE RLS. It expires at COMMIT/ROLLBACK; do not assume one transaction configures the next. Re-running provisioning for an already-bound role deliberately returns `SERVICE_ROLE_ALREADY_BOUND` without changing its grants; inspect metadata instead. Migration/profile restart remains idempotent. Existing legal-entity and registry SELECT policies provide the required access. **No new operator policies, grants, BYPASSRLS, SET ROLE, RLS disablement or FORCE RLS removal were needed or introduced.** The operator is trusted to nominate the maintenance tenant and inherently owns DDL; application roles retain their independent immutable tenant fences.
+
+The regression verifies missing/wrong operator context denial, sequential provisioning, context expiry, tenant-filtered inspection, repeated-call denial, exact registry checks, migration restart, application wrong-tenant denial and two unchanged PR50 recovery startups. FORCE RLS flags and operator privilege/membership flags stay unchanged throughout. The application rollback procedure above is therefore rehearsed with a Render-like operator, not only a superuser fixture.
+
+Backup limitation: with FORCE RLS enabled, the non-BYPASSRLS owner fails the `row_security=off` read semantics used by default logical backup. The test asserts that failure; it does not run a production dump or certify a full post-cutover backup. Do not add `--enable-row-security` and call a filtered dump complete, grant BYPASSRLS, or disable policies. The earlier synthetic quarantine restore proves recovery mechanics only. Before production cutover, separately approve and verify a complete pre-change backup/restore path; post-cutover full backup requires verified managed backup/snapshot capability or a separately reviewed recovery design. This production recovery gate remains unresolved, rather than being hidden by superuser evidence.
+
+Parent also confirmed masked MCP configuration *names* for the dedicated owner password hash, signing key, internal OAuth flag and Google configuration. Names alone prove neither valid values nor working authorization. Actual service-local MCP database principal remains unknown. No secret values were read in this continuation.
