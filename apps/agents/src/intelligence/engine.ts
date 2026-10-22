@@ -108,10 +108,10 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   await c.query('UPDATE specialist_budgets SET used=$2 WHERE root_queue_id=$1',[run.root_queue_id,JSON.stringify(used)]);
   await c.query('UPDATE specialist_sessions SET used=$2 WHERE queue_id=$1',[run.queue_id,JSON.stringify(agentUsed)]);
  }
- async function context(c:PoolClient,run:Run){
-  const all=(await c.query(`SELECT g.id,g.state,g.objective FROM goals g JOIN specialist_delegations d ON d.goal_id=g.id WHERE d.parent_queue_id=$1 ORDER BY d.created_at,g.id`,[run.queue_id])).rows;
+ async function context(c:PoolClient,run:Pick<Run,'queue_id'>){
+  const all=(await c.query(`SELECT g.id,g.state,g.objective,d.created_at FROM goals g JOIN specialist_delegations d ON d.goal_id=g.id WHERE d.parent_queue_id=$1 ORDER BY d.created_at,g.id`,[run.queue_id])).rows;
   const sources=await verifiedEvidence(c,all.map(g=>g.id));
-  const reports:Report[]=sources.filter(e=>e.fresh&&e.result.status==='COMPLETE'&&e.result.report).map(e=>e.result.report as Report);
+  const reports:Report[]=sources.filter(e=>e.fresh&&configs.has(e.capabilityId)&&e.result.status==='COMPLETE'&&e.result.report).map(e=>e.result.report as Report);
   // Expand citations only through verified child reports, checking their current
   // verification IDs again. Never accept evidence IDs invented by a model.
   const cited=[...new Set(reports.flatMap(r=>r.evidence.map(e=>e.goalId)))];
@@ -122,7 +122,18 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
     r.evidence.some(old=>old.id===id&&old.verificationId===e.verificationId)&&containsValue(e.result,cl.value)))));
   const missing=all.filter(g=>g.state==='COMPLETED'&&!sources.some(s=>s.goalId===g.id&&s.fresh&&
     (!configs.has(s.capabilityId)||validReports.some(r=>sha256Hex(r)===sha256Hex(s.result.report))))).map(g=>g.id);
-  return {tasks:all,evidence,reports:validReports,missing,conflicts:contradictions(validReports),pending:all.some(g=>!['COMPLETED','FAILED','CANCELLED','WAITING_EXTERNAL','BLOCKED','REPLANNING'].includes(g.state))};
+  const conflicts=contradictions(validReports).map(conflict=>({...conflict,correctionAfter:Math.max(...sources.filter(s=>
+   validReports.includes(s.result.report as Report)&&(s.result.report as Report).claims.some(cl=>cl.topic===conflict.topic)).map(s=>new Date(s.retrievedAt).getTime()))}));
+  return {tasks:all,evidence,reports:validReports,missing,conflicts,pending:all.some(g=>!['COMPLETED','FAILED','CANCELLED','WAITING_EXTERNAL','BLOCKED','REPLANNING'].includes(g.state))};
+ }
+ function assertConflictCorrections(claims:Report['claims'],current:Awaited<ReturnType<typeof context>>){
+  for(const conflict of current.conflicts){
+   const claim=claims.find(c=>c.topic===conflict.topic),oldIds=new Set(conflict.values.flatMap(v=>v.evidenceIds));
+   // Correction must be a direct read delegated AFTER the conflicting reports
+   // existed. An old third source or a peer's nested citation is insufficient.
+   if(!claim||!claim.evidenceIds.some(id=>!oldIds.has(id)&&current.evidence.some(e=>e.id===id&&
+    current.tasks.some(t=>t.id===e.goalId&&new Date(t.created_at).getTime()>conflict.correctionAfter))))throw Error('SPECIALIST_CONFLICT_UNRESOLVED');
+  }
  }
  function outcome(run:Run){return {result:{status:run.state.phase==='COMPLETE'?'COMPLETE':'STOPPED',report:run.state.report??null,reason:run.state.reason??null},
   evidence:{specialist_session:run.queue_id,classification:'SYNTHETIC_MODEL_ARCHITECTURE',side_effect:false}};}
@@ -151,7 +162,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   try{
    const memory=await withTransaction(c=>recallVerifiedLessons(c,tenant.entity,run.objective.slice(0,200)));
    const projectedEvidence=ctx.evidence.map(e=>{
-    const result=e.result.report?{status:e.result.status,report:{summary:(e.result.report as any).summary,claims:(e.result.report as any).claims}}:e.result;
+    const result=e.result; // Leaf source fields never acquire specialist-report semantics.
     const envelope=sourceEnvelope({id:e.id,capabilityId:e.capabilityId,uri:typeof e.result.uri==='string'?e.result.uri:undefined,retrievedAt:e.retrievedAt,text:JSON.stringify(result),verified:true});
     const {content,...provenance}=envelope; // Structured result below is the same bounded source content.
     if(envelope.truncated)throw Error('SPECIALIST_SOURCE_TOO_LARGE');
@@ -180,11 +191,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
      }
      // A conflict can only be addressed with a new direct observation, not by
      // choosing one of the conflicting agents or quoting the report itself.
-     for(const conflict of current.conflicts){
-      const claim=decision.claims.find(c=>c.topic===conflict.topic);
-      const oldIds=new Set(conflict.values.flatMap(v=>v.evidenceIds));
-      if(!claim||!claim.evidenceIds.some(id=>!oldIds.has(id)&&current.evidence.some(e=>e.id===id&&!configs.has(e.capabilityId))))throw Error('SPECIALIST_CONFLICT_UNRESOLVED');
-     }
+     assertConflictCorrections(decision.claims,current);
      run.state.report={agentId:cfg.agentId,summary:decision.summary,claims:decision.claims,uncertainties:decision.uncertainties,
       completionCriteria:decision.completionCriteria,classification:'MODEL_INFERENCE',evidence:current.evidence};
      run.state.phase='COMPLETE';await save(c,run);return outcome(run);
@@ -303,6 +310,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const r=(await c.query('SELECT s.state,b.cancelled,least(b.deadline,s.deadline) deadline FROM specialist_sessions s JOIN specialist_budgets b USING(root_queue_id) WHERE s.queue_id=$1',[queueId])).rows[0];
    if(!r||r.cancelled||new Date(r.deadline).getTime()<=Date.now()||r.state.phase!=='COMPLETE'||result.status!=='COMPLETE'||sha256Hex(result.report)!==sha256Hex(r.state.report))return false;
    const report=r.state.report as Report;
+   try{assertConflictCorrections(report.claims,await context(c,{queue_id:queueId}));}catch{return false;}
    const fresh=await verifiedEvidence(c,[...new Set(report.evidence.map(e=>e.goalId))]);
    return report.claims.length>0&&report.claims.every(cl=>cl.evidenceIds.length>0&&cl.evidenceIds.every(id=>{
     const x=fresh.find(e=>e.id===id),old=report.evidence.find(e=>e.id===id);

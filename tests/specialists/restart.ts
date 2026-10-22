@@ -2,7 +2,7 @@
 // with SIGKILL in acceptance.ts. This does not call or simulate a live model.
 import assert from 'node:assert/strict';
 import {pool} from '../../packages/db/src/client';
-import {applySpecialistProfile,specialistManifest} from '../../packages/db/src/specialistProfile';
+import {applySpecialistProfile,specialistMigrationManifest} from '../../packages/db/src/specialistProfile';
 import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
 import {ceiling} from '../../apps/agents/src/intelligence/contracts';
 async function main(){
@@ -22,7 +22,7 @@ async function main(){
  assert.deepEqual(r.used,{models:2,tools:1,iterations:2,tokens:64000,costUsd:0.064,delegations:1});
  assert.deepEqual(r.agent_used,{models:1,tools:1,iterations:1,tokens:32000,costUsd:0.032,delegations:1});
  assert.deepEqual(r.state,{phase:'MODEL_PENDING',children:[],history:[{reservation:'uncertain-do-not-refund'}]});
- assert.equal((await c.query('SELECT sha256 FROM sam_specialist_migrations')).rows[0].sha256,specialistManifest().sha256);
+ assert.deepEqual((await c.query('SELECT filename,sha256 FROM sam_specialist_migrations ORDER BY filename')).rows,specialistMigrationManifest().map(({filename,sha256})=>({filename,sha256})));
  console.log('SPECIALIST_POSTGRES_RESTART PASS',process.argv[2],'durable counters, pending reasoning state and migration receipt retained; no live models');
  }finally{c.release();}
 }

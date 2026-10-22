@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','migration-upgrade-rollback','specialist-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-evaluation','migration-upgrade-rollback','specialist-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -242,6 +242,8 @@ async function main(){
    await step(name,s=>suite(s,'tests/integration/'+file));
   await step('specialist-reasoning',s=>suite(s,'tests/specialists/acceptance.ts'));
   await step('specialist-gateway',s=>suite(s,'tests/specialists/gateway.ts'));
+  await step('specialist-provenance',s=>suite(s,'tests/specialists/provenance.ts'));
+  await step('specialist-evaluation',s=>node(s,['node','--import','tsx','tests/specialists/evaluation.ts']));
   await step('migration-upgrade-rollback',s=>node(s,['node','tests/testing/database-lifecycle.cjs','prepare'],life));
   await step('specialist-restart-prepare',s=>node(s,['node','--import','tsx','tests/specialists/restart.ts','prepare'],life));
   await step('postgres-restart',async s=>{await command(s,'docker',['restart','--time','10',db]);await ready(s);});

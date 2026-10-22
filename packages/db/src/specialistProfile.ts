@@ -7,22 +7,29 @@ export function specialistManifest(){
  const filename='00106_specialist_intelligence.sql',sql=readFileSync('packages/db/specialist-migrations/'+filename,'utf8');
  return {filename,sql,sha256:createHash('sha256').update(sql).digest('hex')};
 }
+export function specialistMigrationManifest(){
+ return [specialistManifest(),...['00107_learning_provenance.sql'].map(filename=>{
+  const sql=readFileSync('packages/db/specialist-migrations/'+filename,'utf8');
+  return {filename,sql,sha256:createHash('sha256').update(sql).digest('hex')};
+ })];
+}
 /** Operator invocation only; never runs on application startup. */
 export async function applySpecialistProfile(c:PoolClient){
- const m=specialistManifest();await c.query('BEGIN');
+ const migrations=specialistMigrationManifest(),m=migrations[0];await c.query('BEGIN');
  try{
   await c.query("SELECT pg_advisory_xact_lock(hashtext('sam-specialist-migrations'))");
   await c.query('CREATE TABLE IF NOT EXISTS sam_specialist_migrations(filename text PRIMARY KEY,sha256 text NOT NULL)');
-  const prior=(await c.query('SELECT * FROM sam_specialist_migrations')).rows;
-  if(prior.length>1||prior.some(p=>p.filename!==m.filename||p.sha256!==m.sha256))throw Error('SPECIALIST_MIGRATION_HASH_MISMATCH');
-  if(!prior.length){await c.query(m.sql);await c.query('INSERT INTO sam_specialist_migrations VALUES($1,$2)',[m.filename,m.sha256]);}
-  await c.query('COMMIT');return {filename:m.filename,sha256:m.sha256};
+  const prior=(await c.query('SELECT * FROM sam_specialist_migrations ORDER BY filename')).rows;
+  if(prior.some((p,i)=>p.filename!==migrations[i]?.filename||p.sha256!==migrations[i]?.sha256))throw Error('SPECIALIST_MIGRATION_HASH_MISMATCH');
+  for(const next of migrations.slice(prior.length)){await c.query(next.sql);await c.query('INSERT INTO sam_specialist_migrations VALUES($1,$2)',[next.filename,next.sha256]);}
+  await c.query('COMMIT');return {filename:m.filename,sha256:m.sha256,migrations:migrations.map(({filename,sha256})=>({filename,sha256}))};
  }catch(e){await c.query('ROLLBACK');throw e;}
 }
 export async function provisionSpecialistAccess(c:PoolClient,input:{schema:string;role:string;orgId:string;legalEntityId:string}){
  // Base runtime provisioning is separate and must already have been reviewed.
  const {schema,role,orgId,legalEntityId:entity}=input;
  if(!/^[a-z_][a-z0-9_]*$/.test(schema)||!/^[a-z_][a-z0-9_]*$/.test(role)||![orgId,entity].every(s=>/^[0-9a-f-]{36}$/.test(s)))throw Error('SPECIALIST_PRINCIPAL_INVALID');
+ await c.query(`GRANT SELECT ON "${schema}".sam_specialist_migrations TO "${role}"`);
  const relations:Record<string,string>={
  specialist_budgets:`EXISTS(SELECT 1 FROM work_queue w JOIN goals g ON g.id=w.goal_id WHERE w.id=root_queue_id AND g.company_scope=legal_entity_id)`,
  specialist_sessions:`EXISTS(SELECT 1 FROM work_queue w JOIN goals g ON g.id=w.goal_id WHERE w.id=queue_id AND g.company_scope=legal_entity_id) AND EXISTS(SELECT 1 FROM specialist_budgets b WHERE b.root_queue_id=specialist_sessions.root_queue_id AND b.legal_entity_id=specialist_sessions.legal_entity_id)`,
@@ -41,6 +48,9 @@ export async function provisionSpecialistAccess(c:PoolClient,input:{schema:strin
 }
 export async function assertSpecialistAccess(c:PoolClient){
  const tenant=await assertRuntimeTenantBinding(c);
+ const receipts=(await c.query('SELECT filename,sha256 FROM sam_specialist_migrations ORDER BY filename')).rows;
+ const expected=specialistMigrationManifest();
+ if(receipts.length!==expected.length||receipts.some((r,i)=>r.filename!==expected[i].filename||r.sha256!==expected[i].sha256))throw Error('SPECIALIST_MIGRATION_UPGRADE_REQUIRED');
  const rows=(await c.query(`SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,p.polpermissive,
   pg_get_expr(p.polqual,p.polrelid) qual,pg_get_expr(p.polwithcheck,p.polrelid) chk FROM pg_policy p JOIN pg_class c ON c.oid=p.polrelid
   WHERE c.relnamespace=to_regnamespace(current_schema()) AND c.relname=ANY($1::text[])

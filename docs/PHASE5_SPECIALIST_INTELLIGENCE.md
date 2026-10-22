@@ -134,6 +134,10 @@ automatically reopen previously completed goals.
 
 ## Durability, budgets and security
 
+The [Phase 6 review](PHASE6_REVIEW_AND_LIVE_EVALUATION.md) records subsequent
+corrections, the additive 00107 learning guard, and the remaining live-evaluation
+budget/adapter gates. The original Phase 5 acceptance below is historical.
+
 `packages/db/specialist-migrations/00106_specialist_intelligence.sql` adds four
 opt-in tables: budgets, sessions, delegations and typed learning. Existing 12
 core and eight Phase 4 migration files are unchanged. The separate operator-only

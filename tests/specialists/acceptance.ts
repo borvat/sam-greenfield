@@ -12,7 +12,7 @@ async function main(){
   assert.equal((await applyIntegrationProfile(c)).length,8);
   const manifest=await applySpecialistProfile(c);assert.deepEqual(await applySpecialistProfile(c),manifest);
   await c.query("UPDATE sam_specialist_migrations SET sha256='tampered'");await assert.rejects(()=>applySpecialistProfile(c),/HASH_MISMATCH/);
-  await c.query('UPDATE sam_specialist_migrations SET sha256=$1',[manifest.sha256]);
+  for(const receipt of manifest.migrations)await c.query('UPDATE sam_specialist_migrations SET sha256=$1 WHERE filename=$2',[receipt.sha256,receipt.filename]);
   assert.equal((await c.query('SELECT count(*)::int n FROM sam_schema_migrations')).rows[0].n,12);
   const schema=(await c.query('SELECT current_schema() s')).rows[0].s;
   const org=randomUUID(),entity=randomUUID(),foreign=randomUUID(),otherOrg=randomUUID(),otherEntity=randomUUID();
@@ -56,6 +56,10 @@ async function main(){
    await c.query(`INSERT INTO specialist_learning(legal_entity_id,goal_id,kind,statement,expires_at) VALUES($1,$2,'MODEL_INFERENCE','foreign secret',now()+interval '1 day')`,[tenant,g.goal]);
   }
   run('isolation');
+  const upgrade=manifest.migrations[1];await c.query('DELETE FROM sam_specialist_migrations WHERE filename=$1',[upgrade.filename]);run('profile-denied');
+  await c.query('INSERT INTO sam_specialist_migrations VALUES($1,$2)',[upgrade.filename,upgrade.sha256]);
+  await c.query("UPDATE sam_specialist_migrations SET sha256='invalid' WHERE filename=$1",[upgrade.filename]);run('profile-denied');
+  await c.query('UPDATE sam_specialist_migrations SET sha256=$1 WHERE filename=$2',[upgrade.sha256,upgrade.filename]);
   await c.query(`DROP POLICY "specialist_fence_${role}" ON specialist_learning`);run('admission-denied');
   console.log(JSON.stringify({suite:'specialist-acceptance',status:'PASS',classification:'SYNTHETIC_MODEL_ARCHITECTURE',liveModels:'NOT_RUN',migration:manifest,
    coverage:['independent reasoning','parallel delegation','verified result passing','failure replan','contradiction correction','executive synthesis','SIGKILL durable recovery','tenant/company fences','side-effect refusal','typed learning/revocation','budgets','cancellation']}));
