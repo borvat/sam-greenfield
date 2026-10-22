@@ -2,7 +2,7 @@
  * structural validation. These are manufactured fixtures, not model runs. */
 import assert from 'node:assert/strict';
 import {generateKeyPairSync,createHash,sign,randomUUID} from 'node:crypto';
-import {stableStringify} from '../../packages/shared/src/stableJson';
+import {stableStringify,sha256Hex} from '../../packages/shared/src/stableJson';
 import {verifyEvaluationTrace} from '../../apps/agents/src/evaluation/trace';
 import {contentHash} from '../../apps/agents/src/evaluation/harness';
 import {publicCases} from '../../apps/agents/src/evaluation/cases';
@@ -42,6 +42,14 @@ const edits:Record<string,(p:any)=>void>={
  'expired agent invocation':p=>p.events.push({kind:'INVOKING',reservation_id:p.events[0].reservation_id,payload:{kind:'model',agentId:'executive-bootstrap'},created_at:p.trial.deadline}),
  'non-boolean seal':p=>p.trial.sealed='false'
 };
+// Regression: inserting an own JSON __proto__ key AFTER signing used to leave
+// the signature valid because canonicalization silently discarded the key.
+const unsigned=envelope(fixture());Object.defineProperty(unsigned.payload.trial,'__proto__',{value:{unsigned:'inserted after signing'},enumerable:true});
+assert.throws(()=>verifyEvaluationTrace(unsigned,keys.publicKey),/AUTHENTICATION_FAILED/);
+const ownProto=JSON.parse('{"__proto__":{"authorization":"untrusted"},"a":1}');
+assert.equal(stableStringify(ownProto),'{"__proto__":{"authorization":"untrusted"},"a":1}');
+assert.notEqual(sha256Hex(ownProto),sha256Hex({a:1}));
+assert.equal(stableStringify({b:2,a:1}),'{"a":1,"b":2}','ordinary-object hash compatibility');
 let accepted=0;
 for(const [name,edit]of Object.entries(edits)){
  const p=structuredClone(fixture());edit(p);
@@ -52,4 +60,4 @@ const protocol=prepareCommercialEvaluation('a'.repeat(40));assert.equal(protocol
 const scenario=protocol.scenarios[0];assert(currentCommercialSource(scenario,scenario.sources[0]));for(const publishedAt of ['', 'invalid', '2030-01-01', '2020-01-01'])assert.equal(currentCommercialSource(scenario,{...scenario.sources[0],publishedAt}),false);
 assert(Object.isFrozen(scenario.sources[0].data));
 const directory=mkdtempSync(join(tmpdir(),'sam-commercial-cli-'));try{const output=join(directory,'prepared');const cli=spawnSync(process.execPath,['--import','tsx','apps/agents/src/evaluation/cli.ts','prepare-commercial','--commit','a'.repeat(40),'--output',output],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:10000});assert.equal(cli.status,0,cli.stderr);assert.equal(JSON.parse(readFileSync(join(output,'report.json'),'utf8')).result.corpusHash,protocol.corpusHash);}finally{rmSync(directory,{recursive:true,force:true});}
-if(process.argv.includes('--reproduce')){process.exitCode=accepted?1:0;}else console.log(JSON.stringify({suite:'independent-trace-review',status:'PASS',negativeChecks:Object.keys(edits).length,classification:'MANUFACTURED_SIGNED_FIXTURES',liveCalls:0}));
+if(process.argv.includes('--reproduce')){process.exitCode=accepted?1:0;}else console.log(JSON.stringify({suite:'independent-trace-review',status:'PASS',negativeChecks:Object.keys(edits).length+1,classification:'MANUFACTURED_SIGNED_FIXTURES',liveCalls:0}));

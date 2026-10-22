@@ -10,13 +10,18 @@ branch are preserved; this candidate requires its own review.
 
 | Finding | Reproduction and impact | Correction / regression |
 | --- | --- | --- |
+| Canonical JSON omitted own `__proto__` properties | Adding such a property to a real signed capture after signing still authenticated and scored PASS without the private key | `stableJson.ts` uses a null-prototype accumulator; regression proves unsigned insertion fails authentication and every JSON key participates in hashing |
 | Agent deadline checked at reservation but omitted at invocation | Reserve a model ticket under a 50 ms agent limit, wait 100 ms, then `begin`: baseline admitted it while trial remained active | `trial.ts` rechecks the ticket's agent at execution admission; `tests/evaluation/budgets.ts` fails before the correction and passes afterward |
 | Completed or mismatched tickets could reach invocation | A failed, never-invoked reservation could subsequently begin; provider/model metadata were not bound to the reservation | `begin` rejects finished attempts and binds provider, model, capability and work-goal metadata. `finish` rejects successful completion without invocation. Budget regressions cover these boundaries |
-| Signed trace accepted malformed accounting and attempt transitions | A valid signing key could attest missing/string global counters, extra reservation counters, unknown kinds, success without invocation, invocation after completion, kind mismatch, agent-expired invocation and non-boolean seal flags | `trace.ts` checks exact finite counter shapes, kind/charge consistency, invocation ordering/binding, agent deadline and completion state; ten hostile signed fixtures in `tests/evaluation/review.ts` |
+| Signed trace accepted malformed accounting and attempt transitions | A valid signing key could attest missing/string global counters, extra reservation counters, unknown kinds, success without invocation, invocation after completion, kind mismatch, agent-expired invocation and non-boolean seal flags | `trace.ts` checks exact finite counter shapes, kind/charge consistency, invocation ordering/binding, agent deadline and completion state; eleven hostile signed fixtures in `tests/evaluation/review.ts` |
 | Mutually contradictory final claims became VERIFIED | Real executive/kernel/PG fixture run returned two different values for the same topic, each independently cited. Root reached COMPLETED with latest verification VERIFIED; the new rejection assertion failed | `engine.ts` rejects contradictory final claims both before accepting a report and in its independent verifier. Each of the three commercial orchestration tests reproduces and then recovers from the rejected proposal |
 
 Before/after failure logs are retained under the local Phase 8 development
-evidence directory. A valid signature proves the named operator signed bytes;
+evidence directory. Ordinary JSON hashes remain unchanged. Hashes/signatures of objects with previously
+omitted own `__proto__` fields deliberately change: quarantine and reverify such
+legacy evidence; do not rewrite receipts or silently trust old signatures.
+
+A valid signature proves the named operator signed bytes;
 it never substitutes for accounting, source validation or semantic review.
 The manufactured signed-trace attacks assume a defective or dishonest signer;
 they are not claims that an untrusted model acquired the signing key.
