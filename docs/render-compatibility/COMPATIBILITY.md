@@ -51,6 +51,8 @@ A third full run passed through migration compatibility, then exposed an obsolet
 
 Targeted continuation found that applying deployed deterministic-failure handling to every composition stopped Phase8 transient retries. The policy is now explicitly selected by the deployed runtime only; Phase8/integration defaults retain bounded recovery. The Render smoke also sets an explicit runtime status-probe port because the MCP process has its own PORT; the release status probe retains its old fallback for the single-supervisor profile.
 
+The unchanged baseline passed the 25-second orchestration cutoff on the same host. Removing unintended report-review polling from specialist compositions restored the same test on this bridge without increasing any test/trial/agent limit. The deployed runtime explicitly enables report review; the integration composition retains its existing operational review callback, avoiding duplicate polling. All three commercial scenarios passed targeted checks using the committed source identity; these preliminary results do not replace final acceptance.
+
 ## Review and evidence boundaries
 
 AI technical review covers conflict resolution, startup/auth route wiring, tool preservation, fenced recovery, schema adoption and evidence binding. This is not a line-by-line re-audit of all inherited files or a human-only live-evaluation signoff. Owner selected AI review. No additional human-only merge rule is invented. Hosted Actions billing failures remain separate from external acceptance; no check is spoofed or workflow rerun requested. Final exact-source external results are recorded in ACCEPTANCE.md after execution; earlier passes are not inherited by this implementation.

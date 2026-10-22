@@ -19,6 +19,7 @@ export function createProductionComposition(input:{
   bundle:ValidatedProductionBundle;
   workerId:string;
   ordinaryFailurePolicy?:"retry"|"record";
+  readReportReview?:boolean;
   specialistConcurrency?:number;
   specialistScopeGoalId?:string;
   planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
@@ -77,7 +78,7 @@ export function createProductionComposition(input:{
       }));
       const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle));
       const learning=earlyLearning??await attempt("learning",()=>learnNextVerifiedExecution(input.bundle));
-      const review=await attempt("review",()=>reviewNextReadGoal(input.bundle));
+      const review=input.readReportReview?await attempt("review",()=>reviewNextReadGoal(input.bundle)):null;
       const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
       return {events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};

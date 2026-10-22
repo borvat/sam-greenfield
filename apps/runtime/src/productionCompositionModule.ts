@@ -43,7 +43,7 @@ if(hasFinance){
 
 return createProductionComposition({
   bundle,
-  workerId:config.workerId,ordinaryFailurePolicy:"record",
+  workerId:config.workerId,ordinaryFailurePolicy:"record",readReportReview:true,
   operationalTick:createFinanceOperationalTickFromEnv()
 });
 })();
