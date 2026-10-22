@@ -1,5 +1,7 @@
 # External provisioning acceptance
 
+Historical 58-stage record preserved below. The later Render-like operator correction and 59-stage exact-source results are in [OPERATOR_ACCEPTANCE.md](OPERATOR_ACCEPTANCE.md).
+
 Tested implementation: `c50b50198b75ff4f3828519f2ac459b83bf3dd41`, tree `10f0b7eae0a4b9f8e34b82729b87d93881e9ab3f`, based directly on PR50 `7df84a3913125896256c5b3039cf7f8cae28b8e1`. Branch: `codex/sam-production-provisioning-rehearsal`. Subsequent publication adds documentation/evidence only; the PR readback records its exact head.
 
 `npm run verify:full -- --output /workspace/sam-production-provisioning-acceptance/full` passed **58/58 required stages, 0 failed, 0 not run**, 2026-10-22 20:03:44–20:19:13 UTC. The clean committed snapshot, source integrity and owned-resource cleanup passed. This is fresh external acceptance of this implementation, not inherited PR50 credit or hosted CI success.
