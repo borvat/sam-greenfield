@@ -1,0 +1,22 @@
+$ docker run --rm --name sam-verify-1792746330132-460b60ae-job-34 --label sam.verification.run=sam-verify-1792746330132-460b60ae --init --network container:sam-verify-1792746330132-460b60ae-pg --mount type=bind,src=/tmp/sam-verify-ePHJx7/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test --env SAM_VERIFICATION_SOURCE_SHA=f9c74cc7d76c5b0888259a09343ca064ddc4a68f --mount type=bind,source=/tmp/sam-evaluation-release-full/metadata,target=/evidence --env SAM_EVALUATION_ARTIFACT_DIR=/evidence node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node scripts/testing/core-reliability.cjs --suite tests/evaluation/budgets.ts
+PASS tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting
+PASS cancellation/expiry after model return and before child plan/report COMMIT; before source dispatch; unregistered source transport refused
+{"suite":"whole-trial-budget-runtime","status":"PASS","checks":["bootstrap admission","reopen no reset","tokens/cost/iterations/agent/deadline","cancel before call","fallback attempts charged","uncertain first call retained","atomic tool race and readback","one invocation per reservation","agent deadline at execution admission","provider/model ticket binding","no success without invocation","no invocation after completion","delegation cap","tool cost cap","goal scope","populated foreign-company RLS","immutable limits/counters/trace","late response rejected","live authorization absent"],"providerCalls":"FIXTURES_ONLY"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+PASS restart cannot reset uncertain bootstrap reservation
+PASS goal evaluation reopen cannot refund SIGKILL reservation
+{"case":"uncertain-crash-capture","expectedScore":"FAIL","actualScore":"FAIL","authenticated":true,"classification":"AUTHENTICATED_INCOMPLETE_CAPTURE"}
+PASS actual SIGKILL preserves uncertain bootstrap reservation, immutable trial deadline and aggregate budget after fresh process restart
+PASS evaluation profile receipt/fence admission fails closed
+PASS evaluation profile receipt/fence admission fails closed
+
+{"passed":1,"failed":0,"results":[{"test":"tests/evaluation/budgets.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T09:13:42.325Z","completedAt":"2026-10-23T09:14:08.500Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T09:13:42.327Z","completedAt":"2026-10-23T09:13:42.506Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T09:13:42.506Z","completedAt":"2026-10-23T09:14:08.500Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

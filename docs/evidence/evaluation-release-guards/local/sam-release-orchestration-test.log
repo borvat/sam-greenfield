@@ -1,0 +1,18 @@
+FAIL tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+AssertionError [ERR_ASSERTION]: worker
+
+null !== 0
+
+    at run (/tmp/sam-generic-tree/tests/evaluation/budgets.ts:183:202)
+    at parent (/tmp/sam-generic-tree/tests/evaluation/budgets.ts:184:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/budgets.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T08:59:10.083Z","completedAt":"2026-10-23T08:59:36.002Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T08:59:10.086Z","completedAt":"2026-10-23T08:59:10.264Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T08:59:10.264Z","completedAt":"2026-10-23T08:59:36.002Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,13 @@
+✔ temporary artifact URLs/filenames verify by downloaded bytes; changed bytes cannot pass (2.178925ms)
+✔ opaque search cursors may rotate but selected records and has-more state must match (0.524561ms)
+✔ artifact fetch rejects arbitrary destinations, redirects, oversize streams and never forwards credentials (21.692744ms)
+✔ error-shaped provider text is not a successful read (0.991931ms)
+✔ upstream cannot populate reserved artifact metadata for either exported read (1.659492ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 230.26369
