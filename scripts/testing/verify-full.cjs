@@ -257,7 +257,7 @@ async function main(){
   await step('specialist-evaluation',s=>node(s,['node','--import','tsx','tests/specialists/evaluation.ts']));
   await step('evaluation-budget',s=>suite(s,'tests/evaluation/budgets.ts',evaluationEvidence()));
   await step('evaluation-adapter',s=>suite(s,'tests/evaluation/adapters.ts'));
-  await step('evaluation-orchestration',s=>suite(s,'tests/evaluation/orchestration.ts',evaluationEvidence()));
+  await step('evaluation-orchestration',async s=>{await suite(s,'tests/evaluation/orchestration.ts',evaluationEvidence());await suite(s,'tests/evaluation/operatorLaunch.ts',evaluationEvidence());});
   await step('evaluation-independent-review',s=>suite(s,'tests/evaluation/review.ts'));
   await step('evaluation-commercial-market',s=>suite(s,'tests/evaluation/market.ts',evaluationEvidence()));
   await step('evaluation-commercial-profitability',s=>suite(s,'tests/evaluation/profitability.ts',evaluationEvidence()));

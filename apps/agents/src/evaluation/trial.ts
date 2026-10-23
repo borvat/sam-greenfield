@@ -15,7 +15,9 @@ export async function createEvaluationTrial(c:PoolClient,input:{rootGoalId:strin
  const s=validateTrialSpec(input.spec);
  const g=(await c.query("SELECT state,company_scope,parent_goal_id FROM goals WHERE id=$1",[input.rootGoalId])).rows[0];
  if(!g||g.state!=='NEW'||g.company_scope!==s.companyId||g.parent_goal_id)throw Error('EVALUATION_NEW_SYNTHETIC_ROOT_REQUIRED');
- const r=await c.query(`INSERT INTO evaluation_trials(root_goal_id,legal_entity_id,spec,deadline) VALUES($1,$2,$3,clock_timestamp()+($4::text||' milliseconds')::interval) RETURNING id`,[input.rootGoalId,s.companyId,JSON.stringify(s),s.limits.elapsedMs]);return r.rows[0].id as string;
+ const r=await c.query(`WITH inserted_at AS MATERIALIZED (SELECT clock_timestamp() at)
+  INSERT INTO evaluation_trials(root_goal_id,legal_entity_id,spec,created_at,deadline)
+  SELECT $1,$2,$3,at,at+($4::text||' milliseconds')::interval FROM inserted_at RETURNING id`,[input.rootGoalId,s.companyId,JSON.stringify(s),s.limits.elapsedMs]);return r.rows[0].id as string;
 }
 export async function appendTrialEvent(c:PoolClient,trialId:string,kind:string,payload:unknown,reservationId:string|null=null){
  return (await c.query(`INSERT INTO evaluation_events(trial_id,kind,reservation_id,payload) VALUES($1,$2,$3,$4) RETURNING sequence,hash,created_at`,[trialId,kind,reservationId,JSON.stringify(payload)])).rows[0];
