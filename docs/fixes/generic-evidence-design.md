@@ -79,3 +79,5 @@ step. Autonomous natural-language decomposition, unseen-goal adaptation and live
 provider reliability are **not proven** by these scripted model fixtures. This
 slice provides generic evidence machinery and removes forced business routing;
 it is not a claim that the complete general-agent objective is finished.
+
+Semantic guards: date subtraction dispatches on date operand kinds, never unit labels. Unknown VAT lineage survives dimensionless ratios and downstream scaling. Inner joins record a scope selection and unmatched counts; complete input coverage cannot certify population-wide deliverables after that selection.

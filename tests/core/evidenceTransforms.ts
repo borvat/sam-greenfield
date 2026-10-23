@@ -107,6 +107,24 @@ async function main(){
  assert.throws(()=>replayTransform({version:1,source:'s',operations:[{op:'group',keys:['k'],aggregates:[{as:'total',fn:'sum',field:'a'}]}]},{s:unknownUnit}),/UNIT_OR_SEMANTICS_UNKNOWN/);
  assert.equal(assessDeliverables({...d,columns:{...d.columns,a:{kind:'decimal',unit:'EUR',vat:'UNKNOWN'}}},[{id:'money',description:'Money',fields:['a'],monetaryFields:['a'],completeCoverage:false,knownTimeZone:false}])[0].structurallyReady,false);
  assert.throws(()=>replayTransform({version:1,source:'s',operations:[]},{s:{...d,timeZone:'UNKNOWN'}}),/TIME_ZONE_UNKNOWN/);
+ // Numeric durations are decimal arithmetic, even when their unit is calendar_day.
+ const durations:Dataset={...d,columns:{a:{kind:'decimal',unit:'calendar_day'},b:{kind:'decimal',unit:'calendar_day'}},rows:[{...d.rows[0],values:{a:'2',b:'3'}}]};
+ for(const [operator,expected] of [['add','5'],['subtract','-1']] as const){
+  assert.equal(replayTransform({version:1,source:'s',operations:[{op:'derive',as:'days',left:'a',right:'b',operator}]},{s:durations}).dataset.rows[0].values.days,expected);
+ }
+ // Unknown VAT must survive a dimensionless ratio and subsequent monetary scaling.
+ const amounts:Dataset={...d,columns:{a:{kind:'decimal',unit:'EUR',vat:'unknown'},b:{kind:'decimal',unit:'EUR',vat:'unknown'},net:{kind:'decimal',unit:'EUR',vat:'net'}},rows:[{...d.rows[0],values:{a:'2',b:'4',net:'10'}}]};
+ for(const vat of ['unknown',undefined])for(const [left,right] of [['ratio','net'],['net','ratio']]){
+  amounts.columns.a.vat=vat;amounts.columns.b.vat=vat;
+  const scaled=replayTransform({version:1,source:'s',operations:[{op:'derive',as:'ratio',left:'a',right:'b',operator:'divide'},{op:'derive',as:'scaled',left,right,operator:'multiply'}]},{s:amounts}).dataset;
+  assert.equal(scaled.rows[0].values.scaled,'5');assert.equal(scaled.columns.ratio.semanticUncertainty,true);
+  assert(assessDeliverables(scaled,[{id:'scaled',description:'Scaled amount',fields:['scaled'],monetaryFields:['scaled'],completeCoverage:false,knownTimeZone:false}])[0].gaps.includes('MONETARY_SEMANTICS_UNKNOWN:scaled'));
+ }
+ // Complete input populations do not make an inner-join subset population-complete.
+ const population:Dataset={...d,columns:{k:{kind:'text'}},rows:['matched','missing'].map(k=>({...d.rows[0],values:{k}})),coverage:'complete'};
+ const joined=replayTransform({version:1,source:'s',operations:[{op:'join',right:'t',leftKey:'k',rightKey:'k',kind:'inner'}]},{s:population,t:{...population,rows:population.rows.slice(0,1)}}).dataset;
+ assert.equal(joined.rows.length,1);assert(joined.limitations.some(x=>x.includes('1 unmatched left records')));
+ assert(assessDeliverables(joined,[{id:'population',description:'Full population',fields:['k'],completeCoverage:true,knownTimeZone:false}])[0].gaps.includes('FILTERED_SCOPE_REQUIRES_REVIEW'));
  assert.equal(f.counters().sends,0);
  console.log(JSON.stringify({status:'PASS',goals,classification:'SYNTHETIC_SCRIPTED_DECISIONS_NOT_AUTONOMOUS_MODEL_QUALITY',liveModelCalls:0,productionRegistration:false,coverage:['generic catalog alternatives','decimal replay','provenance','period grouping','partial pagination','unmatched joins','duplicate inventory without deletion','cross-tenant/goal refusal','revocation','limits']}));
  await pool.end();

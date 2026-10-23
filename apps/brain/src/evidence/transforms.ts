@@ -1,5 +1,5 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
-export type Column={kind:'text'|'date'|'decimal';unit?:string;vat?:string};
+export type Column={kind:'text'|'date'|'decimal';unit?:string;vat?:string;semanticUncertainty?:boolean};
 export type Citation={executionId:string;verificationId:string;row:number;sourceHash:string};
 export type EvidenceRow={values:Record<string,string|null>;citations:Citation[]};
 export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[]};
@@ -43,11 +43,13 @@ function validate(d:Dataset){
 }
 function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit)||a.unit!==b.unit||a.vat!==b.vat)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
 function deriveColumn(a:Column,b:Column,op:string):Column{
+ const uncertain=!!(a.semanticUncertainty||b.semanticUncertainty||a.vat!==undefined&&!known(a.vat)||b.vat!==undefined&&!known(b.vat));
+ const inherited=(c:Column):Column=>uncertain?{...c,semanticUncertainty:true}:c;
  if(op==='subtract'&&a.kind==='date'&&b.kind==='date')return {kind:'decimal',unit:'calendar_day'};
- if(op==='add'||op==='subtract'){compatible(a,b);return {...a};}
+ if(op==='add'||op==='subtract'){compatible(a,b);return inherited({...a});}
  if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit))fail('UNIT_OR_SEMANTICS_UNKNOWN');
- if(op==='multiply'){if(b.unit==='1')return {...a};if(a.unit==='1')return {...b};fail('UNIT_COMPOSITION_UNSUPPORTED');}
- if(b.unit==='1')return {...a};compatible(a,b);return {kind:'decimal',unit:'1'};
+ if(op==='multiply'){if(b.unit==='1')return inherited({...a});if(a.unit==='1')return inherited({...b});fail('UNIT_COMPOSITION_UNSUPPORTED');}
+ if(b.unit==='1')return inherited({...a});compatible(a,b);return inherited({kind:'decimal',unit:'1',...(!known(a.vat)||!known(b.vat)?{semanticUncertainty:true}:{})});
 }
 /** Pure bounded interpreter. No eval, dynamic imports, network or database access. */
 export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset>){
@@ -73,9 +75,11 @@ export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset
     return {eq:cmp===0,ne:cmp!==0,lt:cmp<0,lte:cmp<=0,gt:cmp>0,gte:cmp>=0}[op.compare];}),selections:[...(d.selections??[]),JSON.stringify(op)],limitations:[...d.limitations,'Filtered subset; source coverage is not evidence of objective-wide coverage']};
   }else if(op.op==='derive'){
    key(op.as);if(Object.hasOwn(d.columns,op.as)||!['add','subtract','multiply','divide'].includes(op.operator))fail('DERIVATION_INVALID');
-   const c=deriveColumn(column(d,op.left),column(d,op.right),op.operator);
-   if(c.unit==='calendar_day'&&!d.timeZone)fail('TIME_ZONE_UNKNOWN');
-   d={...d,columns:{...d.columns,[op.as]:c},rows:d.rows.map(r=>({...r,values:{...r.values,[op.as]:r.values[op.left]===null||r.values[op.right]===null?null:c.unit==='calendar_day'?String((Date.parse(value(r,op.left))-Date.parse(value(r,op.right)))/86400000):exactDecimal(value(r,op.left),value(r,op.right),op.operator)}}))};
+   const leftColumn=column(d,op.left),rightColumn=column(d,op.right);
+   const dateDifference=op.operator==='subtract'&&leftColumn.kind==='date'&&rightColumn.kind==='date';
+   const c=deriveColumn(leftColumn,rightColumn,op.operator);
+   if(dateDifference&&!d.timeZone)fail('TIME_ZONE_UNKNOWN');
+   d={...d,columns:{...d.columns,[op.as]:c},rows:d.rows.map(r=>({...r,values:{...r.values,[op.as]:r.values[op.left]===null||r.values[op.right]===null?null:dateDifference?String((Date.parse(value(r,op.left))-Date.parse(value(r,op.right)))/86400000):exactDecimal(value(r,op.left),value(r,op.right),op.operator)}}))};
   }else if(op.op==='group'||op.op==='distinct'){
    if(!op.keys.length||op.keys.length>8||new Set(op.keys).size!==op.keys.length)fail('GROUP_INVALID');op.keys.forEach(k=>column(d,k));
    const groups=new Map<string,EvidenceRow[]>();for(const r of d.rows){const k=JSON.stringify(op.keys.map(f=>r.values[f]));const rows=groups.get(k)??[];rows.push(r);groups.set(k,rows);}
@@ -97,7 +101,7 @@ export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset
     matches++;rows.push({values:{...left.values,...Object.fromEntries(Object.entries(rr.values).map(([k,v])=>['right_'+k,v]))},citations:citations([left,rr])});if(rows.length>500)fail('ROW_OR_COLUMN_LIMIT');}
     if(!matches){unmatched++;if(op.kind==='left')rows.push({values:{...left.values,...Object.fromEntries(Object.keys(right.columns).map(k=>['right_'+k,null]))},citations:left.citations});}}
    d={columns,rows,coverage:d.coverage==='complete'&&right.coverage==='complete'?'complete':d.coverage==='partial'||right.coverage==='partial'?'partial':'unknown',timeZone:d.timeZone===right.timeZone?d.timeZone:null,
-    selections:[...(d.selections??[]),...(right.selections??[])],limitations:[...d.limitations,...right.limitations,`Join ${op.kind}: ${unmatched} unmatched left records; no absence inferred beyond recorded coverage`]};
+    selections:[...(d.selections??[]),...(right.selections??[]),...(op.kind==='inner'?[JSON.stringify(op)]:[])],limitations:[...d.limitations,...right.limitations,`Join ${op.kind}: ${unmatched} unmatched left records; no absence inferred beyond recorded coverage`]};
   }else fail('OPERATION_UNSUPPORTED');
   validate(d);
  }
@@ -110,7 +114,7 @@ export function assessDeliverables(d:Dataset,deliverables:Deliverable[]){
  return deliverables.map(r=>{const gaps:string[]=[];for(const f of r.fields){if(!Object.hasOwn(d.columns,f))gaps.push('FIELD_MISSING:'+f);else if(d.rows.some(row=>row.values[f]===null))gaps.push('VALUE_MISSING:'+f);}
   if(r.completeCoverage&&d.selections?.length)gaps.push('FILTERED_SCOPE_REQUIRES_REVIEW');
   if(r.completeCoverage&&d.coverage!=='complete')gaps.push('COVERAGE_'+d.coverage.toUpperCase());if(r.knownTimeZone&&!d.timeZone)gaps.push('TIME_ZONE_UNKNOWN');
-  for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat))gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
+  for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat)||c.semanticUncertainty)gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
   return {id:r.id,description:r.description,structurallyReady:gaps.length===0,gaps,limitations:d.limitations};
  });
 }
