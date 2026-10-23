@@ -1,4 +1,7 @@
 import {evidenceReleaseContracts} from '../../production/src/evidenceReleaseContracts';
+import {createOrdinaryGoalComposition,isOrdinaryGoalBundle} from '../../production/src/ordinaryGoalComposition';
+import {withOrdinaryGeneralAgentFromEnv} from '../../production/src/ordinaryGoalConfiguration';
+import {assertNoPendingOrdinaryGoals} from '../../production/src/ordinaryGoalRollback';
 import {BOL_VERIFICATION_CONTRACTS as BOL_MCP_CONTRACTS} from '../../production/src/bolMcpBundle';
 import {SAM_GOOGLE_VERIFICATION_CONTRACTS} from '../../production/src/samGoogleBundle';
 import {GMAIL_READ_VERIFICATION_CONTRACTS} from '../../production/src/gmailReadBundle';
@@ -22,6 +25,10 @@ if(config.mode==='production'){
 }
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
+// Opt-in path is read-only admission. Operator provisioning must already exist;
+// even local startup cannot silently install its missing registrations.
+if(process.env.SAM_ORDINARY_GENERAL_AGENT==='1')return createOrdinaryGoalComposition({bundle:isOrdinaryGoalBundle(bundle.raw)?bundle.raw:await withOrdinaryGeneralAgentFromEnv(bundle.raw),workerId:config.workerId});
+await assertNoPendingOrdinaryGoals(pool);
 await syncVerificationContracts(evidenceReleaseContracts(bundle));
 await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
 if(bundle.raw.capabilities.some(c=>c.capabilityId.startsWith("google_mcp_")))await syncVerificationContracts(SAM_GOOGLE_VERIFICATION_CONTRACTS);

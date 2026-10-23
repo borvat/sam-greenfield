@@ -55,7 +55,7 @@ async function createGoal(input:{
       [
         input.actor,
         inserted.rows[0].id,
-        JSON.stringify({business_id:inserted.rows[0].business_id,domain:input.domain??"chatgpt_direct",objective:input.objective}),
+        JSON.stringify({business_id:inserted.rows[0].business_id,domain:input.domain??"chatgpt_direct",objective:input.objective,...(process.env.SAM_ORDINARY_GENERAL_AGENT==='1'&&completion==='sam.read_report.v1'?{ordinaryGeneralAgentV1:true}:{})}),
         input.authorityCeiling
       ]
     );
@@ -144,13 +144,15 @@ export function createKernelProductionDispatcher(
             WHERE health='HEALTHY'
               AND capabilities @> '["planning"]'::jsonb
               AND privacy_class_allowed @> $1::jsonb
+              AND (NOT $2::boolean OR (cost_per_1k_input>0 AND cost_per_1k_output>0 AND capabilities @> '["specialist_reasoning"]'::jsonb))
             ORDER BY provider_id
             LIMIT 1`,
-          [JSON.stringify([classification])]
+          [JSON.stringify([classification]),process.env.SAM_ORDINARY_GENERAL_AGENT==='1']
         );
         return (result.rowCount??0)>0;
       });
       if(!planningReady){
+        if(process.env.SAM_ORDINARY_GENERAL_AGENT==='1')return {status:'UNAVAILABLE',reason:'ORDINARY_MODEL_ACCOUNTING_NOT_CONFIGURED',message:'Reviewed positive provider prices and reasoning capability metadata are required. No goal was created.'};
         return {
           status:"UNAVAILABLE",
           reason:"MODEL_PROVIDER_NOT_CONFIGURED",
@@ -194,6 +196,13 @@ export function createKernelProductionDispatcher(
     },
 
     async execute(input){
+      // This opt-in worker admits authenticated executing roots, not literal
+      // direct-tool plans without a goal-wide allowance. Never silently queue
+      // work that this composition cannot safely execute.
+      if(process.env.SAM_ORDINARY_GENERAL_AGENT==='1'){
+        if(input.acceptanceContract===undefined)throw Error('GOAL_CONTRACT_REQUIRED');
+        throw Error('ORDINARY_GENERAL_AGENT_REQUIRES_GOAL_SUBMISSION');
+      }
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
       const capability=bundle.catalog.get(input.capabilityId);
       bundle.tools.definition(input.capabilityId);

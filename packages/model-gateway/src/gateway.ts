@@ -10,6 +10,7 @@ import { cyclePlanningTask, consumeCycleTask, type DevelopmentCyclePermit } from
 import { isAutonomyPermit,type AutonomyPermit } from "../../../apps/development/src/autonomyPermit";
 import {assertEvaluationPermit,assertEvaluationPrice} from './evaluationPermit';
 import {assertRegisteredEvaluationAdapter} from './evaluationAdapter';
+import {assertOrdinaryAdmission,assertOrdinaryAdapter,assertOrdinaryPrice} from './ordinaryAdmission';
 
 export class ModelGateway {
   constructor(
@@ -39,9 +40,10 @@ export class ModelGateway {
       const registry = await loadProviderRegistry(client);
       return applyRecentFailureCircuitBreaker(client, registry);
     });
-    if(task.boundedSynthetic&&task.boundedEvaluation)throw Error('MODEL_BOUNDARY_CONFLICT');
+    if([task.boundedSynthetic,task.boundedEvaluation,task.boundedOrdinary].filter(Boolean).length>1)throw Error('MODEL_BOUNDARY_CONFLICT');
     if(task.boundedEvaluation)assertEvaluationPermit(task.boundedEvaluation.permit);
-    const bounded=task.boundedEvaluation??task.boundedSynthetic;
+    if(task.boundedOrdinary)assertOrdinaryAdmission(task.boundedOrdinary.admission);
+    const bounded=task.boundedOrdinary??task.boundedEvaluation??task.boundedSynthetic;
     if(bounded){
       if(!Number.isSafeInteger(bounded.maxInputTokens)||!Number.isSafeInteger(bounded.maxOutputTokens)||
         bounded.maxInputTokens<1||bounded.maxOutputTokens<1||
@@ -97,6 +99,10 @@ export class ModelGateway {
           const provider=providers.find(p=>p.providerId===candidate.providerId)!;
           assertEvaluationPrice(task.boundedEvaluation.permit,candidate.providerId,candidate.model,provider.costPer1kInput,provider.costPer1kOutput);
           if(adapter.executionMode!==(task.boundedEvaluation.permit.mode==='fixture'?'evaluation-fixture':'evaluation-live')||adapter.supportsUsageLimits!==true)throw Error('EVALUATION_ADAPTER_REQUIRED');
+        }else if(task.boundedOrdinary){
+          assertOrdinaryAdapter(adapter,candidate.model);
+          const provider=providers.find(p=>p.providerId===candidate.providerId)!;
+          assertOrdinaryPrice(task.boundedOrdinary.admission,candidate.providerId,candidate.model,provider.costPer1kInput,provider.costPer1kOutput);
         }else if(adapter.executionMode!=='synthetic'||adapter.supportsUsageLimits!==true)throw Error('BOUNDED_SYNTHETIC_ADAPTER_REQUIRED');
         ticket=await bounded.reserveAttempt({providerId:candidate.providerId,model:candidate.model,
           tokens:bounded.maxInputTokens+bounded.maxOutputTokens,costUsd:candidate.estimatedCostUsd});
@@ -111,6 +117,7 @@ export class ModelGateway {
           result.usage.outputTokens>bounded.maxOutputTokens||Buffer.byteLength(JSON.stringify(result.output),'utf8')>bounded.maxOutputTokens))
           throw Error('MODEL_USAGE_LIMIT_VIOLATION');
         if(task.boundedEvaluation&&result.model!==candidate.model)throw Error('EVALUATION_MODEL_MISMATCH');
+        if(task.boundedOrdinary&&result.model!==candidate.model)throw Error('ORDINARY_MODEL_MISMATCH');
         const provider = providers.find((p) => p.providerId === candidate.providerId)!;
         const costUsd =
           (result.usage.inputTokens / 1000) * provider.costPer1kInput +
@@ -153,6 +160,7 @@ export class ModelGateway {
           dataClassification: task.dataClassification
         }));
         if(task.boundedEvaluation&&(task.signal?.aborted||err instanceof Error&&/^EVALUATION_/.test(err.message)))throw err;
+        if(task.boundedOrdinary&&(task.signal?.aborted||err instanceof Error&&/^ORDINARY_/.test(err.message)))throw err;
       }
     }
 

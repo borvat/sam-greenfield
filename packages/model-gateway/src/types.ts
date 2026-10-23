@@ -11,6 +11,7 @@ export interface ModelTask {
     note?(event:{kind:'ADAPTER_MISSING';providerId:string;model:string}):Promise<void>;
   };
   boundedEvaluation?: NonNullable<ModelTask['boundedSynthetic']>&{permit:import('./evaluationPermit').EvaluationPermit};
+  boundedOrdinary?: NonNullable<ModelTask['boundedSynthetic']>&{admission:import('./ordinaryAdmission').OrdinaryModelAdmission};
   task: string;
   capability: string;
   dataClassification: DataClassification;

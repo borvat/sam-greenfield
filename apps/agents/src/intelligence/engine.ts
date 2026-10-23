@@ -1,3 +1,4 @@
+import {assertOrdinaryAdmission,type OrdinaryModelAdmission} from '../../../../packages/model-gateway/src/ordinaryAdmission';
 import {assertExecutionIntegrity} from '../../../brain/src/evidence/verifiedSources';
 import {evidenceFamily,assertAssignedExecution,type DelegationPolicy} from '../../../brain/src/evidence/delegationScope';
 import {commercialScenario,commercialClaimSupported,currentCommercialSource} from '../evaluation/scenarios';
@@ -55,11 +56,13 @@ export function claimSupportForScenario(scenario?:ReturnType<typeof commercialSc
   return !!source&&currentCommercialSource(scenario,source)&&sha256Hex(source.data)===sha256Hex(result.sourceData)&&commercialClaimSupported(source.data,topic,value);
  };
 }
-export async function createSpecialistIntelligence(input:{configs:SpecialistConfig[];catalog:CapabilityCatalog;tools:ToolRegistry;gateway:ModelGateway;trial?:EvaluationTrial;sharedGoalPolicy?:DelegationPolicy;diagnostic?:(error:unknown)=>void}){
+export async function createSpecialistIntelligence(input:{configs:SpecialistConfig[];catalog:CapabilityCatalog;tools:ToolRegistry;gateway:ModelGateway;trial?:EvaluationTrial;ordinary?:{admission:OrdinaryModelAdmission;live(c:PoolClient,goalId:string):Promise<unknown>;charge(c:PoolClient,goalId:string,kind:'iteration'|'delegation'):Promise<unknown>;gateway(goalId:string,base:ModelGateway):ModelGateway};sharedGoalPolicy?:DelegationPolicy;diagnostic?:(error:unknown)=>void}){
  if(input.trial)assertEvaluationTrial(input.trial);
- if(process.env.SAM_SPECIALIST_INTELLIGENCE!==(input.trial?.permit.mode==='live'?'evaluation':'synthetic'))throw Error('SPECIALIST_SYNTHETIC_PROFILE_REQUIRED');
+ if(input.ordinary){assertOrdinaryAdmission(input.ordinary.admission);if(input.trial||!input.sharedGoalPolicy)throw Error('ORDINARY_SPECIALIST_ADMISSION_INVALID');}
+ if(process.env.SAM_SPECIALIST_INTELLIGENCE!==(input.ordinary?'ordinary':input.trial?.permit.mode==='live'?'evaluation':'synthetic'))throw Error(input.ordinary?'ORDINARY_SPECIALIST_PROFILE_REQUIRED':'SPECIALIST_SYNTHETIC_PROFILE_REQUIRED');
  const tenant=await withTransaction(assertSpecialistAccess);
- if(input.sharedGoalPolicy&&!input.trial)throw Error('SHARED_GOAL_TRIAL_REQUIRED');
+ if(input.sharedGoalPolicy&&!input.trial&&!input.ordinary)throw Error('SHARED_GOAL_TRIAL_REQUIRED');
+ if(input.ordinary&&input.ordinary.admission.tenant!==tenant.entity)throw Error('ORDINARY_SPECIALIST_TENANT_MISMATCH');
  const scenario=input.trial&&!input.sharedGoalPolicy?commercialScenario(input.trial.spec.caseId):undefined;
  const legacySupports=claimSupportForScenario(scenario);
  const supportsClaim=(result:Record<string,unknown>,topic:string,value:string,path?:string[])=>{
@@ -71,6 +74,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
  const budgetOwner=async(c:PoolClient,goalId:string,legacy:string)=>{
   if(!input.sharedGoalPolicy)return legacy;
   const family=await evidenceFamily(c,goalId,tenant.entity,input.sharedGoalPolicy);
+  if(input.ordinary){await input.ordinary.live(c,goalId);return family.rootGoalId;}
   const owner='goal.'+family.rootGoalId;if(!Object.hasOwn(input.trial!.spec.agents,owner))throw Error('EVALUATION_GOAL_NOT_ENROLLED');
   await input.trial!.scope(c,goalId);return owner;
  };
@@ -107,6 +111,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   await input.trial.finish(ticket,{status:'success',result});return result;
  }
  async function fence(c:PoolClient,work:ClaimedWork){
+  if(input.ordinary)await input.ordinary.live(c,work.goalId!);
   if(input.trial)await input.trial.scope(c,work.goalId!);
   // One lock order for every family mutation, including FK/RLS checks. Model
   // calls run outside transactions, so independent reasoning remains concurrent.
@@ -155,6 +160,11 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   }
   await c.query('UPDATE specialist_budgets SET used=$2 WHERE root_queue_id=$1',[run.root_queue_id,JSON.stringify(used)]);
   await c.query('UPDATE specialist_sessions SET used=$2 WHERE queue_id=$1',[run.queue_id,JSON.stringify(agentUsed)]);
+  if(input.ordinary){
+   const row=(await c.query('SELECT goal_id FROM work_queue WHERE id=$1',[run.queue_id])).rows[0];
+   await input.ordinary.live(c,row.goal_id);
+   for(const kind of ['iterations','delegations'] as const)for(let n=0;n<(delta[kind]??0);n++)await input.ordinary.charge(c,row.goal_id,kind==='iterations'?'iteration':'delegation');
+  }
   if(input.trial){
    const row=(await c.query('SELECT w.goal_id,s.agent_id FROM work_queue w JOIN specialist_sessions s ON s.queue_id=w.id WHERE w.id=$1',[run.queue_id])).rows[0];
    if(!Object.keys(delta).length){await input.trial.live(c);return;}
@@ -227,12 +237,12 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
     return {...e,result,provenance};
    });
    const projectedContext={...ctx,evidence:projectedEvidence,reports:ctx.reports.map(r=>({agentId:r.agentId,summary:r.summary,claims:r.claims,uncertainties:r.uncertainties}))};
-   const payload={rules:[...reasoningRules,...(input.sharedGoalPolicy?['Every report claim requires path: the exact own-key path in the cited verified execution result selecting its primitive value. Topic and summary are interpretations, never raw source facts. No benchmark-specific expected answer is available.']:[])],agent:{id:cfg.agentId,purpose:cfg.purpose},objective:run.objective,
+   const payload={rules:[...reasoningRules.filter(rule=>!input.ordinary||!rule.startsWith('No actual external writes or live paid')), ...(input.ordinary?['Only authorized read-only tools and bounded model decisions are permitted. Stop honestly when evidence or the shared goal allowance is insufficient.']:[]),...(input.sharedGoalPolicy?['Every report claim requires path: the exact own-key path in the cited verified execution result selecting its primitive value. Topic and summary are interpretations, never raw source facts. No benchmark-specific expected answer is available.']:[])],agent:{id:cfg.agentId,purpose:cfg.purpose},objective:run.objective,
     capabilities:cfg.allowedCapabilities.map(id=>({id,...input.catalog.planningDescriptors().find(d=>d.capabilityId===id)})),
     prior:run.state.history.slice(-12),verifiedContext:projectedContext,trustedMemory:{classification:"VERIFIED_QUOTATIONS_ONLY",records:memory,trustBoundary:untrusted},trustBoundary:untrusted};
    if(Buffer.byteLength(JSON.stringify(payload))>maxContext)throw Error('SPECIALIST_CONTEXT_EXHAUSTED');
    const owner=await withTransaction(c=>budgetOwner(c,work.goalId!,cfg.agentId));
-   const gateway=input.trial?input.trial.gateway(input.gateway,work.goalId!,owner):input.gateway;
+   const gateway=input.ordinary?input.ordinary.gateway(work.goalId!,input.gateway):input.trial?input.trial.gateway(input.gateway,work.goalId!,owner):input.gateway;
    const trialAgent=input.trial?.spec.agents[owner];
    const maxInputTokens=Math.min(run.limits.maxInputTokens,input.trial?.spec.limits.maxInputTokens??Infinity,trialAgent?.maxInputTokens??Infinity);
    const maxOutputTokens=Math.min(run.limits.maxOutputTokens,input.trial?.spec.limits.maxOutputTokens??Infinity,trialAgent?.maxOutputTokens??Infinity);
@@ -279,6 +289,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
     run.state.phase='WAITING';run.state.conflicts=current.conflicts;await save(c,run);return null;
    });
   }catch(e){
+   if(input.ordinary&&e instanceof Error&&/^ORDINARY_(ALLOWANCE_|MODEL_TIMEOUT)/.test(e.message))throw e;
    // Invalid proposals and provider failures are visible to the next independent
    // reasoning turn. Reservations are never refunded for uncertain outcomes.
    return withTransaction(async c=>{
@@ -359,6 +370,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
   cancel:async(rootQueueId:string)=>withTransaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,106))',[rootQueueId]);const r=await c.query('UPDATE specialist_budgets SET cancelled=true WHERE root_queue_id=$1 RETURNING root_queue_id',[rootQueueId]);if(!r.rowCount)throw Error('SPECIALIST_SCOPE_DENIED');}),
   verifyReport:async(result:Record<string,unknown>,queueId:string,admissionClient?:PoolClient)=>{const check=async(c:PoolClient)=>{
    if(input.trial){try{await input.trial.live(c);}catch{return false;}}
+   if(input.ordinary){const work=(await c.query('SELECT goal_id FROM work_queue WHERE id=$1',[queueId])).rows[0];if(!work)return false;try{await input.ordinary.live(c,work.goal_id);}catch{return false;}}
    const r=(await c.query('SELECT s.state,b.cancelled,least(b.deadline,s.deadline) deadline FROM specialist_sessions s JOIN specialist_budgets b USING(root_queue_id) WHERE s.queue_id=$1',[queueId])).rows[0];
    if(!r||r.cancelled||new Date(r.deadline).getTime()<=Date.now()||r.state.phase!=='COMPLETE'||result.status!=='COMPLETE'||sha256Hex(result.report)!==sha256Hex(r.state.report))return false;
    const report=r.state.report as Report;
