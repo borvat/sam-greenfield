@@ -1,0 +1,35 @@
+$ docker run --rm --name sam-verify-1792729303132-f5570f60-job-48 --label sam.verification.run=sam-verify-1792729303132-f5570f60 --init --network container:sam-verify-1792729303132-f5570f60-pg --mount type=bind,src=/tmp/sam-verify-uuSbUe/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --mount type=bind,src=/tmp/sam-verify-uuSbUe/python,dst=/fixtures,readonly --env PYTHONPATH=/fixtures/site --env DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_greenfield --env DATABASE_URL_APP=postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 python tests/phase0_postgres/real_postgres_test.py
+=== Real PostgreSQL Phase 0 Verification - FULL SUITE ===
+DB: postgres://postgres:verification-fixture@127.0.0.1:5432/sam_greenfield
+App Role DB: postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield (NOSUPERUSER NOBYPASSRLS - proves superuser bypass avoided)
+✓ extensions provisioned: pgcrypto
+✓ all 9 migrations applied from zero: 22 tables (expected 22), final hash 40da9a3081ffc4f7
+✓ RLS isolation real: 22 tables rowsecurity=true
+✓ RLS fail-closed policies verified, no fail-open patterns, 21 policies
+  Policies: ['approvals_current', 'audit_current', 'business_ids_current', 'events_current', 'executions_current', 'financial_documents_tenant_isolation_fail_closed', 'goals_org_boundary', 'goals_tenant_isolation_fail_closed', 'inbox_current', 'legal_entities_tenant_isolation_fail_closed', 'memory_current', 'calls_current', 'providers_read', 'organizations_current', 'outbox_current', 'plans_current', 'side_effects_current', 'contracts_read', 'verifications_current', 'work_current', 'facts_current']
+✓ RLS app role app_tenant_test NOSUPERUSER NOBYPASSRLS created and can connect (proves superuser bypass avoided)
+✓ append-only audit UPDATE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ append-only audit DELETE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ financial immutability UPDATE rejection real: financial_documents is immutable once issued, id=20a1a0b7-3489-4097-aadf-3df14f12d1a4, business_id=INV1792729999990
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ financial immutability DELETE rejection real: financial_documents is immutable once issued, id=20a1a0b7-3489-4097-aadf-3df14f12d1a4, business_id=INV1792729999990
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ concurrent next_business_id() real: 100 IDs from 10 connections, no duplicates, no MAX()+1
+✓ lease-fencing race real: stale worker token 2 commit rejected (ok=False)
+✓ lease-fencing race real: current worker token 3 commit accepted (ok=True)
+✓ transactional outbox rollback real: state change + outbox atomic, rollback proved (state=NEW, outbox=0)
+✓ transactional outbox commit real: state + outbox committed atomically
+✓ concurrent inbox deduplication real: 10 concurrent inserts same dedup_key, 1 ok, 9 deduped (UNIQUE constraint)
+✓ concurrent semantic side-effect dedup real: operation_key UNIQUE, 1 ok, 9 deduped, effectively-once
+✓ side-effect reconciliation real: crash-after-provider-success simulated, reconciled to CONFIRMED
+✓ monotonic event_seq replay/cursor real: seqs [1, 2, 3, 4, 5], replay ordered by event_seq ASC
+
+=== All Real PostgreSQL Tests PASS - FULL SUITE ===
+Phase 0 Status: MECHANICALLY_TESTED + SECURITY FIXED + FULL REAL POSTGRES INVARIANTS VERIFIED
+Requires actual GitHub Actions run for LIVE_PROVEN

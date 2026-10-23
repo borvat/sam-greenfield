@@ -1,0 +1,233 @@
+$ docker run --rm --name sam-verify-1792729524733-1935bb05-job-25 --label sam.verification.run=sam-verify-1792729524733-1935bb05 --init --network container:sam-verify-1792729524733-1935bb05-pg --mount type=bind,src=/tmp/sam-verify-30RbfQ/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env NODE_ENV=test --env DATABASE_URL=postgres://fixture:fixture@127.0.0.1:9/sam_core_test node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node --import tsx --test tests/isolated/sam_google_bundle.ts tests/isolated/sam_google_evidence.ts tests/isolated/sam_google_http.ts tests/isolated/sam_google_mcp_bridge.ts tests/isolated/sam_google_oauth_flow.ts tests/isolated/sam_google_oauth_pkce.ts tests/isolated/sam_google_oauth_state.ts tests/isolated/sam_google_postgres.ts tests/isolated/sam_google_recovery.ts tests/isolated/sam_google_review.ts tests/isolated/sam_google_token_crypto.ts tests/isolated/sam_google_verifier_claim.ts tests/phase21/mcp_internal_oauth.ts tests/phase22/submit_goal_surface.ts
+TAP version 13
+# Subtest: only discovered read tools register with specialist, schema, adapter and fresh verifier
+ok 1 - only discovered read tools register with specialist, schema, adapter and fresh verifier
+  ---
+  duration_ms: 6.587245
+  type: 'test'
+  ...
+# Subtest: unapproved connection registers no Google capabilities
+ok 2 - unapproved connection registers no Google capabilities
+  ---
+  duration_ms: 0.277077
+  type: 'test'
+  ...
+# Subtest: permissions read describes its observed owner/sharing output without becoming a write
+ok 3 - permissions read describes its observed owner/sharing output without becoming a write
+  ---
+  duration_ms: 0.413404
+  type: 'test'
+  ...
+# Subtest: temporary artifact URLs/filenames verify by downloaded bytes; changed bytes cannot pass
+ok 4 - temporary artifact URLs/filenames verify by downloaded bytes; changed bytes cannot pass
+  ---
+  duration_ms: 3.439427
+  type: 'test'
+  ...
+# Subtest: opaque search cursors may rotate but selected records and has-more state must match
+ok 5 - opaque search cursors may rotate but selected records and has-more state must match
+  ---
+  duration_ms: 0.510911
+  type: 'test'
+  ...
+# Subtest: artifact fetch rejects arbitrary destinations, redirects, oversize streams and never forwards credentials
+ok 6 - artifact fetch rejects arbitrary destinations, redirects, oversize streams and never forwards credentials
+  ---
+  duration_ms: 73.644821
+  type: 'test'
+  ...
+# Subtest: error-shaped provider text is not a successful read
+ok 7 - error-shaped provider text is not a successful read
+  ---
+  duration_ms: 0.240563
+  type: 'test'
+  ...
+# Subtest: Google HTTP routes protect start/status, publish exact CIMD, sanitize errors and bind callback
+ok 8 - Google HTTP routes protect start/status, publish exact CIMD, sanitize errors and bind callback
+  ---
+  duration_ms: 191.40286
+  type: 'test'
+  ...
+# Subtest: only the seven explicitly requested read tools are accepted
+ok 9 - only the seven explicitly requested read tools are accepted
+  ---
+  duration_ms: 1.027029
+  type: 'test'
+  ...
+# Subtest: bridge rejects missing authentication and insecure endpoints
+ok 10 - bridge rejects missing authentication and insecure endpoints
+  ---
+  duration_ms: 2.945683
+  type: 'test'
+  ...
+# Subtest: unsafe calls are rejected before any network request
+ok 11 - unsafe calls are rejected before any network request
+  ---
+  duration_ms: 4.632256
+  type: 'test'
+  ...
+# Subtest: read-only tool discovery uses authenticated MCP initialize and tools/list
+ok 12 - read-only tool discovery uses authenticated MCP initialize and tools/list
+  ---
+  duration_ms: 50.343555
+  type: 'test'
+  ...
+# Subtest: 401 fails closed instead of registering capabilities
+ok 13 - 401 fails closed instead of registering capabilities
+  ---
+  duration_ms: 0.323348
+  type: 'test'
+  ...
+# Subtest: bearer token cannot be sent to an arbitrary HTTPS endpoint
+ok 14 - bearer token cannot be sent to an arbitrary HTTPS endpoint
+  ---
+  duration_ms: 0.322576
+  type: 'test'
+  ...
+# Subtest: mismatched JSON-RPC response IDs fail closed
+ok 15 - mismatched JSON-RPC response IDs fail closed
+  ---
+  duration_ms: 0.495828
+  type: 'test'
+  ...
+# Subtest: full SAM-only PKCE state -> callback -> refresh storage; replay denied
+ok 16 - full SAM-only PKCE state -> callback -> refresh storage; replay denied
+  ---
+  duration_ms: 50.464047
+  type: 'test'
+  ...
+# Subtest: no offline refresh means OAuth cannot be marked authorized
+ok 17 - no offline refresh means OAuth cannot be marked authorized
+  ---
+  duration_ms: 0.903212
+  type: 'test'
+  ...
+# Subtest: callback cannot move authorization to a different owner/client or issuer
+ok 18 - callback cannot move authorization to a different owner/client or issuer
+  ---
+  duration_ms: 7.400422
+  type: 'test'
+  ...
+# Subtest: SAM authorization URL uses distinct secure callback and read-only Google scopes
+ok 19 - SAM authorization URL uses distinct secure callback and read-only Google scopes
+  ---
+  duration_ms: 1.719123
+  type: 'test'
+  ...
+# Subtest: invalid state fails without network request
+ok 20 - invalid state fails without network request
+  ---
+  duration_ms: 2.329434
+  type: 'test'
+  ...
+# Subtest: refresh flow fails closed on missing SAM-only credential
+ok 21 - refresh flow fails closed on missing SAM-only credential
+  ---
+  duration_ms: 0.221534
+  type: 'test'
+  ...
+# Subtest: expired OAuth refresh is reported as explicit reauthorization
+ok 22 - expired OAuth refresh is reported as explicit reauthorization
+  ---
+  duration_ms: 34.689393
+  type: 'test'
+  ...
+# Subtest: authorization cannot proceed until OAuth state is durably stored
+ok 23 - authorization cannot proceed until OAuth state is durably stored
+  ---
+  duration_ms: 0.639164
+  type: 'test'
+  ...
+# Subtest: oauth state succeeds once only and blocks replay
+ok 24 - oauth state succeeds once only and blocks replay
+  ---
+  duration_ms: 1.271998
+  type: 'test'
+  ...
+# Subtest: expired oauth state fails closed
+ok 25 - expired oauth state fails closed
+  ---
+  duration_ms: 0.423599
+  type: 'test'
+  ...
+# Subtest: PostgreSQL SQL: encrypted persistence, one-use state, refresh rotation, cache and rollback
+ok 26 - PostgreSQL SQL: encrypted persistence, one-use state, refresh rotation, cache and rollback
+  ---
+  duration_ms: 5083.116912
+  type: 'test'
+  ...
+# Subtest: Google file 404s retain typed classification without provider text; other errors fail closed
+ok 27 - Google file 404s retain typed classification without provider text; other errors fail closed
+  ---
+  duration_ms: 2.710097
+  type: 'test'
+  ...
+# Subtest: actual bridge error response preserves the recoverable code across RPC
+ok 28 - actual bridge error response preserves the recoverable code across RPC
+  ---
+  duration_ms: 47.686406
+  type: 'test'
+  ...
+# Subtest: same-goal replanner can discover a search fallback despite an explicitly named initial read
+ok 29 - same-goal replanner can discover a search fallback despite an explicitly named initial read
+  ---
+  duration_ms: 32.852272
+  type: 'test'
+  ...
+# Subtest: isolated PostgreSQL: 404 transitions the same goal; budget, fencing, writes and atomic rollback stay enforced
+ok 30 - isolated PostgreSQL: 404 transitions the same goal; budget, fencing, writes and atomic rollback stay enforced
+  ---
+  duration_ms: 4330.986026
+  type: 'test'
+  ...
+# Subtest: review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion
+ok 31 - review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion
+  ---
+  duration_ms: 3.644357
+  type: 'test'
+  ...
+# Subtest: isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction
+ok 32 - isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction
+  ---
+  duration_ms: 4375.592568
+  type: 'test'
+  ...
+# Subtest: seals and opens SAM-only token with stable context
+ok 33 - seals and opens SAM-only token with stable context
+  ---
+  duration_ms: 2.051905
+  type: 'test'
+  ...
+# Subtest: rejects weak encryption keys and tampered ciphertext
+ok 34 - rejects weak encryption keys and tampered ciphertext
+  ---
+  duration_ms: 0.390519
+  type: 'test'
+  ...
+# Subtest: a busy or already verified execution is not read twice; thrown verification releases its cross-worker claim
+ok 35 - a busy or already verified execution is not read twice; thrown verification releases its cross-worker claim
+  ---
+  duration_ms: 2.318277
+  type: 'test'
+  ...
+# Subtest: SAM internal OAuth completes PKCE, issues JWTs, and rotates refresh tokens
+ok 36 - SAM internal OAuth completes PKCE, issues JWTs, and rotates refresh tokens
+  ---
+  duration_ms: 1345.93184
+  type: 'test'
+  ...
+# Subtest: sam_submit_goal is exposed only when a planner is configured and forwards the whole objective
+ok 37 - sam_submit_goal is exposed only when a planner is configured and forwards the whole objective
+  ---
+  duration_ms: 423.840428
+  type: 'test'
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6625.716471

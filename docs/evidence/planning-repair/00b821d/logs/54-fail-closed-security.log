@@ -1,0 +1,33 @@
+$ docker run --rm --name sam-verify-1792729303132-f5570f60-job-50 --label sam.verification.run=sam-verify-1792729303132-f5570f60 --init --network container:sam-verify-1792729303132-f5570f60-pg --mount type=bind,src=/tmp/sam-verify-uuSbUe/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --mount type=bind,src=/tmp/sam-verify-uuSbUe/python,dst=/fixtures,readonly --env PYTHONPATH=/fixtures/site --env DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_greenfield --env DATABASE_URL_APP=postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 python tests/phase0_postgres/test_rls_fail_closed_security.py
+Setup: Org 36f54f71-4365-47e1-abff-318788d8a2c7, Entity A b22926df-6390-4748-bf75-be8308c69d71, B e645008d-f54e-4f26-ac48-fd592f1da096
+Using NOSUPERUSER NOBYPASSRLS role - superuser bypass avoided, no stale NULL bypass comment
+
+--- TEST 1: No tenant context -> zero protected rows visible ---
+No context SELECT: count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed)
+✓ PASS: No context goals 0 rows
+
+--- TEST 2: No tenant context -> INSERT blocked ---
+✓ PASS: No context INSERT blocked (exception): new row violates row-level security policy for table "financial_documents"
+
+
+--- TEST 3: No context -> UPDATE blocked ---
+✓ PASS: No context UPDATE blocked (rowcount 0)
+
+--- TEST 4: No context -> DELETE blocked ---
+✓ PASS: No context DELETE blocked (rowcount 0)
+
+--- TEST 5: Tenant A cannot read/write B ---
+✓ PASS: Tenant A cannot read B doc
+✓ PASS: Tenant A can read own doc
+
+--- TEST 6: Tenant B cannot read/write A ---
+✓ PASS: Tenant B cannot read A doc
+
+--- TEST 7: Tenant A can access own ---
+✓ PASS: Tenant A can access own goal
+
+--- TEST 8: Service/admin bypass explicit, never via NULL ---
+✓ PASS: NULL context does NOT bypass - explicit bypass via service_role/is_admin only, never NULL - FAIL-CLOSED verified
+
+=== ALL SECURITY TESTS PASS - FAIL-CLOSED VERIFIED (NOSUPERUSER ROLE) ===

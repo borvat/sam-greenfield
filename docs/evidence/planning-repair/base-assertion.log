@@ -1,0 +1,12 @@
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Previously failed read/. Input:
+
+'PLAN_FAILED_READ_REPLAY'
+
+    at run (/tmp/sam-planning-base-check/tests/isolated/replan_fault_injection.ts:30:9) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'PLAN_FAILED_READ_REPLAY',
+  expected: /Previously failed read/,
+  operator: 'match',
+  diff: 'simple'
+}

@@ -1,0 +1,65 @@
+$ docker image inspect sam-verification:sam-verify-1792729524733-1935bb05
+[
+    {
+        "Id": "sha256:9a0d1e0aa0898892b4fd138e6809368bc7291937b3e511619adc7fd0b1431835",
+        "RepoTags": [
+            "sam-verification:sam-verify-1792729524733-1935bb05"
+        ],
+        "RepoDigests": [],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-23T04:37:01.499695087Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 216225589,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:74d97c428c51a828f9051a7a40a53ff1fc99e54fc30323ce36760701b0b7f711",
+                "sha256:7274ff4dd06a0a4fd83bd08fd260502d9649c896f2003c4755a746b5fea9d023",
+                "sha256:79b7c554459a6a12f07ce664510b6522652928ae2371b8f2243a1e6b1f819732",
+                "sha256:363e4f25a5ca20cd46b16c801ed078baf864af0f36c8ba4441c7feb6a4539b20",
+                "sha256:d012801b684c46625686a06ef6262490e641bf241e7d3fba99858774c74767a9",
+                "sha256:148ae05c9d4a6ceb0558a5c5dbd8cab31071d77af94f0bf5f24d003665ab4324",
+                "sha256:0d0df73c048b7927782f183d54f2063104d9b9c19de83ef52c88452ff528fb8d",
+                "sha256:d0803060ce1278979b1768585dc74390cb3c27bba55a5877a2538c56e856ff1c",
+                "sha256:8fe12d4e8853e060b8c78443a85cac5167700aac0bdd6b14c6367fcb1b94b6a6",
+                "sha256:9b4d76cdae7975d960cf80737ad9dc3d902e1073e8e31122bcdb9738ebe30af1",
+                "sha256:c5eb4a98e7890f6c4215ae7024173d5184872f4c8dbd0e28e01c06c1d90b9d9e"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-10-23T04:37:02.06206599Z"
+        },
+        "Config": {
+            "ArgsEscaped": true,
+            "Cmd": [
+                "npm",
+                "start"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.4",
+                "YARN_VERSION=1.22.22",
+                "NODE_ENV=production"
+            ],
+            "ExposedPorts": {
+                "8080/tcp": {}
+            },
+            "Labels": null,
+            "OnBuild": null,
+            "User": "node",
+            "Volumes": null,
+            "WorkingDir": "/app"
+        }
+    }
+]

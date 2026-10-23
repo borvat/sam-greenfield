@@ -1,0 +1,14 @@
+$ docker run --rm --name sam-verify-1792729524733-1935bb05-job-49 --label sam.verification.run=sam-verify-1792729524733-1935bb05 --init --network container:sam-verify-1792729524733-1935bb05-pg --mount type=bind,src=/tmp/sam-verify-30RbfQ/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --mount type=bind,src=/tmp/sam-verify-30RbfQ/python,dst=/fixtures,readonly --env PYTHONPATH=/fixtures/site --env DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_greenfield --env DATABASE_URL_APP=postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 python tests/phase0_postgres/test_rls_tenant_isolation.py
+Entities: Org 68be4888-0e40-4905-a52f-235a244e3a52, A 2675c248-e5a8-4e7a-a3bc-807daac599ca, B b99ee838-1e5b-427b-b6f5-867e03151d05
+Docs: A 2ee058ce-d9b5-4077-9f88-e880c09a7929, B 9164e62c-24ac-4dbe-8686-c2d9166a4810
+Using NOSUPERUSER NOBYPASSRLS role app_tenant_test to prove superuser bypass avoided
+No context SELECT financial_documents (app role): count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed, app role)
+✓ PASS: Tenant A cannot read B doc (app role)
+✓ PASS: Tenant A can read own doc (app role)
+✓ PASS: Tenant A cannot UPDATE B doc (app role, rowcount 0)
+✓ PASS: Tenant B cannot read A doc (app role)
+✓ PASS: Tenant B can read own doc (app role)
+
+=== RLS Tenant Isolation Real Test PASS (NOSUPERUSER role) ===
+Proves isolation with actual RLS policies, superuser bypass avoided

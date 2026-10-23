@@ -1,0 +1,864 @@
+{
+  "command": "score-authenticated",
+  "startedAt": "2026-10-23T04:30:12.061Z",
+  "completedAt": "2026-10-23T04:30:12.085Z",
+  "runtime": "v22.23.4",
+  "inputHash": "c3d75ed9c4fbcfe2d249354562de6f8ad179bc6a417c9b516198ec33a11b4d4d",
+  "result": {
+    "schemaVersion": 1,
+    "commit": "00b821d73a764d2c89c0a3f1e6e3535642fa5349",
+    "caseId": "industrial-refrigeration",
+    "status": "PASS",
+    "classification": "AUTHENTICATED_FIXTURE_CAPTURE",
+    "liveReasoningValidated": false,
+    "independentHumanReview": "PENDING",
+    "traceHash": "b966fd56987950c284b103910ea7fd273dbc6d3a5f30a38dbef8752a1abe5da5",
+    "sourcePackHash": "63ecd7600f4adacce1dda3b1a31e3632a5ba96637773c12b829da9a8c304fc88",
+    "usage": {
+      "shared": {
+        "models": 10,
+        "tools": 12,
+        "tokens": 320000,
+        "costUsd": 0.32000000000000006,
+        "delegations": 8
+      },
+      "agents": {
+        "executive-bootstrap": {
+          "models": 1,
+          "tools": 0,
+          "tokens": 32000,
+          "costUsd": 0.032,
+          "delegations": 0
+        },
+        "executive-specialist": {
+          "models": 4,
+          "tools": 6,
+          "tokens": 128000,
+          "costUsd": 0.128,
+          "delegations": 5
+        },
+        "risk-specialist": {
+          "models": 2,
+          "tools": 2,
+          "tokens": 64000,
+          "costUsd": 0.064,
+          "delegations": 1
+        },
+        "market-specialist": {
+          "models": 3,
+          "tools": 4,
+          "tokens": 96000,
+          "costUsd": 0.096,
+          "delegations": 2
+        }
+      }
+    },
+    "checks": [
+      {
+        "name": "exact-commit",
+        "status": "PASS",
+        "detail": "Captured runtime must match the reviewed candidate"
+      },
+      {
+        "name": "time-envelope",
+        "status": "PASS",
+        "detail": "No late completion; at most two minutes per proposed trial"
+      },
+      {
+        "name": "unique-attempts",
+        "status": "PASS",
+        "detail": "Include every actual attempt, retry and verification readback as a separate event"
+      },
+      {
+        "name": "inclusive-reservations",
+        "status": "PASS",
+        "detail": "Failed/unknown attempts keep full reservations; readbacks and delegated work count"
+      },
+      {
+        "name": "shared-budget",
+        "status": "PASS",
+        "detail": "Shared counters include all agents and retries"
+      },
+      {
+        "name": "agent-budgets",
+        "status": "PASS",
+        "detail": "Every acting identity has its own finite budget"
+      },
+      {
+        "name": "authorized-read-only-scope",
+        "status": "PASS",
+        "detail": "No writes, unauthorized tools or foreign-company events"
+      },
+      {
+        "name": "event-times",
+        "status": "PASS",
+        "detail": "No events outside the recorded run"
+      },
+      {
+        "name": "unique-receipts",
+        "status": "PASS",
+        "detail": "A source must have one current verification receipt"
+      },
+      {
+        "name": "independent-specialists",
+        "status": "PASS",
+        "detail": "Distinct specialist model attempts; this alone does not establish reasoning quality"
+      },
+      {
+        "name": "grounded-answer",
+        "status": "PASS",
+        "detail": "Closed-world benchmark quotation only; semantic quality and genuine provider provenance need independent review"
+      },
+      {
+        "name": "corrective-research",
+        "status": "PASS",
+        "detail": "Conflicting evidence requires a subsequent corrective read"
+      },
+      {
+        "name": "verified-learning",
+        "status": "PASS",
+        "detail": "Only a supported quotation cycle can be trusted; no inferred policy changes"
+      }
+    ],
+    "traceAuthenticated": true,
+    "headHash": "952dfc09a493f67a2bbc34e60db68a644d3055d77350c34faa3d4efd8a453a27",
+    "wholeTrialUsed": {
+      "tools": 12,
+      "models": 10,
+      "tokens": 320000,
+      "costUsd": 0.32000000000000006,
+      "iterations": 10,
+      "delegations": 8
+    },
+    "projectedTrace": {
+      "schemaVersion": 1,
+      "classification": "FIXTURE",
+      "commit": "00b821d73a764d2c89c0a3f1e6e3535642fa5349",
+      "caseId": "industrial-refrigeration",
+      "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+      "rootQueueId": "844cf6d4-a1cd-4a4c-a02a-1d66d6287590",
+      "startedAt": "2026-10-23T04:29:50.126Z",
+      "completedAt": "2026-10-23T04:30:11.754Z",
+      "deadline": "2026-10-23T04:31:50.126Z",
+      "sharedLimits": {
+        "tools": 20,
+        "models": 20,
+        "tokens": 400000,
+        "costUsd": 0.5,
+        "delegations": 16
+      },
+      "agentLimits": {
+        "risk-specialist": {
+          "tools": 20,
+          "models": 40,
+          "tokens": 1000000,
+          "costUsd": 0.5,
+          "delegations": 16
+        },
+        "market-specialist": {
+          "tools": 20,
+          "models": 40,
+          "tokens": 1000000,
+          "costUsd": 0.5,
+          "delegations": 16
+        },
+        "executive-bootstrap": {
+          "tools": 20,
+          "models": 20,
+          "tokens": 400000,
+          "costUsd": 0.5,
+          "delegations": 16
+        },
+        "executive-specialist": {
+          "tools": 20,
+          "models": 40,
+          "tokens": 1000000,
+          "costUsd": 0.5,
+          "delegations": 16
+        }
+      },
+      "events": [
+        {
+          "id": "d786453d-edc8-44c6-af1d-49b07ee822ab",
+          "agentId": "executive-bootstrap",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:50.677Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "18114b62-12c4-4d0f-a467-ec3765c0e22f",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:51.594Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "d35ec576-7abd-4e46-a9bf-4f9dd0e27fc3",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:54.169Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "old-survey"
+        },
+        {
+          "id": "93b77e9b-2c11-45ac-8031-0f5f0f74882c",
+          "agentId": "risk-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:54.373Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "90c7c00c-2eab-4c55-b17e-1a31ce3c0360",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:54.524Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "d899f7c3-0fd2-4306-95ea-83de1ca1fb0b",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:55.586Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "old-survey"
+        },
+        {
+          "id": "99f6de2e-1c4a-49a5-8c61-9c0c7c36938c",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:57.069Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "injection"
+        },
+        {
+          "id": "f9bcd172-ce97-4e6d-aa7b-507becb47835",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:57.581Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "injection"
+        },
+        {
+          "id": "45e288bb-bc3e-47e3-a009-36bfd6dcfb5a",
+          "agentId": "risk-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:58.952Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "trade-interview"
+        },
+        {
+          "id": "4290ee3f-1130-4ed8-a204-27de726f8c44",
+          "agentId": "risk-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:59.444Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "trade-interview"
+        },
+        {
+          "id": "f94ccf6d-ab3c-4e31-817f-76c82d5ccdc2",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:00.993Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "old-survey"
+        },
+        {
+          "id": "1e1577ee-e823-4630-839b-02efee4ffb9d",
+          "agentId": "risk-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:01.133Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "646e26ca-b946-4fb1-a2a3-2e5966e07417",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:01.666Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "failure",
+          "sideEffect": false,
+          "capabilityId": "source.read"
+        },
+        {
+          "id": "738e5e9e-50c4-41b4-818e-2aad3d7c287c",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:02.889Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "43e40f44-ed22-4a29-a3aa-0e7c9c5c8852",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:04.204Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "old-survey"
+        },
+        {
+          "id": "5637a9a4-c821-422b-ab5d-688753e8b919",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:04.764Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "old-survey"
+        },
+        {
+          "id": "48d27235-2770-434c-af30-17124a5cf0be",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:06.042Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "0b0fa40b-2395-4b71-8249-b88588a636ae",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:07.332Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "9387c09d-7f1f-4143-8455-fa3af7be2c74",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:08.527Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "1626c002-ebce-42fa-ac53-01304c753b3a",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:09.573Z",
+          "kind": "tool",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "corrective-register"
+        },
+        {
+          "id": "14149b4d-0303-4ba9-ae31-d5d1b9c33972",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:10.046Z",
+          "kind": "readback",
+          "reserved": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "capabilityId": "source.read",
+          "sourceId": "corrective-register"
+        },
+        {
+          "id": "e93f4bd7-0726-411f-9471-7c79b1279da9",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:11.123Z",
+          "kind": "model",
+          "reserved": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 32000,
+            "costUsd": 0.032,
+            "delegations": 0
+          },
+          "outcome": "success",
+          "sideEffect": false,
+          "providerId": "specialist-fixture",
+          "model": "fixture",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 1
+          }
+        },
+        {
+          "id": "child-13",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:52.110Z",
+          "kind": "delegation",
+          "capabilityId": "specialist.market",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-14",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:52.213Z",
+          "kind": "delegation",
+          "capabilityId": "specialist.risk",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-15",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:52.317Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-16",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:52.384Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-32",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:55.033Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-35",
+          "agentId": "risk-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:29:55.402Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-69",
+          "agentId": "market-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:03.300Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        },
+        {
+          "id": "child-95",
+          "agentId": "executive-specialist",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "at": "2026-10-23T04:30:08.935Z",
+          "kind": "delegation",
+          "capabilityId": "source.read",
+          "reserved": {
+            "models": 0,
+            "tools": 0,
+            "tokens": 0,
+            "costUsd": 0,
+            "delegations": 1
+          },
+          "outcome": "success",
+          "sideEffect": false
+        }
+      ],
+      "verifiedSources": [
+        {
+          "id": "old-survey",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "executionId": "8dc4c668-b3ff-4bd4-ab31-2cc2d450a6c0",
+          "verificationId": "a53a0e2e-0127-4f19-b38b-45f422bc9d00",
+          "verifiedAt": "2026-10-23T04:30:04.983Z",
+          "status": "VERIFIED",
+          "contentHash": "8d65ac3d89608799fe561e9d108b073ca494aa8b0d0ccc817e1c31e3a1106442"
+        },
+        {
+          "id": "injection",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "executionId": "4429b1f0-23af-4f42-87bb-500b3320ac40",
+          "verificationId": "43220be8-d78b-4ae9-a656-c4e281957cf5",
+          "verifiedAt": "2026-10-23T04:29:57.835Z",
+          "status": "VERIFIED",
+          "contentHash": "bd52bc6f9a52d60d1e03809e7539d00237d23c573eb1268b6029eee16fe34c0d"
+        },
+        {
+          "id": "trade-interview",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "executionId": "78a50f8f-c74d-4108-b53b-a9cfd94c5a7d",
+          "verificationId": "38e12181-fa1c-44b2-9b30-ac0a0a2da5e5",
+          "verifiedAt": "2026-10-23T04:29:59.717Z",
+          "status": "VERIFIED",
+          "contentHash": "5a37149512c9217973575d4b72376c40602663c4f9f8c5b550ce864b6320a547"
+        },
+        {
+          "id": "corrective-register",
+          "companyId": "cd717f24-4936-46e9-b41c-20c15cbff7d8",
+          "executionId": "30a93da8-40ff-46f6-b8d4-a79dd5f9aefe",
+          "verificationId": "f4f59f3a-90eb-4430-82c2-ec9f0eb4a6bb",
+          "verifiedAt": "2026-10-23T04:30:10.302Z",
+          "status": "VERIFIED",
+          "contentHash": "ada38d4651a15e5d847d86ce39a6b923667d28cfebda74d1c29c1cc26a4ffde5"
+        }
+      ],
+      "conflicts": [
+        {
+          "topic": "maintenance-demand",
+          "detectedAt": "2026-10-23T04:30:07.063Z",
+          "correctiveReadEventId": "1626c002-ebce-42fa-ac53-01304c753b3a"
+        },
+        {
+          "topic": "maintenance-demand",
+          "detectedAt": "2026-10-23T04:30:08.224Z",
+          "correctiveReadEventId": "1626c002-ebce-42fa-ac53-01304c753b3a"
+        },
+        {
+          "topic": "maintenance-demand",
+          "detectedAt": "2026-10-23T04:30:09.438Z",
+          "correctiveReadEventId": "1626c002-ebce-42fa-ac53-01304c753b3a"
+        },
+        {
+          "topic": "maintenance-demand",
+          "detectedAt": "2026-10-23T04:30:10.802Z",
+          "correctiveReadEventId": "MISSING"
+        }
+      ],
+      "report": {
+        "summary": "executive-specialist observes synthetic demand 24",
+        "classification": "MODEL_INFERENCE",
+        "claims": [
+          {
+            "topic": "maintenance-demand",
+            "value": "24",
+            "sourceId": "corrective-register"
+          }
+        ],
+        "uncertainties": [
+          "Synthetic source only; real market truth and live reasoning have not been evaluated"
+        ]
+      },
+      "learning": [
+        {
+          "id": "296bf209-6e02-4edf-a4ac-21ba03085501",
+          "parentId": "5a85fed1-47ac-4988-beb4-8aa0f80bb7dd",
+          "kind": "HYPOTHESIS",
+          "statement": "24",
+          "sourceId": "corrective-register",
+          "trusted": false
+        },
+        {
+          "id": "5a85fed1-47ac-4988-beb4-8aa0f80bb7dd",
+          "parentId": null,
+          "kind": "OBSERVATION",
+          "statement": "24",
+          "sourceId": "corrective-register",
+          "trusted": false
+        },
+        {
+          "id": "a64a9e25-639e-46c5-a5de-a586b93164be",
+          "parentId": "cbddc107-ef22-4875-a41d-deaaf945b718",
+          "kind": "VERIFIED_LESSON",
+          "statement": "24",
+          "sourceId": "corrective-register",
+          "trusted": true
+        },
+        {
+          "id": "cbddc107-ef22-4875-a41d-deaaf945b718",
+          "parentId": "296bf209-6e02-4edf-a4ac-21ba03085501",
+          "kind": "EVALUATION",
+          "statement": "24",
+          "sourceId": "corrective-register",
+          "trusted": false
+        }
+      ],
+      "humanReview": "PENDING"
+    }
+  }
+}
