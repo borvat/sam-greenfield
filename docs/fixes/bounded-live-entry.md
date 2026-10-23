@@ -116,3 +116,30 @@ processing. Reconcile existing leases through supported recovery, without budget
 resets or replaying old blocked goals. No pause, switch, restart or restore was executed
 by this coding task. Scoped principal availability remains unverified; blocked access
 must not be bypassed to establish it.
+
+## Shared composition selection (disabled follow-up)
+
+For the signed `shared-records-v1` corpus, the same optional entry now selects
+`frozenSharedGoalEvaluationBundle` and the shared ordinary-planner/specialist/read/
+derive/review builder. Other existing cases retain their original bounded builder.
+Selection comes from the immutable trial case, not business keywords or a goal plan.
+The factory moved out of tests; test fixtures import that same factory. Reviewed
+provider binding preserves the trusted bundle identity and checks the exact frozen
+three-capability manifest and existing independent verification contracts before
+composition. No database registration is performed by bootstrap.
+
+The shared case requires existing verification rows for `records.search`
+(`readback:boolean`), `derive_verified_evidence` (`replayed:boolean`) and
+`reason.records` (`grounded:boolean`), all independent `db_query` contracts. It also
+requires the explicit shared coordinator compatibility profile and existing scoped
+integration/specialist/evaluation access. These are preconditions, not automatically
+applied permissions or production changes. Live specialist mode would additionally
+require `SAM_SPECIALIST_INTELLIGENCE=evaluation`; fixture tests use `synthetic`.
+`LIVE_EVALUATION_ENABLED` remains false. Ordinary production composition and Render
+configuration remain unchanged, and the same-service pause/restore requirements
+above still apply.
+
+The positive isolated shared test uses `prepareBoundedEvaluationComposition` and
+`startRuntimeService`, including readiness/recovery, tick scheduling and stop/drain.
+SIGKILL/restart and signed capture are retained. This is model-stub validation of the
+service path over invented records, not proof of live reasoning or business schemas.

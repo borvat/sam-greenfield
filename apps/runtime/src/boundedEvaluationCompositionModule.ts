@@ -22,5 +22,8 @@ export default (async()=>{
  const trial=await openEvaluationTrial(trialId,{payload:approval.payload,signature:approval.signature,trustedOwnerPublicKey});
  if(trial.spec.mode!=='live')throw Error('EVALUATION_LIVE_TRIAL_REQUIRED');
  const {prepareBoundedEvaluationComposition,frozenGoalEvaluationBundle}=await import('../../production/src/boundedEvaluationBootstrap');
- return prepareBoundedEvaluationComposition({trial,sourceBundle:frozenGoalEvaluationBundle(trial.spec.caseId),expectedCommit:commit,workerId:env.SAM_WORKER_ID,env});
+ const {sharedCorpus}=await import('../../agents/src/evaluation/sharedCorpus');
+ const {frozenSharedGoalEvaluationBundle}=await import('../../production/src/frozenSharedGoalEvaluationBundle');
+ const sourceBundle=trial.spec.caseId===sharedCorpus.id?frozenSharedGoalEvaluationBundle(trial.spec.companyId):frozenGoalEvaluationBundle(trial.spec.caseId);
+ return prepareBoundedEvaluationComposition({trial,sourceBundle,expectedCommit:commit,workerId:env.SAM_WORKER_ID,env});
 })();

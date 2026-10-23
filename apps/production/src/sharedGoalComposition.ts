@@ -41,6 +41,13 @@ export function sharedGoalBundle(base:ProductionBundle,contracts:OutputContracts
  configured.toolDefinitions=configured.toolDefinitions.map(t=>({...t,companyScopes:[tenant],costUpperBoundUsd:t.costUpperBoundUsd??0}));
  const copied=structuredClone(configs);bundles.set(configured,{configs:copied,tenant,digest:evaluationBundleHash(configured)});return configured;
 }
+/** Read-only bootstrap may bind reviewed adapters without losing trusted assembly
+ * identity. All capabilities, contracts and specialist configuration remain pinned. */
+export function isSharedGoalBundle(bundle:ProductionBundle){return bundles.has(bundle);}
+export function bindSharedGoalModels(bundle:ProductionBundle,modelAdapters:NonNullable<ProductionBundle['modelAdapters']>,modelProviderConfigs:NonNullable<ProductionBundle['modelProviderConfigs']>){
+ const setup=bundles.get(bundle);if(!setup||setup.digest!==evaluationBundleHash(bundle))throw Error('SHARED_GOAL_ASSEMBLY_REQUIRED');
+ const bound={...bundle,modelAdapters,modelProviderConfigs};bundles.set(bound,setup);return bound;
+}
 export async function createSharedGoalComposition(input:{bundle:ProductionBundle;trial:EvaluationTrial;expectedCommit:string;workerId:string;diagnostic?:(stage:string,error:unknown)=>void}){
  assertEvaluationTrial(input.trial);
  const setup=bundles.get(input.bundle);if(!setup||setup.tenant!==input.trial.spec.companyId||setup.digest!==evaluationBundleHash(input.bundle))throw Error('SHARED_GOAL_ASSEMBLY_REQUIRED');

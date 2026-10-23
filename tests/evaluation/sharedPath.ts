@@ -17,7 +17,8 @@ import {ceiling} from '../../apps/agents/src/intelligence/contracts';
 import {sharedCorpus,sharedCorpusHash} from '../../apps/agents/src/evaluation/sharedCorpus';
 import {fixtureEvaluationAdapter} from '../../packages/model-gateway/src/evaluationAdapter';
 import {evaluationBundleHash} from '../../apps/production/src/goalEvaluationBundle';
-import {createSharedGoalComposition} from '../../apps/production/src/sharedGoalComposition';
+import {prepareBoundedEvaluationComposition} from '../../apps/production/src/boundedEvaluationBootstrap';
+import {startRuntimeService} from '../../apps/runtime/src/service';
 import {fixtureBundle} from './sharedFixture';
 const objectives=['Compare January and February supplied ledger amounts in net EUR, with citations and limits.','Compare supplier promises against delivery dates for the supplied delivery records.','Inventory duplicate supplied documents by content hash without deleting anything.'];
 const info=(objective:string)=>objective===objectives[0]?{query:'ledger',field:'total',units:'EUR',vat:'net'}:objective===objectives[1]?{query:'delivery',field:'delay',units:'calendar_day',vat:'UNKNOWN'}:{query:'document',field:'count',units:'count',vat:'UNKNOWN'};
@@ -48,9 +49,19 @@ async function worker(){
   }else output={assumptions:{goalObligations:{version:1,deliverables:[{id:'analysis',description:objective,fields:[field],scope:{kind:'population',filter:query,query:{capabilityId:'records.search',params:{query}}},units,vat,period:'UNKNOWN',timeZone:'UTC'}],unresolved:[]}},steps:[{capabilityId:'reason.records',params:{objective}}]};
   return {model:'fixture',usage:{inputTokens:5,outputTokens:20},output};
  });
- const composition=await createSharedGoalComposition({bundle:fixtureBundle(t.spec.companyId,adapter),trial:t,expectedCommit:t.spec.commit,workerId:'shared-fixture',diagnostic:(stage,error)=>console.error(stage,error)});
- await composition.recover();
- for(let i=0;i<160;i++){try{const outcome:any=await composition.runWorkTick();if(outcome?.review?.reason)console.error('REVIEW_RUNTIME_DIAGNOSTIC',JSON.stringify(outcome.review));}catch(error){console.error('FIXTURE_FAILURE_STATE',JSON.stringify({goals:(await pool.query('SELECT objective,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows,reviews:(await pool.query("SELECT goal_id,decision->>'status' status,decision->'limitations' limitations FROM goal_read_reviews")).rows}));throw error;}const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state)))break;if(process.argv[2]==='crash'&&i===11){console.log('SHARED_RESTART_BARRIER');await new Promise(()=>{});}if(i%20===0)console.log(JSON.stringify({tick:i,goals:rows,calls}));}
+ const composition=await prepareBoundedEvaluationComposition({sourceBundle:fixtureBundle(t.spec.companyId,adapter),trial:t,expectedCommit:t.spec.commit,workerId:'shared-fixture'});
+ let ticks=0,done=false,failure:unknown;
+ const service=await startRuntimeService({port:0,host:'127.0.0.1',tickIntervalMs:10,composition:{...composition,async runWorkTick(){
+  if(done)return {processed:false};
+  try{const outcome=await composition.runWorkTick();ticks++;
+   const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;
+   done=rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state));
+   if(process.argv[2]==='crash'&&ticks===12){console.log('SHARED_RESTART_BARRIER');await new Promise(()=>{});}
+   if(ticks>160)throw Error('FIXTURE_TICK_LIMIT');return outcome;
+  }catch(error){failure=error;done=true;throw error;}
+ }}});
+ try{const deadline=Date.now()+140000;while(!done&&Date.now()<deadline)await new Promise(r=>setTimeout(r,25));assert(done,'Shared service timed out');if(failure)throw failure;}
+ finally{await service.stop();}
  const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(!rows.every(g=>g.state==='COMPLETED'))console.error('FINAL_REPORT_DIAGNOSTIC',JSON.stringify((await pool.query("SELECT goal_id,decision->>'status' status,decision->'limitations' limitations FROM goal_read_reviews")).rows));assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));const usage=(await pool.query('SELECT used FROM evaluation_trials WHERE id=$1',[t.id])).rows[0].used;assert(usage.models<=24);assert.equal(usage.models,usage.iterations);assert.equal(usage.tools,18);assert.equal((await pool.query('SELECT count(*)::int n FROM executions')).rows[0].n,10);assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
 }
 async function parent(){const c=await pool.connect(),role='sam_shared_'+process.pid;let made=false;try{
@@ -63,7 +74,7 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  for(const [id,fields] of [['records.search',{readback:'boolean'}],['derive_verified_evidence',{replayed:'boolean'}],['reason.records',{grounded:'boolean'}]] as const)await c.query("INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES($1,'Fixture verification','db_query',$2,'{}')",[id,fields]);
  const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Shared fixture coordinator','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
  const ids:string[]=[];for(const objective of objectives)ids.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling,completion_definition) VALUES($1,$2,$3,$4,'NEW','GREEN','sam.read_report.v1') RETURNING id",[randomUUID(),entity,root,objective])).rows[0].id);
- const limits={...ceiling,models:24,maxOutputTokens:4000,tokens:672000};const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:sharedCorpus.id,corpusHash:sharedCorpusHash(),companyId:entity,rootCapabilityId:'reason.records',limits,agents:{'executive-bootstrap':{...limits,models:0},...Object.fromEntries(ids.map(id=>['goal.'+id,{...limits,models:8}]))},prices:[{providerId:'eval-shared',model:'fixture',inputPer1k:0.001,outputPer1k:0.001}],capabilityHash:evaluationBundleHash(fixtureBundle(entity,null))};
+ const limits={...ceiling,models:24,maxOutputTokens:4000,tokens:672000};const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:sharedCorpus.id,corpusHash:sharedCorpusHash(),companyId:entity,rootCapabilityId:'reason.records',limits,agents:{'executive-bootstrap':{...limits,models:0},...Object.fromEntries(ids.map(id=>['goal.'+id,{...limits,models:8}]))},prices:[{providerId:'eval-shared',model:'fixture',inputPer1k:0.001,outputPer1k:0.001}],capabilityHash:evaluationBundleHash(fixtureBundle(entity))};
  const trial=await createEvaluationTrial(c,{rootGoalId:root,spec});
  const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity} -c jit=off`);
  const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1',SAM_KNOWLEDGE_ENABLED:'true'};
@@ -92,7 +103,7 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  // Historical capture must retain failed/blocked owners' assigned descendants,
  // while the runtime resolver continues to deny dispatch from those owners.
  for(const state of ['FAILED','WAITING_EXTERNAL','CANCELLED','BLOCKED']){
-  const testBundle=fixtureBundle(entity,null);
+  const testBundle=fixtureBundle(entity);
   const captureClient={query:async(sql:any,params?:any)=>{
    const result=await c.query(sql==='COMMIT'?'ROLLBACK':sql,params);
    if(sql==='BEGIN'){
@@ -107,7 +118,7 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
   assert(failed.sources.some(s=>s.goal_id===source.goal_id));
   assert(!failed.reports.some(r=>r.goal_id===link.owner));
  }
- const snapshot=await sealGoalFamilyEvaluation(c,trial,fixtureBundle(entity,null));assert.equal(snapshot.goals.filter(g=>g.state==='COMPLETED').length,3);assert.equal(Object.keys(snapshot.obligations).length,3);
+ const snapshot=await sealGoalFamilyEvaluation(c,trial,fixtureBundle(entity));assert.equal(snapshot.goals.filter(g=>g.state==='COMPLETED').length,3);assert.equal(Object.keys(snapshot.obligations).length,3);
  const key=generateKeyPairSync('ed25519'),trace=await exportEvaluationTrace(c,trial,key.privateKey),score=scoreAuthenticatedEvaluation(trace,key.publicKey,spec.commit);assert.equal(score.status,'PASS');assert.equal(score.liveReasoningValidated,false);verifyEvaluationTrace(trace,key.publicKey);
  // Benchmark assertions are outside the runtime and absent from every prompt.
  const reports=snapshot.reports.map(r=>r.decision);assert(reports.every(r=>r.findings.length>=2));

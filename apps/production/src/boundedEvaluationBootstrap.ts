@@ -1,3 +1,4 @@
+import {isSharedGoalBundle,bindSharedGoalModels,createSharedGoalComposition} from './sharedGoalComposition';
 import {assertIntegrationAccess} from '../../../packages/db/src/integrationProfile';
 import {pool,withTransaction} from '../../../packages/db/src/client';
 import {loadProviderRegistry} from '../../../packages/model-gateway/src/registry';
@@ -43,11 +44,13 @@ export async function prepareBoundedEvaluationComposition(input:{trial:Evaluatio
  });
  const adapters=input.trial.spec.mode==='live'?[existingEvaluationAdapter(input.trial.permit,configs,input.env)]:input.sourceBundle.modelAdapters??[];
  for(const adapter of adapters)assertRegisteredEvaluationAdapter(adapter,input.trial.permit.mode);
- const raw={...input.sourceBundle,modelAdapters:adapters,modelProviderConfigs:configs.filter(c=>adapters.some(a=>a.providerId===c.providerId))};
+ const shared=isSharedGoalBundle(input.sourceBundle),selected=configs.filter(c=>adapters.some(a=>a.providerId===c.providerId));
+ const raw=shared?bindSharedGoalModels(input.sourceBundle,adapters,selected):{...input.sourceBundle,modelAdapters:adapters,modelProviderConfigs:selected};
+ if(shared&&sha256Hex(raw.capabilities.map(c=>c.capabilityId).sort())!==sha256Hex(['derive_verified_evidence','reason.records','records.search']))throw Error('EVALUATION_SHARED_MANIFEST_REQUIRED');
  const bundle=validateProductionBundle(raw);
  // This check is read-only in every environment, including test fixtures.
- const required=[FROZEN_SOURCE_CONTRACT,...evidenceReleaseContracts(bundle)];
+ const required=[...(shared?[{capabilityId:'records.search',verificationMethod:'db_query',requiredEvidenceFields:{readback:'boolean'}},{capabilityId:'reason.records',verificationMethod:'db_query',requiredEvidenceFields:{grounded:'boolean'}}]:[FROZEN_SOURCE_CONTRACT]),...evidenceReleaseContracts(bundle)];
  for(const contract of required){const row=(await pool.query('SELECT verification_method,required_evidence_fields,must_not_trust_execution_result FROM verification_contracts WHERE capability_id=$1',[contract.capabilityId])).rows[0];
   if(!row?.must_not_trust_execution_result||row.verification_method!==contract.verificationMethod||sha256Hex(row.required_evidence_fields)!==sha256Hex(contract.requiredEvidenceFields))throw Error('EVALUATION_VERIFICATION_PROVISIONING_REQUIRED');}
- return createGoalEvaluationComposition({bundle:raw,trial:input.trial,expectedCommit:input.expectedCommit,workerId:input.workerId});
+ return (shared?createSharedGoalComposition:createGoalEvaluationComposition)({bundle:raw,trial:input.trial,expectedCommit:input.expectedCommit,workerId:input.workerId});
 }
