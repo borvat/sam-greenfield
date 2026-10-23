@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-VYZnlZ/source.tar 9da55fc3d075a1776acf3162397c8b1f17e602b2
+$ tar -xf /tmp/sam-verify-VYZnlZ/source.tar -C /tmp/sam-verify-VYZnlZ/source

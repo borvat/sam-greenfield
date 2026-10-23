@@ -1,0 +1,50 @@
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-pg
+sam-verify-1792736523883-e182ab2e
+$ docker rm --force --volumes sam-verify-1792736523883-e182ab2e-pg
+sam-verify-1792736523883-e182ab2e-pg
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-1
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-1
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-2
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-2
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-3
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-3
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-4
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-4
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-5
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-5
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-6
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-6
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-7
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-7
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-8
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-8
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-9
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-9
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-10
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-10
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-11
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-11
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-12
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-12
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-13
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-13
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-job-14
+
+Error: No such object: sam-verify-1792736523883-e182ab2e-job-14
+$ docker network inspect --format '{{index .Labels "sam.verification.run"}}' sam-verify-1792736523883-e182ab2e-net
+sam-verify-1792736523883-e182ab2e
+$ docker network rm sam-verify-1792736523883-e182ab2e-net
+sam-verify-1792736523883-e182ab2e-net

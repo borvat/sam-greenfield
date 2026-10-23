@@ -1,0 +1,16 @@
+PASS tests/phase22/planner_scope.ts
+✔ explicit narrow bol reads do not force unrelated orders and inventory (26.964336ms)
+✔ explicit multi-specialist reads stay available together (1.20712ms)
+✔ natural-language identity reads are not assigned an arbitrary two-step minimum (0.230628ms)
+✔ unavailable or mutating explicit tools never become executable (1.000889ms)
+✔ identical reads are corrected once instead of posing as independent verification (0.993198ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 53.07854
+
+{"passed":1,"failed":0,"results":[{"test":"tests/phase22/planner_scope.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T06:19:52.830Z","completedAt":"2026-10-23T06:19:53.306Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T06:19:52.832Z","completedAt":"2026-10-23T06:19:53.021Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/phase22/planner_scope.ts"],"startedAt":"2026-10-23T06:19:53.021Z","completedAt":"2026-10-23T06:19:53.306Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

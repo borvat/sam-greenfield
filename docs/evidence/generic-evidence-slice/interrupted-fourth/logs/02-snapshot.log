@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-yeIVgb/source.tar 32ae2ac33fc962d45164d60c7c1d037e07ba101f
+$ tar -xf /tmp/sam-verify-yeIVgb/source.tar -C /tmp/sam-verify-yeIVgb/source

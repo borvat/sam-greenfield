@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-N5prp3/source.tar ce4356c697cf96a900e95b65513bd5c8c2af636c
+$ tar -xf /tmp/sam-verify-N5prp3/source.tar -C /tmp/sam-verify-N5prp3/source

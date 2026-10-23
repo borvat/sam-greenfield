@@ -1,0 +1,4328 @@
+{
+  "schemaVersion": 1,
+  "runId": "sam-verify-1792736523883-e182ab2e",
+  "startedAt": "2026-10-23T06:22:03.883Z",
+  "completedAt": "2026-10-23T06:25:08.393Z",
+  "status": "FAIL",
+  "classification": "INDEPENDENT_LOCAL_SYNTHETIC_ACCEPTANCE_NOT_HOSTED_OR_PRODUCTION",
+  "source": {
+    "sha": "d5c3ad27320db404721793f56266919bd8a5fa0a",
+    "tree": "98230265ddbda5cb26e3b7e46b4a8c675e8d534d",
+    "clean": true,
+    "fileManifestHash": "d364d598aba5fc2c7c3683b47daf9df71a51a873908b761880a39eab2bd9c756",
+    "implementationDigest": "f9ba738930ad579314d1c20d72fadfa0994e84f6ebae86bfd36b0b53f8e80863"
+  },
+  "host": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "docker": {
+      "Client": {
+        "Version": "28.4.0",
+        "ApiVersion": "1.51",
+        "DefaultAPIVersion": "1.51",
+        "GitCommit": "d8eb465",
+        "GoVersion": "go1.24.7",
+        "Os": "linux",
+        "Arch": "amd64",
+        "BuildTime": "Wed Sep  3 20:56:28 2025",
+        "Context": "default"
+      },
+      "Server": {
+        "Platform": {
+          "Name": "Docker Engine - Community"
+        },
+        "Components": [
+          {
+            "Name": "Engine",
+            "Version": "28.4.0",
+            "Details": {
+              "ApiVersion": "1.51",
+              "Arch": "amd64",
+              "BuildTime": "Wed Sep  3 20:58:50 2025",
+              "Experimental": "false",
+              "GitCommit": "249d679",
+              "GoVersion": "go1.24.7",
+              "KernelVersion": "6.18.55",
+              "MinAPIVersion": "1.24",
+              "Os": "linux"
+            }
+          },
+          {
+            "Name": "containerd",
+            "Version": "v1.7.28",
+            "Details": {
+              "GitCommit": "b98a3aace656320842a23f4a392a33f46af97866"
+            }
+          },
+          {
+            "Name": "runc",
+            "Version": "1.3.0",
+            "Details": {
+              "GitCommit": "v1.3.0-0-g4ca628d"
+            }
+          },
+          {
+            "Name": "docker-init",
+            "Version": "0.19.0",
+            "Details": {
+              "GitCommit": "de40ad0"
+            }
+          }
+        ],
+        "Version": "28.4.0",
+        "ApiVersion": "1.51",
+        "MinAPIVersion": "1.24",
+        "GitCommit": "249d679",
+        "GoVersion": "go1.24.7",
+        "Os": "linux",
+        "Arch": "amd64",
+        "KernelVersion": "6.18.55",
+        "BuildTime": "2025-09-03T20:58:50.000000000+00:00"
+      }
+    },
+    "compose": "2.40.3"
+  },
+  "pins": {
+    "platform": "linux/amd64",
+    "node": "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+    "productionBase": "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc",
+    "postgres": "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9",
+    "python": "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+    "psycopg2Binary": "2.9.13",
+    "actionlint": {
+      "version": "1.7.7",
+      "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz",
+      "sha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
+    }
+  },
+  "images": [
+    {
+      "role": "node",
+      "ref": "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+      "id": "sha256:eefceac94552a7e7e9da532feb53139a8630e3934b862662ce1d7cb877772c86",
+      "repoDigests": [
+        "node@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "productionBase",
+      "ref": "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc",
+      "id": "sha256:c79227476e31e0f5410cfc4578f1f9a59300510491f2f6f0b5eaf956dbef4986",
+      "repoDigests": [
+        "node@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "postgres",
+      "ref": "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9",
+      "id": "sha256:4b4956e2ab1f0aec9779dfca20366a9963a3f24c34269c3a115dd838387f0734",
+      "repoDigests": [
+        "pgvector/pgvector@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "python",
+      "ref": "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+      "id": "sha256:b4403f3b7acf5e0700a5dd4e7ab01456d62b557a208a04f8a42d3470d93b5730",
+      "repoDigests": [
+        "python@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    }
+  ],
+  "steps": [
+    {
+      "name": "preflight",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:03.884Z",
+      "completedAt": "2026-10-23T06:22:04.188Z",
+      "commands": [
+        {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.888Z",
+          "completedAt": "2026-10-23T06:22:03.893Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD^{tree}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.893Z",
+          "completedAt": "2026-10-23T06:22:03.896Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=normal"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.896Z",
+          "completedAt": "2026-10-23T06:22:03.902Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "context",
+            "inspect"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.902Z",
+          "completedAt": "2026-10-23T06:22:03.917Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "version",
+            "--format",
+            "{{json .}}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.917Z",
+          "completedAt": "2026-10-23T06:22:03.938Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "version",
+            "--short"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:03.938Z",
+          "completedAt": "2026-10-23T06:22:04.017Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "buildx",
+            "version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.017Z",
+          "completedAt": "2026-10-23T06:22:04.103Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "info",
+            "--format",
+            "{{.OSType}}/{{.Architecture}}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.103Z",
+          "completedAt": "2026-10-23T06:22:04.172Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.172Z",
+          "completedAt": "2026-10-23T06:22:04.175Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "curl",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.175Z",
+          "completedAt": "2026-10-23T06:22:04.186Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "tar",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.186Z",
+          "completedAt": "2026-10-23T06:22:04.188Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/01-preflight.log"
+    },
+    {
+      "name": "snapshot",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:04.189Z",
+      "completedAt": "2026-10-23T06:22:04.260Z",
+      "commands": [
+        {
+          "argv": [
+            "git",
+            "archive",
+            "--format=tar",
+            "--output",
+            "/tmp/sam-verify-g3hjdg/source.tar",
+            "d5c3ad27320db404721793f56266919bd8a5fa0a"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.190Z",
+          "completedAt": "2026-10-23T06:22:04.220Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "tar",
+            "-xf",
+            "/tmp/sam-verify-g3hjdg/source.tar",
+            "-C",
+            "/tmp/sam-verify-g3hjdg/source"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.220Z",
+          "completedAt": "2026-10-23T06:22:04.229Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/02-snapshot.log"
+    },
+    {
+      "name": "images",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:04.261Z",
+      "completedAt": "2026-10-23T06:22:04.394Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.261Z",
+          "completedAt": "2026-10-23T06:22:04.278Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.278Z",
+          "completedAt": "2026-10-23T06:22:04.292Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.292Z",
+          "completedAt": "2026-10-23T06:22:04.313Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.313Z",
+          "completedAt": "2026-10-23T06:22:04.329Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.329Z",
+          "completedAt": "2026-10-23T06:22:04.342Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.342Z",
+          "completedAt": "2026-10-23T06:22:04.357Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.357Z",
+          "completedAt": "2026-10-23T06:22:04.370Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.370Z",
+          "completedAt": "2026-10-23T06:22:04.394Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/03-images.log"
+    },
+    {
+      "name": "isolated-postgres",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:04.395Z",
+      "completedAt": "2026-10-23T06:22:10.640Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "network",
+            "create",
+            "--internal",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "sam-verify-1792736523883-e182ab2e-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.396Z",
+          "completedAt": "2026-10-23T06:22:04.432Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--detach",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--network",
+            "sam-verify-1792736523883-e182ab2e-net",
+            "--env",
+            "POSTGRES_DB=sam_core_test",
+            "--env",
+            "POSTGRES_PASSWORD=verification-fixture",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:04.432Z",
+          "completedAt": "2026-10-23T06:22:08.240Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:08.240Z",
+          "completedAt": "2026-10-23T06:22:08.378Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:08.879Z",
+          "completedAt": "2026-10-23T06:22:08.999Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:09.500Z",
+          "completedAt": "2026-10-23T06:22:09.625Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:10.125Z",
+          "completedAt": "2026-10-23T06:22:10.230Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_core_test_lifecycle"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:10.230Z",
+          "completedAt": "2026-10-23T06:22:10.383Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_core_test_application"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:10.383Z",
+          "completedAt": "2026-10-23T06:22:10.511Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_greenfield"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:10.511Z",
+          "completedAt": "2026-10-23T06:22:10.640Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/04-isolated-postgres.log"
+    },
+    {
+      "name": "node-dependencies",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:10.647Z",
+      "completedAt": "2026-10-23T06:22:29.625Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-1",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "HTTP_PROXY",
+            "--env",
+            "HTTPS_PROXY",
+            "--env",
+            "NO_PROXY",
+            "--env",
+            "http_proxy",
+            "--env",
+            "https_proxy",
+            "--env",
+            "no_proxy",
+            "--add-host",
+            "proxy:172.31.12.109",
+            "--mount",
+            "type=bind,src=/usr/local/share/ca-certificates/environment-proxy-ca.crt,dst=/tmp/verification-ca.pem,readonly",
+            "--env",
+            "NODE_EXTRA_CA_CERTS=/tmp/verification-ca.pem",
+            "--env",
+            "PIP_CERT=/tmp/verification-ca.pem",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "ci",
+            "--include=dev",
+            "--cache",
+            "/tmp/npm-cache",
+            "--fetch-retries=1",
+            "--fetch-timeout=20000"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:10.650Z",
+          "completedAt": "2026-10-23T06:22:29.625Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/05-node-dependencies.log"
+    },
+    {
+      "name": "python-dependencies",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:29.627Z",
+      "completedAt": "2026-10-23T06:22:33.285Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-2",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "HTTP_PROXY",
+            "--env",
+            "HTTPS_PROXY",
+            "--env",
+            "NO_PROXY",
+            "--env",
+            "http_proxy",
+            "--env",
+            "https_proxy",
+            "--env",
+            "no_proxy",
+            "--add-host",
+            "proxy:172.31.12.109",
+            "--mount",
+            "type=bind,src=/usr/local/share/ca-certificates/environment-proxy-ca.crt,dst=/tmp/verification-ca.pem,readonly",
+            "--env",
+            "NODE_EXTRA_CA_CERTS=/tmp/verification-ca.pem",
+            "--env",
+            "PIP_CERT=/tmp/verification-ca.pem",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/python,dst=/fixtures",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+            "python",
+            "-m",
+            "pip",
+            "install",
+            "--target",
+            "/fixtures/site",
+            "--cache-dir",
+            "/tmp/pip-cache",
+            "--retries",
+            "1",
+            "--timeout",
+            "20",
+            "--only-binary=:all:",
+            "--require-hashes",
+            "--requirement",
+            "scripts/testing/requirements-verification.txt"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:29.628Z",
+          "completedAt": "2026-10-23T06:22:33.285Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/06-python-dependencies.log"
+    },
+    {
+      "name": "runtime-versions",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:22:33.286Z",
+      "completedAt": "2026-10-23T06:23:07.361Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-3",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:33.287Z",
+          "completedAt": "2026-10-23T06:22:43.611Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-4",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:43.611Z",
+          "completedAt": "2026-10-23T06:22:54.652Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-5",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "openssl",
+            "version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:22:54.652Z",
+          "completedAt": "2026-10-23T06:23:05.733Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-6",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+            "python",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:05.733Z",
+          "completedAt": "2026-10-23T06:23:07.270Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792736523883-e182ab2e-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atc",
+            "SELECT version()"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:07.271Z",
+          "completedAt": "2026-10-23T06:23:07.361Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/07-runtime-versions.log"
+    },
+    {
+      "name": "workflow-tool",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:23:07.363Z",
+      "completedAt": "2026-10-23T06:23:07.943Z",
+      "commands": [
+        {
+          "argv": [
+            "curl",
+            "--fail",
+            "--location",
+            "--silent",
+            "--show-error",
+            "--max-time",
+            "60",
+            "--output",
+            "/tmp/sam-verify-g3hjdg/actionlint.tar.gz",
+            "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:07.364Z",
+          "completedAt": "2026-10-23T06:23:07.895Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "tar",
+            "-xzf",
+            "/tmp/sam-verify-g3hjdg/actionlint.tar.gz",
+            "-C",
+            "/tmp/sam-verify-g3hjdg",
+            "actionlint"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:07.898Z",
+          "completedAt": "2026-10-23T06:23:07.940Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "/tmp/sam-verify-g3hjdg/actionlint",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:07.940Z",
+          "completedAt": "2026-10-23T06:23:07.943Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/08-workflow-tool.log"
+    },
+    {
+      "name": "workflow-validation",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:23:07.945Z",
+      "completedAt": "2026-10-23T06:23:07.950Z",
+      "commands": [
+        {
+          "argv": [
+            "/tmp/sam-verify-g3hjdg/actionlint",
+            "-no-color",
+            "-shellcheck=",
+            "-pyflakes=",
+            ".github/workflows/phase0-postgres-verification.yml"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:07.946Z",
+          "completedAt": "2026-10-23T06:23:07.950Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/09-workflow-validation.log",
+      "scope": "actionlint YAML/Actions semantic validation; optional shellcheck/pyflakes not installed or claimed"
+    },
+    {
+      "name": "configuration-validation",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:23:07.951Z",
+      "completedAt": "2026-10-23T06:23:39.006Z",
+      "commands": [
+        {
+          "argv": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+            "tests/testing/runner-contract.cjs"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:07.953Z",
+          "completedAt": "2026-10-23T06:23:08.178Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--file",
+            "docker-compose.yml",
+            "config",
+            "--quiet",
+            "--no-interpolate",
+            "--no-env-resolution"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:08.178Z",
+          "completedAt": "2026-10-23T06:23:08.242Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--file",
+            "docker-compose.production.yml",
+            "config",
+            "--quiet",
+            "--no-interpolate",
+            "--no-env-resolution"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:08.242Z",
+          "completedAt": "2026-10-23T06:23:08.312Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--file",
+            "deploy/production/docker-compose.live.yml",
+            "config",
+            "--quiet",
+            "--no-interpolate",
+            "--no-env-resolution"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:08.312Z",
+          "completedAt": "2026-10-23T06:23:08.389Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--file",
+            "deploy/staging/docker-compose.integration.yml",
+            "config",
+            "--quiet",
+            "--no-interpolate",
+            "--no-env-resolution"
+          ],
+          "cwd": "/tmp/sam-verify-g3hjdg/source",
+          "startedAt": "2026-10-23T06:23:08.389Z",
+          "completedAt": "2026-10-23T06:23:08.468Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-7",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "tests/release/build_configuration.cjs"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:08.468Z",
+          "completedAt": "2026-10-23T06:23:20.790Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-8",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "tests/release/preparation.cjs"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:20.790Z",
+          "completedAt": "2026-10-23T06:23:30.114Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-9",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "packages/db/src/migrate.js",
+            "--check-deterministic"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:30.114Z",
+          "completedAt": "2026-10-23T06:23:39.006Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/10-configuration-validation.log"
+    },
+    {
+      "name": "typecheck",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:23:39.007Z",
+      "completedAt": "2026-10-23T06:23:53.334Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-10",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:39.009Z",
+          "completedAt": "2026-10-23T06:23:53.334Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/11-typecheck.log"
+    },
+    {
+      "name": "regression",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:23:53.336Z",
+      "completedAt": "2026-10-23T06:24:31.667Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-11",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test",
+            "--env",
+            "SAM_VERIFICATION_SOURCE_SHA=d5c3ad27320db404721793f56266919bd8a5fa0a",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "run",
+            "test:core-regression"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:23:53.338Z",
+          "completedAt": "2026-10-23T06:24:31.666Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/12-regression.log",
+      "suiteResults": {
+        "passed": 49,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/phase1/final_acceptance.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:23:58.535Z",
+            "completedAt": "2026-10-23T06:23:59.113Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:23:58.538Z",
+                "completedAt": "2026-10-23T06:23:58.738Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase1/final_acceptance.ts"
+                ],
+                "startedAt": "2026-10-23T06:23:58.738Z",
+                "completedAt": "2026-10-23T06:23:59.113Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase1/full_vertical_slice.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:23:59.142Z",
+            "completedAt": "2026-10-23T06:23:59.621Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:23:59.143Z",
+                "completedAt": "2026-10-23T06:23:59.315Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase1/full_vertical_slice.ts"
+                ],
+                "startedAt": "2026-10-23T06:23:59.315Z",
+                "completedAt": "2026-10-23T06:23:59.621Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase1/kernel_smoke.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:23:59.648Z",
+            "completedAt": "2026-10-23T06:24:00.189Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:23:59.649Z",
+                "completedAt": "2026-10-23T06:23:59.838Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase1/kernel_smoke.ts"
+                ],
+                "startedAt": "2026-10-23T06:23:59.838Z",
+                "completedAt": "2026-10-23T06:24:00.189Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase1/replan_recovery.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:00.207Z",
+            "completedAt": "2026-10-23T06:24:00.701Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:00.225Z",
+                "completedAt": "2026-10-23T06:24:00.398Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase1/replan_recovery.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:00.398Z",
+                "completedAt": "2026-10-23T06:24:00.701Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase1/runtime_loop.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:00.717Z",
+            "completedAt": "2026-10-23T06:24:01.160Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:00.719Z",
+                "completedAt": "2026-10-23T06:24:00.870Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase1/runtime_loop.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:00.870Z",
+                "completedAt": "2026-10-23T06:24:01.160Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/authority_guard.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:01.181Z",
+            "completedAt": "2026-10-23T06:24:01.571Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:01.182Z",
+                "completedAt": "2026-10-23T06:24:01.362Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/authority_guard.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:01.362Z",
+                "completedAt": "2026-10-23T06:24:01.571Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/brain_kernel_handoff.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:01.591Z",
+            "completedAt": "2026-10-23T06:24:02.143Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:01.592Z",
+                "completedAt": "2026-10-23T06:24:01.747Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/brain_kernel_handoff.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:01.747Z",
+                "completedAt": "2026-10-23T06:24:02.143Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/brain_replanning.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:02.163Z",
+            "completedAt": "2026-10-23T06:24:02.654Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:02.164Z",
+                "completedAt": "2026-10-23T06:24:02.324Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/brain_replanning.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:02.324Z",
+                "completedAt": "2026-10-23T06:24:02.654Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/final_acceptance.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:02.674Z",
+            "completedAt": "2026-10-23T06:24:03.180Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:02.675Z",
+                "completedAt": "2026-10-23T06:24:02.836Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/final_acceptance.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:02.836Z",
+                "completedAt": "2026-10-23T06:24:03.180Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/gateway_resilience.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:03.200Z",
+            "completedAt": "2026-10-23T06:24:03.633Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:03.201Z",
+                "completedAt": "2026-10-23T06:24:03.381Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/gateway_resilience.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:03.381Z",
+                "completedAt": "2026-10-23T06:24:03.633Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase2/model_gateway.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:03.652Z",
+            "completedAt": "2026-10-23T06:24:04.106Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:03.653Z",
+                "completedAt": "2026-10-23T06:24:03.831Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase2/model_gateway.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:03.831Z",
+                "completedAt": "2026-10-23T06:24:04.106Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase3/capability_catalog.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:04.128Z",
+            "completedAt": "2026-10-23T06:24:04.462Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:04.129Z",
+                "completedAt": "2026-10-23T06:24:04.299Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase3/capability_catalog.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:04.299Z",
+                "completedAt": "2026-10-23T06:24:04.462Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase3/final_acceptance.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:04.479Z",
+            "completedAt": "2026-10-23T06:24:05.034Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:04.479Z",
+                "completedAt": "2026-10-23T06:24:04.662Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase3/final_acceptance.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:04.662Z",
+                "completedAt": "2026-10-23T06:24:05.034Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase3/specialist_delegation.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:05.052Z",
+            "completedAt": "2026-10-23T06:24:05.636Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:05.053Z",
+                "completedAt": "2026-10-23T06:24:05.352Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase3/specialist_delegation.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:05.352Z",
+                "completedAt": "2026-10-23T06:24:05.636Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase3/specialist_supervisor.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:05.652Z",
+            "completedAt": "2026-10-23T06:24:06.108Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:05.653Z",
+                "completedAt": "2026-10-23T06:24:05.832Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase3/specialist_supervisor.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:05.832Z",
+                "completedAt": "2026-10-23T06:24:06.108Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase4/reconciliation.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:06.129Z",
+            "completedAt": "2026-10-23T06:24:06.696Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:06.130Z",
+                "completedAt": "2026-10-23T06:24:06.358Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase4/reconciliation.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:06.358Z",
+                "completedAt": "2026-10-23T06:24:06.696Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase4/tool_gateway.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:06.719Z",
+            "completedAt": "2026-10-23T06:24:07.260Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:06.720Z",
+                "completedAt": "2026-10-23T06:24:06.923Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase4/tool_gateway.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:06.923Z",
+                "completedAt": "2026-10-23T06:24:07.260Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase5/final_acceptance.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:07.285Z",
+            "completedAt": "2026-10-23T06:24:07.748Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:07.287Z",
+                "completedAt": "2026-10-23T06:24:07.451Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase5/final_acceptance.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:07.451Z",
+                "completedAt": "2026-10-23T06:24:07.748Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase5/verified_learning.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:07.774Z",
+            "completedAt": "2026-10-23T06:24:08.643Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:07.775Z",
+                "completedAt": "2026-10-23T06:24:07.955Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase5/verified_learning.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:07.955Z",
+                "completedAt": "2026-10-23T06:24:08.643Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase6/final_acceptance.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:08.661Z",
+            "completedAt": "2026-10-23T06:24:09.063Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:08.662Z",
+                "completedAt": "2026-10-23T06:24:08.827Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase6/final_acceptance.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:08.827Z",
+                "completedAt": "2026-10-23T06:24:09.063Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase6/operational_supervision.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:09.081Z",
+            "completedAt": "2026-10-23T06:24:09.458Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:09.082Z",
+                "completedAt": "2026-10-23T06:24:09.235Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase6/operational_supervision.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:09.235Z",
+                "completedAt": "2026-10-23T06:24:09.458Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase6/policy_evaluation.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:09.481Z",
+            "completedAt": "2026-10-23T06:24:09.798Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:09.482Z",
+                "completedAt": "2026-10-23T06:24:09.650Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase6/policy_evaluation.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:09.650Z",
+                "completedAt": "2026-10-23T06:24:09.798Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase7/production_readiness.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:09.828Z",
+            "completedAt": "2026-10-23T06:24:10.387Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:09.829Z",
+                "completedAt": "2026-10-23T06:24:10.014Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase7/production_readiness.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:10.014Z",
+                "completedAt": "2026-10-23T06:24:10.387Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase7/runtime_module_loading.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:10.405Z",
+            "completedAt": "2026-10-23T06:24:12.015Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:10.406Z",
+                "completedAt": "2026-10-23T06:24:10.629Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase7/runtime_module_loading.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:10.629Z",
+                "completedAt": "2026-10-23T06:24:12.015Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase7/runtime_service.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:12.038Z",
+            "completedAt": "2026-10-23T06:24:12.657Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:12.039Z",
+                "completedAt": "2026-10-23T06:24:12.229Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase7/runtime_service.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:12.230Z",
+                "completedAt": "2026-10-23T06:24:12.657Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase8/chatgpt_tool_surface.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:12.679Z",
+            "completedAt": "2026-10-23T06:24:13.236Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:12.680Z",
+                "completedAt": "2026-10-23T06:24:12.956Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase8/chatgpt_tool_surface.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:12.956Z",
+                "completedAt": "2026-10-23T06:24:13.236Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase9/production_wiring.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:13.259Z",
+            "completedAt": "2026-10-23T06:24:14.005Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:13.260Z",
+                "completedAt": "2026-10-23T06:24:13.474Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase9/production_wiring.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:13.474Z",
+                "completedAt": "2026-10-23T06:24:14.005Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase10/mcp_transport.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:14.023Z",
+            "completedAt": "2026-10-23T06:24:14.943Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:14.024Z",
+                "completedAt": "2026-10-23T06:24:14.184Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase10/mcp_transport.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:14.184Z",
+                "completedAt": "2026-10-23T06:24:14.943Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase11/model_adapters.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:14.962Z",
+            "completedAt": "2026-10-23T06:24:15.497Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:14.963Z",
+                "completedAt": "2026-10-23T06:24:15.149Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase11/model_adapters.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:15.149Z",
+                "completedAt": "2026-10-23T06:24:15.497Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase12/gmail_adapter.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:15.514Z",
+            "completedAt": "2026-10-23T06:24:15.982Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:15.515Z",
+                "completedAt": "2026-10-23T06:24:15.694Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase12/gmail_adapter.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:15.694Z",
+                "completedAt": "2026-10-23T06:24:15.982Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase12/gmail_read_trial.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:16.002Z",
+            "completedAt": "2026-10-23T06:24:16.884Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:16.003Z",
+                "completedAt": "2026-10-23T06:24:16.202Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase12/gmail_read_trial.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:16.202Z",
+                "completedAt": "2026-10-23T06:24:16.884Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase13/drive_adapters.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:16.901Z",
+            "completedAt": "2026-10-23T06:24:17.430Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:16.902Z",
+                "completedAt": "2026-10-23T06:24:17.087Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase13/drive_adapters.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:17.087Z",
+                "completedAt": "2026-10-23T06:24:17.430Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase14/eboekhouden_read.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:17.453Z",
+            "completedAt": "2026-10-23T06:24:18.032Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:17.454Z",
+                "completedAt": "2026-10-23T06:24:17.667Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase14/eboekhouden_read.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:17.667Z",
+                "completedAt": "2026-10-23T06:24:18.032Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase15/bol_read.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:18.051Z",
+            "completedAt": "2026-10-23T06:24:18.528Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:18.052Z",
+                "completedAt": "2026-10-23T06:24:18.233Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase15/bol_read.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:18.233Z",
+                "completedAt": "2026-10-23T06:24:18.528Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase16/bol_operational_intelligence.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:18.547Z",
+            "completedAt": "2026-10-23T06:24:19.207Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:18.548Z",
+                "completedAt": "2026-10-23T06:24:18.732Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase16/bol_operational_intelligence.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:18.733Z",
+                "completedAt": "2026-10-23T06:24:19.207Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase17/bol_sam_surface.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:19.238Z",
+            "completedAt": "2026-10-23T06:24:20.493Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:19.239Z",
+                "completedAt": "2026-10-23T06:24:19.547Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase17/bol_sam_surface.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:19.547Z",
+                "completedAt": "2026-10-23T06:24:20.493Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase17/finance_reconciliation.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:20.523Z",
+            "completedAt": "2026-10-23T06:24:21.135Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:20.528Z",
+                "completedAt": "2026-10-23T06:24:20.726Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase17/finance_reconciliation.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:20.726Z",
+                "completedAt": "2026-10-23T06:24:21.135Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase18/operational_finance_loop.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:21.184Z",
+            "completedAt": "2026-10-23T06:24:21.749Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:21.185Z",
+                "completedAt": "2026-10-23T06:24:21.381Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase18/operational_finance_loop.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:21.381Z",
+                "completedAt": "2026-10-23T06:24:21.749Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase19/command_center.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:21.767Z",
+            "completedAt": "2026-10-23T06:24:22.321Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:21.767Z",
+                "completedAt": "2026-10-23T06:24:21.942Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase19/command_center.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:21.942Z",
+                "completedAt": "2026-10-23T06:24:22.321Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase20/live_golden_chain_gate.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:22.353Z",
+            "completedAt": "2026-10-23T06:24:22.990Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:22.354Z",
+                "completedAt": "2026-10-23T06:24:22.618Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase20/live_golden_chain_gate.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:22.618Z",
+                "completedAt": "2026-10-23T06:24:22.990Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase21/mcp_internal_oauth.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:23.017Z",
+            "completedAt": "2026-10-23T06:24:24.174Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:23.018Z",
+                "completedAt": "2026-10-23T06:24:23.207Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase21/mcp_internal_oauth.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:23.207Z",
+                "completedAt": "2026-10-23T06:24:24.174Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase21/production_deployment.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:24.197Z",
+            "completedAt": "2026-10-23T06:24:24.587Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:24.198Z",
+                "completedAt": "2026-10-23T06:24:24.382Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase21/production_deployment.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:24.382Z",
+                "completedAt": "2026-10-23T06:24:24.587Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/acceptance_recovery.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:24.608Z",
+            "completedAt": "2026-10-23T06:24:26.143Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:24.609Z",
+                "completedAt": "2026-10-23T06:24:24.790Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/acceptance_recovery.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:24.790Z",
+                "completedAt": "2026-10-23T06:24:26.143Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/bol_analysis.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:26.160Z",
+            "completedAt": "2026-10-23T06:24:26.690Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:26.161Z",
+                "completedAt": "2026-10-23T06:24:26.339Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/bol_analysis.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:26.339Z",
+                "completedAt": "2026-10-23T06:24:26.690Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/bol_analysis_bridge.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:26.708Z",
+            "completedAt": "2026-10-23T06:24:27.379Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:26.709Z",
+                "completedAt": "2026-10-23T06:24:26.910Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/bol_analysis_bridge.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:26.910Z",
+                "completedAt": "2026-10-23T06:24:27.379Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/planner_scope.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:27.398Z",
+            "completedAt": "2026-10-23T06:24:27.897Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:27.399Z",
+                "completedAt": "2026-10-23T06:24:27.576Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/planner_scope.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:27.576Z",
+                "completedAt": "2026-10-23T06:24:27.897Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/runtime_recovery.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:27.917Z",
+            "completedAt": "2026-10-23T06:24:28.860Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:27.919Z",
+                "completedAt": "2026-10-23T06:24:28.129Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/runtime_recovery.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:28.129Z",
+                "completedAt": "2026-10-23T06:24:28.860Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/submit_goal_planner.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:28.877Z",
+            "completedAt": "2026-10-23T06:24:29.635Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:28.877Z",
+                "completedAt": "2026-10-23T06:24:29.047Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/submit_goal_planner.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:29.047Z",
+                "completedAt": "2026-10-23T06:24:29.635Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/phase22/submit_goal_surface.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:29.667Z",
+            "completedAt": "2026-10-23T06:24:30.639Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:29.669Z",
+                "completedAt": "2026-10-23T06:24:29.864Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/phase22/submit_goal_surface.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:29.864Z",
+                "completedAt": "2026-10-23T06:24:30.639Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "core-reliability",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:24:31.669Z",
+      "completedAt": "2026-10-23T06:24:56.367Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-12",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test",
+            "--env",
+            "SAM_VERIFICATION_SOURCE_SHA=d5c3ad27320db404721793f56266919bd8a5fa0a",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "run",
+            "test:core-reliability"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:24:31.670Z",
+          "completedAt": "2026-10-23T06:24:56.367Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/13-core-reliability.log",
+      "suiteResults": {
+        "passed": 11,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/core/reliability.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:38.950Z",
+            "completedAt": "2026-10-23T06:24:44.977Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:38.952Z",
+                "completedAt": "2026-10-23T06:24:39.190Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/reliability.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:39.190Z",
+                "completedAt": "2026-10-23T06:24:44.977Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/planningConcurrency.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:45.005Z",
+            "completedAt": "2026-10-23T06:24:45.716Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:45.006Z",
+                "completedAt": "2026-10-23T06:24:45.183Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/planningConcurrency.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:45.183Z",
+                "completedAt": "2026-10-23T06:24:45.716Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/reservationRace.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:45.736Z",
+            "completedAt": "2026-10-23T06:24:46.293Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:45.737Z",
+                "completedAt": "2026-10-23T06:24:45.945Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/reservationRace.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:45.945Z",
+                "completedAt": "2026-10-23T06:24:46.293Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/tenantWorkload.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:46.311Z",
+            "completedAt": "2026-10-23T06:24:47.030Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:46.312Z",
+                "completedAt": "2026-10-23T06:24:46.508Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/tenantWorkload.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:46.508Z",
+                "completedAt": "2026-10-23T06:24:47.030Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/eventBacklog.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:47.056Z",
+            "completedAt": "2026-10-23T06:24:49.030Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:47.057Z",
+                "completedAt": "2026-10-23T06:24:47.243Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/eventBacklog.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:47.243Z",
+                "completedAt": "2026-10-23T06:24:49.030Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/learningScheduling.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:49.052Z",
+            "completedAt": "2026-10-23T06:24:49.579Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:49.053Z",
+                "completedAt": "2026-10-23T06:24:49.225Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/learningScheduling.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:49.225Z",
+                "completedAt": "2026-10-23T06:24:49.579Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/startupAdmission.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:49.606Z",
+            "completedAt": "2026-10-23T06:24:51.374Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:49.607Z",
+                "completedAt": "2026-10-23T06:24:49.758Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/startupAdmission.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:49.758Z",
+                "completedAt": "2026-10-23T06:24:51.374Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/planningDeadline.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:51.399Z",
+            "completedAt": "2026-10-23T06:24:52.050Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:51.400Z",
+                "completedAt": "2026-10-23T06:24:51.570Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/planningDeadline.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:51.570Z",
+                "completedAt": "2026-10-23T06:24:52.050Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/planningRepair.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:52.080Z",
+            "completedAt": "2026-10-23T06:24:53.557Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:52.081Z",
+                "completedAt": "2026-10-23T06:24:52.253Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/planningRepair.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:52.253Z",
+                "completedAt": "2026-10-23T06:24:53.557Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/reviewReliability.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:53.583Z",
+            "completedAt": "2026-10-23T06:24:54.682Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:53.584Z",
+                "completedAt": "2026-10-23T06:24:53.792Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/reviewReliability.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:53.792Z",
+                "completedAt": "2026-10-23T06:24:54.682Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          },
+          {
+            "test": "tests/core/evidenceTransforms.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:24:54.712Z",
+            "completedAt": "2026-10-23T06:24:55.403Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:24:54.713Z",
+                "completedAt": "2026-10-23T06:24:54.894Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/core/evidenceTransforms.ts"
+                ],
+                "startedAt": "2026-10-23T06:24:54.894Z",
+                "completedAt": "2026-10-23T06:24:55.403Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "provider-auth",
+      "kind": "test",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:24:56.369Z",
+      "completedAt": "2026-10-23T06:25:05.690Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-13",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test",
+            "--env",
+            "SAM_VERIFICATION_SOURCE_SHA=d5c3ad27320db404721793f56266919bd8a5fa0a",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "scripts/testing/core-reliability.cjs",
+            "--suite",
+            "tests/release/provider_auth.ts"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:24:56.371Z",
+          "completedAt": "2026-10-23T06:25:05.690Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/14-provider-auth.log",
+      "suiteResults": {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/provider_auth.ts",
+            "passed": true,
+            "status": "PASS",
+            "exit": 0,
+            "startedAt": "2026-10-23T06:25:03.910Z",
+            "completedAt": "2026-10-23T06:25:04.481Z",
+            "commands": [
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "packages/db/src/migrate.js",
+                  "--apply"
+                ],
+                "startedAt": "2026-10-23T06:25:03.912Z",
+                "completedAt": "2026-10-23T06:25:04.152Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              },
+              {
+                "argv": [
+                  "/usr/local/bin/node",
+                  "--import",
+                  "tsx",
+                  "tests/release/provider_auth.ts"
+                ],
+                "startedAt": "2026-10-23T06:25:04.152Z",
+                "completedAt": "2026-10-23T06:25:04.481Z",
+                "exitCode": 0,
+                "signal": null,
+                "error": null
+              }
+            ],
+            "testExecuted": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "postgres-tls",
+      "kind": "test",
+      "status": "FAIL",
+      "startedAt": "2026-10-23T06:25:05.693Z",
+      "completedAt": "2026-10-23T06:25:07.064Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792736523883-e182ab2e-job-14",
+            "--label",
+            "sam.verification.run=sam-verify-1792736523883-e182ab2e",
+            "--init",
+            "--network",
+            "container:sam-verify-1792736523883-e182ab2e-pg",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-g3hjdg/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test",
+            "--env",
+            "SAM_VERIFICATION_SOURCE_SHA=d5c3ad27320db404721793f56266919bd8a5fa0a",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "node",
+            "scripts/testing/core-reliability.cjs",
+            "--suite",
+            "tests/release/postgres_tls.ts"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:05.695Z",
+          "completedAt": "2026-10-23T06:25:07.064Z",
+          "exitCode": 143,
+          "signal": null
+        }
+      ],
+      "log": "logs/15-postgres-tls.log",
+      "reason": "postgres-tls: exit 143 (see logs/15-postgres-tls.log)"
+    },
+    {
+      "name": "contracts",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/16-contracts.log"
+    },
+    {
+      "name": "synthetic-pilot",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/17-synthetic-pilot.log"
+    },
+    {
+      "name": "managed-schema",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/18-managed-schema.log"
+    },
+    {
+      "name": "local-bundle",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/19-local-bundle.log"
+    },
+    {
+      "name": "closed-setup",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/20-closed-setup.log"
+    },
+    {
+      "name": "database-contract",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/21-database-contract.log"
+    },
+    {
+      "name": "prelaunch-gate",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/22-prelaunch-gate.log"
+    },
+    {
+      "name": "service-provisioning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/23-service-provisioning.log"
+    },
+    {
+      "name": "operator-provisioning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/24-operator-provisioning.log"
+    },
+    {
+      "name": "provisioning-backup-recovery",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/25-provisioning-backup-recovery.log"
+    },
+    {
+      "name": "render-migration-compatibility",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/26-render-migration-compatibility.log"
+    },
+    {
+      "name": "render-google-oauth-contracts",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/27-render-google-oauth-contracts.log"
+    },
+    {
+      "name": "integration-migrations",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/28-integration-migrations.log"
+    },
+    {
+      "name": "integration-oauth-mcp",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/29-integration-oauth-mcp.log"
+    },
+    {
+      "name": "integration-orchestration",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/30-integration-orchestration.log"
+    },
+    {
+      "name": "specialist-reasoning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/31-specialist-reasoning.log"
+    },
+    {
+      "name": "specialist-gateway",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/32-specialist-gateway.log"
+    },
+    {
+      "name": "specialist-provenance",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/33-specialist-provenance.log"
+    },
+    {
+      "name": "specialist-learning-fairness",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/34-specialist-learning-fairness.log"
+    },
+    {
+      "name": "specialist-evaluation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/35-specialist-evaluation.log"
+    },
+    {
+      "name": "evaluation-budget",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/36-evaluation-budget.log"
+    },
+    {
+      "name": "evaluation-adapter",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/37-evaluation-adapter.log"
+    },
+    {
+      "name": "evaluation-orchestration",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/38-evaluation-orchestration.log"
+    },
+    {
+      "name": "evaluation-independent-review",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/39-evaluation-independent-review.log"
+    },
+    {
+      "name": "evaluation-commercial-market",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/40-evaluation-commercial-market.log"
+    },
+    {
+      "name": "evaluation-commercial-profitability",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/41-evaluation-commercial-profitability.log"
+    },
+    {
+      "name": "evaluation-commercial-suppliers",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/42-evaluation-commercial-suppliers.log"
+    },
+    {
+      "name": "migration-upgrade-rollback",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/43-migration-upgrade-rollback.log"
+    },
+    {
+      "name": "specialist-restart-prepare",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/44-specialist-restart-prepare.log"
+    },
+    {
+      "name": "evaluation-restart-prepare",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/45-evaluation-restart-prepare.log"
+    },
+    {
+      "name": "postgres-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/46-postgres-restart.log"
+    },
+    {
+      "name": "migration-after-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/47-migration-after-restart.log"
+    },
+    {
+      "name": "specialist-restart-check",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/48-specialist-restart-check.log"
+    },
+    {
+      "name": "evaluation-restart-check",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/49-evaluation-restart-check.log"
+    },
+    {
+      "name": "phase0-migrations",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/50-phase0-migrations.log"
+    },
+    {
+      "name": "phase0-acceptance",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/51-phase0-acceptance.log"
+    },
+    {
+      "name": "phase0-postgres",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/52-phase0-postgres.log"
+    },
+    {
+      "name": "tenant-isolation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/53-tenant-isolation.log"
+    },
+    {
+      "name": "fail-closed-security",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/54-fail-closed-security.log"
+    },
+    {
+      "name": "clean-image",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/55-clean-image.log"
+    },
+    {
+      "name": "image-contract",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/56-image-contract.log"
+    },
+    {
+      "name": "application-startup-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/57-application-startup-restart.log"
+    },
+    {
+      "name": "source-integrity",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/58-source-integrity.log"
+    },
+    {
+      "name": "cleanup",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T06:25:07.067Z",
+      "completedAt": "2026-10-23T06:25:08.389Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-pg"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.069Z",
+          "completedAt": "2026-10-23T06:25:07.098Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "rm",
+            "--force",
+            "--volumes",
+            "sam-verify-1792736523883-e182ab2e-pg"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.098Z",
+          "completedAt": "2026-10-23T06:25:07.766Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.766Z",
+          "completedAt": "2026-10-23T06:25:07.802Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.802Z",
+          "completedAt": "2026-10-23T06:25:07.840Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-3"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.840Z",
+          "completedAt": "2026-10-23T06:25:07.875Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-4"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.875Z",
+          "completedAt": "2026-10-23T06:25:07.904Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-5"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.904Z",
+          "completedAt": "2026-10-23T06:25:07.933Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-6"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.934Z",
+          "completedAt": "2026-10-23T06:25:07.975Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-7"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:07.975Z",
+          "completedAt": "2026-10-23T06:25:08.007Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-8"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.007Z",
+          "completedAt": "2026-10-23T06:25:08.050Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.050Z",
+          "completedAt": "2026-10-23T06:25:08.092Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-10"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.092Z",
+          "completedAt": "2026-10-23T06:25:08.135Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-11"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.135Z",
+          "completedAt": "2026-10-23T06:25:08.169Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-12"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.169Z",
+          "completedAt": "2026-10-23T06:25:08.215Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-13"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.215Z",
+          "completedAt": "2026-10-23T06:25:08.244Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-job-14"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.244Z",
+          "completedAt": "2026-10-23T06:25:08.275Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "network",
+            "inspect",
+            "--format",
+            "{{index .Labels \"sam.verification.run\"}}",
+            "sam-verify-1792736523883-e182ab2e-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.275Z",
+          "completedAt": "2026-10-23T06:25:08.289Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "network",
+            "rm",
+            "sam-verify-1792736523883-e182ab2e-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T06:25:08.289Z",
+          "completedAt": "2026-10-23T06:25:08.350Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/59-cleanup.log"
+    }
+  ],
+  "excludedChecks": [
+    {
+      "name": "GitHub-hosted execution and effective merge governance",
+      "status": "SKIP",
+      "reason": "Not performed; account restriction and rules remain external gates"
+    },
+    {
+      "name": "Staging, production, live providers, paid model calls and customer data",
+      "status": "SKIP",
+      "reason": "Outside authorization; no readiness claim"
+    }
+  ],
+  "unresolvedDefects": [
+    "postgres-tls: exit 143 (see logs/15-postgres-tls.log)",
+    "INTERRUPTED: partial results are not acceptance"
+  ],
+  "safety": {
+    "publishedPorts": 0,
+    "productionCredentialsInherited": false,
+    "remoteDatabaseInputAccepted": false,
+    "githubStatusChecksWritten": false,
+    "merge": false,
+    "deployment": false,
+    "billingChanges": false
+  },
+  "artifacts": {
+    "logs/01-preflight.log": "c2b86a17fbbd4e48115401da76fa1e3b65285851e66867016c68179a9aafb313",
+    "logs/02-snapshot.log": "23a0330859b51a34d9f104aa69537b9e0c83bc6cd891d300b4fd7f984c79c360",
+    "logs/03-images.log": "2a48b66b80f823b0e726f6749e33a32066f69dd9c571da608dc517b128b0556c",
+    "logs/04-isolated-postgres.log": "3bbcb6daef7e7b2d382ce3e4f350216c31efa9391bacfba79af4f42aa42e367a",
+    "logs/05-node-dependencies.log": "37328f65dedac8d876817daa0cf25fc7b5e41b229ffe415173da4a72a4f6975d",
+    "logs/06-python-dependencies.log": "73858768523e1e04d7834f0857f8e055571f26926c277b24bad731a6ec5c00d8",
+    "logs/07-runtime-versions.log": "b337b1490c442ae4e5c24c1d7971fabdab69a249db8593a2931c8cf7f53482f1",
+    "logs/08-workflow-tool.log": "ad6e3c9292eddca9f4d19506ced4be75d8ff97b4899e3044397894fc2fd64fcd",
+    "logs/09-workflow-validation.log": "4345bb3592d3669703b43862c8ba5df334ac68ce225abe27a04dfbac518c96cb",
+    "logs/10-configuration-validation.log": "78c2cbab89a8427dfa0bda121c92adac3db74ae33ab1fad27af8909bc0cb9b43",
+    "logs/11-typecheck.log": "d92ab5074e5ab8b354d8942d49db910b61547e51e9d28fc519d4826615fbd658",
+    "logs/12-regression.log": "65c0d430296821bed300c75b542985f4ad7a0392a4271fb769a20ee743dcc0a5",
+    "logs/13-core-reliability.log": "44251658c1d10b433a1c506891d616aef2d6079502ed13bf8fd95ca529d9f525",
+    "logs/14-provider-auth.log": "6c445798d38dce4ce43335320c9c58deb7cc33084a05763107a084ddeae1d544",
+    "logs/15-postgres-tls.log": "735edd9d742b9b51322e72940671dfbb4fa227e8ea824178138d0e13f45967f4",
+    "logs/59-cleanup.log": "dc626299205309c63ec96075a3a1d90c60051fd3332138f6e4d98db9f90ed972",
+    "metadata/source-files.json": "d364d598aba5fc2c7c3683b47daf9df71a51a873908b761880a39eab2bd9c756"
+  },
+  "runtimes": {
+    "node": "v22.23.4",
+    "npm": "10.9.9",
+    "openssl": "OpenSSL 3.0.22 25 Aug 2026 (Library: OpenSSL 3.0.22 25 Aug 2026)",
+    "python": "Python 3.11.17",
+    "postgres": "PostgreSQL 15.19 (Debian 15.19-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "actionlint": "1.7.7\ninstalled by downloading from release page\nbuilt with go1.23.4 compiler for linux/amd64"
+  }
+}
