@@ -1,0 +1,43 @@
+FAIL tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+PASS completed expired child does not prevent sibling startup recovery
+PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting
+PASS actual composition zero tools/iterations and separately charged readback deny callbacks
+PASS cancellation/expiry after model return and before child plan/report COMMIT; before source dispatch; unregistered source transport refused
+{"suite":"whole-trial-budget-runtime","status":"PASS","checks":["bootstrap admission","reopen no reset","tokens/cost/iterations/agent/deadline","cancel before call","fallback attempts charged","uncertain first call retained","atomic tool race and readback","one invocation per reservation","agent deadline at execution admission","provider/model ticket binding","no success without invocation","no invocation after completion","delegation cap","tool cost cap","goal scope","populated foreign-company RLS","immutable limits/counters/trace","late response rejected","live authorization absent"],"providerCalls":"FIXTURES_ONLY"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /EXECUTION_RESERVATION_REQUIRED/. Input:
+
+'Error: EVALUATION_OPERATION_PERSISTENCE_UNCONFIRMED'
+
+    at parent (/tmp/sam-obligations-tree/tests/evaluation/budgets.ts:268:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: Error: EVALUATION_OPERATION_PERSISTENCE_UNCONFIRMED
+      at assertGoalFamilyOperationLinks (/tmp/sam-obligations-tree/apps/agents/src/evaluation/goalFamilyScore.ts:9:31)
+      at scoreGoalFamilyCapture (/tmp/sam-obligations-tree/apps/agents/src/evaluation/goalFamilyScore.ts:30:2)
+      at <anonymous> (/tmp/sam-obligations-tree/tests/evaluation/budgets.ts:268:21)
+      at getActual (node:assert:611:5)
+      at strict.throws (node:assert:759:24)
+      at parent (/tmp/sam-obligations-tree/tests/evaluation/budgets.ts:268:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5),
+  expected: /EXECUTION_RESERVATION_REQUIRED/,
+  operator: 'throws',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/budgets.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T16:30:41.781Z","completedAt":"2026-10-23T16:31:34.551Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T16:30:41.783Z","completedAt":"2026-10-23T16:30:41.963Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T16:30:41.963Z","completedAt":"2026-10-23T16:31:34.551Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

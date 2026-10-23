@@ -71,3 +71,10 @@ recomputed before publication. The earlier failed 9dea66 evidence above remains
 unchanged. Only the isolated fixture hashes changed in this application commit;
 no validation was relaxed. Same external TCP-readiness harness adjustment.
 Subsequent obligation/collection/lifecycle work is not covered by this result.
+
+## Current follow-up: 5bfe7b8
+
+[Exact-head follow-up evidence](obligations-5bfe7b8/README.md): **59/59 PASS** on
+`5bfe7b8342756623f77f4c3d158a12b7435d32d1`. Signed child-family and actual
+source-persistence crash traces, public keys and diagnostic failures are included.
+The shared general-agent composition remains unfinished; this is offline validation.

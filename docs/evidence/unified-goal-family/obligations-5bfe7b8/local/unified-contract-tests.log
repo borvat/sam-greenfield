@@ -1,0 +1,15 @@
+✔ collection receipts require an exact connected terminal query, independent of page order (12.898681ms)
+✔ missing pagination and unreviewed identities cannot become completion receipts (0.507243ms)
+✔ obligations bind the original objective and survive omitted continuation assumptions (3.860262ms)
+✔ review must account for each bound deliverable exactly once (0.436928ms)
+✔ review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion (2.783542ms)
+✔ projected detail quotes use verified literals and reject projection wrappers (0.330167ms)
+✔ isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction (2172.142939ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2836.18765

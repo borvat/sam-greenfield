@@ -1,0 +1,13 @@
+✔ obligations bind the original objective and survive omitted continuation assumptions (2.493249ms)
+✔ review must account for each bound deliverable exactly once (0.289566ms)
+✔ review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion (3.200906ms)
+✔ projected detail quotes use verified literals and reject projection wrappers (0.37842ms)
+✔ isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction (1959.32833ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2527.133952

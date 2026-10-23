@@ -1,0 +1,16 @@
+$ docker run --rm --name sam-verify-1792773744208-e54260da-job-47 --label sam.verification.run=sam-verify-1792773744208-e54260da --init --network container:sam-verify-1792773744208-e54260da-pg --mount type=bind,src=/tmp/sam-verify-XIfpiJ/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --mount type=bind,src=/tmp/sam-verify-XIfpiJ/python,dst=/fixtures,readonly --env PYTHONPATH=/fixtures/site --env DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_greenfield --env DATABASE_URL_APP=postgres://app_tenant_test:test_password@127.0.0.1:5432/sam_greenfield python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8 python tests/phase0/phase0_acceptance.py
+✓ deterministic_migrations PASS - 12 files: ['00001_initial_org_legal_entities.sql', '00002_audit_framework.sql', '00003_event_fabric.sql', '00004_outbox_and_side_effect.sql', '00005_world_facts_memory.sql', '00006_policy_approvals_verification.sql', '00007_goals_plans_financial.sql', '00008_rls_tenant_isolation_policies.sql', '00009_fix_rls_fail_closed.sql', '00010_fix_global_business_id_sequence.sql', '00012_core_reliability.sql', '00013_operational_tenant_policies.sql']
+✓ RLS isolation PASS - 22 tables have RLS enabled, 22 tables checked
+✓ RLS fail-closed policies present (IS NOT NULL AND ...)
+✓ append-only audit PASS - trigger exists
+✓ event deduplication and event_seq ordering PASS - dedup_key UNIQUE, event_seq monotonic
+✓ transactional outbox atomicity PASS - state + outbox in same tx (rollback proven in real postgres test)
+✓ inbox consumer deduplication PASS - per-consumer dedup_key UNIQUE
+✓ lease fencing PASS - stale token rejected, new token accepted
+✓ semantic side-effect reconciliation foundation PASS - effectively-once via operation_key
+✓ business ID concurrency PASS - 50 IDs generated transactionally, no duplicates, no MAX()+1
+✓ financial immutability invariant PASS - DB trigger prevents UPDATE/DELETE after issued
+✓ clean boot proof PASS - 12 migrations applied deterministically, final hash 46b5b2ea30b89305
+  Migrations: 00001_initial_org_legal_entities.sql:4b01452c74004121, 00002_audit_framework.sql:1532b32e2a3ca7aa, 00003_event_fabric.sql:d942ee36640bdd36, 00004_outbox_and_side_effect.sql:06888f2a03e31f6e, 00005_world_facts_memory.sql:b9bcb63c289fdae9, 00006_policy_approvals_verification.sql:1b09604a3363455a, 00007_goals_plans_financial.sql:4d60577ef6b47dae, 00008_rls_tenant_isolation_policies.sql:c41bc43f7501ee91, 00009_fix_rls_fail_closed.sql:255e3fa1fe2cbfb1, 00010_fix_global_business_id_sequence.sql:001630b5347f1fdf, 00012_core_reliability.sql:78205ef98aa952f3, 00013_operational_tenant_policies.sql:18586d04848985d2
+
+Phase 0 Acceptance: 11/11 passed, 0 failed

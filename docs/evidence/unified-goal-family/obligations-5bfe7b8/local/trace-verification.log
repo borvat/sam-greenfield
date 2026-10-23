@@ -1,0 +1,2 @@
+{"name":"goal-family","signature":"VERIFIED","events":64,"status":"PASS","classification":"AUTHENTICATED_GOAL_FAMILY_FIXTURE","declaredCompletedGoals":3,"liveReasoningValidated":false}
+{"name":"source-persistence-crash","signature":"VERIFIED","events":8,"status":"FAIL","classification":"AUTHENTICATED_INCOMPLETE_CAPTURE","liveReasoningValidated":false}
