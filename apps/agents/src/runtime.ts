@@ -81,7 +81,7 @@ export async function runOneSpecialistWork(input: {
   ttlSeconds: number;
   rootGoalId?:string;
   executors: Record<string, CapabilityExecutor>;
-  advancers?:Record<string,CapabilityExecutor|((work:ClaimedWork)=>ReturnType<CapabilityExecutor>|Promise<null>)>;
+  advancers?:Record<string,CapabilityExecutor|((work:ClaimedWork)=>Promise<Awaited<ReturnType<CapabilityExecutor>>|null>)>;
 }): Promise<{ processed: boolean; queueId?: string; executionId?: string; deferred?:boolean }> {
   const work = await claimNextWorkForSpecialistAtomic(
     input.agent,

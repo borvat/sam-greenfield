@@ -4,7 +4,7 @@ import type {ModelTask} from '../../../packages/model-gateway/src/types';
 import {assertEvaluationTrial,type EvaluationTrial} from '../../agents/src/evaluation/trial';
 import {sha256Hex} from '../../../packages/shared/src/stableJson';
 import type {ProductionBundle} from './types';
-export const evaluationBundleHash=(bundle:ProductionBundle)=>sha256Hex({tools:bundle.toolDefinitions,contracts:bundle.verifiedEvidenceContracts??[]});
+export const evaluationBundleHash=(bundle:ProductionBundle)=>sha256Hex({tools:bundle.toolDefinitions,contracts:bundle.verifiedEvidenceContracts??[],...(bundle.descendantEvidencePolicy?{descendantEvidencePolicy:bundle.descendantEvidencePolicy,requireGoalObligations:bundle.requireGoalObligations===true}:{})});
 /** Explicit permit-bound composition. Reuses the existing durable trial ledger.
  * Agent keys encode immutable goal enrollment, so reopening cannot shuffle quotas.
  * No entrypoint calls this factory; live release/owner interlocks remain intact.

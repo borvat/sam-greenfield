@@ -63,7 +63,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   try{
     const input={catalog:bundle.catalog,gateway:bundle.raw.modelGatewayForGoal?.(next.id)??options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
       goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal,
-      candidatePolicy:{singleCandidate:true,onDiagnostic,
+      candidatePolicy:{singleCandidate:true,onDiagnostic,requireGoalObligations:bundle.raw.requireGoalObligations,
         validationFeedback:validationCode}};
     // beginReplanAtomic durably enters PLANNING before proposing. Repairs must
     // resume that same episode, retaining failed-read exclusions and recovery

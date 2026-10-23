@@ -1,3 +1,4 @@
+import {validateGoalObligations,assertObligationReview} from '../../../kernel/src/goalObligations';
 import {assertGoalFamilyOperationLinks} from './goalFamilyScore';
 import type {PoolClient} from 'pg';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
@@ -44,8 +45,13 @@ export async function sealGoalFamilyEvaluation(c:PoolClient,trialId:string,bundl
     }
    }
   }
+  const obligations:Record<string,unknown>={};
+  for(const goal of children){
+   const initial=(await c.query('SELECT goal_assumptions FROM plans WHERE goal_id=$1 ORDER BY version LIMIT 1 FOR SHARE',[goal.id])).rows[0]?.goal_assumptions?.goalObligations;
+   if(initial!==undefined){const contract=validateGoalObligations(initial,goal.objective);const report=reports.find(r=>r.goal_id===goal.id);if(report)assertObligationReview(contract,report.decision);obligations[goal.id]={contract,hash:sha256Hex(contract)};}
+  }
   const events=(await c.query('SELECT * FROM evaluation_events WHERE trial_id=$1 ORDER BY sequence',[trialId])).rows;
-  const snapshot={format:'sam.goal-family.v1',root:{id:root.id,state:root.state},goals:children.map(g=>({id:g.id,objective:g.objective,state:g.state,currentPlanId:g.current_plan_id})),reports,sources};
+  const snapshot={format:'sam.goal-family.v1',obligations,root:{id:root.id,state:root.state},goals:children.map(g=>({id:g.id,objective:g.objective,state:g.state,currentPlanId:g.current_plan_id})),reports,sources};
   assertGoalFamilyOperationLinks(snapshot,{trial,spec:trial.spec,events});
   await appendTrialEvent(c,trialId,'SNAPSHOT',snapshot);
   await c.query('UPDATE evaluation_trials SET sealed=true WHERE id=$1',[trialId]);await c.query('COMMIT');return snapshot;

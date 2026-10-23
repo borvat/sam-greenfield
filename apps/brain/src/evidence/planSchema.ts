@@ -13,6 +13,7 @@ export const TRANSFORM_PLAN_SCHEMA={type:'object',additionalProperties:false,req
   operation('derive',{as:identifier,left:identifier,right:identifier,operator:{enum:['add','subtract','multiply','divide']}}),
   operation('group',{keys,aggregates:{type:'array',minItems:1,maxItems:8,items:{anyOf:[aggregate('sum',{field:identifier}),aggregate('count',{})]}}}),
   operation('join',{right:identifier,leftKey:identifier,rightKey:identifier,kind:{enum:['left','inner']}}),
+  operation('union',{right:identifier}),
   operation('distinct',{keys})
  ]}}
 }};

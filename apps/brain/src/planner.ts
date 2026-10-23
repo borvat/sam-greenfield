@@ -1,3 +1,4 @@
+import {goalObligationProposalSchema,bindProposedObligations} from '../../kernel/src/goalObligations';
 import {sha256Hex} from '../../../packages/shared/src/stableJson';
 import {validateToolParameters} from '../../../packages/tool-gateway/src/validation';
 import {validateParameters} from '../../../packages/tool-gateway/src/validation';
@@ -20,6 +21,7 @@ export interface PlanningCandidatePolicy {
   // Production uses durable reservations for repair instead of a second call
   // consuming the tail of the first call's deadline.
   singleCandidate?:boolean;
+  requireGoalObligations?:boolean;
   validationFeedback?:string;
   onDiagnostic?:(event:PlanningDiagnostic)=>Promise<void>;
 }
@@ -144,6 +146,7 @@ export async function proposePlan(input: {
     planningTimeUtc:new Date().toISOString(),validationFeedback,
       contract: {
         output: "CandidatePlan",
+        ...(input.candidatePolicy?.requireGoalObligations?{goalObligations:{location:"assumptions.goalObligations",required:true,schema:goalObligationProposalSchema,rule:"Interpret every original deliverable. Use UNKNOWN for unsupported meanings. Runtime binds the original objective; this is not authorization or proof."}}:{}),
         rule: "proposal_only_no_side_effects",
         fields:{assumptions:"object",constraints:"object",dependencies:"object mapping step keys to prerequisite step keys; use {} when none",
           steps:"1 to 64 steps, each with capabilityId from capabilities, params matching its parameters schema, optional stepKey and dependsOn (array of step keys)"},
@@ -174,6 +177,8 @@ export async function proposePlan(input: {
   const candidate = localDevelopment() && !autonomyEnabled() ?
     validateSyntheticPlan(routed.result.output, () => {}, phase => input.gateway.recordDevelopmentValidation(phase)) :
     validateCandidatePlan(routed.result.output);
+  if(input.candidatePolicy?.requireGoalObligations)candidate.assumptions.goalObligations=bindProposedObligations(candidate.assumptions.goalObligations,input.objective);
+  if(candidate.assumptions.verifiedDelegationPlans!==undefined)throw Error('PLAN_RESERVED_ASSUMPTION');
   const unique=new Set<string>();
   for(const step of candidate.steps){
     if((input.forbiddenReadSteps??[]).some(b=>sameReadRequest(b,{capabilityId:step.capabilityId,params:step.params??{}})))throw Error("PLAN_FAILED_READ_REPLAY");

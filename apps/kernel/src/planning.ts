@@ -19,6 +19,8 @@ export interface PlanStepInput {
 }
 
 export interface PersistPlanInput {
+  /** Internal continuation admission; never copied from model output. */
+  preserveVerifiedDelegations?:boolean;
   goalId: string;
   assumptions?: Record<string, unknown>;
   constraints?: Record<string, unknown>;
@@ -41,12 +43,23 @@ export async function persistPlanAndDelegate(client:import('pg').PoolClient,inpu
   validateStepGraph(input.steps);
 
     const goal = await client.query(
-      "SELECT id, state, objective FROM goals WHERE id=$1 FOR UPDATE",
+      "SELECT id, state, objective, current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
       [input.goalId]
     );
     if (goal.rowCount !== 1) throw new Error("Goal not found");
     if (goal.rows[0].state !== "PLANNING") {
       throw new Error(`Goal must be PLANNING before plan persistence, got ${goal.rows[0].state}`);
+    }
+
+    if(input.assumptions?.verifiedDelegationPlans!==undefined)throw Error('PLAN_RESERVED_ASSUMPTION');
+    if(input.preserveVerifiedDelegations){
+      const previous=(await client.query('SELECT plan_hash,goal_assumptions FROM plans WHERE id=$1 AND goal_id=$2',[goal.rows[0].current_plan_id,input.goalId])).rows[0];
+      if(!previous)throw Error('DELEGATION_CONTINUATION_PLAN_MISSING');
+      // Retain immutable assignment authorization, never a fresh privilege.
+      // Raw/derived verification is rechecked on every replay and report commit.
+      const carried=[...new Set([...(previous.goal_assumptions?.verifiedDelegationPlans??[]),previous.plan_hash])];
+      if(carried.length>5||carried.some(h=>typeof h!=='string'||!/^[a-f0-9]{64}$/.test(h)))throw Error('DELEGATION_CONTINUATION_LIMIT');
+      input={...input,assumptions:{...input.assumptions,verifiedDelegationPlans:carried}};
     }
 
     const initial=await client.query('SELECT goal_assumptions FROM plans WHERE goal_id=$1 ORDER BY version ASC LIMIT 1',[input.goalId]);

@@ -3,7 +3,7 @@ import {sha256Hex} from '../../../packages/shared/src/stableJson';
 export type ObligationScope=
  |{kind:'enumerated';identities:string[]}
  |{kind:'subset';description:string}
- |{kind:'population';filter:string}
+ |{kind:'population';filter:string;query?:{capabilityId:string;params:Record<string,unknown>}}
  |{kind:'unknown'};
 export type GoalObligations={version:1;objectiveHash:string;deliverables:{id:string;description:string;fields:string[];scope:ObligationScope;units:string;vat:string;period:string;timeZone:string}[];unresolved:string[]};
 const object=(v:unknown):v is Record<string,any>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -23,7 +23,7 @@ export function validateGoalObligations(value:unknown,objective:string):GoalObli
   const s=d.scope;if(!object(s))return invalid();
   if(s.kind==='unknown'){if(!keys(s,['kind']))return invalid();}
   else if(s.kind==='subset'){if(!keys(s,['kind','description'])||!text(s.description))return invalid();}
-  else if(s.kind==='population'){if(!keys(s,['kind','filter'])||!text(s.filter))return invalid();}
+  else if(s.kind==='population'){if(!keys(s,['kind','filter','query'])||!text(s.filter))return invalid();if(s.query!==undefined&&(!object(s.query)||!keys(s.query,['capabilityId','params'])||!text(s.query.capabilityId,100)||!object(s.query.params)||JSON.stringify(s.query).length>4000))return invalid();}
   else if(s.kind==='enumerated'){if(!keys(s,['kind','identities'])||!Array.isArray(s.identities)||!s.identities.length||s.identities.length>500||s.identities.some((v:unknown)=>!text(v,300))||new Set(s.identities).size!==s.identities.length)return invalid();}
   else invalid();
  }
@@ -40,4 +40,27 @@ export function carryGoalObligations(objective:string,previous:unknown,proposed:
 export function assertObligationReview(contract:GoalObligations,review:{requirements:{obligationId?:string}[]}){
  const ids=review.requirements.map(r=>r.obligationId);
  if(ids.length!==contract.deliverables.length||new Set(ids).size!==ids.length||contract.deliverables.some(d=>!ids.includes(d.id)))throw Error('REVIEW_OBLIGATIONS_MISSING');
+}
+
+/** Model-visible interpretation contract. The runtime binds objectiveHash; the
+ * model cannot select or replace the original objective. */
+export const goalObligationProposalSchema = {
+ type:'object',additionalProperties:false,required:['version','deliverables','unresolved'],properties:{
+  version:{type:'integer',enum:[1]},
+  deliverables:{type:'array',minItems:1,maxItems:30,items:{type:'object',additionalProperties:false,
+   required:['id','description','fields','scope','units','vat','period','timeZone'],properties:{
+    id:{type:'string',minLength:1,maxLength:64},description:{type:'string',minLength:1,maxLength:1000},
+    fields:{type:'array',maxItems:30,items:{type:'string',minLength:1,maxLength:100}},
+    scope:{oneOf:[
+     {type:'object',additionalProperties:false,required:['kind','identities'],properties:{kind:{enum:['enumerated']},identities:{type:'array',minItems:1,maxItems:500,items:{type:'string',minLength:1,maxLength:300}}}},
+     {type:'object',additionalProperties:false,required:['kind','description'],properties:{kind:{enum:['subset']},description:{type:'string',minLength:1,maxLength:1000}}},
+     {type:'object',additionalProperties:false,required:['kind','filter'],properties:{kind:{enum:['population']},filter:{type:'string',minLength:1,maxLength:1000},query:{type:'object',additionalProperties:false,required:['capabilityId','params'],properties:{capabilityId:{type:'string',minLength:1,maxLength:100},params:{type:'object'}}}}},
+     {type:'object',additionalProperties:false,required:['kind'],properties:{kind:{enum:['unknown']}}}]},
+    ...Object.fromEntries(['units','vat','period','timeZone'].map(k=>[k,{type:'string',minLength:1,maxLength:300}]))}}},
+  unresolved:{type:'array',maxItems:30,items:{type:'string',minLength:1,maxLength:1000}}
+ }
+};
+export function bindProposedObligations(value:unknown,objective:string):GoalObligations{
+ if(!object(value)||Object.hasOwn(value,'objectiveHash'))throw Error('GOAL_OBLIGATIONS_PROPOSAL_INVALID');
+ return validateGoalObligations({...value,objectiveHash:sha256Hex(objective)},objective);
 }

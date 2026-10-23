@@ -1,23 +1,26 @@
+import {evidenceFamily,type DelegationPolicy} from './delegationScope';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {transformVerifiedSources,assertExecutionIntegrity} from './verifiedSources';
 import {contractDigest,type OutputContracts} from './contracts';
 export const DERIVE_CAPABILITY='derive_verified_evidence';
 export type DeriveRequest={sources:Record<string,{executionId:string;contractId:string}>;plan:import('./transforms').TransformPlan};
-export type EvidenceScope={goalId:string;legalEntityId:string};
+export type EvidenceScope={goalId:string;legalEntityId:string;delegationPolicy?:DelegationPolicy};
 export async function deriveArtifact(client:any,scope:EvidenceScope,request:DeriveRequest,registry:OutputContracts){
  if(!request||Object.keys(request).some(k=>!['sources','plan'].includes(k))||!request.sources||Array.isArray(request.sources)||Buffer.byteLength(JSON.stringify(request))>16000)throw Error('EVIDENCE_REQUEST_INVALID');
+ const family=scope.delegationPolicy?await evidenceFamily(client,scope.goalId,scope.legalEntityId,scope.delegationPolicy):undefined;
+ const goalIds=family?.goalIds??[scope.goalId];
  const entries=Object.entries(request.sources);if(!entries.length||entries.length>8)throw Error('EVIDENCE_SOURCE_LIMIT');
  const sources:Record<string,string>={},contracts:Record<string,any>={},contractBindings:Record<string,string>={};
  for(const [alias,ref] of entries){
   if(!ref||Object.keys(ref).some(k=>!['executionId','contractId'].includes(k)))throw Error('EVIDENCE_REQUEST_INVALID');
   const contract=registry.find(c=>c.id===ref.contractId);if(!contract||contract.capabilityId===DERIVE_CAPABILITY)throw Error('EVIDENCE_OUTPUT_SCHEMA_UNKNOWN');
-  const row=(await client.query(`SELECT e.capability_id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND e.goal_id=$2 AND g.company_scope=$3`,[ref.executionId,scope.goalId,scope.legalEntityId])).rows[0];
+  const row=(await client.query(`SELECT e.capability_id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND e.goal_id=ANY($2::uuid[]) AND g.company_scope=$3`,[ref.executionId,goalIds,scope.legalEntityId])).rows[0];
   if(row?.capability_id!==contract.capabilityId)throw Error('EVIDENCE_CONTRACT_SCOPE_MISMATCH');
   if(contracts[contract.capabilityId]&&sha256Hex(contracts[contract.capabilityId])!==sha256Hex(contract.extraction))throw Error('EVIDENCE_CONTRACT_CONFLICT');
   contracts[contract.capabilityId]=contract.extraction;sources[alias]=ref.executionId;contractBindings[alias]=contractDigest(contract);
  }
- const output=await transformVerifiedSources(client,{...scope,sources,plan:request.plan},contracts);
- const content={version:1 as const,...scope,request,contractBindings,output};
+ const output=await transformVerifiedSources(client,{...scope,sources,plan:request.plan},contracts,scope.delegationPolicy);
+ const content={version:1 as const,goalId:scope.goalId,legalEntityId:scope.legalEntityId,request,contractBindings,output};
  const artifact={...content,artifactId:sha256Hex(content)};
  if(Buffer.byteLength(JSON.stringify(artifact))>250000)throw Error('EVIDENCE_SIZE_LIMIT');
  return artifact;

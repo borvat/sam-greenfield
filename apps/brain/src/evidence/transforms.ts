@@ -11,6 +11,7 @@ export type Operation=
  |{op:'derive';as:string;left:string;right:string;operator:'add'|'subtract'|'multiply'|'divide'}
  |{op:'group';keys:string[];aggregates:{as:string;field?:string;fn:'sum'|'count'}[]}
  |{op:'join';right:string;leftKey:string;rightKey:string;kind:'left'|'inner'}
+ |{op:'union';right:string}
  |{op:'distinct';keys:string[]};
 export type TransformPlan={version:1;source:string;operations:Operation[]};
 const fail=(code:string):never=>{throw Error('EVIDENCE_'+code);};
@@ -94,6 +95,14 @@ export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset
     if(op.op==='group')for(const a of op.aggregates)values[a.as]=a.fn==='count'?String(rows.length):rows.reduce((sum,r)=>exactDecimal(sum,value(r,a.field!),'add'),'0');
     return {values,citations:citations(rows)};
    })};
+  }else if(op.op==='union'){
+   key(op.right);if(!Object.hasOwn(relations,op.right))fail('SOURCE_MISSING');const right=relations[op.right];
+   if(sha256Hex(d.columns)!==sha256Hex(right.columns)||d.timeZone!==right.timeZone)fail('UNION_SCHEMA_MISMATCH');
+   const rows=[...d.rows,...right.rows];if(rows.length>500)fail('ROW_OR_COLUMN_LIMIT');
+   // Preserve every row and citation. Duplicate identities are not silently
+   // discarded; collection assessment decides whether query coverage is proved.
+   d={...d,rows,coverage:d.coverage==='complete'&&right.coverage==='complete'?'complete':d.coverage==='partial'||right.coverage==='partial'?'partial':'unknown',
+    sourceContexts:[...(d.sourceContexts??[]),...(right.sourceContexts??[])],selections:[...(d.selections??[]),...(right.selections??[])],limitations:[...d.limitations,...right.limitations]};
   }else if(op.op==='join'){
    key(op.right);if(!Object.hasOwn(relations,op.right)||!['left','inner'].includes(op.kind))fail('JOIN_INVALID');const right=relations[op.right];
    const a=column(d,op.leftKey),b=column(right,op.rightKey);if(JSON.stringify(a)!==JSON.stringify(b))fail('JOIN_TYPE_MISMATCH');

@@ -1,3 +1,5 @@
+import {assessBoundObligation} from '../../brain/src/evidence/fulfillment';
+import {evidenceFamily,assertAssignedExecution} from '../../brain/src/evidence/delegationScope';
 import {validateGoalObligations,assertObligationReview} from '../../kernel/src/goalObligations';
 import {assertExecutionIntegrity} from '../../brain/src/evidence/verifiedSources';
 import {assertCommitAdmission} from '../../../packages/db/src/commitAdmission';
@@ -23,7 +25,7 @@ import { assessResearchProgress, isResearchObjective, sourceEnvelope, validateRe
 import type {ValidatedProductionBundle} from "./bundle";
 
 export const READ_REPORT_CONTRACT="sam.read_report.v1";
-export type Source={id:string;capabilityId:string;params:Record<string,unknown>;text:string;truncated:boolean;actor:string;retrievedAt:string;uri?:string;verifiedQuotes?:Record<number,string>;derivedArtifact?:DerivedArtifact};
+export type Source={id:string;capabilityId:string;params:Record<string,unknown>;text:string;truncated:boolean;actor:string;retrievedAt:string;uri?:string;verifiedQuotes?:Record<number,string>;derivedArtifact?:DerivedArtifact;classification?:'MODEL_INFERENCE'|'RAW'|'DERIVED'};
 type Review={status:"continue"|"complete"|"blocked";summary:string;requirements:{obligationId?:string;requirement:string;fulfilled:boolean;evidenceIds:string[]}[];findings:{text:string;executionId:string;quote:string;confidence?:"LOW"|"MEDIUM"|"HIGH";confidenceBasis?:string}[];limitations:string[];contradictions?:{topic:string;evidenceIds:string[]}[];steps:{capabilityId:string;params:Record<string,unknown>}[]};
 const object=(x:any)=>x&&typeof x==="object"&&!Array.isArray(x);
 const sourceLines=(text:string)=>text.split("\n").flatMap(line=>line.length<=1000?[line]:Array.from({length:Math.ceil(line.length/1000)},(_,i)=>line.slice(i*1000,(i+1)*1000)));
@@ -60,6 +62,9 @@ export function validateReadReview(value:any,sources:Source[],objective:string,d
    f.derivedCitation={artifactId:artifact.artifactId,outputHash:artifact.output.outputHash,row:claim.row,field:claim.field,value:claim.value,inputs:row.citations};
   }else if(f.derivedClaim!==undefined||f.derivedCitation!==undefined)throw Error('REVIEW_DERIVED_CLAIM_UNSUPPORTED');
   if(requireConfidence&&(!["LOW","MEDIUM","HIGH"].includes(f.confidence)||typeof f.confidenceBasis!=="string"||!f.confidenceBasis.trim()||f.confidenceBasis.length>500))throw new Error("REVIEW_CONFIDENCE_REQUIRED");
+ }
+ if(value.status==='complete')for(const r of value.requirements){
+  if(r.evidenceIds.every((id:string)=>sources.find(s=>s.id===id)?.classification==='MODEL_INFERENCE'))throw Error('REVIEW_INTERPRETATION_NOT_SOURCE_EVIDENCE');
  }
  if(value.status==='complete')for(const r of value.requirements)for(const id of r.evidenceIds){
   if(sources.find(s=>s.id===id)?.derivedArtifact&&!value.findings.some((f:any)=>f.executionId===id&&f.derivedCitation))throw Error('REVIEW_DERIVED_REQUIREMENT_CITATION_REQUIRED');
@@ -123,14 +128,18 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   }
   const reviewAttempt=(budget?.attempts??0)+1;
   let callsUsed=budget?.callsUsed??0;
-  const all=await client.query(`SELECT e.*,(SELECT v.result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)='VERIFIED' AS verified FROM executions e WHERE e.goal_id=$1 ORDER BY e.started_at,e.id`,[goal.id]);
+  const family=bundle.raw.descendantEvidencePolicy?await evidenceFamily(client,goal.id,goal.company_scope,bundle.raw.descendantEvidencePolicy):undefined;
+  if(family&&family.rootGoalId!==goal.id)throw Error('REVIEW_ROOT_SCOPE_REQUIRED');
+  const sourceGoalIds=family?.goalIds??[goal.id];
+  const all=await client.query(`SELECT e.*,(SELECT v.result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)='VERIFIED' AS verified FROM executions e WHERE e.goal_id=ANY($1::uuid[]) ORDER BY e.started_at,e.id`,[sourceGoalIds]);
+  if(family)for(const execution of all.rows)await assertAssignedExecution(client,execution,family);
   const failedHistory=all.rows.filter((x:any)=>!x.verified).map((x:any)=>({capabilityId:x.capability_id,params:x.params,reason:"NONVERIFIED_PRIOR_EXECUTION"}));
   all.rows=all.rows.filter((x:any)=>x.verified);
   const derived=new Map<string,DerivedArtifact>(),rejectedDerived=new Set<string>();
   for(const execution of all.rows.filter((e:any)=>e.capability_id===DERIVE_CAPABILITY)){
    try{
     if(!bundle.raw.verifiedEvidenceContracts)throw Error('REVIEW_DERIVED_DISABLED');
-    derived.set(execution.id,await replayStoredArtifact(client,{goalId:goal.id,legalEntityId:goal.company_scope},execution.id,bundle.raw.verifiedEvidenceContracts));
+    derived.set(execution.id,await replayStoredArtifact(client,{goalId:execution.goal_id,legalEntityId:goal.company_scope,delegationPolicy:bundle.raw.descendantEvidencePolicy},execution.id,bundle.raw.verifiedEvidenceContracts));
    }catch{rejectedDerived.add(execution.id);}
   }
   // Invalid/revoked derivations never become model observations or quotations.
@@ -158,7 +167,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    const verifiedQuotes=Object.fromEntries(sourceLines(text).flatMap((line,index)=>{
     const quote=line.trim();return quote.length>=3&&(derivedQuotes?derivedQuotes.has(quote):raw.includes(quote))?[[index,quote]]:[];
    }));
-   return {id:e.id,capabilityId:e.capability_id,params:e.params,text,verifiedQuotes,...(derived.has(e.id)?{derivedArtifact:derived.get(e.id)}:{}),truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
+   return {id:e.id,capabilityId:e.capability_id,params:e.params,text,verifiedQuotes,classification:derived.has(e.id)?'DERIVED':e.evidence?.classification==='MODEL_INFERENCE'?'MODEL_INFERENCE':'RAW',...(derived.has(e.id)?{derivedArtifact:derived.get(e.id)}:{}),truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
   });
   if(sources.length>20)throw new Error("REVIEW_SOURCE_BUDGET_EXCEEDED");
   // Restricted report policies hide old-plan reports. Runtime audit receipts
@@ -240,6 +249,10 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
     const derivedGaps=decision.findings.flatMap((finding:any)=>{
      const artifact=derived.get(finding.executionId);if(!artifact)return [];
      const field=finding.derivedClaim.field;
+     if(obligations){
+      const requirements=decision!.requirements.filter(r=>r.evidenceIds.includes(finding.executionId));
+      return requirements.flatMap(r=>{const bound=obligations.deliverables.find(d=>d.id===r.obligationId)!;return assessBoundObligation(artifact.output.dataset,bound,[field]).gaps;});
+     }
      return assessDeliverables(artifact.output.dataset,[{id:field,description:field,fields:[field],completeCoverage:true,knownTimeZone:false}])[0].gaps;
     });
     if(derivedGaps.length&&decision.status==='complete')decision={...decision,status:'blocked',requirements:decision.requirements.map(r=>({...r,fulfilled:false})),steps:[],limitations:[...decision.limitations,...derivedGaps]};
@@ -265,7 +278,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    }
   }
   const retryable=!derivedReplayBlocked&&!projectionBlocked&&error!=='REVIEW_INPUT_BUDGET_EXCEEDED'&&!decision&&reviewAttempt<2&&callsUsed<4&&!options.signal?.aborted;
-  if(!decision)decision={status:"blocked",summary:"Objective review could not establish completion",requirements:[{requirement:"Validated objective completion",fulfilled:false,evidenceIds:[]}],findings:[],limitations:[error??"REVIEW_FAILED"],steps:[]};
+  if(!decision)decision={status:"blocked",summary:"Objective review could not establish completion",requirements:obligations?obligations.deliverables.map(d=>({obligationId:d.id,requirement:d.description,fulfilled:false,evidenceIds:[]})):[{requirement:"Validated objective completion",fulfilled:false,evidenceIds:[]}],findings:[],limitations:[error??"REVIEW_FAILED"],steps:[]};
   decision.limitations=[...new Set([...decision.limitations,...evidenceLimitations,...monetaryGaps,...invoiceNotice])];
   const savedDecision={...decision,runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
   await client.query("BEGIN");
@@ -275,9 +288,14 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
     // conflicts with verification FK inserts; receipt SHARE locks prevent an
     // existing receipt from changing after replay. Hold both through COMMIT.
     const ids=[...new Set([...all.rows.map((e:any)=>e.id),...Array.from(derived.values()).flatMap(a=>Object.values(a.output.bindings).map((b:any)=>b.executionId))])].sort();
-    const locked=await client.query('SELECT id FROM executions WHERE goal_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE',[goal.id,ids]);
+    const locked=await client.query('SELECT id FROM executions WHERE goal_id=ANY($1::uuid[]) AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE',[sourceGoalIds,ids]);
     if(locked.rowCount!==ids.length)throw Error('REVIEW_SOURCE_EVIDENCE_INVALID');
     await client.query('SELECT id FROM verifications WHERE execution_id=ANY($1::uuid[]) ORDER BY execution_id,id FOR SHARE',[ids]);
+   }
+   if(family){
+    await client.query('SELECT id FROM goals WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE',[sourceGoalIds]);
+    const refreshed=await evidenceFamily(client,goal.id,goal.company_scope,bundle.raw.descendantEvidencePolicy!);
+    if(refreshed.hash!==family.hash)throw Error('REVIEW_DELEGATION_CHANGED');
    }
    const current=await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goal.id]);
    if(current.rows[0]?.state!=="VERIFYING"||current.rows[0]?.current_plan_id!==goal.current_plan_id)throw new Error("REVIEW_STALE_PLAN");
@@ -287,20 +305,20 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    if(rawIds.length){
     const receipts=(await client.query(`SELECT e.*,v.result verification_result,v.execution_hash verified_hash,v.plan_hash verified_plan_hash
      FROM executions e JOIN LATERAL(SELECT result,execution_hash,plan_hash FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
-     WHERE e.goal_id=$1 AND e.id=ANY($2::uuid[])`,[goal.id,rawIds])).rows;
+     WHERE e.goal_id=ANY($1::uuid[]) AND e.id=ANY($2::uuid[])`,[sourceGoalIds,rawIds])).rows;
     if(receipts.length!==rawIds.length||receipts.some((e:any)=>e.verification_result!=='VERIFIED'||e.verified_hash!==e.execution_hash||e.execution_hash!==all.rows.find((old:any)=>old.id===e.id)?.execution_hash))throw Error('REVIEW_SOURCE_EVIDENCE_INVALID');
-    for(const receipt of receipts)assertExecutionIntegrity(receipt);
+    for(const receipt of receipts){assertExecutionIntegrity(receipt);if(family)await assertAssignedExecution(client,receipt,family);}
    }
    // Recheck lineage after model calls and before report/knowledge commit.
-   for(const executionId of derived.keys())await replayStoredArtifact(client,{goalId:goal.id,legalEntityId:goal.company_scope},executionId,bundle.raw.verifiedEvidenceContracts!);
+   for(const executionId of derived.keys())await replayStoredArtifact(client,{goalId:all.rows.find((e:any)=>e.id===executionId).goal_id,legalEntityId:goal.company_scope,delegationPolicy:bundle.raw.descendantEvidencePolicy},executionId,bundle.raw.verifiedEvidenceContracts!);
    await recordReadReviewBudget(client,goal.id,goal.current_plan_id,savedDecision.runtimeReview);
    if(!retryable)await client.query('INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash) VALUES($1,$2,$3,$4::jsonb,$5)',
     [goal.id,goal.current_plan_id,round,JSON.stringify(savedDecision),sha256Hex(savedDecision)]);
-   if(decision.status==="complete"&&process.env.SAM_INTEGRATION_ENABLED==="1") await captureVerifiedKnowledge(client,goal.id,decision.findings,sourceText);
+   if(decision.status==="complete"&&process.env.SAM_INTEGRATION_ENABLED==="1") await captureVerifiedKnowledge(client,goal.id,decision.findings.filter(f=>all.rows.some((e:any)=>e.id===f.executionId&&e.goal_id===goal.id&&e.evidence?.classification!=='MODEL_INFERENCE')),sourceText);
    if(decision.status==="continue"){
     await transitionGoal(client,goal.id,"VERIFYING","REPLANNING","verified_observation_continuation");
     await transitionGoal(client,goal.id,"REPLANNING","PLANNING","concrete_observed_reads");
-    await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:"verified_observation_continuation",round},constraints:{readOnly:true},steps:decision.steps});
+    await persistPlanAndDelegate(client,{goalId:goal.id,preserveVerifiedDelegations:Boolean(family),assumptions:{source:"verified_observation_continuation",round},constraints:{readOnly:true},steps:decision.steps});
    }else await transitionGoal(client,goal.id,"VERIFYING",decision.status==="complete"?"COMPLETED":"WAITING_EXTERNAL",decision.status==="complete"?"evidence_report_saved":"objective_review_blocked",{report_hash:sha256Hex(savedDecision),round});
    await client.query('UPDATE goals SET next_wake_at=NULL WHERE id=$1',[goal.id]);
    if(retryable)await client.query("UPDATE goals SET next_wake_at=now()+interval '30 seconds' WHERE id=$1",[goal.id]);

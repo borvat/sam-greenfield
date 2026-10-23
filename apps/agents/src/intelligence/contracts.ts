@@ -2,7 +2,7 @@ import {z} from 'zod';
 /** Model outputs are structured proposals, never permissions or verified facts. */
 const text=z.string().trim().min(1).max(2000);
 const citation=z.string().uuid();
-export const claimSchema=z.object({topic:text,value:text,evidenceIds:z.array(citation).min(1).max(12)}).strict();
+export const claimSchema=z.object({topic:text,value:text,path:z.array(z.string().min(1).max(100)).min(1).max(12).optional(),evidenceIds:z.array(citation).min(1).max(12)}).strict();
 export const decisionSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('dispatch'),understanding:text,plan:z.array(text).min(1).max(12),reason:text,
   tasks:z.array(z.object({capabilityId:z.string().min(1).max(150),objective:text,params:z.record(z.string(),z.unknown())}).strict()).min(1).max(4)}).strict(),

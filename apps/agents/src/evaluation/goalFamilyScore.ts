@@ -1,16 +1,17 @@
+import {validateGoalObligations,assertObligationReview} from '../../../kernel/src/goalObligations';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {assertExecutionIntegrity} from '../../../brain/src/evidence/verifiedSources';
 /** Every persisted operation must have its exact durable pre-dispatch reservation. */
 export function assertGoalFamilyOperationLinks(snapshot:any,capture:any){
- for(const reserved of capture.events.filter((e:any)=>e.kind==='RESERVED'&&['tool','readback'].includes(e.payload.kind))){
+ for(const reserved of capture.events.filter((e:any)=>e.kind==='RESERVED'&&['tool','readback','reasoning-result'].includes(e.payload.kind))){
   const finished=capture.events.find((e:any)=>e.kind==='FINISHED'&&e.reservation_id===reserved.reservation_id&&e.payload.status==='success');
   if(!finished)continue;
-  const matches=snapshot.sources.filter((s:any)=>(reserved.payload.kind==='tool'?s.evidence:s.verification_evidence)?.evaluationReservation?.id===reserved.reservation_id);
+  const matches=snapshot.sources.filter((s:any)=>(reserved.payload.kind!=='readback'?s.evidence:s.verification_evidence)?.evaluationReservation?.id===reserved.reservation_id);
   if(matches.length!==1)throw Error('EVALUATION_OPERATION_PERSISTENCE_UNCONFIRMED');
  }
  for(const source of snapshot.sources){
   const link=source.evidence?.evaluationReservation;
-  const dispatched=capture.events.find((e:any)=>e.kind==='RESERVED'&&e.reservation_id===link?.id&&e.payload.kind==='tool'&&e.payload.queueId===source.queue_id&&e.payload.fencingToken===Number(source.fencing_token)&&e.payload.goalId===source.goal_id);
+  const dispatched=capture.events.find((e:any)=>e.kind==='RESERVED'&&e.reservation_id===link?.id&&['tool','reasoning-result'].includes(e.payload.kind)&&e.payload.queueId===source.queue_id&&e.payload.fencingToken===Number(source.fencing_token)&&e.payload.goalId===source.goal_id);
   const finished=dispatched&&capture.events.find((e:any)=>e.kind==='FINISHED'&&e.reservation_id===dispatched.reservation_id&&e.payload.status==='success');
   if(link?.trialId!==capture.trial.id||!finished||finished.payload.resultHash!==sha256Hex(source.result))throw Error('EVALUATION_EXECUTION_RESERVATION_REQUIRED');
   if(source.verification_id){
@@ -30,6 +31,7 @@ export function scoreGoalFamilyCapture(capture:any){
  assertGoalFamilyOperationLinks(snapshot,capture);
  for(const goal of snapshot.goals){
   const report=snapshot.reports.find((r:any)=>r.goal_id===goal.id&&r.plan_id===goal.currentPlanId);
+  const bound=snapshot.obligations?.[goal.id];if(bound){const contract=validateGoalObligations(bound.contract,goal.objective);if(sha256Hex(contract)!==bound.hash)throw Error('EVALUATION_OBLIGATION_HASH_INVALID');if(report)assertObligationReview(contract,report.decision);}
   if(goal.state==='COMPLETED'&&report?.decision.status!=='complete'||report&&sha256Hex(report.decision)!==report.report_hash)throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
   if(!['COMPLETED','WAITING_EXTERNAL','FAILED','CANCELLED','BLOCKED'].includes(goal.state))throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
   const references=new Set([...(report?.decision.findings??[]).map((f:any)=>f.executionId),...(report?.decision.requirements??[]).flatMap((r:any)=>r.evidenceIds)]);
