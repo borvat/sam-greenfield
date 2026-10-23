@@ -1,0 +1,10 @@
+✔ review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion (3.69484ms)
+✔ isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction (2020.206385ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2615.147431

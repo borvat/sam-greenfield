@@ -1,0 +1,53 @@
+$ docker run --rm --name sam-verify-1792732156177-8799d080-job-12 --label sam.verification.run=sam-verify-1792732156177-8799d080 --init --network container:sam-verify-1792732156177-8799d080-pg --mount type=bind,src=/tmp/sam-verify-EBEy2s/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test --env SAM_VERIFICATION_SOURCE_SHA=662e38ef3a0f29d70fd449b73beef7a9efcdffaa node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 npm run test:core-reliability
+
+> test:core-reliability
+> node scripts/testing/core-reliability.cjs
+
+PASS tests/core/reliability.ts
+PASS planning failure isolation, fairness, persisted backoff and redaction
+PASS deadline prevents late plan persistence
+PASS planning retry budget
+PASS malformed parameters and dependency cycles rejected
+PASS dependency ordering, independent verification, typed propagation and restart
+PASS invalid result types fail durably; cancelled prerequisites never execute
+PASS replanner receives prior plan/failure evidence; replan budget enforced
+PASS HTTP/readback success is insufficient; typed and contradictory evidence rejected
+PASS Gmail verifies intended content, not message existence
+PASS real process crash after ACT, reconciliation, no resend across restart/replan
+PASS unknown side effects escalate to owner without resending
+PASS production outbox relay and event consumption
+PASS separate app identity, negative tenant/missing/spoofed-context tests and protected registry writes
+PASS specialist lease attempt exhaustion
+PASS external OAuth request deadline
+CORE_RELIABILITY 15 checks passed; fixtures only; zero external provider calls
+
+PASS tests/core/planningConcurrency.ts
+{"check":"concurrent planning with failures and two DB connections","healthy":12,"failed":4,"invokes":16,"ms":141,"thresholdMs":3000,"poolMax":2}
+
+PASS tests/core/reservationRace.ts
+PASS atomic reservation/approval/lease binding under reconciler interleaving; denied approval leaves no operation; concurrent identical writes consume one approval and send once per goal
+
+PASS tests/core/tenantWorkload.ts
+{"check":"parallel fixed-principal workload","tenants":4,"rows":80,"crossTenantReads":0,"ms":37,"thresholdMs":3000,"unboundRoleRejected":true}
+
+PASS tests/core/eventBacklog.ts
+{"check":"bounded event backlog","events":350,"ticks":4,"batches":[{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":50,"consumed":50}],"ms":1118,"thresholdMs":5000}
+
+PASS tests/core/learningScheduling.ts
+PASS unfinished legacy goal does not starve learning from a completed verified goal
+
+PASS tests/core/startupAdmission.ts
+PASS production owner-role refusal before serving: apps/runtime/src/main.ts
+PASS production owner-role refusal before serving: apps/mcp/src/main.ts
+PASS production owner-role refusal before serving: apps/command-center/src/main.ts
+
+PASS tests/core/planningDeadline.ts
+PASS deadline expiring after proposal but before persistence creates no plan
+
+PASS tests/core/planningRepair.ts
+PASS slow valid repair with fresh durable reservation; sanitized goal-linked diagnostics; three-attempt exhaustion; cancellation; late response discarded; concurrent planner creates one plan and queue entry, no execution
+
+PASS tests/core/reviewReliability.ts
+PASS review deadlines abort provider transport; durable bounded continuation reuses verified work; exhaustion/cancellation/contracts/tenant/owner gates; deterministic large evidence metadata; wrong-period invoices and missing EUR/VAT/coverage cannot complete; incomplete reports remain honest
+
+{"passed":10,"failed":0,"results":[{"test":"tests/core/reliability.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:11:52.055Z","completedAt":"2026-10-23T05:11:57.358Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:11:52.057Z","completedAt":"2026-10-23T05:11:52.215Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/reliability.ts"],"startedAt":"2026-10-23T05:11:52.215Z","completedAt":"2026-10-23T05:11:57.358Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningConcurrency.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:11:57.383Z","completedAt":"2026-10-23T05:11:57.971Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:11:57.384Z","completedAt":"2026-10-23T05:11:57.538Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/planningConcurrency.ts"],"startedAt":"2026-10-23T05:11:57.538Z","completedAt":"2026-10-23T05:11:57.971Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/reservationRace.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:11:57.991Z","completedAt":"2026-10-23T05:11:58.465Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:11:57.992Z","completedAt":"2026-10-23T05:11:58.149Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/reservationRace.ts"],"startedAt":"2026-10-23T05:11:58.149Z","completedAt":"2026-10-23T05:11:58.465Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/tenantWorkload.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:11:58.484Z","completedAt":"2026-10-23T05:11:59.035Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:11:58.486Z","completedAt":"2026-10-23T05:11:58.647Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/tenantWorkload.ts"],"startedAt":"2026-10-23T05:11:58.647Z","completedAt":"2026-10-23T05:11:59.035Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/eventBacklog.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:11:59.053Z","completedAt":"2026-10-23T05:12:00.714Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:11:59.054Z","completedAt":"2026-10-23T05:11:59.224Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/eventBacklog.ts"],"startedAt":"2026-10-23T05:11:59.224Z","completedAt":"2026-10-23T05:12:00.714Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/learningScheduling.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:12:00.736Z","completedAt":"2026-10-23T05:12:01.176Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:12:00.737Z","completedAt":"2026-10-23T05:12:00.880Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/learningScheduling.ts"],"startedAt":"2026-10-23T05:12:00.880Z","completedAt":"2026-10-23T05:12:01.176Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/startupAdmission.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:12:01.199Z","completedAt":"2026-10-23T05:12:02.799Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:12:01.199Z","completedAt":"2026-10-23T05:12:01.340Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/startupAdmission.ts"],"startedAt":"2026-10-23T05:12:01.340Z","completedAt":"2026-10-23T05:12:02.799Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningDeadline.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:12:02.819Z","completedAt":"2026-10-23T05:12:03.407Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:12:02.820Z","completedAt":"2026-10-23T05:12:02.973Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/planningDeadline.ts"],"startedAt":"2026-10-23T05:12:02.973Z","completedAt":"2026-10-23T05:12:03.407Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningRepair.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:12:03.424Z","completedAt":"2026-10-23T05:12:04.830Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:12:03.426Z","completedAt":"2026-10-23T05:12:03.560Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/planningRepair.ts"],"startedAt":"2026-10-23T05:12:03.560Z","completedAt":"2026-10-23T05:12:04.830Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/reviewReliability.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:12:04.849Z","completedAt":"2026-10-23T05:12:05.897Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:12:04.850Z","completedAt":"2026-10-23T05:12:04.991Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/core/reviewReliability.ts"],"startedAt":"2026-10-23T05:12:04.991Z","completedAt":"2026-10-23T05:12:05.897Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,1 @@
+PASS: all 711 tracked source files retain the archived SHA256; generated Dockerfile recorded separately.

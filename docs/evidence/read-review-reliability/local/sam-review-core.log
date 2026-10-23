@@ -1,0 +1,57 @@
+
+> test:core-reliability
+> node scripts/testing/core-reliability.cjs
+
+PASS tests/core/reliability.ts
+PASS planning failure isolation, fairness, persisted backoff and redaction
+PASS deadline prevents late plan persistence
+PASS planning retry budget
+PASS malformed parameters and dependency cycles rejected
+PASS dependency ordering, independent verification, typed propagation and restart
+PASS invalid result types fail durably; cancelled prerequisites never execute
+PASS replanner receives prior plan/failure evidence; replan budget enforced
+PASS HTTP/readback success is insufficient; typed and contradictory evidence rejected
+PASS Gmail verifies intended content, not message existence
+PASS real process crash after ACT, reconciliation, no resend across restart/replan
+PASS unknown side effects escalate to owner without resending
+PASS production outbox relay and event consumption
+PASS separate app identity, negative tenant/missing/spoofed-context tests and protected registry writes
+PASS specialist lease attempt exhaustion
+PASS external OAuth request deadline
+CORE_RELIABILITY 15 checks passed; fixtures only; zero external provider calls
+
+PASS tests/core/planningConcurrency.ts
+{"check":"concurrent planning with failures and two DB connections","healthy":12,"failed":4,"invokes":16,"ms":175,"thresholdMs":3000,"poolMax":2}
+
+PASS tests/core/reservationRace.ts
+PASS atomic reservation/approval/lease binding under reconciler interleaving; denied approval leaves no operation; concurrent identical writes consume one approval and send once per goal
+
+PASS tests/core/tenantWorkload.ts
+{"check":"parallel fixed-principal workload","tenants":4,"rows":80,"crossTenantReads":0,"ms":45,"thresholdMs":3000,"unboundRoleRejected":true}
+
+PASS tests/core/eventBacklog.ts
+{"check":"bounded event backlog","events":350,"ticks":4,"batches":[{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":100,"consumed":100},{"relayed":50,"consumed":50}],"ms":1369,"thresholdMs":5000}
+
+PASS tests/core/learningScheduling.ts
+PASS unfinished legacy goal does not starve learning from a completed verified goal
+
+PASS tests/core/startupAdmission.ts
+PASS production owner-role refusal before serving: apps/runtime/src/main.ts
+PASS production owner-role refusal before serving: apps/mcp/src/main.ts
+PASS production owner-role refusal before serving: apps/command-center/src/main.ts
+
+PASS tests/core/planningDeadline.ts
+PASS deadline expiring after proposal but before persistence creates no plan
+
+PASS tests/core/planningRepair.ts
+PASS slow valid repair with fresh durable reservation; sanitized goal-linked diagnostics; three-attempt exhaustion; cancellation; late response discarded; concurrent planner creates one plan and queue entry, no execution
+
+PASS tests/core/reviewReliability.ts
+PASS review deadlines abort provider transport; durable bounded continuation reuses verified work; exhaustion/cancellation/contracts/tenant/owner gates; deterministic large evidence metadata; wrong-period invoices and missing EUR/VAT/coverage cannot complete; incomplete reports remain honest
+
+{"passed":10,"failed":0,"results":[{"test":"tests/core/reliability.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:07:51.274Z","completedAt":"2026-10-23T05:07:56.500Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:07:51.277Z","completedAt":"2026-10-23T05:07:51.542Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/reliability.ts"],"startedAt":"2026-10-23T05:07:51.542Z","completedAt":"2026-10-23T05:07:56.500Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningConcurrency.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:07:56.574Z","completedAt":"2026-10-23T05:07:57.228Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:07:56.576Z","completedAt":"2026-10-23T05:07:56.795Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/planningConcurrency.ts"],"startedAt":"2026-10-23T05:07:56.795Z","completedAt":"2026-10-23T05:07:57.228Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/reservationRace.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:07:57.285Z","completedAt":"2026-10-23T05:07:57.807Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:07:57.286Z","completedAt":"2026-10-23T05:07:57.507Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/reservationRace.ts"],"startedAt":"2026-10-23T05:07:57.507Z","completedAt":"2026-10-23T05:07:57.807Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/tenantWorkload.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:07:57.870Z","completedAt":"2026-10-23T05:07:58.600Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:07:57.871Z","completedAt":"2026-10-23T05:07:58.100Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/tenantWorkload.ts"],"startedAt":"2026-10-23T05:07:58.100Z","completedAt":"2026-10-23T05:07:58.600Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/eventBacklog.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:07:58.654Z","completedAt":"2026-10-23T05:08:00.564Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:07:58.655Z","completedAt":"2026-10-23T05:07:58.898Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/eventBacklog.ts"],"startedAt":"2026-10-23T05:07:58.898Z","completedAt":"2026-10-23T05:08:00.564Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/learningScheduling.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:08:00.618Z","completedAt":"2026-10-23T05:08:01.098Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:08:00.619Z","completedAt":"2026-10-23T05:08:00.831Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/learningScheduling.ts"],"startedAt":"2026-10-23T05:08:00.831Z","completedAt":"2026-10-23T05:08:01.098Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/startupAdmission.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:08:01.152Z","completedAt":"2026-10-23T05:08:02.424Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:08:01.153Z","completedAt":"2026-10-23T05:08:01.381Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/startupAdmission.ts"],"startedAt":"2026-10-23T05:08:01.382Z","completedAt":"2026-10-23T05:08:02.424Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningDeadline.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:08:02.483Z","completedAt":"2026-10-23T05:08:03.098Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:08:02.484Z","completedAt":"2026-10-23T05:08:02.699Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/planningDeadline.ts"],"startedAt":"2026-10-23T05:08:02.699Z","completedAt":"2026-10-23T05:08:03.098Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/planningRepair.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:08:03.153Z","completedAt":"2026-10-23T05:08:04.591Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:08:03.154Z","completedAt":"2026-10-23T05:08:03.366Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/planningRepair.ts"],"startedAt":"2026-10-23T05:08:03.366Z","completedAt":"2026-10-23T05:08:04.591Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true},{"test":"tests/core/reviewReliability.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T05:08:04.647Z","completedAt":"2026-10-23T05:08:05.658Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:08:04.648Z","completedAt":"2026-10-23T05:08:04.873Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/reviewReliability.ts"],"startedAt":"2026-10-23T05:08:04.873Z","completedAt":"2026-10-23T05:08:05.658Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

@@ -1,0 +1,44 @@
+$ docker run --rm --name sam-verify-1792732156177-8799d080-job-28 --label sam.verification.run=sam-verify-1792732156177-8799d080 --init --network container:sam-verify-1792732156177-8799d080-pg --mount type=bind,src=/tmp/sam-verify-EBEy2s/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test --env SAM_VERIFICATION_SOURCE_SHA=662e38ef3a0f29d70fd449b73beef7a9efcdffaa node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node scripts/testing/core-reliability.cjs --suite tests/integration/orchestration.ts
+FAIL tests/integration/orchestration.ts
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'WAITING_EXTERNAL'
+- 'COMPLETED'
+
+    at main (/app/tests/integration/scenario-worker.ts:87:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'WAITING_EXTERNAL',
+  expected: 'COMPLETED',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+AssertionError [ERR_ASSERTION]: restricted worker execute
+
+1 !== 0
+
+    at run (/app/tests/integration/orchestration.ts:38:51)
+    at main (/app/tests/integration/orchestration.ts:40:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+/app/node_modules/pg-pool/index.js:491
+      const err = new Error('Called end on pool more than once')
+                  ^
+
+Error: Called end on pool more than once
+    at BoundPool.end (/app/node_modules/pg-pool/index.js:491:19)
+    at <anonymous> (/app/tests/integration/orchestration.ts:65:52)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+Node.js v22.23.4
+
+{"passed":0,"failed":1,"results":[{"test":"tests/integration/orchestration.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T05:15:14.440Z","completedAt":"2026-10-23T05:15:35.833Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T05:15:14.442Z","completedAt":"2026-10-23T05:15:14.593Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/integration/orchestration.ts"],"startedAt":"2026-10-23T05:15:14.593Z","completedAt":"2026-10-23T05:15:35.833Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}
