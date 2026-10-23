@@ -2,6 +2,20 @@
 
 Prepared 2026-10-23. **Proposal only: no activation, signature, production access, grants, credentials or paid calls performed.** This is one three-goal trial on the existing SAM repository/runtime/database, not another architecture phase or proof of business integration.
 
+## Current operator preflight: not executable yet
+
+The parent's read-only preflight has not established a trusted owner-signing mechanism or public-key provenance, an eligible synthetic principal/profile, or the deployed coordinator-guard definition. QNAN is an operational tenant and is not eligible for synthetic enrollment. **There is no verified executable live-approval workflow through the currently available interfaces.** This is a limitation of the code-added workflow and missing security setup, not a Render restriction.
+
+The necessary controls are a trusted scoped approval, tenant isolation, immutable bounded spending, cancellation and independently verifiable evidence. Requiring an operator to create a five-minute trial, obtain a signature, distribute files and restart the service inside that same window is avoidable engineering ceremony; it is not a fundamental safety requirement. The ordered operation below is conditional documentation, not a promise that this ceremony is currently usable.
+
+Smallest concrete proposal for a separate, single owner decision:
+
+1. Have the authorized existing-system operator identify an eligible pre-existing synthetic scope/principal and attest the exact current profile/guard definition. Do not substitute QNAN, create credentials or infer absence from unavailable metadata.
+2. Establish one approved signing/trust mechanism with verified provenance and operator custody. If an existing organizational signer can be verified, reuse it; none has been established here. Otherwise an explicitly approved security-setup proposal must specify the responsible operator, managed key custody, public-key registration location, rotation/revocation and audit receipts. The owner must not be told to invent or paste a signing key, and the coding agent must not generate or impersonate it.
+3. Make approval executable before starting the run clock: a narrowly reviewed launch mechanism could verify a short-lived, single-use approval binding release/corpus/capabilities/company/goals/provider/budgets, then atomically create the trial and start its unchanged 300-second deadline after service readiness. A persisted one-use identifier would prevent replay; restart would reopen the same trial and counters. This is a **proposal requiring separate implementation/security review**, not supported behavior of f8b570ac and not authorization to bypass its current signature/interlock. It changes launch sequencing, not spending/time limits or existing tenant permissions.
+
+Until steps 1–2 are concretely established and either the existing ceremony is demonstrated within its window or the reviewed launch sequencing is implemented, live evaluation remains pending. No grant, signing key, approval file, deadline or production setting was created/changed here. The independent offline business-contract work can continue without this setup.
+
 ## Pins and scope
 
 - Reviewed disabled application: `f8b570ac80158303993c3156872c76401ff965f9`; tree `d611d900909a5673db71d36fbff5e787a620dca7`.
