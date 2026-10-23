@@ -5,6 +5,8 @@ import {pool} from '../../../packages/db/src/client';
 import {deriveArtifact,replayStoredArtifact,DERIVE_CAPABILITY,type DeriveRequest} from '../../brain/src/evidence/artifacts';
 import {freezeOutputContracts,type OutputContracts} from '../../brain/src/evidence/contracts';
 import type {ProductionBundle} from './types';
+const localAdapters=new WeakMap<object,object>();
+export function assertLocalDerivedAdapter(adapter:object,verifier:object|undefined){if(!verifier||localAdapters.get(adapter)!==verifier)throw Error('EVALUATION_LOCAL_DERIVED_ADAPTER_REQUIRED');}
 export const DERIVED_VERIFICATION_CONTRACT={capabilityId:DERIVE_CAPABILITY,description:'Deterministic replay over current same-goal latest-verified records',verificationMethod:'db_query' as const,requiredEvidenceFields:{replayed:'boolean'},independentQueryTemplate:{method:'verified-evidence-replay-v1'}};
 /** Explicit opt-in composition. Not called by any production startup path. */
 export function withVerifiedEvidence(bundle:ProductionBundle,entries:OutputContracts,db:any=pool):ProductionBundle{
@@ -12,7 +14,7 @@ export function withVerifiedEvidence(bundle:ProductionBundle,entries:OutputContr
  if(!registry.length||bundle.verifiedEvidenceContracts||bundle.capabilities.some(c=>c.capabilityId===DERIVE_CAPABILITY))throw Error('EVIDENCE_REGISTRATION_INVALID');
  for(const c of registry){const tool=bundle.toolDefinitions.find(t=>t.capabilityId===c.capabilityId);if(!tool||tool.sideEffect||tool.authorityClass!=='GREEN')throw Error('EVIDENCE_CONTRACT_CAPABILITY_UNSAFE');}
  const description='Compose bounded verified records using select/filter/group/sum/count/distinct/join and exact decimal arithmetic. Input execution IDs must belong to this goal and match a listed reviewed extraction contract. No new reads, arbitrary code, writes or invented semantics. Output includes row citations, limitations and replay hashes.';
- return {...bundle,verifiedEvidenceContracts:registry,
+ const configured:ProductionBundle={...bundle,verifiedEvidenceContracts:registry,
   capabilities:[...bundle.capabilities.map(c=>({...c,...(registry.some(r=>r.capabilityId===c.capabilityId)?{output:{schemaStatus:'DECLARED' as const,units:{},timeSemantics:'Per versioned extraction contract; absent metadata stays UNKNOWN',coverageSemantics:'Verified metadata only; pagination absence is not completeness',limitations:['Only listed extraction fields have reviewed semantics; other output fields remain UNKNOWN'],extractionContracts:registry.filter(r=>r.capabilityId===c.capabilityId)}}:{})})),
    {capabilityId:DERIVE_CAPABILITY,authorityClass:'GREEN',specialistAgentId:'verified_evidence',specialistVersion:'1',description,parameters:DERIVE_PARAMETERS}],
   toolDefinitions:[...bundle.toolDefinitions,{capabilityId:DERIVE_CAPABILITY,authorityClass:'GREEN',sideEffect:false,description,inputSchema:DERIVE_PARAMETERS,costUpperBoundUsd:0}],
@@ -40,4 +42,6 @@ export function withVerifiedEvidence(bundle:ProductionBundle,entries:OutputContr
    finally{client.release();}
   }}]
  };
+ localAdapters.set(configured.toolAdapters.at(-1)!,configured.verificationAdapters!.at(-1)!);
+ return configured;
 }

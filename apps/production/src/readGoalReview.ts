@@ -1,3 +1,4 @@
+import {assertCommitAdmission} from '../../../packages/db/src/commitAdmission';
 import {derivedCellQuote,derivedReviewText} from './derivedReviewEvidence';
 import {DERIVE_CAPABILITY,replayStoredArtifact,type DerivedArtifact} from '../../brain/src/evidence/artifacts';
 import {assessDeliverables} from '../../brain/src/evidence/transforms';
@@ -93,17 +94,17 @@ export function validateReadReview(value:any,sources:Source[],objective:string,d
 
 const sourceText=reviewSourceText;
 
-export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any=pool,invoke?: (input:any,signal:AbortSignal)=>Promise<any>,options:{callDeadlineMs?:number;signal?:AbortSignal}={}){
+export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any=pool,invoke?: (input:any,signal:AbortSignal)=>Promise<any>,options:{callDeadlineMs?:number;signal?:AbortSignal;goalId?:string}={}){
 
  const callDeadlineMs=options.callDeadlineMs??40000;
  if(!Number.isSafeInteger(callDeadlineMs)||callDeadlineMs<1||callDeadlineMs>40000)throw Error('REVIEW_POLICY_INVALID');
  const client=await db.connect();let lockedId:string|undefined;
  try{
-  const candidates=await client.query(`SELECT g.* FROM goals g WHERE g.state='VERIFYING' AND g.completion_definition=$1
+  const candidates=await client.query(`SELECT g.* FROM goals g WHERE g.state='VERIFYING' AND g.completion_definition=$1 AND ($2::uuid IS NULL OR g.id=$2)
    AND NOT EXISTS(SELECT 1 FROM work_queue w WHERE w.goal_id=g.id AND w.plan_id=g.current_plan_id AND w.status<>'EXECUTED')
    AND EXISTS(SELECT 1 FROM executions e WHERE e.goal_id=g.id AND e.plan_id=g.current_plan_id)
    AND NOT EXISTS(SELECT 1 FROM executions e WHERE e.goal_id=g.id AND e.plan_id=g.current_plan_id AND (SELECT v.result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) IS DISTINCT FROM 'VERIFIED')
-   ORDER BY g.updated_at,g.id LIMIT 10`,[READ_REPORT_CONTRACT]);
+   ORDER BY g.updated_at,g.id LIMIT 10`,[READ_REPORT_CONTRACT,options.goalId??null]);
   let goal:any;
   for(const candidate of candidates.rows){const lock=await client.query("SELECT pg_try_advisory_lock(hashtext($1)) AS locked",["read-review:"+candidate.id]);if(lock.rows[0].locked){goal=candidate;lockedId=candidate.id;break}}
   if(!goal)return {processed:false};
@@ -114,7 +115,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const budget=await readReviewBudget(client,goal.id,goal.current_plan_id);
   if(prior||(budget&&(!budget.retryable||budget.attempts>=2||budget.callsUsed>=4))){
    await client.query('BEGIN');
-   try{await transitionGoal(client,goal.id,'VERIFYING','WAITING_EXTERNAL','read_review_budget_or_report_terminal');await client.query('COMMIT');}
+   try{await transitionGoal(client,goal.id,'VERIFYING','WAITING_EXTERNAL','read_review_budget_or_report_terminal');await assertCommitAdmission(client);await client.query('COMMIT');}
    catch(e){await client.query('ROLLBACK');throw e;}
    return {processed:true,goalId:goal.id,status:'blocked'};
   }
@@ -288,6 +289,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    }else await transitionGoal(client,goal.id,"VERIFYING",decision.status==="complete"?"COMPLETED":"WAITING_EXTERNAL",decision.status==="complete"?"evidence_report_saved":"objective_review_blocked",{report_hash:sha256Hex(savedDecision),round});
    await client.query('UPDATE goals SET next_wake_at=NULL WHERE id=$1',[goal.id]);
    if(retryable)await client.query("UPDATE goals SET next_wake_at=now()+interval '30 seconds' WHERE id=$1",[goal.id]);
+   await assertCommitAdmission(client);
    await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e}
   return {processed:true,goalId:goal.id,status:decision.status};
@@ -297,6 +299,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   try{
    const state=await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE",[lockedId]);
    if(state.rows[0]?.state==="VERIFYING")await transitionGoal(client,lockedId,"VERIFYING","WAITING_EXTERNAL","objective_review_runtime_failed",{reason:"REVIEW_FAILED"});
+   await assertCommitAdmission(client);
    await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e}
   return {processed:true,goalId:lockedId,status:"blocked"};

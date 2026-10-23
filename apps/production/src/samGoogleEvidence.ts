@@ -26,6 +26,8 @@ export async function readGoogleArtifact(url:string):Promise<GoogleArtifact>{
 
 export async function googleReadEvidence(name:SamGoogleTool,result:Record<string,unknown>,readArtifact=readGoogleArtifact){
  if(result.isError===true)throw samGoogleReadFailure(name,result);
+ // Reserved runtime namespace: remote MCP output can never supply download proof.
+ result={...result};delete result.samArtifacts;
  const strings:string[]=[];
  const visit=(v:any)=>{if(typeof v==="string")strings.push(v);else if(Array.isArray(v))v.forEach(visit);else if(v&&typeof v==="object")Object.values(v).forEach(visit)};visit(result);
  const texts=(result.content as any[]??[]).filter(c=>c.type==="text").map(c=>String(c.text));

@@ -1,3 +1,4 @@
+import {assertCommitAdmission} from './commitAdmission';
 
 import { Pool, type PoolClient } from 'pg';
 
@@ -16,6 +17,7 @@ export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>)
   try {
     await client.query('BEGIN');
     const result = await fn(client);
+    await assertCommitAdmission(client);
     await client.query('COMMIT');
     return result;
   } catch (e) {

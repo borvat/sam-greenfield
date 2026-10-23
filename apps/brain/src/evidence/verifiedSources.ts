@@ -1,6 +1,6 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {replayTransform,knownTimeZone,type Column,type Dataset,type TransformPlan} from './transforms';
-export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[];rowsMode?:'array'|'single';fields?:Record<string,{path:string[];from?:'record'|'root';encoding?:'safe-integer'}>;requiredFields?:string[];sourceLimitations?:string[];periodPath?:string[];identityPath?:string[]};
+export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[];rowsMode?:'array'|'single';fields?:Record<string,{path:string[];from?:'record'|'root';encoding?:'safe-integer'}>;requiredFields?:string[];sourceLimitations?:string[];periodPath?:string[];identityPath?:string[];evidenceBinding?:{path:string[];fields:string[]}};
 const at=(v:any,path:string[])=>{if(!Array.isArray(path)||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_PATH_INVALID');for(const k of path){if(v===null||typeof v!=='object'||!Object.hasOwn(v,k))return undefined;v=v[k];}return v;};
 /** Internal API only. Contract registry is trusted application configuration,
  * never model parameters. No production capability/registry is installed here. */
@@ -19,6 +19,12 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
   if(!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(alias)||['constructor','prototype','__proto__'].includes(alias))throw Error('EVIDENCE_ALIAS_INVALID');
   const row=rows.find((r:any)=>r.id===id),contract=contracts[row.capability_id];if(!contract?.version)throw Error('EVIDENCE_OUTPUT_SCHEMA_UNKNOWN');
   const selected=at(row.result,contract.rowsPath),records=contract.rowsMode==='single'?[selected]:selected;if(!Array.isArray(records)||records.length>500)throw Error('EVIDENCE_RECORDS_INVALID');
+  if(contract.evidenceBinding){
+   const binding=contract.evidenceBinding,receipts=at(row.evidence,binding.path);
+   if(!Array.isArray(receipts)||receipts.length!==records.length||!binding.fields.length||binding.fields.some(k=>!Object.hasOwn(contract.columns,k))||
+    records.some((record:any,i:number)=>binding.fields.some(k=>!record||!receipts[i]||!Object.hasOwn(record,k)||!Object.hasOwn(receipts[i],k)||sha256Hex(record[k])!==sha256Hex(receipts[i][k]))))
+    throw Error('EVIDENCE_METADATA_BINDING_INVALID');
+  }
   const coverage=at(row.result,contract.coveragePath),timeZone=at(row.result,contract.timeZonePath),limitations=at(row.result,contract.limitationsPath);
   assertExecutionIntegrity(row);
   const sourceHash=sha256Hex(row.result);

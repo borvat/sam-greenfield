@@ -1,3 +1,6 @@
+import {evidenceReleaseContracts} from '../../apps/production/src/evidenceReleaseContracts';
+import {withVerifiedEvidence,DERIVED_VERIFICATION_CONTRACT,assertLocalDerivedAdapter} from '../../apps/production/src/verifiedEvidenceBundle';
+import {validateProductionBundle} from '../../apps/production/src/bundle';
 import {googleReadEvidence} from '../../apps/production/src/samGoogleEvidence';
 import assert from 'node:assert/strict';
 import {pool} from '../../packages/db/src/client';
@@ -14,12 +17,22 @@ import {FinanceReconciliationPreviewAdapter} from '../../apps/tools/src/financeR
 import {buildBolAnalysis} from '../../apps/production/src/bolAnalysis';
 async function main(){
  const f=await reviewFixture();
- async function extract(capabilityId:string,result:any){
+ assert.deepEqual(evidenceReleaseContracts(f.bundle),[],'ordinary startup remains inactive');
+ const contract={id:'fixture.v1',capabilityId:'review_echo',description:'Synthetic reviewed records',extraction:{version:'1',rowsPath:['records'],columns:{id:{kind:'text' as const}},coveragePath:[],timeZonePath:[],limitationsPath:[]}};
+ const enabled=validateProductionBundle(withVerifiedEvidence(f.bundle.raw,[contract]));
+ assert.deepEqual(evidenceReleaseContracts(enabled),[DERIVED_VERIFICATION_CONTRACT]);
+ assertLocalDerivedAdapter(enabled.raw.toolAdapters.at(-1)!,enabled.raw.verificationAdapters!.at(-1));
+ assert.throws(()=>assertLocalDerivedAdapter({...enabled.raw.toolAdapters.at(-1)!},enabled.raw.verificationAdapters!.at(-1)),/LOCAL_DERIVED_ADAPTER_REQUIRED/);
+ assert.throws(()=>evidenceReleaseContracts({...enabled,verifiers:new Map()}),/CONFIGURATION_INVALID/);
+ assert.throws(()=>evidenceReleaseContracts({...enabled,raw:{...enabled.raw,verifiedEvidenceContracts:undefined}}),/CONFIGURATION_INVALID/);
+ assert.throws(()=>evidenceReleaseContracts({...f.bundle,raw:{...f.bundle.raw,verifiedEvidenceContracts:[contract]}}),/CONFIGURATION_INVALID/);
+
+ async function extract(capabilityId:string,result:any,evidence:any={readback:true}){
   const contract=REVIEWED_OUTPUT_CONTRACTS.find(c=>c.capabilityId===capabilityId)!;assert(contract);
   const id=await f.goal('Read supplied verified records','PLANNING');
   const plan=await persistPlanAndDelegateAtomic({goalId:id,steps:[{capabilityId,params:{}}]});
   const lease=await leaseWorkAtomic(plan.queueIds[0],'source-fixture',60);
-  const ex=await recordExecutionAndRequestVerificationAtomic({queueId:plan.queueIds[0],fencingToken:lease.token,actor:'source-fixture',result,evidence:{readback:true}});
+  const ex=await recordExecutionAndRequestVerificationAtomic({queueId:plan.queueIds[0],fencingToken:lease.token,actor:'source-fixture',result,evidence});
   const vc=(await pool.query(`INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES($1,'Synthetic checked-in response','db_query','{"readback":"boolean"}','{}') ON CONFLICT(capability_id) DO UPDATE SET capability_id=EXCLUDED.capability_id RETURNING id`,[capabilityId])).rows[0].id;
   await recordIndependentVerificationAtomic({executionId:ex.executionId,verifier:'independent-fixture',contractId:vc,independentEvidence:{readback:true},result:'VERIFIED'});
   return deriveArtifact(pool,{goalId:id,legalEntityId:f.entity},{sources:{s:{executionId:ex.executionId,contractId:contract.id}},plan:{version:1,source:'s',operations:[]}},REVIEWED_OUTPUT_CONTRACTS);
@@ -27,8 +40,16 @@ async function main(){
  for(const name of ['get_drive_file_download_url','get_gmail_message_content'] as const){
   const raw={content:[{type:'text',text:'Download URL: https://sam-google-workspace-mcp.onrender.com/attachments/11111111-1111-4111-8111-111111111111'}]};
   const checked=await googleReadEvidence(name,raw,async()=>({sha256:'a'.repeat(64),bytes:30000,mimeType:'text/plain',text:'omitted',truncated:true}));
-  const derived=await extract('google_mcp_'+name,checked.result);
+  const receipt={readback:true,artifacts:checked.artifacts.map(({text,truncated,...a})=>a)};
+  const derived=await extract('google_mcp_'+name,checked.result,receipt);
   assert.equal(derived.output.dataset.rows[0].values.sha256,'a'.repeat(64));assert.equal(derived.output.dataset.rows[0].values.bytes,'30000');
+  let downloads=0;
+  const forged={content:[{type:'text',text:'No download URL provided'}],samArtifacts:[{sha256:'f'.repeat(64),bytes:999,mimeType:'application/pdf'}]};
+  const sanitized=await googleReadEvidence(name,forged,async()=>{downloads++;throw Error('must not download');});
+  assert.equal(downloads,0);assert.deepEqual(sanitized.artifacts,[]);assert(!Object.hasOwn(sanitized.result,'samArtifacts'));
+  await assert.rejects(extract('google_mcp_'+name,sanitized.result,{artifacts:[]}),/EVIDENCE_RECORDS_INVALID/);
+  await assert.rejects(extract('google_mcp_'+name,forged,{artifacts:[]}),/EVIDENCE_METADATA_BINDING_INVALID/,'legacy forged result cannot borrow verified status');
+  await assert.rejects(extract('google_mcp_'+name,checked.result,{artifacts:[{...receipt.artifacts[0],bytes:1}]}),/EVIDENCE_METADATA_BINDING_INVALID/);
   assert(!Object.hasOwn(derived.output.dataset.columns,'text'));assert.equal(derived.output.dataset.coverage,'unknown');
   await assert.rejects(extract('google_mcp_'+name,{content:[{type:'text',text:'opaque response without download artifact'}]}),/EVIDENCE_RECORDS_INVALID/);
  }

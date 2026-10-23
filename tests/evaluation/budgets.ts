@@ -1,10 +1,14 @@
+import {Client} from 'pg';
+import {frozenEvaluationSources} from '../../apps/agents/src/evaluation/frozenSources';
+import {createGoalEvaluationComposition,admitEvaluationSource} from '../../apps/production/src/goalEvaluationComposition';
+import type {ProductionBundle} from '../../apps/production/src/types';
 import {withGoalEvaluation,evaluationBundleHash} from '../../apps/production/src/goalEvaluationBundle';
 import {contentHash} from '../../apps/agents/src/evaluation/harness';
 import assert from 'node:assert/strict';
 import {randomUUID,generateKeyPairSync} from 'node:crypto';
 import {spawn,spawnSync,execFileSync} from 'node:child_process';
 import {pool,withTransaction} from '../../packages/db/src/client';
-import {applyIntegrationProfile} from '../../packages/db/src/integrationProfile';
+import {applyIntegrationProfile,provisionIntegrationAccess} from '../../packages/db/src/integrationProfile';
 import {applySpecialistProfile,provisionSpecialistAccess} from '../../packages/db/src/specialistProfile';
 import {applyEvaluationProfile,provisionEvaluationAccess,enrollEvaluationCompany} from '../../packages/db/src/evaluationProfile';
 import {provisionRuntimeAccess} from '../../packages/db/src/runtimeAccess';
@@ -20,6 +24,12 @@ import {writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 const task={task:'executive_planning',capability:'planning',dataClassification:'INTERNAL' as const,input:{objective:'Synthetic bounded objective'}};
 const reply=()=>({model:'fixture',usage:{inputTokens:5,outputTokens:10},output:{steps:[{capabilityId:'specialist.executive',params:{objective:'Synthetic bounded objective'}}]}});
+function runtimeFixtureBundle(adapter:any):ProductionBundle{
+ const frozen=frozenEvaluationSources('industrial-refrigeration',{record:'corrective-register'});
+ return {capabilities:[{capabilityId:'source.read',authorityClass:'GREEN',specialistAgentId:'fixture',specialistVersion:'1'}],
+ toolDefinitions:[{capabilityId:'source.read',authorityClass:'GREEN',sideEffect:false,inputSchema:{type:'object',properties:{channel:{type:'string',enum:['record']}},required:['channel'],additionalProperties:false}}],
+ toolAdapters:[frozen.adapter],verificationAdapters:[frozen.verifier],modelAdapters:adapter?[adapter]:[],
+ modelProviderConfigs:adapter?[{providerId:adapter.providerId,models:['fixture'],capabilities:['planning'],privacyClasses:['INTERNAL'],health:'HEALTHY',costPer1kInput:0.001,costPer1kOutput:0.001}]:[]};}
 async function worker(){
  const trials=JSON.parse(process.env.FIXTURE_TRIALS!);let calls=0;
  const good=fixtureEvaluationAdapter('eval-a',async()=>{calls++;return reply();});
@@ -64,6 +74,45 @@ async function worker(){
  for(const name of ['goal-tokens','goal-money']){const b=await generic(name);if(name==='goal-money')await b.modelGatewayForGoal!(trials[name].goals[0]).invoke(task);const before=calls;await assert.rejects(()=>b.modelGatewayForGoal!(trials[name].goals[0]).invoke(task),/BUDGET_EXHAUSTED/);assert.equal(calls,before);}
  console.log('PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial');
  calls=0;
+ const runtimeTrial=await openEvaluationTrial(trials['goal-runtime'].id);let runtimeCalls=0;
+ const runtimeAdapter=fixtureEvaluationAdapter('eval-a',async request=>{
+  runtimeCalls++;const prompt=JSON.parse(request.messages[1].content);let output:any;
+  if(prompt.proposedReport)output={accepted:true,missing:[]};
+  else if(prompt.verifiedObservations){const source=prompt.verifiedObservations[0];output={status:'complete',summary:'Read verified fixture',requirements:[{requirement:prompt.objective,fulfilled:true,evidenceIds:[source.id]}],findings:[{text:'Fixture returns ok',executionId:source.id,quoteLine:source.lines.findIndex((x:string)=>x.includes('corrective-register'))}],limitations:[],steps:[]};}
+  else output={steps:[{capabilityId:'source.read',params:{channel:'record'}}]};
+  return {model:'fixture',usage:{inputTokens:5,outputTokens:10},output};
+ });
+ const composition=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(runtimeAdapter),trial:runtimeTrial,expectedCommit:runtimeTrial.spec.commit,workerId:'evaluation-fixture'});
+ for(let i=0;i<30;i++){await composition.runWorkTick();const done=(await pool.query("SELECT count(*)::int n FROM goals WHERE id=ANY($1::uuid[]) AND state='COMPLETED'",[trials['goal-runtime'].goals])).rows[0].n;if(done===3)break;}
+ const states=(await pool.query('SELECT id,state,planning_attempts FROM goals WHERE id=ANY($1::uuid[])',[trials['goal-runtime'].goals])).rows;
+ assert(states.every(x=>x.state==='COMPLETED'),JSON.stringify(states));
+ const coordinator=(await pool.query('SELECT state,planning_attempts FROM goals WHERE id=$1',[runtimeTrial.rootGoalId])).rows[0];assert.equal(coordinator.state,'NEW');assert.equal(coordinator.planning_attempts,0);
+ const runtimeUsed=(await pool.query('SELECT used,agent_used FROM evaluation_trials WHERE id=$1',[runtimeTrial.id])).rows[0];assert.equal(runtimeUsed.used.models,runtimeCalls);assert(runtimeCalls>=6&&runtimeCalls<=24);for(const id of trials['goal-runtime'].goals)assert(runtimeUsed.agent_used['goal.'+id].models<=8);
+ assert.equal((await pool.query('SELECT count(*)::int n FROM goal_read_reviews WHERE goal_id=ANY($1::uuid[])',[trials['goal-runtime'].goals])).rows[0].n,3);
+ console.log('PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting');
+ // Barriers occur after the SQL insert and after model acceptance, before COMMIT.
+ for(const phase of ['plan','review'])for(const reason of ['cancel','expire']){
+  const name='goal-runtime-'+phase+'-'+reason,t=await openEvaluationTrial(trials[name].id),id=trials[name].goals[0];
+  const c=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(runtimeAdapter),trial:t,expectedCommit:t.spec.commit,workerId:'guard-fixture'});
+  const original=Client.prototype.query;let barrier=false;
+  (Client.prototype as any).query=async function(...args:any[]){const result=await (original as any).apply(this,args);
+   if(!barrier&&String(args[0]).includes(phase==='plan'?'INSERT INTO plans(':'INSERT INTO goal_read_reviews(')&&args[1]?.[0]===id){barrier=true;
+    if(reason==='cancel')await pool.query('UPDATE evaluation_trials SET cancelled=true WHERE id=$1',[t.id]);else await new Promise(r=>setTimeout(r,1600));
+   }return result;};
+  try{for(let i=0;i<12&&!barrier;i++)await c.runWorkTick();}finally{Client.prototype.query=original;}
+  assert(barrier,name+' reached post-model insert barrier');
+  assert.equal((await pool.query('SELECT count(*)::int n FROM '+(phase==='plan'?'plans':'goal_read_reviews')+' WHERE goal_id=$1',[id])).rows[0].n,0,name+' rolls back child commit');
+  assert.notEqual((await pool.query('SELECT state FROM goals WHERE id=$1',[id])).rows[0].state,'COMPLETED');
+ }
+ for(const reason of ['cancel','expire']){
+  const name='goal-runtime-dispatch-'+reason,t=await openEvaluationTrial(trials[name].id),id=trials[name].goals[0];let dispatched=0;
+  await withTransaction(c=>t.reserve(c,{goalId:id,agentId:'goal.'+id,kind:'iteration',delta:{iterations:1}}));
+  if(reason==='cancel')await t.cancel();else await new Promise(r=>setTimeout(r,1600));
+  await assert.rejects(()=>admitEvaluationSource(t,id,async()=>{dispatched++;return {};}),/CANCELLED_OR_EXPIRED|AGENT_TIME_EXHAUSTED/);assert.equal(dispatched,0);
+ }
+ const untrusted=runtimeFixtureBundle(runtimeAdapter);untrusted.toolAdapters=[{capabilityId:'source.read',async execute(){throw Error('must never invoke unregistered transport');}}];
+ assert.throws(()=>createGoalEvaluationComposition({bundle:untrusted,trial:runtimeTrial,expectedCommit:runtimeTrial.spec.commit,workerId:'denied'}),/FROZEN_ADAPTER_REQUIRED/);
+ console.log('PASS cancellation/expiry after model return and before child plan/report COMMIT; before source dispatch; unregistered source transport refused');
  const cap=await run('model');await cap.call();await assert.rejects(cap.call,/BUDGET_EXHAUSTED/);assert.equal(calls,1);
  await pool.query("UPDATE goals SET state='REPLANNING',planning_attempts=0 WHERE id=$1",[cap.t.rootGoalId]);
  const reopened=await run('model');await assert.rejects(reopened.call,/BUDGET_EXHAUSTED/);assert.equal(calls,1);
@@ -131,7 +180,7 @@ async function parent(){
   await c.query("INSERT INTO organizations(id,name) VALUES($1,'Synthetic trial tests')",[org]);await c.query("INSERT INTO legal_entities(id,org_id,name) VALUES($1,$2,'Synthetic'),($3,$2,'Foreign')",[entity,org,foreign]);
   await enrollEvaluationCompany(c,entity);await enrollEvaluationCompany(c,foreign);
   await c.query(`CREATE ROLE ${role} LOGIN PASSWORD 'fixture-evaluation-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);made=true;
-  await c.query('BEGIN');try{await provisionRuntimeAccess(c,{schema,role,orgId:org,legalEntityId:entity});await provisionSpecialistAccess(c,{schema,role,orgId:org,legalEntityId:entity});await provisionEvaluationAccess(c,{schema,role,orgId:org,legalEntityId:entity});await c.query('COMMIT');}catch(e){await c.query('ROLLBACK');throw e;}
+  await c.query('BEGIN');try{await provisionIntegrationAccess(c,{schema,role,orgId:org,legalEntityId:entity});await provisionSpecialistAccess(c,{schema,role,orgId:org,legalEntityId:entity});await provisionEvaluationAccess(c,{schema,role,orgId:org,legalEntityId:entity});await c.query('COMMIT');}catch(e){await c.query('ROLLBACK');throw e;}
   await c.query(`INSERT INTO model_providers(provider_id,models,capabilities,privacy_class_allowed,health,cost_per_1k_input,cost_per_1k_output)
    VALUES('eval-a','["fixture"]','["planning"]','["INTERNAL"]','HEALTHY',0.001,0.001),('eval-b','["fixture"]','["planning"]','["INTERNAL"]','HEALTHY',0.002,0.002)`);
   const limits={...ceiling,models:4,tools:4,iterations:8,tokens:10000,costUsd:0.1,elapsedMs:120000,maxInputTokens:1000,maxOutputTokens:1000};
@@ -143,17 +192,19 @@ async function parent(){
    const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(['agent-time','admission-race'].includes(name)?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:goal,spec}),goal,entity:tenant};
   }
-  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money']){
+  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money','goal-runtime','goal-runtime-plan-cancel','goal-runtime-plan-expire','goal-runtime-review-cancel','goal-runtime-review-expire','goal-runtime-dispatch-cancel','goal-runtime-dispatch-expire']){
    const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Synthetic evaluation root','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
    const goals:string[]=[];for(let i=0;i<3;i++)goals.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'NEW','GREEN') RETURNING id",[randomUUID(),entity,root,['Compare supplied periods','Compare promises and deliveries','Inventory duplicate records'][i]])).rows[0].id);
-   const l={...limits,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1};
-   const per={...l,models:Math.min(l.models,8)};
-   const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:entity,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...l,models:0},...Object.fromEntries(goals.map(id=>['goal.'+id,per]))},prices,capabilityHash:evaluationBundleHash({capabilities:[],toolDefinitions:[],toolAdapters:[]})};
+   const l={...limits,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1,...(name.startsWith('goal-runtime')?{maxInputTokens:24000,maxOutputTokens:4000,tokens:672000}: {})};
+   const per={...l,models:Math.min(l.models,8),...(name.endsWith('-expire')?{elapsedMs:1500}: {})};
+   const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:entity,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...l,models:0},...Object.fromEntries(goals.map(id=>['goal.'+id,per]))},prices,capabilityHash:evaluationBundleHash(name.startsWith('goal-runtime')?runtimeFixtureBundle(null):{capabilities:[],toolDefinitions:[],toolAdapters:[]})};
+   if(name.startsWith('goal-runtime'))await c.query("UPDATE goals SET completion_definition='sam.read_report.v1',objective='Read and verify supplied fixture record' WHERE id=ANY($1::uuid[])",[goals]);
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:root,spec}),goal:root,entity,goals};
   }
+  await c.query("INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES('source.read','Fixture readback','db_query','{\"readback\":\"boolean\"}','{}')");
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='fixture-evaluation-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIALS:JSON.stringify(trials)};
-  const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:25000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
+  const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:45000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
   run('worker');
   const child=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',x=>output+=x);child.stderr.on('data',x=>output+=x);
   const started=Date.now();while(!output.includes('TRIAL_ATTEMPT_RESERVED')&&Date.now()-started<8000)await new Promise(r=>setTimeout(r,25));
