@@ -1,0 +1,33 @@
+FAIL tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+AssertionError [ERR_ASSERTION]: worker
+
+null !== 0
+
+    at run (/tmp/sam-generic-tree/tests/evaluation/budgets.ts:224:202)
+    at parent (/tmp/sam-generic-tree/tests/evaluation/budgets.ts:225:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/budgets.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T15:27:23.644Z","completedAt":"2026-10-23T15:28:10.229Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T15:27:23.646Z","completedAt":"2026-10-23T15:27:23.830Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T15:27:23.830Z","completedAt":"2026-10-23T15:28:10.229Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,60 @@
+$ docker run --rm --name sam-verify-1792769437141-6d9ad8a4-job-1 --label sam.verification.run=sam-verify-1792769437141-6d9ad8a4 --init --mount type=bind,src=/tmp/sam-verify-prIcfH/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY --env http_proxy --env https_proxy --env no_proxy --add-host proxy:172.31.12.109 --mount type=bind,src=/usr/local/share/ca-certificates/environment-proxy-ca.crt,dst=/tmp/verification-ca.pem,readonly --env NODE_EXTRA_CA_CERTS=/tmp/verification-ca.pem --env PIP_CERT=/tmp/verification-ca.pem node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 npm ci --include=dev --cache /tmp/npm-cache --fetch-retries=1 --fetch-timeout=20000
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '/app/node_modules/@modelcontextprotocol/server',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir '/app/node_modules/@modelcontextprotocol/server/dist'] {
+npm warn cleanup       errno: -39,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: '/app/node_modules/@modelcontextprotocol/server/dist'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '/app/node_modules/@modelcontextprotocol',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir '/app/node_modules/@modelcontextprotocol/server/dist'] {
+npm warn cleanup       errno: -39,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: '/app/node_modules/@modelcontextprotocol/server/dist'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '/app/node_modules',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir '/app/node_modules/@modelcontextprotocol/server/dist'] {
+npm warn cleanup       errno: -39,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: '/app/node_modules/@modelcontextprotocol/server/dist'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '/app/node_modules/@modelcontextprotocol/sdk',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir '/app/node_modules/@modelcontextprotocol/sdk/dist/esm/examples/server'] {
+npm warn cleanup       errno: -39,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: '/app/node_modules/@modelcontextprotocol/sdk/dist/esm/examples/server'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat '/app/node_modules/@electric-sql/pglite/dist'
+npm error code ENOSPC
+npm error syscall mkdir
+npm error path /tmp/npm-cache
+npm error errno -28
+npm error nospc ENOSPC: no space left on device, mkdir '/tmp/npm-cache'
+npm error nospc There appears to be insufficient space on your system to finish.
+npm error nospc Clear up some disk space and try again.
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
+npm error Log files were not written due to an error writing to the directory: /tmp/npm-cache/_logs
+npm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal

@@ -1,0 +1,456 @@
+$ docker image inspect node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+[]
+Error response from daemon: No such image: node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+$ docker pull --platform linux/amd64 node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+docker.io/library/node@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2: Pulling from library/node
+8a051559ff62: Pulling fs layer
+55f3510f14ae: Pulling fs layer
+e0959ba39613: Pulling fs layer
+8145ffc7a2f0: Pulling fs layer
+c989958b006c: Pulling fs layer
+536933331502: Pulling fs layer
+8145ffc7a2f0: Waiting
+c989958b006c: Waiting
+fc8fca04e403: Pulling fs layer
+536933331502: Waiting
+2371d54c8ec8: Pulling fs layer
+2371d54c8ec8: Waiting
+55f3510f14ae: Verifying Checksum
+55f3510f14ae: Download complete
+8a051559ff62: Download complete
+e0959ba39613: Download complete
+c989958b006c: Verifying Checksum
+c989958b006c: Download complete
+fc8fca04e403: Verifying Checksum
+fc8fca04e403: Download complete
+8a051559ff62: Pull complete
+2371d54c8ec8: Verifying Checksum
+2371d54c8ec8: Download complete
+536933331502: Verifying Checksum
+536933331502: Download complete
+55f3510f14ae: Pull complete
+e0959ba39613: Pull complete
+8145ffc7a2f0: Verifying Checksum
+8145ffc7a2f0: Download complete
+8145ffc7a2f0: Pull complete
+c989958b006c: Pull complete
+536933331502: Pull complete
+fc8fca04e403: Pull complete
+2371d54c8ec8: Pull complete
+Digest: sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+Status: Downloaded newer image for node@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+docker.io/library/node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+$ docker image inspect node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2
+[
+    {
+        "Id": "sha256:eefceac94552a7e7e9da532feb53139a8630e3934b862662ce1d7cb877772c86",
+        "RepoTags": [],
+        "RepoDigests": [
+            "node@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-21T11:35:41.796207711Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 1131312003,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:bff6114e14f43741aabe79549a5c46135d29da921864159fc2ac757d93d96e2e",
+                "sha256:6c33392e2024522fa66db76af1290c71b768ca40607c7624c6b825f618bbbe6e",
+                "sha256:b96b611cc62035632fb10f39e20d3e81b62522f9f1c5f3e680f64cd2eb781622",
+                "sha256:c9484ef8e75ab43c5509f5a3fddf0bd2d751f4e100a37a174596802563b9b04e",
+                "sha256:f9dcc62eba1db24289e59cf68be0bc87b15313edbf41c178175d3ccc8d8395f6",
+                "sha256:afdfed5104145a0ef44c4272a2fa49e2ab21dc58cc4e327244b34a02f769fd11",
+                "sha256:7a12d867865f2eb5ec0574b68087aaa8eab552f04d0f912bd328b9ec018e33f8",
+                "sha256:43aa4012a4257e2e7265c6f2f3db942a26c2e8e362bf9044b35622d48f3a5de2"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "node"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.4",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Labels": null,
+            "OnBuild": null,
+            "User": "",
+            "Volumes": null,
+            "WorkingDir": ""
+        }
+    }
+]
+$ docker image inspect node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc
+[
+    {
+        "Id": "sha256:c79227476e31e0f5410cfc4578f1f9a59300510491f2f6f0b5eaf956dbef4986",
+        "RepoTags": [],
+        "RepoDigests": [
+            "node@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-21T11:35:43.087410982Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 168217033,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:74d97c428c51a828f9051a7a40a53ff1fc99e54fc30323ce36760701b0b7f711",
+                "sha256:7274ff4dd06a0a4fd83bd08fd260502d9649c896f2003c4755a746b5fea9d023",
+                "sha256:79b7c554459a6a12f07ce664510b6522652928ae2371b8f2243a1e6b1f819732",
+                "sha256:363e4f25a5ca20cd46b16c801ed078baf864af0f36c8ba4441c7feb6a4539b20"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "node"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.4",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Labels": null,
+            "OnBuild": null,
+            "User": "",
+            "Volumes": null,
+            "WorkingDir": "/"
+        }
+    }
+]
+$ docker image inspect node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc
+[
+    {
+        "Id": "sha256:c79227476e31e0f5410cfc4578f1f9a59300510491f2f6f0b5eaf956dbef4986",
+        "RepoTags": [],
+        "RepoDigests": [
+            "node@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-21T11:35:43.087410982Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 168217033,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:74d97c428c51a828f9051a7a40a53ff1fc99e54fc30323ce36760701b0b7f711",
+                "sha256:7274ff4dd06a0a4fd83bd08fd260502d9649c896f2003c4755a746b5fea9d023",
+                "sha256:79b7c554459a6a12f07ce664510b6522652928ae2371b8f2243a1e6b1f819732",
+                "sha256:363e4f25a5ca20cd46b16c801ed078baf864af0f36c8ba4441c7feb6a4539b20"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "node"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=22.23.4",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Labels": null,
+            "OnBuild": null,
+            "User": "",
+            "Volumes": null,
+            "WorkingDir": "/"
+        }
+    }
+]
+$ docker image inspect pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+[
+    {
+        "Id": "sha256:4b4956e2ab1f0aec9779dfca20366a9963a3f24c34269c3a115dd838387f0734",
+        "RepoTags": [
+            "pgvector/pgvector:pg15"
+        ],
+        "RepoDigests": [
+            "pgvector/pgvector@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-01T17:32:35.207322837Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 438908650,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:34467cc93912af891dfee8a3902adf9b4f355a9bca4eaa46f658d1181a21de0d",
+                "sha256:00c21fdbfbca2a423eccc2e3e4cca94b66ccf7dea0478dbc4019b793fe9e38b1",
+                "sha256:3a4246ed41469a5794dfb1347c55cf24853669f04557ea4bacc84ee20bf8fece",
+                "sha256:2a7d01d2d8c11a10c45340d3c44e7fb12140f78b43337e4a3eb5989798dcc063",
+                "sha256:e31e8a4cd244914fd2a56dec3fdde7b03c99d0b0a2668d7b675fd5b74d12aa69",
+                "sha256:777c5ace403d020561d6c3f39f12a46c86d961ee106c119eacca8a9415ce5b82",
+                "sha256:95c5ad364cbfe945221e8b2f6ac6222a9946548159dcfdd9c88e85f651a590dd",
+                "sha256:45e3d5353f3a5cc1adc35b81272b70b8b2d6d60807d2d9869b04bd2f48f37291",
+                "sha256:3f72e83dee0c9144a86e42e4af5c659ebe0421822ad1bb17d10e69d0cb7e3a34",
+                "sha256:15cd01019b87eac0a67d5b691cdf2d42514490b615abc31f0fda1990b4793bdd",
+                "sha256:09f7642224255d8d9d13540e2d87bdced816099689edd478cc82449d00d1fc38",
+                "sha256:5076dd9d7d0005086ec9312bd725385726b9907c750878e9f6a51035e70f73bc",
+                "sha256:59e18b52efdb0de59b71c6dc99aeca79e5e59b9650b5cb717a3d455452170c1e",
+                "sha256:955acfc3bc92c2d8701d1b0cb960703ee98bfc751b8a1d4623219e86e9a7542b",
+                "sha256:f0cf3370d9e7a815da21fc8f4f2a78aa8bb36a502cfc70b14d452dd870c41568",
+                "sha256:76667ccae1baecce4b13e9e3622b0f74dd6eb5820f3866a208cace9e0a1af16b"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "postgres"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/15/bin",
+                "GOSU_VERSION=1.19",
+                "LANG=en_US.utf8",
+                "PG_MAJOR=15",
+                "PG_VERSION=15.19-1.pgdg12+2",
+                "PGDATA=/var/lib/postgresql/data"
+            ],
+            "ExposedPorts": {
+                "5432/tcp": {}
+            },
+            "Labels": null,
+            "OnBuild": null,
+            "StopSignal": "SIGINT",
+            "User": "",
+            "Volumes": {
+                "/var/lib/postgresql/data": {}
+            },
+            "WorkingDir": ""
+        }
+    }
+]
+$ docker image inspect pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+[
+    {
+        "Id": "sha256:4b4956e2ab1f0aec9779dfca20366a9963a3f24c34269c3a115dd838387f0734",
+        "RepoTags": [
+            "pgvector/pgvector:pg15"
+        ],
+        "RepoDigests": [
+            "pgvector/pgvector@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-01T17:32:35.207322837Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 438908650,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:34467cc93912af891dfee8a3902adf9b4f355a9bca4eaa46f658d1181a21de0d",
+                "sha256:00c21fdbfbca2a423eccc2e3e4cca94b66ccf7dea0478dbc4019b793fe9e38b1",
+                "sha256:3a4246ed41469a5794dfb1347c55cf24853669f04557ea4bacc84ee20bf8fece",
+                "sha256:2a7d01d2d8c11a10c45340d3c44e7fb12140f78b43337e4a3eb5989798dcc063",
+                "sha256:e31e8a4cd244914fd2a56dec3fdde7b03c99d0b0a2668d7b675fd5b74d12aa69",
+                "sha256:777c5ace403d020561d6c3f39f12a46c86d961ee106c119eacca8a9415ce5b82",
+                "sha256:95c5ad364cbfe945221e8b2f6ac6222a9946548159dcfdd9c88e85f651a590dd",
+                "sha256:45e3d5353f3a5cc1adc35b81272b70b8b2d6d60807d2d9869b04bd2f48f37291",
+                "sha256:3f72e83dee0c9144a86e42e4af5c659ebe0421822ad1bb17d10e69d0cb7e3a34",
+                "sha256:15cd01019b87eac0a67d5b691cdf2d42514490b615abc31f0fda1990b4793bdd",
+                "sha256:09f7642224255d8d9d13540e2d87bdced816099689edd478cc82449d00d1fc38",
+                "sha256:5076dd9d7d0005086ec9312bd725385726b9907c750878e9f6a51035e70f73bc",
+                "sha256:59e18b52efdb0de59b71c6dc99aeca79e5e59b9650b5cb717a3d455452170c1e",
+                "sha256:955acfc3bc92c2d8701d1b0cb960703ee98bfc751b8a1d4623219e86e9a7542b",
+                "sha256:f0cf3370d9e7a815da21fc8f4f2a78aa8bb36a502cfc70b14d452dd870c41568",
+                "sha256:76667ccae1baecce4b13e9e3622b0f74dd6eb5820f3866a208cace9e0a1af16b"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "postgres"
+            ],
+            "Entrypoint": [
+                "docker-entrypoint.sh"
+            ],
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/15/bin",
+                "GOSU_VERSION=1.19",
+                "LANG=en_US.utf8",
+                "PG_MAJOR=15",
+                "PG_VERSION=15.19-1.pgdg12+2",
+                "PGDATA=/var/lib/postgresql/data"
+            ],
+            "ExposedPorts": {
+                "5432/tcp": {}
+            },
+            "Labels": null,
+            "OnBuild": null,
+            "StopSignal": "SIGINT",
+            "User": "",
+            "Volumes": {
+                "/var/lib/postgresql/data": {}
+            },
+            "WorkingDir": ""
+        }
+    }
+]
+$ docker image inspect python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
+[
+    {
+        "Id": "sha256:b4403f3b7acf5e0700a5dd4e7ab01456d62b557a208a04f8a42d3470d93b5730",
+        "RepoTags": [],
+        "RepoDigests": [
+            "python@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-21T01:09:58.372959533Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 125060642,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:a70f6272827f64e1427d048ced77491aab5d64ab95725e56920802ff391197d7",
+                "sha256:535a5d38abecfac4fa49da33fa942b53c53c463bd0d39a860967e46eb03faafe",
+                "sha256:6972161a9a77e7c1afb997daac15abc54f5b70c7b40b814601f53e038d8c398c",
+                "sha256:d86e9bd004831a6069b9a02e5caac80b73526315f52719079b4017b099956ed2"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "python3"
+            ],
+            "Entrypoint": null,
+            "Env": [
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+                "PYTHON_VERSION=3.11.17",
+                "PYTHON_SHA256=bfb74ad39efae27cda510f134ab408e00f9992c56851cfc0b1cdb5646da11599"
+            ],
+            "Labels": null,
+            "OnBuild": null,
+            "User": "",
+            "Volumes": null,
+            "WorkingDir": ""
+        }
+    }
+]
+$ docker image inspect python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
+[
+    {
+        "Id": "sha256:b4403f3b7acf5e0700a5dd4e7ab01456d62b557a208a04f8a42d3470d93b5730",
+        "RepoTags": [],
+        "RepoDigests": [
+            "python@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-10-21T01:09:58.372959533Z",
+        "DockerVersion": "",
+        "Author": "",
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 125060642,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "vfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:a70f6272827f64e1427d048ced77491aab5d64ab95725e56920802ff391197d7",
+                "sha256:535a5d38abecfac4fa49da33fa942b53c53c463bd0d39a860967e46eb03faafe",
+                "sha256:6972161a9a77e7c1afb997daac15abc54f5b70c7b40b814601f53e038d8c398c",
+                "sha256:d86e9bd004831a6069b9a02e5caac80b73526315f52719079b4017b099956ed2"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        },
+        "Config": {
+            "Cmd": [
+                "python3"
+            ],
+            "Entrypoint": null,
+            "Env": [
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+                "PYTHON_VERSION=3.11.17",
+                "PYTHON_SHA256=bfb74ad39efae27cda510f134ab408e00f9992c56851cfc0b1cdb5646da11599"
+            ],
+            "Labels": null,
+            "OnBuild": null,
+            "User": "",
+            "Volumes": null,
+            "WorkingDir": ""
+        }
+    }
+]

@@ -1,0 +1,11 @@
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792769437141-6d9ad8a4-pg
+sam-verify-1792769437141-6d9ad8a4
+$ docker rm --force --volumes sam-verify-1792769437141-6d9ad8a4-pg
+sam-verify-1792769437141-6d9ad8a4-pg
+$ docker inspect --format '{{index .Config.Labels "sam.verification.run"}}' sam-verify-1792769437141-6d9ad8a4-job-1
+
+Error: No such object: sam-verify-1792769437141-6d9ad8a4-job-1
+$ docker network inspect --format '{{index .Labels "sam.verification.run"}}' sam-verify-1792769437141-6d9ad8a4-net
+sam-verify-1792769437141-6d9ad8a4
+$ docker network rm sam-verify-1792769437141-6d9ad8a4-net
+sam-verify-1792769437141-6d9ad8a4-net

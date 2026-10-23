@@ -1,0 +1,1357 @@
+{
+  "schemaVersion": 1,
+  "runId": "sam-verify-1792769437141-6d9ad8a4",
+  "startedAt": "2026-10-23T15:30:37.142Z",
+  "completedAt": "2026-10-23T15:31:50.875Z",
+  "status": "FAIL",
+  "classification": "INDEPENDENT_LOCAL_SYNTHETIC_ACCEPTANCE_NOT_HOSTED_OR_PRODUCTION",
+  "source": {
+    "sha": "1370842ad3d3f0ecf63ef5227e10386a69690b74",
+    "tree": "3deb7d17120aff5f72e4d48cae23a4fcc71c616b",
+    "clean": true,
+    "fileManifestHash": "2a06a08edcfeba6d470f152bc019abe1e2c8516e3f67a8566888f47af26389a7",
+    "implementationDigest": "6d36e8f31b9c33d7a36baa8ccdbf5e8b13c310232b5416ea599bd2bae596882e"
+  },
+  "host": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "docker": {
+      "Client": {
+        "Version": "28.4.0",
+        "ApiVersion": "1.51",
+        "DefaultAPIVersion": "1.51",
+        "GitCommit": "d8eb465",
+        "GoVersion": "go1.24.7",
+        "Os": "linux",
+        "Arch": "amd64",
+        "BuildTime": "Wed Sep  3 20:56:28 2025",
+        "Context": "default"
+      },
+      "Server": {
+        "Platform": {
+          "Name": "Docker Engine - Community"
+        },
+        "Components": [
+          {
+            "Name": "Engine",
+            "Version": "28.4.0",
+            "Details": {
+              "ApiVersion": "1.51",
+              "Arch": "amd64",
+              "BuildTime": "Wed Sep  3 20:58:50 2025",
+              "Experimental": "false",
+              "GitCommit": "249d679",
+              "GoVersion": "go1.24.7",
+              "KernelVersion": "6.18.55",
+              "MinAPIVersion": "1.24",
+              "Os": "linux"
+            }
+          },
+          {
+            "Name": "containerd",
+            "Version": "v1.7.28",
+            "Details": {
+              "GitCommit": "b98a3aace656320842a23f4a392a33f46af97866"
+            }
+          },
+          {
+            "Name": "runc",
+            "Version": "1.3.0",
+            "Details": {
+              "GitCommit": "v1.3.0-0-g4ca628d"
+            }
+          },
+          {
+            "Name": "docker-init",
+            "Version": "0.19.0",
+            "Details": {
+              "GitCommit": "de40ad0"
+            }
+          }
+        ],
+        "Version": "28.4.0",
+        "ApiVersion": "1.51",
+        "MinAPIVersion": "1.24",
+        "GitCommit": "249d679",
+        "GoVersion": "go1.24.7",
+        "Os": "linux",
+        "Arch": "amd64",
+        "KernelVersion": "6.18.55",
+        "BuildTime": "2025-09-03T20:58:50.000000000+00:00"
+      }
+    },
+    "compose": "2.40.3"
+  },
+  "pins": {
+    "platform": "linux/amd64",
+    "node": "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+    "productionBase": "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc",
+    "postgres": "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9",
+    "python": "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+    "psycopg2Binary": "2.9.13",
+    "actionlint": {
+      "version": "1.7.7",
+      "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz",
+      "sha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
+    }
+  },
+  "images": [
+    {
+      "role": "node",
+      "ref": "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+      "id": "sha256:eefceac94552a7e7e9da532feb53139a8630e3934b862662ce1d7cb877772c86",
+      "repoDigests": [
+        "node@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "productionBase",
+      "ref": "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc",
+      "id": "sha256:c79227476e31e0f5410cfc4578f1f9a59300510491f2f6f0b5eaf956dbef4986",
+      "repoDigests": [
+        "node@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "postgres",
+      "ref": "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9",
+      "id": "sha256:4b4956e2ab1f0aec9779dfca20366a9963a3f24c34269c3a115dd838387f0734",
+      "repoDigests": [
+        "pgvector/pgvector@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    {
+      "role": "python",
+      "ref": "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8",
+      "id": "sha256:b4403f3b7acf5e0700a5dd4e7ab01456d62b557a208a04f8a42d3470d93b5730",
+      "repoDigests": [
+        "python@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+      ],
+      "os": "linux",
+      "architecture": "amd64"
+    }
+  ],
+  "steps": [
+    {
+      "name": "preflight",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T15:30:37.144Z",
+      "completedAt": "2026-10-23T15:30:37.582Z",
+      "commands": [
+        {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.151Z",
+          "completedAt": "2026-10-23T15:30:37.157Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD^{tree}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.157Z",
+          "completedAt": "2026-10-23T15:30:37.161Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=normal"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.161Z",
+          "completedAt": "2026-10-23T15:30:37.167Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "context",
+            "inspect"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.167Z",
+          "completedAt": "2026-10-23T15:30:37.195Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "version",
+            "--format",
+            "{{json .}}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.195Z",
+          "completedAt": "2026-10-23T15:30:37.226Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "version",
+            "--short"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.227Z",
+          "completedAt": "2026-10-23T15:30:37.347Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "buildx",
+            "version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.347Z",
+          "completedAt": "2026-10-23T15:30:37.495Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "info",
+            "--format",
+            "{{.OSType}}/{{.Architecture}}"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.495Z",
+          "completedAt": "2026-10-23T15:30:37.567Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "git",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.567Z",
+          "completedAt": "2026-10-23T15:30:37.569Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "curl",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.569Z",
+          "completedAt": "2026-10-23T15:30:37.580Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "tar",
+            "--version"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.580Z",
+          "completedAt": "2026-10-23T15:30:37.582Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/01-preflight.log"
+    },
+    {
+      "name": "snapshot",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T15:30:37.583Z",
+      "completedAt": "2026-10-23T15:30:37.673Z",
+      "commands": [
+        {
+          "argv": [
+            "git",
+            "archive",
+            "--format=tar",
+            "--output",
+            "/tmp/sam-verify-prIcfH/source.tar",
+            "1370842ad3d3f0ecf63ef5227e10386a69690b74"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.584Z",
+          "completedAt": "2026-10-23T15:30:37.620Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "tar",
+            "-xf",
+            "/tmp/sam-verify-prIcfH/source.tar",
+            "-C",
+            "/tmp/sam-verify-prIcfH/source"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.620Z",
+          "completedAt": "2026-10-23T15:30:37.642Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/02-snapshot.log"
+    },
+    {
+      "name": "images",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T15:30:37.674Z",
+      "completedAt": "2026-10-23T15:31:17.245Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.675Z",
+          "completedAt": "2026-10-23T15:30:37.691Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "pull",
+            "--platform",
+            "linux/amd64",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:30:37.691Z",
+          "completedAt": "2026-10-23T15:31:17.026Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.026Z",
+          "completedAt": "2026-10-23T15:31:17.080Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.081Z",
+          "completedAt": "2026-10-23T15:31:17.127Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.127Z",
+          "completedAt": "2026-10-23T15:31:17.164Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.165Z",
+          "completedAt": "2026-10-23T15:31:17.182Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.182Z",
+          "completedAt": "2026-10-23T15:31:17.201Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.201Z",
+          "completedAt": "2026-10-23T15:31:17.228Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.228Z",
+          "completedAt": "2026-10-23T15:31:17.245Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/03-images.log"
+    },
+    {
+      "name": "isolated-postgres",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T15:31:17.247Z",
+      "completedAt": "2026-10-23T15:31:28.513Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "network",
+            "create",
+            "--internal",
+            "--label",
+            "sam.verification.run=sam-verify-1792769437141-6d9ad8a4",
+            "sam-verify-1792769437141-6d9ad8a4-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.247Z",
+          "completedAt": "2026-10-23T15:31:17.293Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--detach",
+            "--name",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "--label",
+            "sam.verification.run=sam-verify-1792769437141-6d9ad8a4",
+            "--network",
+            "sam-verify-1792769437141-6d9ad8a4-net",
+            "--env",
+            "POSTGRES_DB=sam_core_test",
+            "--env",
+            "POSTGRES_PASSWORD=verification-fixture",
+            "pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:17.293Z",
+          "completedAt": "2026-10-23T15:31:24.590Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:24.590Z",
+          "completedAt": "2026-10-23T15:31:24.755Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:25.256Z",
+          "completedAt": "2026-10-23T15:31:25.387Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:25.887Z",
+          "completedAt": "2026-10-23T15:31:25.992Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:26.493Z",
+          "completedAt": "2026-10-23T15:31:26.617Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:27.118Z",
+          "completedAt": "2026-10-23T15:31:27.362Z",
+          "exitCode": 2,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "--env",
+            "PGPASSWORD=verification-fixture",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-h",
+            "127.0.0.1",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-Atqc",
+            "SELECT 1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:27.862Z",
+          "completedAt": "2026-10-23T15:31:27.960Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_core_test_lifecycle"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:27.960Z",
+          "completedAt": "2026-10-23T15:31:28.124Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_core_test_application"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:28.124Z",
+          "completedAt": "2026-10-23T15:31:28.389Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "exec",
+            "sam-verify-1792769437141-6d9ad8a4-pg",
+            "psql",
+            "-U",
+            "postgres",
+            "-d",
+            "sam_core_test",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE sam_greenfield"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:28.389Z",
+          "completedAt": "2026-10-23T15:31:28.513Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/04-isolated-postgres.log"
+    },
+    {
+      "name": "node-dependencies",
+      "kind": "infrastructure",
+      "status": "FAIL",
+      "startedAt": "2026-10-23T15:31:28.518Z",
+      "completedAt": "2026-10-23T15:31:50.369Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "run",
+            "--rm",
+            "--name",
+            "sam-verify-1792769437141-6d9ad8a4-job-1",
+            "--label",
+            "sam.verification.run=sam-verify-1792769437141-6d9ad8a4",
+            "--init",
+            "--mount",
+            "type=bind,src=/tmp/sam-verify-prIcfH/source,dst=/app",
+            "--workdir",
+            "/app",
+            "--user",
+            "1000:1000",
+            "--env",
+            "HOME=/tmp",
+            "--env",
+            "HTTP_PROXY",
+            "--env",
+            "HTTPS_PROXY",
+            "--env",
+            "NO_PROXY",
+            "--env",
+            "http_proxy",
+            "--env",
+            "https_proxy",
+            "--env",
+            "no_proxy",
+            "--add-host",
+            "proxy:172.31.12.109",
+            "--mount",
+            "type=bind,src=/usr/local/share/ca-certificates/environment-proxy-ca.crt,dst=/tmp/verification-ca.pem,readonly",
+            "--env",
+            "NODE_EXTRA_CA_CERTS=/tmp/verification-ca.pem",
+            "--env",
+            "PIP_CERT=/tmp/verification-ca.pem",
+            "node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2",
+            "npm",
+            "ci",
+            "--include=dev",
+            "--cache",
+            "/tmp/npm-cache",
+            "--fetch-retries=1",
+            "--fetch-timeout=20000"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:28.520Z",
+          "completedAt": "2026-10-23T15:31:50.369Z",
+          "exitCode": 228,
+          "signal": null
+        }
+      ],
+      "log": "logs/05-node-dependencies.log",
+      "reason": "node-dependencies: exit 228 (see logs/05-node-dependencies.log)"
+    },
+    {
+      "name": "python-dependencies",
+      "kind": "infrastructure",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/06-python-dependencies.log"
+    },
+    {
+      "name": "runtime-versions",
+      "kind": "infrastructure",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/07-runtime-versions.log"
+    },
+    {
+      "name": "workflow-tool",
+      "kind": "infrastructure",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/08-workflow-tool.log"
+    },
+    {
+      "name": "workflow-validation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/09-workflow-validation.log"
+    },
+    {
+      "name": "configuration-validation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/10-configuration-validation.log"
+    },
+    {
+      "name": "typecheck",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/11-typecheck.log"
+    },
+    {
+      "name": "regression",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/12-regression.log"
+    },
+    {
+      "name": "core-reliability",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/13-core-reliability.log"
+    },
+    {
+      "name": "provider-auth",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/14-provider-auth.log"
+    },
+    {
+      "name": "postgres-tls",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/15-postgres-tls.log"
+    },
+    {
+      "name": "contracts",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/16-contracts.log"
+    },
+    {
+      "name": "synthetic-pilot",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/17-synthetic-pilot.log"
+    },
+    {
+      "name": "managed-schema",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/18-managed-schema.log"
+    },
+    {
+      "name": "local-bundle",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/19-local-bundle.log"
+    },
+    {
+      "name": "closed-setup",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/20-closed-setup.log"
+    },
+    {
+      "name": "database-contract",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/21-database-contract.log"
+    },
+    {
+      "name": "prelaunch-gate",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/22-prelaunch-gate.log"
+    },
+    {
+      "name": "service-provisioning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/23-service-provisioning.log"
+    },
+    {
+      "name": "operator-provisioning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/24-operator-provisioning.log"
+    },
+    {
+      "name": "provisioning-backup-recovery",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/25-provisioning-backup-recovery.log"
+    },
+    {
+      "name": "render-migration-compatibility",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/26-render-migration-compatibility.log"
+    },
+    {
+      "name": "render-google-oauth-contracts",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/27-render-google-oauth-contracts.log"
+    },
+    {
+      "name": "integration-migrations",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/28-integration-migrations.log"
+    },
+    {
+      "name": "integration-oauth-mcp",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/29-integration-oauth-mcp.log"
+    },
+    {
+      "name": "integration-orchestration",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/30-integration-orchestration.log"
+    },
+    {
+      "name": "specialist-reasoning",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/31-specialist-reasoning.log"
+    },
+    {
+      "name": "specialist-gateway",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/32-specialist-gateway.log"
+    },
+    {
+      "name": "specialist-provenance",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/33-specialist-provenance.log"
+    },
+    {
+      "name": "specialist-learning-fairness",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/34-specialist-learning-fairness.log"
+    },
+    {
+      "name": "specialist-evaluation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/35-specialist-evaluation.log"
+    },
+    {
+      "name": "evaluation-budget",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/36-evaluation-budget.log"
+    },
+    {
+      "name": "evaluation-adapter",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/37-evaluation-adapter.log"
+    },
+    {
+      "name": "evaluation-orchestration",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/38-evaluation-orchestration.log"
+    },
+    {
+      "name": "evaluation-independent-review",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/39-evaluation-independent-review.log"
+    },
+    {
+      "name": "evaluation-commercial-market",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/40-evaluation-commercial-market.log"
+    },
+    {
+      "name": "evaluation-commercial-profitability",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/41-evaluation-commercial-profitability.log"
+    },
+    {
+      "name": "evaluation-commercial-suppliers",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/42-evaluation-commercial-suppliers.log"
+    },
+    {
+      "name": "migration-upgrade-rollback",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/43-migration-upgrade-rollback.log"
+    },
+    {
+      "name": "specialist-restart-prepare",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/44-specialist-restart-prepare.log"
+    },
+    {
+      "name": "evaluation-restart-prepare",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/45-evaluation-restart-prepare.log"
+    },
+    {
+      "name": "postgres-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/46-postgres-restart.log"
+    },
+    {
+      "name": "migration-after-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/47-migration-after-restart.log"
+    },
+    {
+      "name": "specialist-restart-check",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/48-specialist-restart-check.log"
+    },
+    {
+      "name": "evaluation-restart-check",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/49-evaluation-restart-check.log"
+    },
+    {
+      "name": "phase0-migrations",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/50-phase0-migrations.log"
+    },
+    {
+      "name": "phase0-acceptance",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/51-phase0-acceptance.log"
+    },
+    {
+      "name": "phase0-postgres",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/52-phase0-postgres.log"
+    },
+    {
+      "name": "tenant-isolation",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/53-tenant-isolation.log"
+    },
+    {
+      "name": "fail-closed-security",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/54-fail-closed-security.log"
+    },
+    {
+      "name": "clean-image",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/55-clean-image.log"
+    },
+    {
+      "name": "image-contract",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/56-image-contract.log"
+    },
+    {
+      "name": "application-startup-restart",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/57-application-startup-restart.log"
+    },
+    {
+      "name": "source-integrity",
+      "kind": "test",
+      "status": "NOT_RUN",
+      "startedAt": null,
+      "completedAt": null,
+      "commands": [],
+      "log": "logs/58-source-integrity.log"
+    },
+    {
+      "name": "cleanup",
+      "kind": "infrastructure",
+      "status": "PASS",
+      "startedAt": "2026-10-23T15:31:50.371Z",
+      "completedAt": "2026-10-23T15:31:50.873Z",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792769437141-6d9ad8a4-pg"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:50.372Z",
+          "completedAt": "2026-10-23T15:31:50.391Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "rm",
+            "--force",
+            "--volumes",
+            "sam-verify-1792769437141-6d9ad8a4-pg"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:50.391Z",
+          "completedAt": "2026-10-23T15:31:50.784Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{index .Config.Labels \"sam.verification.run\"}}",
+            "sam-verify-1792769437141-6d9ad8a4-job-1"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:50.784Z",
+          "completedAt": "2026-10-23T15:31:50.809Z",
+          "exitCode": 1,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "network",
+            "inspect",
+            "--format",
+            "{{index .Labels \"sam.verification.run\"}}",
+            "sam-verify-1792769437141-6d9ad8a4-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:50.810Z",
+          "completedAt": "2026-10-23T15:31:50.825Z",
+          "exitCode": 0,
+          "signal": null
+        },
+        {
+          "argv": [
+            "docker",
+            "network",
+            "rm",
+            "sam-verify-1792769437141-6d9ad8a4-net"
+          ],
+          "cwd": "/tmp/sam-generic-tree",
+          "startedAt": "2026-10-23T15:31:50.825Z",
+          "completedAt": "2026-10-23T15:31:50.869Z",
+          "exitCode": 0,
+          "signal": null
+        }
+      ],
+      "log": "logs/59-cleanup.log"
+    }
+  ],
+  "excludedChecks": [
+    {
+      "name": "GitHub-hosted execution and effective merge governance",
+      "status": "SKIP",
+      "reason": "Not performed; account restriction and rules remain external gates"
+    },
+    {
+      "name": "Staging, production, live providers, paid model calls and customer data",
+      "status": "SKIP",
+      "reason": "Outside authorization; no readiness claim"
+    }
+  ],
+  "unresolvedDefects": [
+    "node-dependencies: exit 228 (see logs/05-node-dependencies.log)"
+  ],
+  "safety": {
+    "publishedPorts": 0,
+    "productionCredentialsInherited": false,
+    "remoteDatabaseInputAccepted": false,
+    "githubStatusChecksWritten": false,
+    "merge": false,
+    "deployment": false,
+    "billingChanges": false
+  },
+  "artifacts": {
+    "logs/01-preflight.log": "1403e72e2e20e46cc591bc513edd4bd01c39ef5b73b77e66d855947a57b007e3",
+    "logs/02-snapshot.log": "80df3d1d8aa12417a46bbe89230bead749cd389e9fd84413017df16d0f3a05d1",
+    "logs/03-images.log": "d3f15e35ed562331a7b03c09005eb02b1cca719c180695b547b55dc3d925b457",
+    "logs/04-isolated-postgres.log": "88f572046728a850ca6947b39a41b88ca113a7463d9c837baead040a89551853",
+    "logs/05-node-dependencies.log": "df8cd57565b1c75468e63fcad0bd28172a8221f9b7dcc4e0fd9e940637c939c4",
+    "logs/59-cleanup.log": "caaa49d9b3a6af0326667ecce80a7c6046641db000e6767c4012672d44a30703",
+    "metadata/source-files.json": "2a06a08edcfeba6d470f152bc019abe1e2c8516e3f67a8566888f47af26389a7"
+  }
+}
