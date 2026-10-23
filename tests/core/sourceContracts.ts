@@ -25,7 +25,7 @@ async function main(){
  assert.equal(item.required,undefined,'raw financial fields are optional');assert.equal(readOutputMetadata('google_mcp_search_drive_files')?.schemaStatus,'UNKNOWN');
  const discovered=withReadOutputMetadata({...f.bundle.raw,capabilities:[{...f.bundle.raw.capabilities[0],capabilityId:'bol_get_order'}]});
  const descriptors=new CapabilityCatalog(discovered.capabilities).planningDescriptors();assert.equal((descriptors[0].output.schema as any).properties.data.properties.orderItems.items.properties.unitPrice.type,'number');
- assert(meta.limitations.some(x=>x.includes('not reviewed monetary')));
+ assert(meta.limitations.some(x=>x.includes('currency UNKNOWN')));
  assert(!REVIEWED_OUTPUT_CONTRACTS.find(c=>c.capabilityId==='bol_get_order')!.extraction.columns.unitPrice,'metadata must not silently create monetary extraction');
 
  assert.deepEqual(evidenceReleaseContracts(f.bundle),[],'ordinary startup remains inactive');

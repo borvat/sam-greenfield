@@ -28,8 +28,8 @@ export class DriveSearchVerifier implements VerificationAdapter{
     const query=input.execution.params?.query?String(input.execution.params.query):undefined;
     const parentId=input.execution.params?.parent_id?String(input.execution.params.parent_id):undefined;
     const limit=input.execution.params?.limit?Number(input.execution.params.limit):50;
-    const result=await this.client.search({query,parentId,pageSize:limit});
-    return compareReadback(input.execution.result,{files:Array.isArray(result?.files)?result.files:[],next_page_token:result?.nextPageToken??null},'drive-independent-readback',{method:'drive_search_readback',result_count:Array.isArray(result?.files)?result.files.length:0});
+    const result=await this.client.search({query,parentId,pageSize:limit,pageToken:input.execution.params?.page_token?String(input.execution.params.page_token):undefined});
+    return compareReadback(input.execution.result,{files:Array.isArray(result?.files)?result.files:[],next_page_token:result?.nextPageToken??null,incomplete_search:typeof result?.incompleteSearch==='boolean'?result.incompleteSearch:null},'drive-independent-readback',{method:'drive_search_readback',result_count:Array.isArray(result?.files)?result.files.length:0});
   }
 }
 

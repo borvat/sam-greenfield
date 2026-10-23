@@ -5,7 +5,7 @@ const recipients={anyOf:[text,{type:'array',minItems:1,maxItems:50,items:text}]}
 const fulfilment={type:'string',enum:['FBR','FBB','ALL']};
 const entries:Record<string,{description:string;properties:Record<string,unknown>;required?:string[]}>= {
  drive_get_metadata:{description:'Read metadata for one Drive file. Use file_id (fileId is a legacy alias).',properties:{file_id:text,fileId:text}},
- drive_search:{description:'Read bounded Drive filename search results, optionally within a parent.',properties:{query:text,parent_id:text,limit:{type:'integer',minimum:1,maximum:100}}},
+ drive_search:{description:'Read bounded Drive filename search results, optionally within a parent.',properties:{query:text,parent_id:text,page_token:text,limit:{type:'integer',minimum:1,maximum:100}}},
  drive_create_folder:{description:'Create one Drive folder after exact owner approval.',properties:{name:text,parent_id:text},required:['name']},
  gmail_send:{description:'Send a plain-text email after exact owner approval of recipients and content.',properties:{to:recipients,cc:recipients,bcc:recipients,subject:text,text:{type:'string',minLength:1,maxLength:100000},reply_to:text},required:['to','subject','text']},
  bol_list_orders:{description:'Read a bounded page of retailer orders.',properties:{page,fulfilment_method:fulfilment,status:{type:'string',enum:['OPEN','ALL']},change_interval_minute:{type:'integer',minimum:1,maximum:10080},latest_change_date:text,vvb_only:{type:'boolean'}}},

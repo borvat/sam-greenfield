@@ -24,11 +24,12 @@ export class DriveSearchAdapter implements ToolAdapter{
     const query=request.params.query?String(request.params.query):undefined;
     const parentId=request.params.parent_id?String(request.params.parent_id):undefined;
     const limit=request.params.limit?Number(request.params.limit):50;
-    const result=await this.client.search({query,parentId,pageSize:limit});
+    const result=await this.client.search({query,parentId,pageSize:limit,pageToken:request.params.page_token?String(request.params.page_token):undefined});
     return {
       result:{
         files:Array.isArray(result?.files)?result.files:[],
-        next_page_token:result?.nextPageToken??null
+        next_page_token:result?.nextPageToken??null,
+        incomplete_search:typeof result?.incompleteSearch==='boolean'?result.incompleteSearch:null
       },
       evidence:{
         result_count:Array.isArray(result?.files)?result.files.length:0,

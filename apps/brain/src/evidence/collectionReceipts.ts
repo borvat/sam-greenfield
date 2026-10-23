@@ -1,7 +1,7 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 /** Reviewed extraction configuration; never accepted from a model/tool response. */
-export type CollectionContract={cursorParameter:string;nextCursorPath:string[];identityPath:string[]};
-export type CollectionReceipt={version:1;executionId:string;executionHash:string;queryHash:string;query?:{capabilityId:string;params:Record<string,unknown>};requestCursor:string|null;nextCursor:string|null;identities:string[];terminal:boolean};
+export type CollectionContract={cursorParameter:string;nextCursorPath:string[];identityPath:string[];requiredFalsePath?:string[]};
+export type CollectionReceipt={version:1;executionId:string;executionHash:string;queryHash:string;query?:{capabilityId:string;params:Record<string,unknown>};requestCursor:string|null;nextCursor:string|null;identities:string[];terminal:boolean;gaps?:string[]};
 function at(value:any,path:string[]){
  if(!Array.isArray(path)||!path.length||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_COLLECTION_CONTRACT_INVALID');
  for(const key of path){if(!value||typeof value!=='object'||!Object.hasOwn(value,key))throw Error('EVIDENCE_COLLECTION_METADATA_MISSING');value=value[key];}return value;
@@ -15,8 +15,9 @@ export function collectionReceipt(row:{id:string;execution_hash:string;capabilit
  if(!cursor(requestCursor)||!cursor(nextCursor)||records.length>500)throw Error('EVIDENCE_COLLECTION_METADATA_INVALID');
  const identities=records.map(record=>at(record,contract.identityPath));
  if(identities.some(id=>typeof id!=='string'||!id.length||id.length>300))throw Error('EVIDENCE_COLLECTION_IDENTITY_INVALID');
+ const gaps:string[]=[];if(contract.requiredFalsePath){let value:unknown;try{value=at(row.result,contract.requiredFalsePath);}catch{}if(value!==false)gaps.push('SEARCH_COMPLETENESS_UNPROVEN');}
  const params=Object.fromEntries(Object.entries(row.params).filter(([key])=>key!==contract.cursorParameter));
- return {version:1,executionId:row.id,executionHash:row.execution_hash,queryHash:sha256Hex({capabilityId:row.capability_id,params,contract}),query:{capabilityId:row.capability_id,params},requestCursor:requestCursor as string|null,nextCursor:nextCursor as string|null,identities,terminal:nextCursor===null};
+ return {version:1,executionId:row.id,executionHash:row.execution_hash,queryHash:sha256Hex({capabilityId:row.capability_id,params,contract}),query:{capabilityId:row.capability_id,params},requestCursor:requestCursor as string|null,nextCursor:nextCursor as string|null,identities,terminal:nextCursor===null,...(gaps.length?{gaps}:{})};
 }
 /** Receipt coverage applies only to the exact bound query, never the whole goal.
  * No timeout, missing page, duplicate identity or cursor loop proves completeness. */
@@ -25,6 +26,7 @@ export function assessCollection(receipts:CollectionReceipt[]){
  const gaps=new Set<string>(),first=receipts[0],pages=new Map<string|null,CollectionReceipt>();
  const ids=new Set<string>(),executions=new Set<string>();
  for(const r of receipts){
+  for(const gap of r.gaps??[])gaps.add(gap);
   if(r.version!==1||r.queryHash!==first.queryHash)gaps.add('QUERY_MISMATCH');
   if(executions.has(r.executionId))gaps.add('REPEATED_EXECUTION');executions.add(r.executionId);
   if(pages.has(r.requestCursor))gaps.add('AMBIGUOUS_PAGE');pages.set(r.requestCursor,r);

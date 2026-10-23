@@ -1,3 +1,4 @@
+import {derivedMonetaryEvidence} from '../../brain/src/evidence/monetaryEvidence';
 import {assessBoundObligation} from '../../brain/src/evidence/fulfillment';
 import {evidenceFamily,assertAssignedExecution} from '../../brain/src/evidence/delegationScope';
 import {validateGoalObligations,assertObligationReview} from '../../kernel/src/goalObligations';
@@ -26,7 +27,7 @@ import type {ValidatedProductionBundle} from "./bundle";
 
 export const READ_REPORT_CONTRACT="sam.read_report.v1";
 export type Source={id:string;capabilityId:string;params:Record<string,unknown>;text:string;truncated:boolean;actor:string;retrievedAt:string;uri?:string;verifiedQuotes?:Record<number,string>;derivedArtifact?:DerivedArtifact;classification?:'MODEL_INFERENCE'|'RAW'|'DERIVED'};
-type Review={status:"continue"|"complete"|"blocked";summary:string;requirements:{obligationId?:string;requirement:string;fulfilled:boolean;evidenceIds:string[]}[];findings:{text:string;executionId:string;quote:string;confidence?:"LOW"|"MEDIUM"|"HIGH";confidenceBasis?:string}[];limitations:string[];contradictions?:{topic:string;evidenceIds:string[]}[];steps:{capabilityId:string;params:Record<string,unknown>}[]};
+type Review={status:"continue"|"complete"|"blocked";summary:string;requirements:{obligationId?:string;requirement:string;fulfilled:boolean;evidenceIds:string[]}[];findings:{text:string;executionId:string;quote:string;derivedClaim?:{row:number;field:string;value:string};confidence?:"LOW"|"MEDIUM"|"HIGH";confidenceBasis?:string}[];limitations:string[];contradictions?:{topic:string;evidenceIds:string[]}[];steps:{capabilityId:string;params:Record<string,unknown>}[]};
 const object=(x:any)=>x&&typeof x==="object"&&!Array.isArray(x);
 const sourceLines=(text:string)=>text.split("\n").flatMap(line=>line.length<=1000?[line]:Array.from({length:Math.ceil(line.length/1000)},(_,i)=>line.slice(i*1000,(i+1)*1000)));
 
@@ -187,7 +188,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const round=prior?.round??Math.max(existing.rows.length,priorRounds)+1;
   const evidenceLimitations=[...new Set(projections.flatMap(p=>[...p.limitations,...p.omissions]))];
   const projectionBlocked=projections.some(p=>p.limitations.some(l=>l.startsWith('REVIEW_EVIDENCE_PROJECTION_BLOCKED')));
-  const monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})));
+  let monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})));
   const invoiceNotice=sources.some(s=>/invoice|factuur/i.test(s.capabilityId))?
    ['Invoice/settlement periods are source-specific; an invoice is not evidence of daily sales revenue. Compare its period to the requested sales period.']:[];
   runtimePhase='objective_contract';
@@ -265,6 +266,17 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
      return assessDeliverables(artifact.output.dataset,[{id:field,description:field,fields:[field],completeCoverage:true,knownTimeZone:false}])[0].gaps;
     });
     if(derivedGaps.length&&decision.status==='complete')decision={...decision,status:'blocked',requirements:decision.requirements.map(r=>({...r,fulfilled:false})),steps:[],limitations:[...decision.limitations,...derivedGaps]};
+    const citedMoney=obligations?decision.requirements.flatMap(requirement=>{
+     const bound=obligations.deliverables.find(d=>d.id===requirement.obligationId)!;
+     return requirement.evidenceIds.flatMap(id=>{
+      const artifact=derived.get(id);if(!artifact)return [];
+      const claims=decision!.findings.filter(f=>f.executionId===id&&f.derivedClaim).map(f=>f.derivedClaim!);
+      const fields=[...new Set(claims.map(c=>c.field))].filter(field=>artifact.output.dataset.rows.every((_,row)=>claims.some(c=>c.row===row&&c.field===field)));
+      return derivedMonetaryEvidence(artifact.output.dataset,bound,fields);
+     });
+    }):[];
+    monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})),citedMoney);
+    input.evidenceLimitations=[...evidenceLimitations,...monetaryGaps,...invoiceNotice];
     if(monetaryGaps.length&&decision.status==='complete')decision={status:'blocked',summary:'Verified evidence does not establish the requested monetary deliverables',
      requirements:decision.requirements.map(r=>({...r,fulfilled:false})),findings:[],limitations:monetaryGaps,steps:[]};
     if(researchPlan){

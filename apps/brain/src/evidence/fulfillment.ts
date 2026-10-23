@@ -1,3 +1,4 @@
+import {sameCalendarPeriod} from './period';
 import {assessCollection} from './collectionReceipts';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import type {GoalObligations} from '../../../kernel/src/goalObligations';
@@ -9,8 +10,8 @@ export function assessBoundObligation(dataset:Dataset,obligation:GoalObligations
   completeCoverage:false,knownTimeZone:obligation.timeZone!=='UNKNOWN'}])[0].gaps;
  const identities=new Set<string>();let identityGap=false;
  for(const row of dataset.rows)for(const citation of row.citations){
-  const context=dataset.sourceContexts?.find(s=>s.sourceHash===citation.sourceHash&&s.collection?.executionId===citation.executionId);
-  const identity=context?.collection?.identities[citation.row];
+  const context=dataset.sourceContexts?.find(s=>s.sourceHash===citation.sourceHash&&(s.collection?.executionId??s.executionId)===citation.executionId);
+  const identity=(context?.collection?.identities??context?.rowIdentities)?.[citation.row];
   if(identity===undefined)identityGap=true;else identities.add(identity);
  }
  if(obligation.scope.kind==='enumerated'){
@@ -24,7 +25,7 @@ export function assessBoundObligation(dataset:Dataset,obligation:GoalObligations
    if(identityGap||collection.identities.length!==identities.size||collection.identities.some(id=>!identities.has(id)))gaps.push('REQUESTED_POPULATION_ROWS_NOT_ACCOUNTED');}
  }
  else gaps.push('REQUESTED_SCOPE_UNKNOWN');
- if(!['UNKNOWN','NOT_APPLICABLE'].includes(obligation.period)&&(!dataset.sourceContexts?.length||dataset.sourceContexts.some(context=>context.period!==obligation.period)))gaps.push('REQUESTED_PERIOD_NOT_ESTABLISHED');
+ if(!['UNKNOWN','NOT_APPLICABLE'].includes(obligation.period)&&(!dataset.sourceContexts?.length||dataset.sourceContexts.some(context=>context.period!==obligation.period&&!sameCalendarPeriod(context.period,obligation.period))))gaps.push('REQUESTED_PERIOD_NOT_ESTABLISHED');
  if(obligation.timeZone!=='UNKNOWN'&&dataset.timeZone!==obligation.timeZone)gaps.push('REQUESTED_TIME_ZONE_MISMATCH');
  // Metadata meanings are not inferred from arithmetic or prose.
  if(obligation.units!=='UNKNOWN'&&fields.some(f=>dataset.columns[f]?.kind==='decimal'&&dataset.columns[f]?.unit!==obligation.units))gaps.push('REQUESTED_UNIT_MISMATCH');

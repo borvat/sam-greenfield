@@ -1,8 +1,8 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
-export type Column={kind:'text'|'date'|'decimal';unit?:string;semantic?:'monetary'|'quantity'|'ratio';vat?:string;semanticUncertainty?:boolean};
+export type Column={kind:'text'|'date'|'decimal';unit?:string;semantic?:'monetary'|'quantity'|'ratio';vat?:string;monetaryMeaning?:'unit-price'|'customer-charge'|'settlement'|'commission'|'unspecified';semanticUncertainty?:boolean};
 export type Citation={executionId:string;verificationId:string;row:number;sourceHash:string};
 export type EvidenceRow={values:Record<string,string|null>;citations:Citation[]};
-export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[];sourceContexts?:{collection?:import('./collectionReceipts').CollectionReceipt;sourceHash:string;period?:unknown;identity?:unknown}[]};
+export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[];sourceContexts?:{collection?:import('./collectionReceipts').CollectionReceipt;sourceHash:string;executionId?:string;rowIdentities?:string[];period?:unknown;identity?:unknown}[]};
 export type Operation=
  |{op:'save';as:string}
  |{op:'from';source:string}
@@ -44,7 +44,7 @@ function validate(d:Dataset){
   if(c.kind==='date'&&(!/^\d{4}-\d{2}-\d{2}$/.test(v)||new Date(v).toISOString().slice(0,10)!==v))fail('DATE_INVALID');
  }}
 }
-function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit)||a.unit!==b.unit||a.vat!==b.vat)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
+function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit)||a.unit!==b.unit||a.vat!==b.vat||a.monetaryMeaning!==b.monetaryMeaning)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
 function deriveColumn(a:Column,b:Column,op:string):Column{
  const uncertain=!!(a.semanticUncertainty||b.semanticUncertainty||isMonetaryColumn(a)&&!known(a.vat)||isMonetaryColumn(b)&&!known(b.vat));
  const inherited=(c:Column):Column=>uncertain?{...c,semanticUncertainty:true}:c;

@@ -61,6 +61,7 @@ export class GoogleDriveApiClient{
     query?:string;
     parentId?:string;
     pageSize?:number;
+    pageToken?:string;
   }):Promise<any>{
     const clauses=["trashed = false"];
     if(input.query?.trim()){
@@ -75,7 +76,8 @@ export class GoogleDriveApiClient{
     const url=new URL("http://local/files");
     url.searchParams.set("q",clauses.join(" and "));
     url.searchParams.set("pageSize",String(Math.max(1,Math.min(100,input.pageSize??50))));
-    url.searchParams.set("fields","files(id,name,mimeType,parents,trashed,modifiedTime,webViewLink),nextPageToken");
+    if(input.pageToken)url.searchParams.set("pageToken",input.pageToken);
+    url.searchParams.set("fields","incompleteSearch,files(id,name,mimeType,parents,trashed,modifiedTime,webViewLink),nextPageToken");
     return this.request(`/files?${url.searchParams.toString()}`);
   }
 
