@@ -1,0 +1,11 @@
+$ docker run --rm --init --name sam-verify-1792767845974-610f962a-application --label sam.verification.run=sam-verify-1792767845974-610f962a --network container:sam-verify-1792767845974-610f962a-pg --mount type=bind,src=/tmp/sam-verify-oQt7RL/source/tests,dst=/app/tests,readonly --workdir /app --env DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test_application sam-verification:sam-verify-1792767845974-610f962a node tests/testing/application-restart.cjs
+{"service":"sam-development-worker","ticks":1,"relayed":0,"events":0,"mode":"maintenance-only","planning":"disabled","capabilityExecution":"disabled","externalAdapters":"disabled"}
+SAM MCP shutdown requested: SIGTERM
+SAM Command Center shutdown requested: SIGTERM
+SAM shutdown requested: SIGTERM
+APPLICATION_RESTART_PASS round 1 real runtime/Command Center/MCP ready, auth enforced, graceful stop, sentinel retained
+{"service":"sam-development-worker","ticks":1,"relayed":0,"events":0,"mode":"maintenance-only","planning":"disabled","capabilityExecution":"disabled","externalAdapters":"disabled"}
+SAM MCP shutdown requested: SIGTERM
+SAM shutdown requested: SIGTERM
+SAM Command Center shutdown requested: SIGTERM
+APPLICATION_RESTART_PASS round 2 real runtime/Command Center/MCP ready, auth enforced, graceful stop, sentinel retained

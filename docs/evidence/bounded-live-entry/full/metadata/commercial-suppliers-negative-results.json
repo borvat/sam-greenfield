@@ -1,0 +1,134 @@
+[
+  {
+    "name": "unsupported field/topic",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "521df646f447e0840c507e280bf2c03445e7f989e131b5c65219d46273fc770d",
+    "failedChecks": [
+      "grounded-field-bound-claims",
+      "corrective-research"
+    ]
+  },
+  {
+    "name": "missing evidence",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "50310869fa81dc6b9c433b40ad57c67d7a72e25f4cdbe553e203860ca35124c1",
+    "failedChecks": [
+      "grounded-field-bound-claims",
+      "corrective-research"
+    ]
+  },
+  {
+    "name": "second invalid citation",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "d3b2d3586e0566f6fe4c23acd27eb1b48340a9f81d2601f46f5e5ec9cce29ce6",
+    "failedChecks": [
+      "grounded-field-bound-claims"
+    ]
+  },
+  {
+    "name": "invalid canonical source bytes",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "8fe36b02965fb0d82ab3ba59f3327cbbd2700b685c1363e58ae89761e7e346c4",
+    "failedChecks": [
+      "all-source-receipts",
+      "grounded-field-bound-claims",
+      "corrective-research",
+      "verified-learning"
+    ]
+  },
+  {
+    "name": "invalid value",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "61f33e80ff8921d6d81041a6eedaccc3c8fc3a8c6733898ed4d64dd8404fd911",
+    "failedChecks": [
+      "grounded-field-bound-claims"
+    ]
+  },
+  {
+    "name": "contradictory final claims",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "986bf6f1515bd59b713586aa33227e97d02dd7a94bbe3100dbb7e857dc5f100f",
+    "failedChecks": [
+      "grounded-field-bound-claims",
+      "consistent-final-claims"
+    ]
+  },
+  {
+    "name": "stale publication",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "3f9069d9812074b9f356eab7fe1ba43c9242aa7cbe690a5070316164e2792766",
+    "failedChecks": [
+      "all-source-receipts",
+      "grounded-field-bound-claims",
+      "corrective-research",
+      "verified-learning"
+    ]
+  },
+  {
+    "name": "failed readback",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "7e55fcb2445a14be2d256fa25ae98f07f1450e28d5905eee6208e7a7360d16ff",
+    "failedChecks": [
+      "all-source-receipts",
+      "grounded-field-bound-claims",
+      "corrective-research",
+      "verified-learning"
+    ]
+  },
+  {
+    "name": "cross-company source",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "4f0bf736ee52aa50f909ec98be0a31f190d025fa6573fbfad3e40308e679adba",
+    "failedChecks": [
+      "all-source-receipts",
+      "grounded-field-bound-claims",
+      "corrective-research",
+      "verified-learning"
+    ]
+  },
+  {
+    "name": "unlinked trusted lesson",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "18742dc32e6ac678663299482a3f24c4631af388138ca913a2bba9b75d6cf2c6",
+    "failedChecks": [
+      "verified-learning"
+    ]
+  },
+  {
+    "name": "missing child capture",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "74522f08145498ec5b8f713cb15e7c916147e594eea0f6c48038fae0cbcb7401",
+    "failedChecks": [
+      "delegation-conservation"
+    ]
+  },
+  {
+    "name": "foreign-root child",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "0955596183fd2e32717f8b3b9534b02e21eaed94839bfeb03dfc84a8034df54a",
+    "failedChecks": [
+      "delegation-conservation"
+    ]
+  },
+  {
+    "name": "absent correction",
+    "expected": "FAIL",
+    "actual": "FAIL",
+    "sha256": "26784cddea174c3b199551458f6c5f28c10e1bc1b797d785598c1801f9d0bf5e",
+    "failedChecks": [
+      "corrective-research"
+    ]
+  }
+]
