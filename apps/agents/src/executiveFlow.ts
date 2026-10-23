@@ -1,3 +1,4 @@
+import type {PlanningCandidatePolicy} from '../../brain/src/planner';
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
 import type { CapabilityExecutor } from "../../kernel/src/workerRuntime";
@@ -14,6 +15,7 @@ export async function runCatalogPlanningCycle(input:{
   dataClassification:DataClassification;
   maxCostUsd:number;
   signal?:AbortSignal;
+  candidatePolicy?:PlanningCandidatePolicy;
   preferredProviders?:string[];
 }){
   return runBrainPlanningCycle({
@@ -22,7 +24,7 @@ export async function runCatalogPlanningCycle(input:{
     goalId:input.goalId,
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    signal:input.signal,preferredProviders:input.preferredProviders,
+    signal:input.signal,candidatePolicy:input.candidatePolicy,preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
     ,availableCapabilities:input.catalog.planningDescriptors()
   });
@@ -37,6 +39,7 @@ export async function runCatalogReplanCycle(input:{
   dataClassification:DataClassification;
   maxCostUsd:number;
   signal?:AbortSignal;
+  candidatePolicy?:PlanningCandidatePolicy;
   preferredProviders?:string[];
 }){
   return runBrainReplanCycle({
@@ -46,7 +49,7 @@ export async function runCatalogReplanCycle(input:{
     reason:input.reason,
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    signal:input.signal,preferredProviders:input.preferredProviders,
+    signal:input.signal,candidatePolicy:input.candidatePolicy,preferredProviders:input.preferredProviders,
     capabilityPolicies:input.catalog.authorityPolicies()
     ,availableCapabilities:input.catalog.planningDescriptors()
   });

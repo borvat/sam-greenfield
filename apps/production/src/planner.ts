@@ -1,3 +1,4 @@
+import {planningValidationCode,type PlanningDiagnostic} from '../../brain/src/planner';
 import {withTransaction} from '../../../packages/db/src/client';
 import {ModelGateway} from '../../../packages/model-gateway/src/gateway';
 import {runCatalogPlanningCycle,runCatalogReplanCycle} from '../../agents/src/executiveFlow';
@@ -10,13 +11,16 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
  :Promise<{processed:boolean;goalId?:string;failed?:boolean;reason?:string}>{
   const adapters=bundle.raw.modelAdapters??[];
   if(!adapters.length)return {processed:false};
+  // One candidate per reservation: defaults cap generation at 3 calls / 90s
+  // total active deadline time (plus existing scheduler/backoff and DB work).
+  // Keep the original 30s per-call deadline and half-budget cost ceiling.
   const deadlineMs=options.deadlineMs??30000,maxAttempts=options.maxAttempts??3,backoffMs=options.backoffMs??1000;
   if(!Number.isSafeInteger(deadlineMs)||deadlineMs<1||deadlineMs>120000||!Number.isSafeInteger(maxAttempts)||maxAttempts<1||maxAttempts>10||
     !Number.isSafeInteger(backoffMs)||backoffMs<1||backoffMs>60000)throw new Error('PLANNING_POLICY_INVALID');
   // A short row-locked transaction commits the durable deadline reservation.
   // No pool connection is held while nested kernel transactions or models run.
   const reservation=await withTransaction(async client=>{
-    const next=(await client.query(`SELECT id,state,planning_attempts FROM goals
+    const next=(await client.query(`SELECT id,state,planning_attempts,planning_failure,replan_attempts,replan_reason FROM goals
       WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
       AND ($1::uuid IS NULL OR id=$1)
       AND (planning_retry_at IS NULL OR planning_retry_at<=now())
@@ -43,11 +47,30 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   if(!reservation)return {processed:false};
   if(reservation.result)return reservation.result;
   const next=reservation.next!,current=next;
+  const started=performance.now();
+  let lastDiagnostic:PlanningDiagnostic|undefined;
+  let validationCode=next.planning_failure?.validationCode?
+    planningValidationCode({code:next.planning_failure.validationCode}):undefined;
+  const onDiagnostic=async(event:PlanningDiagnostic)=>{
+    lastDiagnostic=event;
+    if(event.code)validationCode=event.code;
+    await withTransaction(async client=>{
+      await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:next.id,eventType:'PLANNING_PHASE',
+        payload:{...event,attempt:current.planning_attempts+1,deadlineMs,maxAttempts}});
+    });
+  };
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),deadlineMs);
   try{
     const input={catalog:bundle.catalog,gateway:options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
-      goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal};
-    if(current.state==='REPLANNING')await runCatalogReplanCycle({...input,reason:'independent_verification_failed'});
+      goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal,
+      candidatePolicy:{singleCandidate:true,onDiagnostic,
+        validationFeedback:validationCode}};
+    // beginReplanAtomic durably enters PLANNING before proposing. Repairs must
+    // resume that same episode, retaining failed-read exclusions and recovery
+    // capabilities without consuming another replan budget entry.
+    const resumingReplan=current.state==='PLANNING'&&current.replan_attempts>0&&typeof current.replan_reason==='string';
+    if(current.state==='REPLANNING'||resumingReplan)await runCatalogReplanCycle({...input,
+      alreadyStarted:resumingReplan,reason:resumingReplan?current.replan_reason:'independent_verification_failed'});
     else await runCatalogPlanningCycle(input);
     await withTransaction(client=>client.query('UPDATE goals SET planning_attempts=0,last_planning_at=now(),planning_retry_at=NULL,planning_failure=NULL WHERE id=$1 AND planning_attempts=$2',[next.id,current.planning_attempts+1]));
     return {processed:true,goalId:next.id};
@@ -65,11 +88,11 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
     const attempt=current.planning_attempts+1;
     await client.query(`UPDATE goals SET planning_attempts=$2,last_planning_at=now(),
       planning_retry_at=now()+($3::double precision*interval '1 millisecond'),planning_failure=$4::jsonb WHERE id=$1`,
-      [next.id,attempt,Math.min(60000,backoffMs*2**(attempt-1)),JSON.stringify({code:reason,attempt,maxAttempts,deadlineMs})]);
+      [next.id,attempt,Math.min(60000,backoffMs*2**(attempt-1)),JSON.stringify({code:reason,attempt,maxAttempts,deadlineMs,elapsedMs:Math.round(performance.now()-started),phase:lastDiagnostic?.phase??'preparation',...(validationCode?{validationCode}:{})})]);
     if(state==='PLANNING'&&autonomyEnabled())await transitionGoal(client,next.id,state,'WAITING_OWNER','planning_failed_closed');
     else if(['NEW','MODELING','PLANNING','REPLANNING'].includes(state)&&attempt>=maxAttempts)
       await transitionGoal(client,next.id,state,'FAILED','planning_attempts_exhausted');
-    await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:next.id,eventType:'PLANNING_ATTEMPT_FAILED',payload:{code:reason,attempt}});
+    await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:next.id,eventType:'PLANNING_ATTEMPT_FAILED',payload:{code:reason,attempt,elapsedMs:Math.round(performance.now()-started),phase:lastDiagnostic?.phase??'preparation',...(validationCode?{validationCode}:{})}});
     return {processed:true,goalId:next.id,failed:true,reason};
     });
   }finally{clearTimeout(timer);}
