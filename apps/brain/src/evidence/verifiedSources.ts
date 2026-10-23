@@ -20,9 +20,7 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
   const row=rows.find((r:any)=>r.id===id),contract=contracts[row.capability_id];if(!contract?.version)throw Error('EVIDENCE_OUTPUT_SCHEMA_UNKNOWN');
   const records=at(row.result,contract.rowsPath);if(!Array.isArray(records)||records.length>500)throw Error('EVIDENCE_RECORDS_INVALID');
   const coverage=at(row.result,contract.coveragePath),timeZone=at(row.result,contract.timeZonePath),limitations=at(row.result,contract.limitationsPath);
-  const executionHash=sha256Hex({queue_id:row.queue_id,goal_id:row.goal_id,plan_id:row.plan_id,plan_hash:row.plan_hash,capability_id:row.capability_id,
-   params:row.params??{},result:row.result,evidence:row.evidence,fencing_token:Number(row.fencing_token),operation_key_ref:row.operation_key_ref??null});
-  if(executionHash!==row.execution_hash||row.plan_hash!==row.verified_plan_hash)throw Error('EVIDENCE_HASH_MISMATCH');
+  assertExecutionIntegrity(row);
   const sourceHash=sha256Hex(row.result);
   sources[alias]={columns:contract.columns,rows:records.map((record:any,index:number)=>{
    if(!record||typeof record!=='object'||Array.isArray(record))throw Error('EVIDENCE_RECORD_INVALID');
@@ -33,4 +31,10 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
  }
  const result=replayTransform(input.plan,sources);
  return {...result,bindings,provenanceHash:sha256Hex({bindings,planHash:result.planHash,outputHash:result.outputHash})};
+}
+
+export function assertExecutionIntegrity(row:any){
+  const executionHash=sha256Hex({queue_id:row.queue_id,goal_id:row.goal_id,plan_id:row.plan_id,plan_hash:row.plan_hash,capability_id:row.capability_id,
+   params:row.params??{},result:row.result,evidence:row.evidence,fencing_token:Number(row.fencing_token),operation_key_ref:row.operation_key_ref??null});
+  if(executionHash!==row.execution_hash||(row.verified_plan_hash!==undefined&&row.plan_hash!==row.verified_plan_hash))throw Error('EVIDENCE_HASH_MISMATCH');
 }

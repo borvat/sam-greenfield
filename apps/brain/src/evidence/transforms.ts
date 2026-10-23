@@ -111,7 +111,7 @@ export type Deliverable={id:string;description:string;fields:string[];completeCo
 /** Structural readiness only, never a replacement for objective review/critique. */
 export function assessDeliverables(d:Dataset,deliverables:Deliverable[]){
  if(deliverables.length>20)fail('DELIVERABLE_LIMIT');
- return deliverables.map(r=>{const gaps:string[]=[];for(const f of r.fields){if(!Object.hasOwn(d.columns,f))gaps.push('FIELD_MISSING:'+f);else if(d.rows.some(row=>row.values[f]===null))gaps.push('VALUE_MISSING:'+f);}
+ return deliverables.map(r=>{const gaps:string[]=[];for(const f of r.fields){if(!Object.hasOwn(d.columns,f))gaps.push('FIELD_MISSING:'+f);else {if(d.rows.some(row=>row.values[f]===null))gaps.push('VALUE_MISSING:'+f);if(d.columns[f].semanticUncertainty)gaps.push('SEMANTIC_LINEAGE_UNKNOWN:'+f);}}
   if(r.completeCoverage&&d.selections?.length)gaps.push('FILTERED_SCOPE_REQUIRES_REVIEW');
   if(r.completeCoverage&&d.coverage!=='complete')gaps.push('COVERAGE_'+d.coverage.toUpperCase());if(r.knownTimeZone&&!d.timeZone)gaps.push('TIME_ZONE_UNKNOWN');
   for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat)||c.semanticUncertainty)gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}

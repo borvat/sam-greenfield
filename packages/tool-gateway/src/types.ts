@@ -15,6 +15,8 @@ export interface ToolExecutionRequest {
   capabilityId:string;
   params:Record<string,unknown>;
   idempotencyKey:string;
+  /** Runtime-only work identity; never copied from model params. */
+  executionContext?:{queueId:string;fencingToken:number};
 }
 
 export interface ToolExecutionResult {

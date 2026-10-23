@@ -1,3 +1,4 @@
+import {DERIVE_CAPABILITY} from './evidence/artifacts';
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 
 type Finding = { executionId: string; quote: string };
@@ -23,9 +24,9 @@ export async function captureVerifiedKnowledge(client:any, goalId:string, findin
     const key=sha256Hex({capability:evidence.capability_id,params:evidence.params,quote:finding.quote});
     await client.query(`INSERT INTO knowledge_records
       (legal_entity_id,kind,statement,execution_id,verification_id,goal_id,source_key,source_timestamp,expires_at)
-      VALUES($1,'SOURCE_FACT',$2,$3,$4,$5,$6,$7,$7::timestamptz + interval '30 days')
+      VALUES($1,$8,$2,$3,$4,$5,$6,$7,$7::timestamptz + interval '30 days')
       ON CONFLICT (legal_entity_id,kind,goal_id,source_key) DO NOTHING`,
-      [goal.company_scope,finding.quote,evidence.id,evidence.verification_id,goalId,key,evidence.started_at]);
+      [goal.company_scope,finding.quote,evidence.id,evidence.verification_id,goalId,key,evidence.started_at,evidence.capability_id===DERIVE_CAPABILITY?'INFERENCE':'SOURCE_FACT']);
   }
 }
 
@@ -37,6 +38,7 @@ export async function recallKnowledge(client:any, legalEntityId:string, objectiv
            ELSE 'Explicit owner decision; never expands execution authority' END AS interpretation
     FROM knowledge_records k WHERE legal_entity_id=$1 AND superseded_at IS NULL
       AND source_timestamp <= $3 AND expires_at > $3
+      AND NOT EXISTS(SELECT 1 FROM executions derived WHERE derived.id=k.execution_id AND derived.capability_id='derive_verified_evidence')
       AND (kind<>'SOURCE_FACT' OR verification_id=(SELECT v.id FROM verifications v WHERE v.execution_id=k.execution_id ORDER BY v.checked_at DESC,v.id DESC LIMIT 1) AND EXISTS(SELECT 1 FROM verifications v WHERE v.id=k.verification_id AND v.result='VERIFIED'))
       AND EXISTS (SELECT 1 FROM unnest(regexp_split_to_array(lower($2),'[^[:alnum:]_]+')) AS words(term)
         WHERE length(term)>2 AND to_tsvector('simple',statement) @@ plainto_tsquery('simple',term))

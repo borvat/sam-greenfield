@@ -4,6 +4,7 @@ import type { SpecialistAgentDefinition } from "./types";
 import { SpecialistRegistry } from "./registry";
 
 export interface CapabilityOutputMetadata {
+  extractionContracts?:import("../../brain/src/evidence/contracts").OutputContracts;
   schemaStatus:'DECLARED'|'UNKNOWN';
   schema?:Record<string,unknown>;
   units:Record<string,string>;

@@ -29,6 +29,8 @@ export interface VerificationAdapter{
 }
 
 export interface ProductionBundle{
+  /** Explicit composition only; no production registry is installed by default. */
+  verifiedEvidenceContracts?:import("../../brain/src/evidence/contracts").OutputContracts;
   capabilities:CapabilityDefinition[];
   toolDefinitions:ToolDefinition[];
   toolAdapters:ToolAdapter[];
