@@ -53,7 +53,7 @@ async function main(){
   }catch(e:any){await writer.query('ROLLBACK');if(e.code!=='55P03')throw e;blocked=true;}finally{writer.release();}};
   const db={async connect(){const c=await pool.connect();return {release:()=>c.release(),async query(sql:string,args?:any[]){
    const result=await c.query(sql,args);
-   if(timing==='after-lock'&&!fired&&sql.includes('WHERE e.goal_id=$1 AND e.id=ANY')){fired=true;await revoke();}
+   if(timing==='after-lock'&&!fired&&/WHERE e\.goal_id=(?:\$1|ANY\(\$1::uuid\[\]\)) AND e\.id=ANY/.test(sql)){fired=true;await revoke();}
    return result;
   }};}};
   await reviewNextReadGoal(f.bundle,db,async input=>{

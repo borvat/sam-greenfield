@@ -154,6 +154,11 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
      canonicalDerivedQuotes.set(e.id,new Set(projection.quotes));
      return {text:projection.text,truncated:projection.omitted>0,omissions:projection.omitted?[`${projection.omitted} derived cells omitted; no full-detail claim`]:[],limitations:artifact.output.dataset.limitations,originalHash:sha256Hex(e.result),data:undefined};
     }
+    if(e.evidence?.classification==='MODEL_INFERENCE'&&object(e.result?.report)){
+     const {evidence,...interpretation}=e.result.report;
+     const projection=projectReviewEvidence({...e.result,report:interpretation},sourceAllowance);
+     return {...projection,originalHash:sha256Hex(e.result),limitations:[...projection.limitations,'Specialist interpretation only; embedded evidence copies omitted. Cite the separately supplied verified raw or derived executions.']};
+    }
     return projectReviewEvidence(e.result,sourceAllowance);
    }catch{
     return {text:'[Verified source cannot fit the review evidence budget without losing essential content]',truncated:true,

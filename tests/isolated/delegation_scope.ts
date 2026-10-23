@@ -8,8 +8,8 @@ function database(change:{tenant?:string;parentPlan?:string;carried?:string[];si
  const child={id:'child',parent_goal_id:'root',company_scope:change.tenant??'tenant',current_plan_id:'child-plan',state:'COMPLETED',depth:1};
  const link={goal_id:'child',parent_goal_id:'root',parent_plan_id:'plan',parent_plan_hash:sha256Hex('plan'),parent_capability:'reason.records',legal_entity_id:'tenant',parent_queue_id:'queue',root_queue_id:'queue',capability_id:change.capability??'records.search',params_hash:sha256Hex({query:'supplied'}),depth:1};
  return {async query(sql:string,params:any[]){
-  if(sql.includes('WITH RECURSIVE lineage'))return {rows:[root]};
-  if(sql.includes('WITH RECURSIVE family'))return {rows:[root,child,...(change.sibling?[{...child,id:'sibling',current_plan_id:'sibling-plan'}]:[])]};
+  if(sql.includes('g.id=l.parent_goal_id'))return {rows:[root]};
+  if(sql.includes('WITH RECURSIVE family'))return {rows:[root,{...child,assignment:link},...(change.sibling?[{...child,id:'sibling',current_plan_id:'sibling-plan',assignment:{...link,goal_id:'sibling'}}]:[])]};
   if(sql.includes('FROM specialist_delegations'))return {rows:params[0]==='root'?[]:[{...link,goal_id:params[0]}]};
   throw Error('Unexpected SQL');
  }};

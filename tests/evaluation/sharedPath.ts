@@ -1,3 +1,4 @@
+import {applySharedGoalProfile} from '../../packages/db/src/sharedGoalProfile';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {spawnSync,execFileSync} from 'node:child_process';
@@ -40,11 +41,11 @@ async function worker(){
  });
  const composition=await createSharedGoalComposition({bundle:fixtureBundle(t.spec.companyId,adapter),trial:t,expectedCommit:t.spec.commit,workerId:'shared-fixture',diagnostic:(stage,error)=>console.error(stage,error)});
  await composition.recover();
- for(let i=0;i<160;i++){await composition.runWorkTick();const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state)))break;if(i%20===0)console.log(JSON.stringify({tick:i,goals:rows,calls}));}
- const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
+ for(let i=0;i<160;i++){try{await composition.runWorkTick();}catch(error){console.error('FIXTURE_FAILURE_STATE',JSON.stringify({goals:(await pool.query('SELECT id,parent_goal_id,state FROM goals')).rows,sessions:(await pool.query("SELECT state->>'phase' phase,state->>'reason' reason FROM specialist_sessions")).rows,reviews:(await pool.query('SELECT goal_id,decision FROM goal_read_reviews')).rows,verifications:(await pool.query('SELECT result,independent_evidence FROM verifications')).rows}));throw error;}const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state)))break;if(i%20===0)console.log(JSON.stringify({tick:i,goals:rows,calls}));}
+ const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(!rows.every(g=>g.state==='COMPLETED'))console.error('FINAL_REPORT_DIAGNOSTIC',JSON.stringify((await pool.query('SELECT goal_id,decision FROM goal_read_reviews')).rows));assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
 }
 async function parent(){const c=await pool.connect(),role='sam_shared_'+process.pid;let made=false;try{
- await applyIntegrationProfile(c);await applySpecialistProfile(c);await applyEvaluationProfile(c);
+ await applyIntegrationProfile(c);await applySpecialistProfile(c);await applyEvaluationProfile(c);await applySharedGoalProfile(c);
  const schema=(await c.query('SELECT current_schema() s')).rows[0].s,org=randomUUID(),entity=randomUUID();
  await c.query("INSERT INTO organizations(id,name) VALUES($1,'Shared fixtures')",[org]);await c.query("INSERT INTO legal_entities(id,org_id,name) VALUES($1,$2,'Shared fixtures')",[entity,org]);await enrollEvaluationCompany(c,entity);
  await c.query(`CREATE ROLE ${role} LOGIN PASSWORD 'shared-fixture-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);made=true;
@@ -55,7 +56,7 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  const ids:string[]=[];for(const objective of objectives)ids.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling,completion_definition) VALUES($1,$2,$3,$4,'NEW','GREEN','sam.read_report.v1') RETURNING id",[randomUUID(),entity,root,objective])).rows[0].id);
  const limits={...ceiling,models:24,maxOutputTokens:4000,tokens:672000};const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:sharedCorpus.id,corpusHash:sharedCorpusHash(),companyId:entity,rootCapabilityId:'reason.records',limits,agents:{'executive-bootstrap':{...limits,models:0},...Object.fromEntries(ids.map(id=>['goal.'+id,{...limits,models:8}]))},prices:[{providerId:'eval-shared',model:'fixture',inputPer1k:0.001,outputPer1k:0.001}],capabilityHash:evaluationBundleHash(fixtureBundle(entity,null))};
  const trial=await createEvaluationTrial(c,{rootGoalId:root,spec});
- const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
- const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env:{PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1'},encoding:'utf8',timeout:70000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
+ const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity} -c jit=off`);
+ const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env:{PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1'},encoding:'utf8',timeout:150000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
  }finally{if(made){await c.query('DROP OWNED BY '+role);await c.query('DROP ROLE '+role);}c.release();}}
 (process.argv[2]?worker():parent()).catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>pool.end());

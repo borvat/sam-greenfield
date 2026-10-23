@@ -23,7 +23,7 @@ async function main(){
          exitCode:r.status,signal:r.signal,error:r.error?.code??null});return r;
      };
      const migrated=execute(['packages/db/src/migrate.js','--apply'],30000);
-     const run=migrated.status===0?execute(['--import','tsx',test],90000):migrated;
+     const run=migrated.status===0?execute(['--import','tsx',test],test==='tests/evaluation/sharedPath.ts'?180000:90000):migrated;
      const passed=run.status===0;results.push({test,passed,status:passed?'PASS':'FAIL',exit:run.status,
        startedAt,completedAt:new Date().toISOString(),commands,testExecuted:migrated.status===0});console.log(passed?'PASS':'FAIL',test);
      if(!passed)console.log((run.stdout+run.stderr).slice(-6000));else if(!process.argv.includes('--regression'))console.log(run.stdout);

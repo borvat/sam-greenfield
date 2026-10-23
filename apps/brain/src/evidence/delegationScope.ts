@@ -6,18 +6,20 @@ const bad=():never=>{throw Error('EVIDENCE_DELEGATION_SCOPE_INVALID');};
 /** Resolve only persisted specialist assignments, not arbitrary parent_goal_id.
  * A replan, changed assignment, tenant or revoked ancestor invalidates replay. */
 export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:DelegationPolicy):Promise<EvidenceFamily>{
- const goals=(await c.query(`WITH RECURSIVE lineage AS (
+ const decorate=`SELECT f.*,p.goal_assumptions authorization,
+ CASE WHEN d.goal_id IS NULL THEN NULL ELSE to_jsonb(d)||jsonb_build_object('parent_goal_id',w.goal_id,'parent_plan_id',w.plan_id,'parent_plan_hash',assigned.plan_hash,'parent_capability',w.capability_id) END assignment
+ FROM family f LEFT JOIN plans p ON p.id=f.current_plan_id AND p.goal_id=f.id
+ LEFT JOIN specialist_delegations d ON d.goal_id=f.id LEFT JOIN work_queue w ON w.id=d.parent_queue_id
+ LEFT JOIN plans assigned ON assigned.id=w.plan_id AND assigned.goal_id=w.goal_id ORDER BY depth,f.id`;
+ const goals=(await c.query(`WITH RECURSIVE family AS (
  SELECT id,parent_goal_id,company_scope,current_plan_id,state,0 depth FROM goals WHERE id=$1
  UNION ALL SELECT g.id,g.parent_goal_id,g.company_scope,g.current_plan_id,g.state,l.depth+1
- FROM goals g JOIN lineage l ON g.id=l.parent_goal_id WHERE l.depth<4)
- SELECT l.*,p.goal_assumptions authorization FROM lineage l LEFT JOIN plans p ON p.id=l.current_plan_id AND p.goal_id=l.id ORDER BY depth`,[goalId])).rows;
+ FROM goals g JOIN family l ON g.id=l.parent_goal_id WHERE l.depth<4)
+ ${decorate}`,[goalId])).rows;
  if(!goals.length||goals[0].company_scope!==tenant)bad();
-
  let root=goals[0];
  for(const child of goals){
-  const link=(await c.query(`SELECT d.*,w.goal_id parent_goal_id,w.plan_id parent_plan_id,w.capability_id parent_capability,w.params parent_params,p.plan_hash parent_plan_hash
-   FROM specialist_delegations d JOIN work_queue w ON w.id=d.parent_queue_id JOIN plans p ON p.id=w.plan_id AND p.goal_id=w.goal_id WHERE d.goal_id=$1`,[child.id])).rows[0];
-  if(!link)break;
+  const link=child.assignment;if(!link)break;
   const parent=goals.find((g:any)=>g.id===link.parent_goal_id);
   validateLink(child,parent,link,tenant,policy);root=parent;
  }
@@ -25,13 +27,11 @@ export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:De
  SELECT id,parent_goal_id,company_scope,current_plan_id,state,0 depth FROM goals WHERE id=$1
  UNION ALL SELECT g.id,g.parent_goal_id,g.company_scope,g.current_plan_id,g.state,f.depth+1
  FROM goals g JOIN family f ON g.parent_goal_id=f.id JOIN specialist_delegations d ON d.goal_id=g.id WHERE f.depth<3)
- SELECT f.*,p.goal_assumptions authorization FROM family f LEFT JOIN plans p ON p.id=f.current_plan_id AND p.goal_id=f.id ORDER BY depth,f.id`,[root.id])).rows;
+ ${decorate}`,[root.id])).rows;
  if(!members.length||members.length>32||members.some((g:any)=>g.company_scope!==tenant))bad();
-
  const accepted:any[]=[];
  for(const child of members.filter((g:any)=>g.id!==root.id)){
-  const link=(await c.query(`SELECT d.*,w.goal_id parent_goal_id,w.plan_id parent_plan_id,w.capability_id parent_capability,w.params parent_params,p.plan_hash parent_plan_hash
-   FROM specialist_delegations d JOIN work_queue w ON w.id=d.parent_queue_id JOIN plans p ON p.id=w.plan_id AND p.goal_id=w.goal_id WHERE d.goal_id=$1`,[child.id])).rows[0];
+  const link=child.assignment;
   const parent=members.find((g:any)=>g.id===child.parent_goal_id);validateLink(child,parent,link,tenant,policy);
   accepted.push({goalId:child.id,planId:child.current_plan_id,parentGoalId:parent.id,parentPlanId:link.parent_plan_id,parentQueueId:link.parent_queue_id,rootQueueId:link.root_queue_id,capabilityId:link.capability_id,paramsHash:link.params_hash,depth:link.depth});
  }

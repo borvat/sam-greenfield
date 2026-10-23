@@ -1,3 +1,4 @@
+import {assertSharedGoalProfile} from '../../../packages/db/src/sharedGoalProfile';
 import {assertIntegrationAccess} from '../../../packages/db/src/integrationProfile';
 import {pool,withTransaction} from '../../../packages/db/src/client';
 import {withCommitAdmission} from '../../../packages/db/src/commitAdmission';
@@ -52,7 +53,7 @@ export async function createSharedGoalComposition(input:{bundle:ProductionBundle
  // Shared owner tools/readbacks are the authoritative ceiling, including all
  // logical specialists. A smaller hidden local tool budget cannot be ignored.
  for(const cfg of setup.configs)for(const id of roots)if(cfg.limits.tools<input.trial.spec.agents['goal.'+id].tools)throw Error('SHARED_TOOL_LIMIT_MISMATCH');
- await withTransaction(async c=>{await assertIntegrationAccess(c);const access=(await c.query("SELECT (has_table_privilege(current_user,'goal_read_reviews','SELECT') AND has_table_privilege(current_user,'goal_read_reviews','INSERT')) allowed")).rows[0];if(!access?.allowed)throw Error('EVALUATION_REPORT_ACCESS_REQUIRED');await input.trial.live(c);});
+ await withTransaction(async c=>{await assertIntegrationAccess(c);await assertSharedGoalProfile(c);const access=(await c.query("SELECT (has_table_privilege(current_user,'goal_read_reviews','SELECT') AND has_table_privilege(current_user,'goal_read_reviews','INSERT')) allowed")).rows[0];if(!access?.allowed)throw Error('EVALUATION_REPORT_ACCESS_REQUIRED');await input.trial.live(c);});
  const checked=validateProductionBundle(raw);
  const engine=await createSpecialistIntelligence({configs:setup.configs,catalog:checked.catalog,tools:checked.tools,gateway:new ModelGateway(Object.fromEntries((raw.modelAdapters??[]).map(a=>[a.providerId,a]))),trial:input.trial,sharedGoalPolicy:policy,diagnostic:error=>input.diagnostic?.('specialist',error)});
  const family=(c:any,id:string)=>evidenceFamily(c,id,setup.tenant,policy);
