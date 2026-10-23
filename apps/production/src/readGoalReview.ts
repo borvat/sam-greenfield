@@ -1,3 +1,4 @@
+import {readReviewBudget,recordReadReviewBudget} from '../../kernel/src/readReviewBudget';
 import {projectReviewEvidence,reviewSourceText,monetaryEvidenceLimitations} from './reviewEvidence';
 import {invokeReviewWithinDeadline} from './reviewDeadline';
 import {insertOutboxEvent} from '../../../packages/db/src/outbox';
@@ -93,14 +94,15 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   if(fresh.rows[0]?.state!=='VERIFYING'||fresh.rows[0]?.current_plan_id!==goal.current_plan_id)return {processed:false};
   const existing=await client.query("SELECT * FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round",[goal.id]);
   const prior=existing.rows.find((x:any)=>x.plan_id===goal.current_plan_id);
-  if(prior&&(!prior.decision.runtimeReview?.retryable||prior.decision.runtimeReview.attempts>=2)){
+  const budget=await readReviewBudget(client,goal.id,goal.current_plan_id);
+  if(prior||(budget&&(!budget.retryable||budget.attempts>=2||budget.callsUsed>=4))){
    await client.query('BEGIN');
    try{await transitionGoal(client,goal.id,'VERIFYING','WAITING_EXTERNAL','read_review_budget_or_report_terminal');await client.query('COMMIT');}
    catch(e){await client.query('ROLLBACK');throw e;}
    return {processed:true,goalId:goal.id,status:'blocked'};
   }
-  const reviewAttempt=(prior?.decision.runtimeReview?.attempts??0)+1;
-  let callsUsed=prior?.decision.runtimeReview?.callsUsed??0;
+  const reviewAttempt=(budget?.attempts??0)+1;
+  let callsUsed=budget?.callsUsed??0;
   const all=await client.query(`SELECT e.*,(SELECT v.result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)='VERIFIED' AS verified FROM executions e WHERE e.goal_id=$1 ORDER BY e.started_at,e.id`,[goal.id]);
   const failedHistory=all.rows.filter((x:any)=>!x.verified).map((x:any)=>({capabilityId:x.capability_id,params:x.params,reason:"NONVERIFIED_PRIOR_EXECUTION"}));
   all.rows=all.rows.filter((x:any)=>x.verified);
@@ -133,11 +135,8 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const gateway=new ModelGateway(Object.fromEntries((bundle.raw.modelAdapters??[]).map(a=>[a.providerId,a])));
   const perResearchCallCeiling=researchPlan?(researchPlan.maxCostUsd*0.6)/(researchPlan.maxIterations*3):undefined;
   const runtimeReview={attempts:reviewAttempt,maxAttempts:2,callsUsed,retryable:reviewAttempt<2,phase:'reserved',elapsedMs:0};
-  const reserved={status:'blocked',summary:'Objective review is in progress; completion is not established',requirements:[{requirement:'Validated objective completion',fulfilled:false,evidenceIds:[]}],findings:[],limitations:['REVIEW_IN_PROGRESS'],steps:[],runtimeReview};
-  // Reserve before model work. A crash cannot silently reset the attempt budget.
-  await client.query(`INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash) VALUES($1,$2,$3,$4::jsonb,$5)
-    ON CONFLICT(goal_id,plan_id) DO UPDATE SET decision=EXCLUDED.decision,report_hash=EXCLUDED.report_hash`,
-    [goal.id,goal.current_plan_id,round,JSON.stringify(reserved),sha256Hex(reserved)]);
+  // Append-only reservations respect the existing insert-only report permissions.
+  await recordReadReviewBudget(client,goal.id,goal.current_plan_id,runtimeReview);
   const attemptStarted=performance.now();
   const invokeModel=invoke??(async(input:any,signal:AbortSignal)=>(await gateway.invoke({task:"executive_planning",capability:"planning",input,signal,dataClassification:bundle.raw.dataClassification??"INTERNAL",maxCostUsd:perResearchCallCeiling??(bundle.raw.planningMaxCostUsd??0.25)/3})).result.output);
   const call=async(input:any)=>{
@@ -145,9 +144,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    if(remaining<=0||callsUsed>=4)throw Error('REVIEW_MODEL_DEADLINE');
    options.signal?.throwIfAborted();
    callsUsed++;runtimeReview.callsUsed=callsUsed;runtimeReview.phase=input.proposedReport?'critique':'review';
-   reserved.runtimeReview=runtimeReview;
-   await client.query('UPDATE goal_read_reviews SET decision=$3::jsonb,report_hash=$4 WHERE goal_id=$1 AND plan_id=$2',
-    [goal.id,goal.current_plan_id,JSON.stringify(reserved),sha256Hex(reserved)]);
+   await recordReadReviewBudget(client,goal.id,goal.current_plan_id,runtimeReview);
    if(performance.now()-attemptStarted>=2*callDeadlineMs)throw Error('REVIEW_MODEL_DEADLINE');
    const started=performance.now();let code='REVIEW_CALL_COMPLETED';
    try{return await invokeReviewWithinDeadline(signal=>invokeModel(input,signal),Math.min(callDeadlineMs,Math.max(1,2*callDeadlineMs-(performance.now()-attemptStarted))),options.signal);}
@@ -177,7 +174,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    "On continue, include only still-needed GREEN sideEffect=false steps. At round 5 stop with blocked if any original deliverable remains unmet.",
    "Never claim success from raw status alone or claim independent reasoning by specialist executors. No provider writes, sending, sharing or deletion."
   ]}};
-  let decision:Review|undefined,error:string|undefined=prior?.decision.runtimeReview?.errorCode;
+  let decision:Review|undefined,error:string|undefined=budget?.errorCode;
   {
    try{
     if(projectionBlocked)throw Error("REVIEW_EVIDENCE_PROJECTION_BLOCKED");
@@ -212,8 +209,9 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   try{
    const current=await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goal.id]);
    if(current.rows[0]?.state!=="VERIFYING"||current.rows[0]?.current_plan_id!==goal.current_plan_id)throw new Error("REVIEW_STALE_PLAN");
-   await client.query('UPDATE goal_read_reviews SET decision=$3::jsonb,report_hash=$4 WHERE goal_id=$1 AND plan_id=$2',
-    [goal.id,goal.current_plan_id,JSON.stringify(savedDecision),sha256Hex(savedDecision)]);
+   await recordReadReviewBudget(client,goal.id,goal.current_plan_id,savedDecision.runtimeReview);
+   if(!retryable)await client.query('INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash) VALUES($1,$2,$3,$4::jsonb,$5)',
+    [goal.id,goal.current_plan_id,round,JSON.stringify(savedDecision),sha256Hex(savedDecision)]);
    if(decision.status==="complete"&&process.env.SAM_INTEGRATION_ENABLED==="1") await captureVerifiedKnowledge(client,goal.id,decision.findings,sourceText);
    if(decision.status==="continue"){
     await transitionGoal(client,goal.id,"VERIFYING","REPLANNING","verified_observation_continuation");

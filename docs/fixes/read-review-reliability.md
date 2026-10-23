@@ -16,12 +16,12 @@ attempts / four calls. Per-call spend ceilings are unchanged. These are active
 model-work limits, not end-to-end guarantees for database/scheduler availability.
 No model is changed and no provider or research feature is activated.
 
-Review attempt/call reservations are stored before invocation in the existing
-unique goal/plan review row. Runtime metadata cannot come from the model. Safe
+Review attempt/call reservations are appended before invocation to the existing tenant-scoped
+audit log, keyed to goal/plan. Runtime metadata cannot come from the model. Safe
 outbox phase events contain goal linkage, phase, attempt/call numbers, elapsed
 milliseconds and runtime error codes, never provider bodies or source text.
-An unfinished reservation is visibly blocked/in-progress, never a completed
-report. Reports and follow-up work still commit atomically; budget reservations
+An unfinished reservation has an explicit runtime phase, never a completed
+report. Report storage remains insert-only; no permission grants change. Reports and follow-up work still commit atomically; budget reservations
 survive a failed transaction or process restart.
 
 A failed first attempt schedules the remaining attempt after 30 seconds. Wakeup
@@ -75,5 +75,5 @@ bounded continuation, no duplicate source work, owner/entity/contract gates,
 exhaustion, cancellation, large structured evidence, period-mismatched invoices,
 missing monetary facts and honest blocked reports. Existing Google review tests
 retain atomic follow-up/report assertions and additionally check the durable
-in-progress reservation. Full acceptance uses the previously documented isolated
+audit reservation. Full acceptance uses the previously documented isolated
 TCP-query PostgreSQL readiness harness; no application tests are skipped.

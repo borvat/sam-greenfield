@@ -1,3 +1,4 @@
+import {readReviewBudget} from '../../kernel/src/readReviewBudget';
 import {withTransaction} from '../../../packages/db/src/client';
 import {transitionGoal} from '../../kernel/src/stateMachine';
 /** Existing owner action surface and database tenant RLS remain authoritative. */
@@ -8,7 +9,7 @@ export async function continueReadReview(input:{goalId:string;legalEntityId:stri
   if(goal.completion_definition!=='sam.read_report.v1')throw Error('GOAL_CONTRACT_REQUIRED');
   if(goal.state!=='WAITING_EXTERNAL')throw Error('REVIEW_NOT_WAITING');
   const review=(await client.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[goal.id,goal.current_plan_id])).rows[0];
-  const retry=review?.decision?.runtimeReview;
+  const retry=review?undefined:await readReviewBudget(client,goal.id,goal.current_plan_id);
   // Legacy reviews already consumed their two in-call attempts. Never reset
   // those budgets, infer a new grant, or use a direct read to evade the contract.
   if(!retry||retry.attempts>=2||retry.callsUsed>=4)throw Error('REVIEW_BUDGET_EXHAUSTED_REQUIRES_NEW_AUTHORIZATION');

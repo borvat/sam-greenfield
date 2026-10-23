@@ -1,3 +1,4 @@
+import {readReviewBudget} from '../../apps/kernel/src/readReviewBudget';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
@@ -40,8 +41,9 @@ async function main(){
  assert.equal((await reviewNextReadGoal(f.bundle,pool,pending,{callDeadlineMs:30})).status,'blocked');
  assert.equal(active,0);assert.equal(calls,1);assert.equal(aborted,1);
  assert.equal((await row(timeout.id)).state,'WAITING_EXTERNAL');assert((await row(timeout.id)).next_wake_at);
- assert.equal((await report(timeout.id)).runtimeReview.attempts,1);
- assert.equal((await report(timeout.id)).runtimeReview.retryable,true);
+ assert.equal((await readReviewBudget(pool,timeout.id,timeout.planId)).attempts,1);
+ assert.equal((await pool.query('SELECT 1 FROM goal_read_reviews WHERE goal_id=$1',[timeout.id])).rowCount,0,'retry has no terminal report');
+ assert.equal((await readReviewBudget(pool,timeout.id,timeout.planId)).retryable,true);
  assert.equal(await wakeGoalFromEventAtomic(timeout.id,1,'EXTERNAL_REPLY'),false,'generic events must not send review back to planning');
  assert.equal((await reviewNextReadGoal(f.bundle,pool,pending,{callDeadlineMs:30})).processed,false,'not retried before wake');
  await pool.query("UPDATE goals SET next_wake_at=now()-interval '1 second' WHERE id=$1",[timeout.id]);
