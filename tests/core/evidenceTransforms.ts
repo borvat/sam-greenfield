@@ -101,6 +101,10 @@ async function main(){
  assert.throws(()=>replayTransform({version:1,source:'s',operations:Array(13).fill({op:'select',fields:{k:'k'}})},{s:d}),/PLAN_LIMIT/);
  const many={...d,rows:Array.from({length:100},()=>d.rows[0])};
  assert.throws(()=>replayTransform({version:1,source:'s',operations:[{op:'join',right:'t',leftKey:'k',rightKey:'k',kind:'inner'}]},{s:many,t:many}),/ROW_OR_COLUMN_LIMIT/);
+ const unknownUnit={...d,columns:{...d.columns,a:{kind:'decimal' as const,unit:'UNKNOWN'}}};
+ assert.throws(()=>replayTransform({version:1,source:'s',operations:[{op:'group',keys:['k'],aggregates:[{as:'total',fn:'sum',field:'a'}]}]},{s:unknownUnit}),/UNIT_OR_SEMANTICS_UNKNOWN/);
+ assert.equal(assessDeliverables({...d,columns:{...d.columns,a:{kind:'decimal',unit:'EUR',vat:'UNKNOWN'}}},[{id:'money',description:'Money',fields:['a'],monetaryFields:['a'],completeCoverage:false,knownTimeZone:false}])[0].structurallyReady,false);
+ assert.throws(()=>replayTransform({version:1,source:'s',operations:[]},{s:{...d,timeZone:'UNKNOWN'}}),/TIME_ZONE_UNKNOWN/);
  assert.equal(f.counters().sends,0);
  console.log(JSON.stringify({status:'PASS',goals,classification:'SYNTHETIC_SCRIPTED_DECISIONS_NOT_AUTONOMOUS_MODEL_QUALITY',liveModelCalls:0,productionRegistration:false,coverage:['generic catalog alternatives','decimal replay','provenance','period grouping','partial pagination','unmatched joins','duplicate inventory without deletion','cross-tenant/goal refusal','revocation','limits']}));
  await pool.end();

@@ -1,5 +1,5 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
-import {replayTransform,type Column,type Dataset,type TransformPlan} from './transforms';
+import {replayTransform,knownTimeZone,type Column,type Dataset,type TransformPlan} from './transforms';
 export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[]};
 const at=(v:any,path:string[])=>{if(!Array.isArray(path)||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_PATH_INVALID');for(const k of path){if(v===null||typeof v!=='object'||!Object.hasOwn(v,k))return undefined;v=v[k];}return v;};
 /** Internal API only. Contract registry is trusted application configuration,
@@ -26,7 +26,7 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
   sources[alias]={columns:contract.columns,rows:records.map((record:any,index:number)=>{
    if(!record||typeof record!=='object'||Array.isArray(record))throw Error('EVIDENCE_RECORD_INVALID');
    return {values:Object.fromEntries(Object.keys(contract.columns).map(k=>[k,Object.hasOwn(record,k)?record[k]:null])),citations:[{executionId:id,verificationId:row.verification_id,row:index,sourceHash}]};
-  }),coverage:['complete','partial'].includes(coverage)?coverage:'unknown',timeZone:typeof timeZone==='string'?timeZone:null,
+  }),coverage:['complete','partial'].includes(coverage)?coverage:'unknown',timeZone:knownTimeZone(timeZone)?timeZone:null,
    limitations:[...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
   bindings[alias]={executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
  }

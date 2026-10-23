@@ -17,6 +17,8 @@ const fail=(code:string):never=>{throw Error('EVIDENCE_'+code);};
 const key=(k:string)=>{if(typeof k!=='string'||! /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k)||['constructor','prototype','__proto__'].includes(k))fail('FIELD_INVALID');return k;};
 const bounded=(v:unknown,n=250000)=>{if(Buffer.byteLength(JSON.stringify(v),'utf8')>n)fail('SIZE_LIMIT');};
 const ten=(n:number)=>10n**BigInt(n);
+const known=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=100&&!/^(unknown|unspecified|undefined|null|n\/a)$/i.test(v);
+export function knownTimeZone(v:unknown):v is string{if(!known(v))return false;try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}}
 function decimal(v:string){if(typeof v!=='string'||! /^-?(0|[1-9]\d{0,29})(\.\d{1,12})?$/.test(v))fail('DECIMAL_INVALID');const [a,b='']=v.split('.');return {n:BigInt(a+b),scale:b.length};}
 function format(n:bigint,scale:number):string{const neg=n<0n;if(neg)n=-n;let s=n.toString().padStart(scale+1,'0');if(scale)s=s.slice(0,-scale)+'.'+s.slice(-scale);s=s.replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');const out=(neg&&n!==0n?'-':'')+s;decimal(out);return out;}
 export function exactDecimal(a:string,b:string,op:'add'|'subtract'|'multiply'|'divide'){
@@ -31,6 +33,7 @@ function value(r:EvidenceRow,f:string){if(r.values[f]===null||r.values[f]===unde
 const citations=(rows:EvidenceRow[])=>{const m=new Map<string,Citation>();for(const r of rows)for(const c of r.citations)m.set(JSON.stringify(c),c);return [...m.entries()].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([,c])=>c);};
 function validate(d:Dataset){
  bounded(d);if(d.rows.length>500||Object.keys(d.columns).length>40)fail('ROW_OR_COLUMN_LIMIT');
+ if(d.timeZone!==null&&!knownTimeZone(d.timeZone))fail('TIME_ZONE_UNKNOWN');
  if(!['complete','partial','unknown'].includes(d.coverage))fail('COVERAGE_INVALID');
  for(const [f,c] of Object.entries(d.columns)){key(f);if(!['text','date','decimal'].includes(c.kind))fail('COLUMN_INVALID');}
  for(const r of d.rows){if(!r.citations.length)fail('PROVENANCE_REQUIRED');for(const f of Object.keys(r.values))column(d,f);for(const [f,c] of Object.entries(d.columns)){
@@ -38,11 +41,11 @@ function validate(d:Dataset){
   if(c.kind==='date'&&(!/^\d{4}-\d{2}-\d{2}$/.test(v)||new Date(v).toISOString().slice(0,10)!==v))fail('DATE_INVALID');
  }}
 }
-function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!a.unit||!b.unit||a.unit!==b.unit||a.vat!==b.vat)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
+function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit)||a.unit!==b.unit||a.vat!==b.vat)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
 function deriveColumn(a:Column,b:Column,op:string):Column{
  if(op==='subtract'&&a.kind==='date'&&b.kind==='date')return {kind:'decimal',unit:'calendar_day'};
  if(op==='add'||op==='subtract'){compatible(a,b);return {...a};}
- if(a.kind!=='decimal'||b.kind!=='decimal'||!a.unit||!b.unit)fail('UNIT_OR_SEMANTICS_UNKNOWN');
+ if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit))fail('UNIT_OR_SEMANTICS_UNKNOWN');
  if(op==='multiply'){if(b.unit==='1')return {...a};if(a.unit==='1')return {...b};fail('UNIT_COMPOSITION_UNSUPPORTED');}
  if(b.unit==='1')return {...a};compatible(a,b);return {kind:'decimal',unit:'1'};
 }
@@ -79,7 +82,7 @@ export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset
    const columns:Record<string,Column>=Object.fromEntries(op.keys.map(k=>[k,d.columns[k]]));
    if(op.op==='group'){if(op.aggregates.length>8)fail('GROUP_INVALID');for(const a of op.aggregates){key(a.as);if(Object.hasOwn(columns,a.as))fail('FIELD_COLLISION');
     if(a.fn==='count')columns[a.as]={kind:'decimal',unit:'count'};
-    else if(a.fn==='sum'){const c=column(d,a.field!);if(c.kind!=='decimal'||!c.unit)fail('UNIT_OR_SEMANTICS_UNKNOWN');columns[a.as]=c;}else fail('AGGREGATION_INVALID');}}
+    else if(a.fn==='sum'){const c=column(d,a.field!);if(c.kind!=='decimal'||!known(c.unit))fail('UNIT_OR_SEMANTICS_UNKNOWN');columns[a.as]=c;}else fail('AGGREGATION_INVALID');}}
    d={...d,columns,rows:[...groups.entries()].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([,rows])=>{
     const values:Record<string,string|null>=Object.fromEntries(op.keys.map(k=>[k,rows[0].values[k]]));
     if(op.op==='group')for(const a of op.aggregates)values[a.as]=a.fn==='count'?String(rows.length):rows.reduce((sum,r)=>exactDecimal(sum,value(r,a.field!),'add'),'0');
@@ -107,7 +110,7 @@ export function assessDeliverables(d:Dataset,deliverables:Deliverable[]){
  return deliverables.map(r=>{const gaps:string[]=[];for(const f of r.fields){if(!Object.hasOwn(d.columns,f))gaps.push('FIELD_MISSING:'+f);else if(d.rows.some(row=>row.values[f]===null))gaps.push('VALUE_MISSING:'+f);}
   if(r.completeCoverage&&d.selections?.length)gaps.push('FILTERED_SCOPE_REQUIRES_REVIEW');
   if(r.completeCoverage&&d.coverage!=='complete')gaps.push('COVERAGE_'+d.coverage.toUpperCase());if(r.knownTimeZone&&!d.timeZone)gaps.push('TIME_ZONE_UNKNOWN');
-  for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!c.unit||!c.vat||c.vat==='unknown')gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
+  for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat))gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
   return {id:r.id,description:r.description,structurallyReady:gaps.length===0,gaps,limitations:d.limitations};
  });
 }
