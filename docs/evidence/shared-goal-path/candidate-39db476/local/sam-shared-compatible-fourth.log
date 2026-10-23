@@ -1,0 +1,23 @@
+FAIL tests/evaluation/sharedPath.ts
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: Transform failed with 1 error:
+/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:44:247: ERROR: Expected ")" but found "phase"
+    at failureErrorWithLog (/workspace/sam-greenfield/node_modules/esbuild/lib/main.js:1752:15)
+    at /workspace/sam-greenfield/node_modules/esbuild/lib/main.js:1019:50
+    at responseCallbacks.<computed> (/workspace/sam-greenfield/node_modules/esbuild/lib/main.js:886:9)
+    at handleIncomingPacket (/workspace/sam-greenfield/node_modules/esbuild/lib/main.js:941:12)
+    at Socket.readFromStdout (/workspace/sam-greenfield/node_modules/esbuild/lib/main.js:864:7)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  name: 'TransformError'
+}
+
+Node.js v24.19.0
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:44:00.798Z","completedAt":"2026-10-23T17:44:01.111Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:44:00.801Z","completedAt":"2026-10-23T17:44:00.984Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:44:00.984Z","completedAt":"2026-10-23T17:44:01.111Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

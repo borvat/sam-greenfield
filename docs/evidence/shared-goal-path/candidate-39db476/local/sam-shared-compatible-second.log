@@ -1,0 +1,26 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"d4c7a727-6f5f-4fe2-a70c-dc8264970a04","state":"NEW"},{"id":"8ad740ff-0798-4670-b55a-c6aae90b56e1","state":"NEW"},{"id":"54400758-91bf-4926-881c-2881441de79b","state":"EXECUTING"}],"calls":2}
+Error: EVIDENCE_DELEGATION_SCOPE_INVALID
+    at bad (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:5:28)
+    at validateLink (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:44:211)
+    at evidenceFamily (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:35:67)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async withTransaction (/tmp/sam-shared-compatible/packages/db/src/client.ts:19:20)
+    at async <anonymous> (/tmp/sam-shared-compatible/apps/production/src/sharedGoalComposition.ts:93:12)
+    at async Object.runWorkTick (/tmp/sam-shared-compatible/apps/production/src/sharedGoalComposition.ts:92:20)
+    at async worker (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:44:25)
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at parent (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:60:326)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:38:14.082Z","completedAt":"2026-10-23T17:39:55.583Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:38:14.084Z","completedAt":"2026-10-23T17:38:14.264Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:38:14.264Z","completedAt":"2026-10-23T17:39:55.582Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

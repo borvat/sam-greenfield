@@ -1,0 +1,18 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"346ac69a-5c34-47e8-8626-80fecd52815d","state":"EXECUTING"},{"id":"524e45f1-4cef-4faa-a234-136d5fba08b7","state":"EXECUTING"},{"id":"f4a02f04-820b-4a38-aeb5-c25bcc16b347","state":"EXECUTING"}],"calls":1}
+PASS shared actual composition three fixture goals; model quality NOT evaluated
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert(reports.every(r=>r.findings.length>=2))
+
+    at parent (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:90:52)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:55:50.069Z","completedAt":"2026-10-23T17:56:43.918Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:55:50.075Z","completedAt":"2026-10-23T17:55:50.255Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:55:50.255Z","completedAt":"2026-10-23T17:56:43.918Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

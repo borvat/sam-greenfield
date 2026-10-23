@@ -1,0 +1,6 @@
+PASS tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"c3e0559c-3926-4f71-a0b4-52a997e0f8e4","state":"NEW"},{"id":"e393f450-8d40-45d6-8eef-fc7eb508f3cb","state":"NEW"},{"id":"7259ca82-c056-4734-a05b-360b9a3fd958","state":"EXECUTING"}],"calls":2}
+{"tick":20,"goals":[{"id":"e393f450-8d40-45d6-8eef-fc7eb508f3cb","state":"EXECUTING"},{"id":"7259ca82-c056-4734-a05b-360b9a3fd958","state":"VERIFYING"},{"id":"c3e0559c-3926-4f71-a0b4-52a997e0f8e4","state":"VERIFYING"}],"calls":12}
+PASS shared actual composition three fixture goals; model quality NOT evaluated
+
+{"passed":1,"failed":0,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T17:51:51.197Z","completedAt":"2026-10-23T17:52:45.245Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:51:51.200Z","completedAt":"2026-10-23T17:51:51.388Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:51:51.389Z","completedAt":"2026-10-23T17:52:45.245Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

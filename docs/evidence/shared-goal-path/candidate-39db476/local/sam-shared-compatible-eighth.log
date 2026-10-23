@@ -1,0 +1,28 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"6992e8ab-f3f2-4177-8c24-88524c32d770","state":"NEW"},{"id":"8c6b0c12-f50e-48b3-bfb9-d9ea6f3ccf42","state":"NEW"},{"id":"24db8f03-5a74-4fd3-8b54-43b1c33c90d6","state":"EXECUTING"}],"calls":2}
+{"tick":20,"goals":[{"id":"24db8f03-5a74-4fd3-8b54-43b1c33c90d6","state":"EXECUTING"},{"id":"8c6b0c12-f50e-48b3-bfb9-d9ea6f3ccf42","state":"EXECUTING"},{"id":"6992e8ab-f3f2-4177-8c24-88524c32d770","state":"COMPLETED"}],"calls":13}
+FIXTURE_FAILURE_STATE {"goals":[{"objective":"Inventory duplicate supplied documents by content hash without deleting anything.","state":"EXECUTING"},{"objective":"Compare January and February supplied ledger amounts in net EUR, with citations and limits.","state":"COMPLETED"},{"objective":"Compare supplier promises against delivery dates for the supplied delivery records.","state":"WAITING_EXTERNAL"}],"reviews":[{"goal_id":"6992e8ab-f3f2-4177-8c24-88524c32d770","status":"complete","limitations":["Synthetic fixtures, not live evidence","Synthetic collection only; query completeness is not global business coverage","Source metadata is attributed verified-read evidence, not independent business truth","Specialist interpretation only; embedded evidence copies omitted. Cite the separately supplied verified raw or derived executions."]}]}
+Error: EVIDENCE_DELEGATION_SCOPE_INVALID
+    at bad (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:5:28)
+    at validateLink (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:44:211)
+    at evidenceFamily (/tmp/sam-shared-compatible/apps/brain/src/evidence/delegationScope.ts:35:67)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async withTransaction (/tmp/sam-shared-compatible/packages/db/src/client.ts:19:20)
+    at async <anonymous> (/tmp/sam-shared-compatible/apps/production/src/sharedGoalComposition.ts:93:12)
+    at async Object.runWorkTick (/tmp/sam-shared-compatible/apps/production/src/sharedGoalComposition.ts:92:20)
+    at async worker (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:44:47)
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at parent (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:60:326)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:48:50.482Z","completedAt":"2026-10-23T17:49:40.219Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:48:50.484Z","completedAt":"2026-10-23T17:48:50.661Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:48:50.661Z","completedAt":"2026-10-23T17:49:40.219Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,28 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"2fa0cbcf-c34a-43f0-8c8d-7f66b9994c3b","state":"NEW"},{"id":"31bfd3f6-2df2-45e5-b909-a2e9e2cda0b2","state":"NEW"},{"id":"09fa4398-611b-45ed-a384-a0f42b3906f8","state":"EXECUTING"}],"calls":2}
+{"tick":20,"goals":[{"id":"09fa4398-611b-45ed-a384-a0f42b3906f8","state":"EXECUTING"},{"id":"31bfd3f6-2df2-45e5-b909-a2e9e2cda0b2","state":"EXECUTING"},{"id":"2fa0cbcf-c34a-43f0-8c8d-7f66b9994c3b","state":"COMPLETED"}],"calls":13}
+AssertionError [ERR_ASSERTION]: [{"id":"2fa0cbcf-c34a-43f0-8c8d-7f66b9994c3b","state":"COMPLETED"},{"id":"31bfd3f6-2df2-45e5-b909-a2e9e2cda0b2","state":"WAITING_EXTERNAL"},{"id":"09fa4398-611b-45ed-a384-a0f42b3906f8","state":"WAITING_EXTERNAL"}]
+    at worker (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:45:106)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at parent (/tmp/sam-shared-compatible/tests/evaluation/sharedPath.ts:60:326)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:44:15.454Z","completedAt":"2026-10-23T17:45:06.373Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:44:15.456Z","completedAt":"2026-10-23T17:44:15.627Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:44:15.627Z","completedAt":"2026-10-23T17:45:06.373Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

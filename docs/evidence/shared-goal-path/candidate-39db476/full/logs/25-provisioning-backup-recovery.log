@@ -1,0 +1,2 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node scripts/testing/provisioning-backup.cjs sam-verify-1792779072663-9598c82a-pg sam-verify-1792779072663-9598c82a
+{"suite":"provisioning-backup-recovery","status":"PASS","backupSha256":"d295ed34bec1ad892d3e7d2a9794fb0fcb3f4d7ba3751030f6350fdb9f036ae8","restoredLedger":14,"upgradedLedger":16,"quarantined":true,"applicationStarted":false,"productionData":false,"automaticDownMigration":false}

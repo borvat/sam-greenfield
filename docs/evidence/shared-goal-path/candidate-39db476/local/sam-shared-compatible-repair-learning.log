@@ -1,0 +1,6 @@
+PASS tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"2c18a53c-d334-4b49-a47d-eb9b75b23e1c","state":"EXECUTING"},{"id":"351c7fce-f2d1-47ab-a96e-57eceb0d6886","state":"EXECUTING"},{"id":"eef30533-3e2d-47c5-8b22-85ce491bae02","state":"EXECUTING"}],"calls":0}
+PASS shared actual composition three fixture goals; model quality NOT evaluated
+PASS shared SIGKILL/restart, no duplicate execution, 18 source/readback charges including rejected transform, signed descendant capture, original obligations and coordinator/cancellation guards; fixture decisions only
+
+{"passed":1,"failed":0,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T18:03:39.510Z","completedAt":"2026-10-23T18:04:43.736Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T18:03:39.512Z","completedAt":"2026-10-23T18:03:39.689Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T18:03:39.689Z","completedAt":"2026-10-23T18:04:43.736Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

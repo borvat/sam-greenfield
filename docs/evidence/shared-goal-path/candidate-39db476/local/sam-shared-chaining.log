@@ -1,0 +1,4 @@
+PASS tests/core/evidenceChaining.ts
+PASS three-level exact chained replay, raw citations, depth bound, foreign-goal refusal and leaf revocation; no external calls
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/evidenceChaining.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T17:59:19.356Z","completedAt":"2026-10-23T17:59:19.891Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:59:19.359Z","completedAt":"2026-10-23T17:59:19.534Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/evidenceChaining.ts"],"startedAt":"2026-10-23T17:59:19.534Z","completedAt":"2026-10-23T17:59:19.891Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

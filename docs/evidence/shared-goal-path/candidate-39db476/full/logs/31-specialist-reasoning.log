@@ -1,0 +1,35 @@
+$ docker run --rm --name sam-verify-1792779072663-9598c82a-job-29 --label sam.verification.run=sam-verify-1792779072663-9598c82a --init --network container:sam-verify-1792779072663-9598c82a-pg --mount type=bind,src=/tmp/sam-verify-0wC0zN/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp --env SAM_CORE_TEST_DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test --env SAM_VERIFICATION_SOURCE_SHA=39db4769e498efe3287bee8216d2c6d0825b0706 node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node scripts/testing/core-reliability.cjs --suite tests/specialists/acceptance.ts
+PASS tests/specialists/acceptance.ts
+{"budgetDomain":"SPECIALIST_FAMILY_ONLY","shared":{"tools":10,"models":9,"tokens":288000,"costUsd":0.28800000000000003,"iterations":9,"delegations":7},"executiveBootstrapModelsOutsideFamily":1,"wholeEvaluationBudget":"NOT_YET_ENFORCED; live evaluation remains blocked"}
+PASS cold-process verified lesson retrieval
+{"test":"collaboration","status":"PASS","maxConcurrentReasoning":2,"agents":["risk-specialist","market-specialist","executive-specialist"],"rootQueue":"aa51f03c-dbf1-4376-9544-564d06111143","learning":"observation->hypothesis->evaluation->verified lesson; inference excluded; revocation hides memory and invalidates report","classification":"SYNTHETIC_MODEL_ARCHITECTURE"}
+{"worker":"collaboration","exit":0,"signal":null,"error":null}
+PASS real SIGKILL model reservation retained, kernel lease recovery, fenced resumed reasoning, single child dispatch
+{"worker":"recover","exit":0,"signal":null,"error":null}
+PASS budget models
+PASS budget tokens
+PASS budget costUsd
+PASS budget iterations
+PASS controls: scope-cancel-time
+PASS controls: tool-and-delegation-counters
+PASS independent readback budget and timeout become INCONCLUSIVE, never verified
+PASS controls: read-timeout
+PASS controls: cancel-inflight-read
+PASS controls: tool-cost
+PASS controls: cumulative-model-cost
+PASS controls: cancel-inflight-model
+PASS controls: model-timeout
+PASS narrowed child model budget enforced independently of available family budget
+PASS model/token/cost/iteration/time limits, cancellation, unauthorized dynamic capability denied, side effects and unbounded/live adapters refused
+{"worker":"controls","exit":0,"signal":null,"error":null}
+PASS populated same-org and cross-org isolation, spoofed GUC cannot switch company, immutable limits/learning
+{"worker":"isolation","exit":0,"signal":null,"error":null}
+PASS runtime refuses absent/corrupt specialist upgrade receipt
+{"worker":"profile-denied","exit":0,"signal":null,"error":null}
+PASS runtime refuses absent/corrupt specialist upgrade receipt
+{"worker":"profile-denied","exit":0,"signal":null,"error":null}
+PASS missing immutable policy refuses specialist admission
+{"worker":"admission-denied","exit":0,"signal":null,"error":null}
+{"suite":"specialist-acceptance","status":"PASS","classification":"SYNTHETIC_MODEL_ARCHITECTURE","liveModels":"NOT_RUN","migration":{"filename":"00106_specialist_intelligence.sql","sha256":"c6c054c2edfbd3860251496d1ec4c356b36874848b40cdd13f97d1c267cb1951","migrations":[{"filename":"00106_specialist_intelligence.sql","sha256":"c6c054c2edfbd3860251496d1ec4c356b36874848b40cdd13f97d1c267cb1951"},{"filename":"00107_learning_provenance.sql","sha256":"a0175f47c6188be789ab0595cbbbc03418be12161ba36a6500761f2f60c000d4"}]},"coverage":["independent reasoning","parallel delegation","verified result passing","failure replan","contradiction correction","executive synthesis","SIGKILL durable recovery","tenant/company fences","side-effect refusal","typed learning/revocation","budgets","cancellation"]}
+
+{"passed":1,"failed":0,"results":[{"test":"tests/specialists/acceptance.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T18:17:33.516Z","completedAt":"2026-10-23T18:18:35.537Z","commands":[{"argv":["/usr/local/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T18:17:33.518Z","completedAt":"2026-10-23T18:17:33.687Z","exitCode":0,"signal":null,"error":null},{"argv":["/usr/local/bin/node","--import","tsx","tests/specialists/acceptance.ts"],"startedAt":"2026-10-23T18:17:33.687Z","completedAt":"2026-10-23T18:18:35.537Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}
