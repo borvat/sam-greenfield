@@ -1,0 +1,8 @@
+{"name":"commercial-market","signature":"VERIFIED","events":127,"status":"PASS","classification":"AUTHENTICATED_COMMERCIAL_FIXTURE_CAPTURE","liveReasoningValidated":false}
+{"name":"commercial-profitability","signature":"VERIFIED","events":127,"status":"PASS","classification":"AUTHENTICATED_COMMERCIAL_FIXTURE_CAPTURE","liveReasoningValidated":false}
+{"name":"commercial-suppliers","signature":"VERIFIED","events":127,"status":"PASS","classification":"AUTHENTICATED_COMMERCIAL_FIXTURE_CAPTURE","liveReasoningValidated":false}
+{"name":"evaluation-incomplete","signature":"VERIFIED","events":7,"status":"FAIL","classification":"AUTHENTICATED_INCOMPLETE_CAPTURE","liveReasoningValidated":false}
+{"name":"evaluation-signed","signature":"VERIFIED","events":109,"status":"PASS","classification":"AUTHENTICATED_FIXTURE_CAPTURE","liveReasoningValidated":false}
+{"name":"goal-family","signature":"VERIFIED","events":64,"status":"PASS","classification":"AUTHENTICATED_GOAL_FAMILY_FIXTURE","declaredCompletedGoals":3,"liveReasoningValidated":false}
+{"name":"shared-path","signature":"VERIFIED","events":188,"status":"PASS","classification":"AUTHENTICATED_GOAL_FAMILY_FIXTURE","declaredCompletedGoals":3,"liveReasoningValidated":false}
+{"name":"source-persistence-crash","signature":"VERIFIED","events":8,"status":"FAIL","classification":"AUTHENTICATED_INCOMPLETE_CAPTURE","liveReasoningValidated":false}

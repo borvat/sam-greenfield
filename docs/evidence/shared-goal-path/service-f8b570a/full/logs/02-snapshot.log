@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-l9PNj4/source.tar f8b570ac80158303993c3156872c76401ff965f9
+$ tar -xf /tmp/sam-verify-l9PNj4/source.tar -C /tmp/sam-verify-l9PNj4/source

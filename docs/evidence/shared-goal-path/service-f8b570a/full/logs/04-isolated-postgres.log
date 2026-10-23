@@ -1,0 +1,21 @@
+$ docker network create --internal --label sam.verification.run=sam-verify-1792779595462-fe382964 sam-verify-1792779595462-fe382964-net
+27a8ba40088e8f4e39d8e28dc5c0d16381e070d404ce78d6996b8e980100670c
+$ docker run --detach --name sam-verify-1792779595462-fe382964-pg --label sam.verification.run=sam-verify-1792779595462-fe382964 --network sam-verify-1792779595462-fe382964-net --env POSTGRES_DB=sam_core_test --env POSTGRES_PASSWORD=verification-fixture pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+29a9fe8e75136bb4c5fa83393b10d59da5b32c39eae8be17161751d06167b609
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792779595462-fe382964-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+psql: error: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792779595462-fe382964-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+psql: error: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792779595462-fe382964-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+psql: error: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792779595462-fe382964-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+1
+$ docker exec sam-verify-1792779595462-fe382964-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_core_test_lifecycle'
+CREATE DATABASE
+$ docker exec sam-verify-1792779595462-fe382964-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_core_test_application'
+CREATE DATABASE
+$ docker exec sam-verify-1792779595462-fe382964-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_greenfield'
+CREATE DATABASE
