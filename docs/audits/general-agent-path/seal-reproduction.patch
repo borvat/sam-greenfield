@@ -1,0 +1,23 @@
+diff --git a/tests/evaluation/budgets.ts b/tests/evaluation/budgets.ts
+index eadfecb..a737063 100644
+--- a/tests/evaluation/budgets.ts
++++ b/tests/evaluation/budgets.ts
+@@ -107,6 +107,7 @@ async function worker(){
+   assert.equal(used.tools,dispatches);if(suffix==='zero-iterations')assert.equal(used.models,0);
+  }
+  console.log('PASS actual composition zero tools/iterations and separately charged readback deny callbacks');
++ if(process.argv[2]==='seal-audit')return;
+  // Barriers occur after the SQL insert and after model acceptance, before COMMIT.
+  for(const phase of ['plan','review'])for(const reason of ['cancel','expire']){
+   const name='goal-runtime-'+phase+'-'+reason,t=await openEvaluationTrial(trials[name].id),id=trials[name].goals[0];
+@@ -222,7 +223,9 @@ async function parent(){
+   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='fixture-evaluation-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
+   const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIALS:JSON.stringify(trials)};
+   const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:45000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
+-  run('worker');
++  run('seal-audit');
++  await assert.rejects(()=>sealEvaluationTrial(c,trials['goal-runtime'].id),/EVALUATION_VERIFIED_FINAL_REPORT_REQUIRED/);
++  console.log('REPRODUCED: three completed ordinary goal reports cannot seal via specialist-root evaluation capture');return;
+   const child=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',x=>output+=x);child.stderr.on('data',x=>output+=x);
+   const started=Date.now();while(!output.includes('TRIAL_ATTEMPT_RESERVED')&&Date.now()-started<8000)await new Promise(r=>setTimeout(r,25));
+   assert.match(output,/TRIAL_ATTEMPT_RESERVED/);const closed=new Promise(r=>child.once('close',r));child.kill('SIGKILL');await closed;

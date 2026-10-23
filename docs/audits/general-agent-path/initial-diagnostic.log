@@ -1,0 +1,43 @@
+FAIL tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting
+PASS actual composition zero tools/iterations and separately charged readback deny callbacks
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"planning","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"review","details":"withheld"}
+Error: EVALUATION_AGENT_TIME_EXHAUSTED
+    at Object.live (/tmp/sam-goal-path-audit/apps/agents/src/evaluation/trial.ts:44:123)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (/tmp/sam-goal-path-audit/apps/production/src/goalEvaluationComposition.ts:37:83)
+    at async assertCommitAdmission (/tmp/sam-goal-path-audit/packages/db/src/commitAdmission.ts:10:64)
+    at async withTransaction (/tmp/sam-goal-path-audit/packages/db/src/client.ts:20:5)
+    at async recoverKernelAfterRestart (/tmp/sam-goal-path-audit/apps/kernel/src/recovery.ts:49:25)
+    at async Object.runWorkTick (/tmp/sam-goal-path-audit/apps/production/src/composition.ts:64:22)
+    at async worker (/tmp/sam-goal-path-audit/tests/evaluation/budgets.ts:119:38)
+AssertionError [ERR_ASSERTION]: worker
+
+1 !== 0
+
+    at run (/tmp/sam-goal-path-audit/tests/evaluation/budgets.ts:224:202)
+    at parent (/tmp/sam-goal-path-audit/tests/evaluation/budgets.ts:225:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/budgets.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T15:32:42.445Z","completedAt":"2026-10-23T15:33:23.428Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T15:32:42.448Z","completedAt":"2026-10-23T15:32:42.821Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T15:32:42.822Z","completedAt":"2026-10-23T15:33:23.428Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}
