@@ -55,7 +55,7 @@ async function main(){
    assert(observations.length===2);assert(observations.every((s:any)=>s.trustBoundary));
    return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:{status:'complete',summary:'FixtureBox: source price EUR 23; verified analysis agrees. A failed analysis was replanned and a specialist retry recovered. Synthetic evidence only.',
     requirements:[{requirement:'Source terms and consolidated decision',fulfilled:true,evidenceIds:observations.map((s:any)=>s.id)}],
-    findings:observations.map((s:any)=>({text:s.lines[0].text,executionId:s.id,quoteLine:0,confidence:'MEDIUM',confidenceBasis:'Synthetic independently reread source; no real market evidence'})),
+    findings:observations.map((s:any)=>({text:s.lines[0],executionId:s.id,quoteLine:0,confidence:'MEDIUM',confidenceBasis:'Synthetic independently reread source; no real market evidence'})),
     limitations:['Model/critic responses are fixtures; specialist executors do not perform independent reasoning.'],contradictions:[],steps:[]}};
   }
   assert.match(input.objective,/FixtureBox/);assert(input.capabilities.some((d:any)=>d.capabilityId===readId));
