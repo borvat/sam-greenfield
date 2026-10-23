@@ -1,0 +1,11 @@
+✔ review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion (2.922276ms)
+✔ projected detail quotes use verified literals and reject projection wrappers (0.306792ms)
+✔ isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction (2019.783589ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2622.747061

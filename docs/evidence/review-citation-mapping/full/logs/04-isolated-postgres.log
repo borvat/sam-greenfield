@@ -1,0 +1,18 @@
+$ docker network create --internal --label sam.verification.run=sam-verify-1792736132505-b9feda43 sam-verify-1792736132505-b9feda43-net
+148038b8708be8b5240cc7b6520eefa82ab61b94b249de33af2e3496cb41db84
+$ docker run --detach --name sam-verify-1792736132505-b9feda43-pg --label sam.verification.run=sam-verify-1792736132505-b9feda43 --network sam-verify-1792736132505-b9feda43-net --env POSTGRES_DB=sam_core_test --env POSTGRES_PASSWORD=verification-fixture pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+e9848d87e13cc743b6397a6c43bd23025de72e09745206cdd791fff75b9c94aa
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792736132505-b9feda43-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+psql: error: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792736132505-b9feda43-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+psql: error: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792736132505-b9feda43-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+1
+$ docker exec sam-verify-1792736132505-b9feda43-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_core_test_lifecycle'
+CREATE DATABASE
+$ docker exec sam-verify-1792736132505-b9feda43-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_core_test_application'
+CREATE DATABASE
+$ docker exec sam-verify-1792736132505-b9feda43-pg psql -U postgres -d sam_core_test -v ON_ERROR_STOP=1 -c 'CREATE DATABASE sam_greenfield'
+CREATE DATABASE

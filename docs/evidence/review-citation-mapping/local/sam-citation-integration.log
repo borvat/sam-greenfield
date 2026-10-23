@@ -1,0 +1,9 @@
+PASS tests/integration/orchestration.ts
+{"test":"MULTI_AGENT_ORCHESTRATION","status":"PASS","initialPlans":1,"revisedPlans":1,"reportReviews":1,"critiqueCalls":1,"specialists":["source-researcher","decision-analyst"],"reportCount":1,"verifiedKnowledge":2,"liveModelCalls":0,"liveProviderRequests":0,"modelUnderstanding":"UNVERIFIED_MOCK_MODEL","independentSpecialistReasoning":"NOT_IMPLEMENTED","classification":"REAL_KERNEL_ORCHESTRATION_WITH_SYNTHETIC_MODEL_AND_SOURCE_FIXTURES"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+PASS cold-process recall durable goal/report/knowledge/UNROUTED notification; revocation fails closed
+PASS cold-process revoked durable goal/report/knowledge/UNROUTED notification; revocation fails closed
+PASS missing immutable feature policy refuses integration admission
+INTEGRATION_ACCEPTANCE PASS: restricted LOGIN, real ModelGateway/kernel, dependent specialist handoffs, failure/replan/retry, single report, atomic learning, cold process recall, revocation, same-org/cross-org isolation; zero external actions
+
+{"passed":1,"failed":0,"results":[{"test":"tests/integration/orchestration.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T06:14:28.407Z","completedAt":"2026-10-23T06:14:35.321Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T06:14:28.410Z","completedAt":"2026-10-23T06:14:28.593Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/integration/orchestration.ts"],"startedAt":"2026-10-23T06:14:28.593Z","completedAt":"2026-10-23T06:14:35.321Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

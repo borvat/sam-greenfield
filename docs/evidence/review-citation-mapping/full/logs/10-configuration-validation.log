@@ -1,0 +1,31 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node tests/testing/runner-contract.cjs
+PASS missing-docker fails before tests; NOT_RUN preserved; reports and hashes valid
+PASS dirty-checkout fails before tests; NOT_RUN preserved; reports and hashes valid
+PASS remote-docker fails before tests; NOT_RUN preserved; reports and hashes valid
+$ docker compose --file docker-compose.yml config --quiet --no-interpolate --no-env-resolution
+time="2026-10-23T06:16:21Z" level=warning msg="/tmp/sam-verify-hChKaA/source/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+$ docker compose --file docker-compose.production.yml config --quiet --no-interpolate --no-env-resolution
+$ docker compose --file deploy/production/docker-compose.live.yml config --quiet --no-interpolate --no-env-resolution
+$ docker compose --file deploy/staging/docker-compose.integration.yml config --quiet --no-interpolate --no-env-resolution
+$ docker run --rm --name sam-verify-1792736132505-b9feda43-job-7 --label sam.verification.run=sam-verify-1792736132505-b9feda43 --init --network container:sam-verify-1792736132505-b9feda43-pg --mount type=bind,src=/tmp/sam-verify-hChKaA/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node tests/release/build_configuration.cjs
+BUILD_CONFIGURATION_PASS: explicit build dev dependencies; production launch pins NODE_ENV; executive disabled; no install/network.
+$ docker run --rm --name sam-verify-1792736132505-b9feda43-job-8 --label sam.verification.run=sam-verify-1792736132505-b9feda43 --init --network container:sam-verify-1792736132505-b9feda43-pg --mount type=bind,src=/tmp/sam-verify-hChKaA/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node tests/release/preparation.cjs
+PREPARATION_PASS: exact nonsecret profile; eight unsafe configuration cases refused; no connections.
+$ docker run --rm --name sam-verify-1792736132505-b9feda43-job-9 --label sam.verification.run=sam-verify-1792736132505-b9feda43 --init --network container:sam-verify-1792736132505-b9feda43-pg --mount type=bind,src=/tmp/sam-verify-hChKaA/source,dst=/app --workdir /app --user 1000:1000 --env HOME=/tmp node:22-bookworm@sha256:82693da96a4e38b8c0e2bf0c5df58fcb86d2d25e5a235c07748f09bfa38567c2 node packages/db/src/migrate.js --check-deterministic
+Migrations in deterministic order:
+  00001_initial_org_legal_entities.sql sha256:4b01452c74004121
+  00002_audit_framework.sql sha256:1532b32e2a3ca7aa
+  00003_event_fabric.sql sha256:d942ee36640bdd36
+  00004_outbox_and_side_effect.sql sha256:06888f2a03e31f6e
+  00005_world_facts_memory.sql sha256:b9bcb63c289fdae9
+  00006_policy_approvals_verification.sql sha256:1b09604a3363455a
+  00007_goals_plans_financial.sql sha256:4d60577ef6b47dae
+  00008_rls_tenant_isolation_policies.sql sha256:c41bc43f7501ee91
+  00009_fix_rls_fail_closed.sql sha256:255e3fa1fe2cbfb1
+  00010_fix_global_business_id_sequence.sql sha256:001630b5347f1fdf
+  00012_core_reliability.sql sha256:78205ef98aa952f3
+  00013_operational_tenant_policies.sql sha256:18586d04848985d2
+
+Final deterministic schema hash: 46b5b2ea30b893050cccef71e5f82c1cac406a51f72b66696f31cb5540a1a8c4
+Total migrations: 12
+Deterministic check PASS

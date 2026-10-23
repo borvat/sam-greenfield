@@ -1,0 +1,5 @@
+$ docker restart --time 10 sam-verify-1792736132505-b9feda43-pg
+Flag --time has been deprecated, use --timeout instead
+sam-verify-1792736132505-b9feda43-pg
+$ docker exec --env PGPASSWORD=verification-fixture sam-verify-1792736132505-b9feda43-pg psql -h 127.0.0.1 -U postgres -d sam_core_test -Atqc 'SELECT 1'
+1
