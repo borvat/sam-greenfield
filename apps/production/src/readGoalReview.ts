@@ -17,7 +17,7 @@ import { assessResearchProgress, isResearchObjective, sourceEnvelope, validateRe
 import type {ValidatedProductionBundle} from "./bundle";
 
 export const READ_REPORT_CONTRACT="sam.read_report.v1";
-export type Source={id:string;capabilityId:string;params:Record<string,unknown>;text:string;truncated:boolean;actor:string;retrievedAt:string;uri?:string};
+export type Source={id:string;capabilityId:string;params:Record<string,unknown>;text:string;truncated:boolean;actor:string;retrievedAt:string;uri?:string;verifiedQuotes?:Record<number,string>};
 type Review={status:"continue"|"complete"|"blocked";summary:string;requirements:{requirement:string;fulfilled:boolean;evidenceIds:string[]}[];findings:{text:string;executionId:string;quote:string;confidence?:"LOW"|"MEDIUM"|"HIGH";confidenceBasis?:string}[];limitations:string[];contradictions?:{topic:string;evidenceIds:string[]}[];steps:{capabilityId:string;params:Record<string,unknown>}[]};
 const object=(x:any)=>x&&typeof x==="object"&&!Array.isArray(x);
 const sourceLines=(text:string)=>text.split("\n").flatMap(line=>line.length<=1000?[line]:Array.from({length:Math.ceil(line.length/1000)},(_,i)=>line.slice(i*1000,(i+1)*1000)));
@@ -40,8 +40,11 @@ export function validateReadReview(value:any,sources:Source[],objective:string,d
   if(source&&f.quoteLine!==undefined){
    const line=sourceLines(source.text)[f.quoteLine];
    if(!Number.isInteger(f.quoteLine)||f.quoteLine<0||typeof line!=="string")throw new Error("REVIEW_INVALID_QUOTE_LINE");
-   f.quote=line;
+   // Projection can change indentation and add wrapper fields. Accept only a
+   // literal quote mapped back to the verified raw source, never wrapper text.
+   f.quote=source.verifiedQuotes?source.verifiedQuotes[f.quoteLine]:line;
   }
+  if(source?.verifiedQuotes&&typeof f.quote==='string'&&!Object.values(source.verifiedQuotes).some(q=>q.includes(f.quote)))throw new Error('REVIEW_UNSUPPORTED_CITATION');
   if(!source||typeof f.text!=="string"||!f.text.trim()||typeof f.quote!=="string"||f.quote.length<3||f.quote.length>1500||!source.text.includes(f.quote))throw new Error("REVIEW_UNSUPPORTED_CITATION: select an existing verified executionId and quoteLine; never retype or paraphrase the quotation");
   if(requireConfidence&&(!["LOW","MEDIUM","HIGH"].includes(f.confidence)||typeof f.confidenceBasis!=="string"||!f.confidenceBasis.trim()||f.confidenceBasis.length>500))throw new Error("REVIEW_CONFIDENCE_REQUIRED");
  }
@@ -116,7 +119,11 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   });
   const sources:Source[]=all.rows.map((e:any,index:number)=>{
    const projection=projections[index],body=projection.text,provenance={independentReadback:"VERIFIED",originalContentHash:projection.originalHash};
-   return {id:e.id,capabilityId:e.capability_id,params:e.params,text:body+"\n[Verified execution evidence]\n"+JSON.stringify(provenance,null,2),truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
+   const text=body+"\n[Verified execution evidence]\n"+JSON.stringify(provenance,null,2),raw=reviewSourceText(e.result);
+   const verifiedQuotes=Object.fromEntries(sourceLines(text).flatMap((line,index)=>{
+    const quote=line.trim();return quote.length>=3&&raw.includes(quote)?[[index,quote]]:[];
+   }));
+   return {id:e.id,capabilityId:e.capability_id,params:e.params,text,verifiedQuotes,truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
   });
   if(sources.length>20)throw new Error("REVIEW_SOURCE_BUDGET_EXCEEDED");
   const round=prior?.round??existing.rows.length+1;
@@ -156,10 +163,10 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    finally{await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:goal.id,eventType:'READ_REVIEW_PHASE',
     payload:{phase:runtimeReview.phase,attempt:reviewAttempt,call:callsUsed,code,promptBytes,elapsedMs:Math.round(performance.now()-started)}});}
   };
-  const observations=sources.map(({text,...source})=>{
+  const observations=sources.map(({text,verifiedQuotes,...source})=>{
    const envelope=sourceEnvelope({id:source.id,capabilityId:source.capabilityId,specialist:source.actor,uri:source.uri,retrievedAt:source.retrievedAt,text,verified:true});
    return {...source,sourceContentHash:envelope.contentHash,sourceTruncated:source.truncated,trustBoundary:envelope.trustBoundary,
-    lines:sourceLines(text).map(line=>line.trim())};
+    lines:sourceLines(text).map(line=>line.trim()),citableLines:Object.keys(verifiedQuotes??{}).map(Number)};
   });
   const schema={status:"continue | complete | blocked",summary:"string",requirements:[{requirement:"each requested deliverable",fulfilled:"boolean",evidenceIds:["verified execution UUID"]}],findings:[{text:"supported finding",executionId:"verified execution UUID",quoteLine:"zero-based array index of an existing nonempty source line, at most 1500 chars",confidence:"LOW | MEDIUM | HIGH",confidenceBasis:"brief evidence and assumption rationale"}],limitations:["string"],contradictions:[{topic:"conflicting claim",evidenceIds:["verified execution UUIDs"]}],steps:[{capabilityId:"listed GREEN read capability",params:"concrete schema-valid object"}]};
   const input={objective:goal.objective,round,maxRounds:5,verifiedObservations:observations,failedReadAttempts:[...failedReadAttempts,...failedHistory],evidenceLimitations:[...evidenceLimitations,...monetaryGaps,...invoiceNotice],previousDecisions:existing.rows.filter((x:any)=>x.plan_id!==goal.current_plan_id).map((x:any)=>x.decision),capabilities:descriptors,contract:{schema,rules:[
@@ -170,7 +177,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    "Use inline content reads by default. A download/export link alone is not proof you read its content. Artifact text in samArtifacts is retrieved content. Mark truncated sources honestly; no claim of complete coverage.",
    "Preserve supplied evidenceLimitations in the report. Projected detail arrays are explicitly sampled; totals, period, coverage and limitations are copied from verified evidence, never inferred from samples. Settlement invoices for a different period cannot substantiate requested-period sales; EUR amount, VAT basis and coverage must be explicit or remain unfulfilled.",
    "Pagination is required only when the original objective asks for all results. Bounded samples must be described as bounded.",
-   "Each observation.lines is a string array; its zero-based array position is quoteLine. For every finding select executionId and integer quoteLine from that observation's lines. The runtime copies the exact quotation; do NOT retype the quote. Select a relevant nonempty line of 3-1500 characters supporting your finding.",
+   "Each observation.lines is a string array; its zero-based array position is quoteLine. Choose only an index listed in citableLines; projection wrappers and provenance metadata are not source quotations. For every finding select executionId and integer quoteLine from that observation's lines. The runtime copies the exact quotation; do NOT retype the quote. Select a relevant nonempty line of 3-1500 characters supporting your finding.",
    ...(researchPlan?["For each research finding assign LOW, MEDIUM or HIGH confidence and a short confidenceBasis grounded in source quality, coverage and assumptions; these are qualitative judgments, never invented statistical probabilities.","Prefer primary official evidence for laws, permits and technical requirements; independently cross-check material market, demand and cost claims across distinct publishers when available. Repeated calls to one tool or publisher do not create independent corroboration. State missing source classes and reduce confidence when evidence is narrow."]:[]),
    "On complete, include findings with source line citations, all requested deliverables as fulfilled requirements and a useful combined summary. The runtime persists this report atomically; no external report-write tool is needed.",
    "failedReadAttempts is runtime control history, not source content. Acknowledge any failed preferred read and successful alternate-source recovery in the summary; cite findings only to successful VERIFIED observations. Initial-attempt instructions already recorded as failed are not still-pending work.",

@@ -15,8 +15,11 @@ silently sliced to fit a request.
 
 Reviewer observations use string arrays, with zero-based array positions as
 quoteLine, rather than an index/text object for every pretty-JSON line. Indentation
-is removed for display; runtime quotation mapping retains the original source
-lines, so exact-quote and knowledge provenance checks are unchanged. All capability
+is removed for display. Each citable projected line is mapped to a literal trimmed
+substring of the verified raw source; only those citableLines may supply quotes.
+Projection wrappers and added provenance metadata are not quotations. The runtime
+copies the verified literal so exact-quote and knowledge provenance checks remain
+binding through report and knowledge persistence. All capability
 schemas and authorization checks remain available for authorized follow-up reads.
 
 Before either proposal or critique, the complete UTF-8 serialized provider task
@@ -57,3 +60,11 @@ oversized input, no critique call for oversized reports, preserved provenance an
 essential metadata/omissions, missing-money honesty, existing authorized read
 continuation and exact source citation behavior. Full acceptance must be recorded
 against the final clean application commit; synthetic success is not live success.
+
+
+The citation regression uses an 18,319-character nested products source: it fit
+under the former 22k per-source limit, but projection introduces an items wrapper
+and changes indentation. The restricted-role integration test now cites a nested
+SKU detail (not a header), asserts its persisted knowledge statement, cold-process
+recall and revocation. Wrapper-only quotations are rejected. No knowledge or
+verification guard is disabled.
