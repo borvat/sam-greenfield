@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-c3XcsV/source.tar 9dea66eadcdd0d3c8a080d1f974234f8a82c69d1
+$ tar -xf /tmp/sam-verify-c3XcsV/source.tar -C /tmp/sam-verify-c3XcsV/source

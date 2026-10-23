@@ -1,0 +1,43 @@
+FAIL tests/evaluation/budgets.ts
+error: function digest(text, unknown) does not exist
+    at /workspace/sam-greenfield/node_modules/pg/lib/client.js:535:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async appendTrialEvent (/tmp/sam-unified-goal-tree/apps/agents/src/evaluation/trial.ts:21:10)
+    at async <anonymous> (/tmp/sam-unified-goal-tree/apps/agents/src/evaluation/trial.ts:121:57)
+    at async withTransaction (/tmp/sam-unified-goal-tree/packages/db/src/client.ts:19:20)
+    at async ModelGateway.invoke (/tmp/sam-unified-goal-tree/apps/agents/src/evaluation/trial.ts:121:6)
+    at async worker (/tmp/sam-unified-goal-tree/tests/evaluation/budgets.ts:76:26) {
+  length: 355,
+  severity: 'ERROR',
+  code: '42883',
+  detail: undefined,
+  hint: 'No function matches the given name and argument types. You might need to add explicit type casts.',
+  position: undefined,
+  internalPosition: '18',
+  internalQuery: "NEW.hash:=encode(digest(NEW.previous_hash||NEW.canonical,'sha256'),'hex')",
+  where: 'PL/pgSQL function evaluation_event_guard() line 15 at assignment',
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_func.c',
+  line: '629',
+  routine: 'ParseFuncOrColumn'
+}
+AssertionError [ERR_ASSERTION]: worker
+
+1 !== 0
+
+    at run (/tmp/sam-unified-goal-tree/tests/evaluation/budgets.ts:246:202)
+    at parent (/tmp/sam-unified-goal-tree/tests/evaluation/budgets.ts:247:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/budgets.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T16:01:56.761Z","completedAt":"2026-10-23T16:01:58.467Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T16:01:56.764Z","completedAt":"2026-10-23T16:01:56.998Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T16:01:56.998Z","completedAt":"2026-10-23T16:01:58.467Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}
