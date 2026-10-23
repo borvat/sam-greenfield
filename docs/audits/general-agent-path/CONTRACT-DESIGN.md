@@ -185,3 +185,14 @@ reuses the queue, fencing, verifiers, exact arithmetic and ledger. No wholesale
 replacement, permission bypass or new infrastructure is justified by this finding.
 The offline redesign itself is authorized code work; production registration, scoped
 profile admission and live spending remain separate operator decisions.
+
+The same inspection also found a fixture-specific acceptance seam:
+`createSpecialistIntelligence` selects `commercialScenario(trial.spec.caseId)` and
+`claimSupportForScenario` invokes `commercialClaimSupported`. That oracle is suitable
+for independent benchmark scoring, not for the shared general-agent runtime's claim
+contract. The unified path must validate claims through generic exact source pointers,
+reviewed semantics and replay. Golden scenario knowledge must stay outside planning,
+specialist decisions and runtime completion. Reusing this engine without separating
+that oracle would preserve a hidden task-specific acceptance path, even if its model
+prompt contained no expected answer. This remains an implementation requirement,
+not a claim that the current candidate has removed it.
