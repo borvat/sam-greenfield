@@ -72,5 +72,5 @@ export function monetaryEvidenceLimitations(objective:string,sources:{capability
   const covered=object(coverage)&&(coverage.complete===true||coverage.pagination==='every requested collection reached an empty terminal page')&&coverage.truncated!==true;
   return money&&currency==='EUR'&&!!vatKnown&&covered;
  });
- return supported?[]:['REVIEW_MONETARY_COVERAGE_UNPROVEN: requested-period sales amount, EUR currency and explicit VAT basis are not established together by verified structured sales evidence. Settlement invoices, including other periods, do not establish daily revenue. Do not invent aggregates.'];
+ return supported?[]:['REVIEW_MONETARY_COVERAGE_UNPROVEN: requested-period sales amount, EUR currency and explicit VAT basis are not established together by verified structured sales evidence. Settlement invoices, including other periods, do not establish daily revenue. Obtain authorized order-level monetary evidence with explicit amounts, currency and VAT basis, plus complete requested-period coverage, before claiming revenue. Do not invent aggregates.'];
 }

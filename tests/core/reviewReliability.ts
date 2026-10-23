@@ -1,3 +1,4 @@
+import {assertReviewInputBudget,REVIEW_INPUT_BYTES,reviewSourceAllowance} from '../../apps/production/src/reviewInputBudget';
 import {readReviewBudget} from '../../apps/kernel/src/readReviewBudget';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -23,11 +24,16 @@ async function main(){
  VALUES('review_echo','Synthetic independent readback','db_query','{"readback":"boolean"}','{}') RETURNING id`)).rows[0].id;
  async function fixture(objective='Read verified source',result:any={message:'Verified source confirms quantity 7'}){
   const id=await f.goal(objective,'PLANNING');await pool.query("UPDATE goals SET completion_definition='sam.read_report.v1' WHERE id=$1",[id]);
-  const plan=await persistPlanAndDelegateAtomic({goalId:id,steps:[{capabilityId:'review_echo',params:{fixture:true}}]});
-  const lease=await leaseWorkAtomic(plan.queueIds[0],'synthetic-reader',60);
-  const ex=await recordExecutionAndRequestVerificationAtomic({queueId:plan.queueIds[0],fencingToken:lease.token,actor:'synthetic-reader',result,evidence:{readback:true}});
+  const results=Array.isArray(result)?result:[result];
+  const plan=await persistPlanAndDelegateAtomic({goalId:id,steps:results.map((_,i)=>({capabilityId:'review_echo',params:{fixture:true,index:i}}))});
+  let executionId='';
+  for(const [i,result] of results.entries()){
+  const lease=await leaseWorkAtomic(plan.queueIds[i],'synthetic-reader',60);
+  const ex=await recordExecutionAndRequestVerificationAtomic({queueId:plan.queueIds[i],fencingToken:lease.token,actor:'synthetic-reader',result,evidence:{readback:true}});
   await recordIndependentVerificationAtomic({executionId:ex.executionId,verifier:'synthetic-independent-verifier',contractId:contract,independentEvidence:{readback:true},result:'VERIFIED'});
-  return {id,planId:plan.planId,executionId:ex.executionId};
+  executionId=ex.executionId;
+  }
+  return {id,planId:plan.planId,executionId};
  }
  const row=async(id:string)=>(await pool.query('SELECT * FROM goals WHERE id=$1',[id])).rows[0];
  const report=async(id:string)=>(await pool.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1',[id])).rows[0].decision;
@@ -84,7 +90,7 @@ async function main(){
  assert(monetaryEvidenceLimitations('2026-10-22 sales revenue EUR VAT',[{...monetary,data:{...monetary.data,vat:'unknown'}}]).length);
  const incomplete=await fixture('2026-10-22 sales revenue EUR VAT',large);
  await reviewNextReadGoal(f.bundle,pool,async input=>{
-  const content=input.verifiedObservations[0].lines.map((l:any)=>l.text).join('\n');assert(content.includes('includedOrders'));assert(content.includes('VAT and revenue unavailable'));
+  const content=input.verifiedObservations[0].lines.join('\n');assert(content.includes('includedOrders'));assert(content.includes('VAT and revenue unavailable'));
   assert.equal(input.verifiedObservations[0].sourceTruncated,true);return final(input);
  });
  assert.equal((await row(incomplete.id)).state,'WAITING_EXTERNAL');
@@ -92,6 +98,39 @@ async function main(){
  assert(blocked.limitations.includes('VAT and revenue unavailable'));assert(blocked.limitations.some((s:string)=>s.includes('MONETARY_COVERAGE_UNPROVEN')));
  const unstructured=await fixture('Read entire content',{content:[{type:'text',text:'x'.repeat(30000)}]});let invoked=0;
  await reviewNextReadGoal(f.bundle,pool,async()=>{invoked++;return {};});assert.equal(invoked,0);assert((await report(unstructured.id)).limitations.some((s:string)=>s.startsWith('REVIEW_EVIDENCE_PROJECTION_BLOCKED')));
+ // Four realistic large sources: analysis, orders, stock and a mismatched invoice.
+ const multi=await fixture('Compare verified operational evidence',[
+  large,{orders:Array.from({length:250},(_,i)=>({orderId:'ORDER-'+i,quantity:2,description:'product '.repeat(15)})),period:large.report.period,limitations:['Order list has no prices']},
+  {inventory:Array.from({length:300},(_,i)=>({ean:String(i),stock:12,description:'stock '.repeat(15)})),coverage:{complete:true}},
+  {invoices:Array.from({length:100},(_,i)=>({invoiceId:'INV-'+i,description:'settlement '.repeat(15)})),period:invoice.data.period,limitations:['September settlement is not October daily revenue']}]);
+ const multiBefore=await counts(multi.id);const sizes:number[]=[];
+ await reviewNextReadGoal(f.bundle,pool,async input=>{
+  sizes.push(assertReviewInputBudget(input));assert.equal(input.verifiedObservations.length,4);
+  for(const s of input.verifiedObservations){assert(s.lines.every((l:any)=>typeof l==='string'));assert(s.sourceContentHash);assert(s.trustBoundary);assert(s.lines.join('\n').includes('originalContentHash'));}
+  const texts=input.verifiedObservations.map((s:any)=>s.lines.join('\n')).join('\n');
+  for(const key of ['includedOrders','orderItems','totals','2026-10-22','2026-09-30'])assert(texts.includes(key));
+  assert(input.evidenceLimitations.some((s:string)=>s.includes('detail items omitted')));
+  assert(input.evidenceLimitations.includes('Order list has no prices'));
+  return input.proposedReport?{accepted:true,missing:[]}:final(input);
+ });
+ assert.equal((await report(multi.id)).status,'complete');assert.equal(sizes.length,2);assert(sizes.every(n=>n<=REVIEW_INPUT_BYTES));assert.deepEqual(await counts(multi.id),multiBefore);
+ assert.equal(reviewSourceAllowance(20),800);assert.throws(()=>reviewSourceAllowance(21),/SOURCE_BUDGET/);
+ // Entire context is measured, including Unicode, escaping, schemas and critique.
+ assert.throws(()=>assertReviewInputBudget({capabilities:[{description:'界'.repeat(17000)}]}),/INPUT_BUDGET/);
+ assert.throws(()=>assertReviewInputBudget({proposedReport:{summary:'"'.repeat(25000)}}),/INPUT_BUDGET/);
+ const oversized=await fixture('Read '+'界'.repeat(17000));let oversizedCalls=0;
+ await reviewNextReadGoal(f.bundle,pool,async()=>{oversizedCalls++;return {};});
+ assert.equal(oversizedCalls,0);assert.equal((await report(oversized.id)).runtimeReview.callsUsed,0);
+ assert.equal((await row(oversized.id)).next_wake_at,null);assert((await report(oversized.id)).limitations.includes('REVIEW_INPUT_BUDGET_EXCEEDED'));
+ const twenty=await fixture('Compare twenty bounded sources',Array.from({length:20},(_,i)=>({source:i,period:large.report.period,totals:{quantity:i},limitations:['Prices absent'],products:Array.from({length:30},(_,j)=>({ean:String(j),stock:3}))})));
+ let twentyCalls=0;
+ await reviewNextReadGoal(f.bundle,pool,async input=>{twentyCalls++;assertReviewInputBudget(input);assert.equal(input.verifiedObservations.length,20);return input.proposedReport?{accepted:true,missing:[]}:final(input);});
+ assert.equal(twentyCalls,2);assert.equal((await report(twenty.id)).status,'complete');
+ const critiqueOverflow=await fixture();let critiqueCalls=0;
+ await reviewNextReadGoal(f.bundle,pool,async input=>{critiqueCalls++;const r=final(input);r.findings[0].text='x'.repeat(50000);return r;});
+ assert.equal(critiqueCalls,1,'oversized critique never dispatched');assert.equal((await report(critiqueOverflow.id)).runtimeReview.callsUsed,1);
+ assert((await report(critiqueOverflow.id)).limitations.includes('REVIEW_INPUT_BUDGET_EXCEEDED'));assert.equal((await row(critiqueOverflow.id)).next_wake_at,null);
+ console.log('PASS total serialized review/critique input ceilings; four large sources retain totals/periods/provenance/omissions; Unicode/escaping oversized input makes zero calls',JSON.stringify({inputBytes:sizes,limit:REVIEW_INPUT_BYTES}));
  const tool=createActionTools({manifest:()=>[],execute:async()=>{},continueReview:async()=>{throw Error('must not dispatch');}}).find(t=>t.definition.name==='sam_continue_review')!;
  assert.equal((await tool.handler({goal_id:legacy.id,legal_entity_id:f.entity},{actor:'not-owner',systemOwner:false})).ok,false);
  // Actual provider HTTP transport cancellation, not just a rejected fake Promise.

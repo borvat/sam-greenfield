@@ -27,6 +27,15 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
  const previous={...source,capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}};
  assert.throws(()=>validateReadReview(review("continue"),[previous],"Read",descriptors),/REPEATED_READ/);
 });
+test("projected detail quotes use verified literals and reject projection wrappers",()=>{
+ const projected={...source,text:'{\n  "items": [\n        "sku": "actual-sku",\n}',verifiedQuotes:{2:'"sku": "actual-sku",'}};
+ const candidate:any=review('complete');candidate.findings=[{text:'Observed SKU',executionId:execution,quoteLine:2}];
+ assert.equal(validateReadReview(candidate,[projected],'Read',descriptors).findings[0].quote,'"sku": "actual-sku",');
+ candidate.findings=[{text:'Invented wrapper claim',executionId:execution,quoteLine:1}];
+ assert.throws(()=>validateReadReview(candidate,[projected],'Read',descriptors),/UNSUPPORTED_CITATION/);
+ candidate.findings=[{text:'Invented wrapper claim',executionId:execution,quote:'"items": ['}];
+ assert.throws(()=>validateReadReview(candidate,[projected],'Read',descriptors),/UNSUPPORTED_CITATION/);
+});
 test("isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction",async()=>{
  const db=new PGlite();
  // Minimal real SQL schema for this boundary; no production database or network.
