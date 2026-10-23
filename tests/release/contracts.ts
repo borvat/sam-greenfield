@@ -141,4 +141,13 @@ async function main(){
   }
   console.log("RELEASE_CONTRACTS PASS: config/refusal, credential stripping, owner criteria, read-only MCP, one-port proxy, bounded real-child restart, graceful stop, output withholding. Classification=LOCAL_PROCESS_WITH_FIXTURE_BACKENDS.");
 }
-main().catch(()=>{console.error("RELEASE_CONTRACTS FAIL (details withheld)");process.exitCode=1;});
+main().catch((error)=>{
+  // Retain actionable assertion locations without printing environment values,
+  // fixture bearer tokens, error messages or generated backend responses.
+  const locations=String(error?.stack??"").split("\n").flatMap(line=>{
+    const match=line.match(/tests\/release\/contracts\.ts:(\d+):(\d+)/);
+    return match?[`contracts.ts:${match[1]}:${match[2]}`]:[];
+  });
+  console.error(JSON.stringify({event:"RELEASE_CONTRACTS_FAILED",type:error?.name==="AssertionError"?"AssertionError":"Error",locations}));
+  process.exitCode=1;
+});

@@ -1,3 +1,4 @@
+import {compareReadback} from './contentVerification';
 import { BolRetailerClient } from "../../../packages/bol/src/client";
 import {
   BolOrdersAdapter,
@@ -30,8 +31,9 @@ function verifier(
     capabilityId,
     async verify(input){
       const p=input.execution.params??{};
+      let fresh:unknown;
       if(capabilityId==="bol_list_orders"){
-        await client.listOrders({
+        fresh=await client.listOrders({
           page:p.page,
           fulfilmentMethod:p.fulfilment_method,
           status:p.status,
@@ -40,33 +42,29 @@ function verifier(
           vvbOnly:p.vvb_only
         });
       }else if(capabilityId==="bol_list_returns"){
-        await client.listReturns({
+        fresh=await client.listReturns({
           page:p.page,
           handled:p.handled,
           fulfilmentMethod:p.fulfilment_method
         });
       }else if(capabilityId==="bol_list_invoices"){
-        await client.listInvoices({
+        fresh=await client.listInvoices({
           periodStartDate:p.period_start_date,
           periodEndDate:p.period_end_date
         });
       }else if(capabilityId==="bol_get_retailer"){
-        await client.getCurrentRetailer();
+        fresh=await client.getCurrentRetailer();
       }else if(capabilityId==="bol_get_order"){
-        await client.getOrder(p.order_id);
+        fresh=await client.getOrder(p.order_id);
       }else if(capabilityId==="bol_list_shipments"){
-        await client.listShipments({page:p.page,fulfilmentMethod:p.fulfilment_method});
+        fresh=await client.listShipments({page:p.page,fulfilmentMethod:p.fulfilment_method});
       }else if(capabilityId==="bol_get_commission"){
-        await client.getCommission({ean:p.ean,unitPrice:p.unit_price,condition:p.condition});
+        fresh=await client.getCommission({ean:p.ean,unitPrice:p.unit_price,condition:p.condition});
       }else{
-        await client.getCompetingOffers({ean:p.ean,page:p.page,countryCode:p.country_code,bestOfferOnly:p.best_offer_only,condition:p.condition});
+        fresh=await client.getCompetingOffers({ean:p.ean,page:p.page,countryCode:p.country_code,bestOfferOnly:p.best_offer_only,condition:p.condition});
       }
 
-      return {
-        result:"VERIFIED" as const,
-        evidence:{method:"bol-independent-api-readback"},
-        verifier:"bol-independent-readback"
-      };
+      return compareReadback(input.execution.result?.data,fresh,'bol-independent-readback',{method:'bol-independent-api-readback'});
     }
   };
 }

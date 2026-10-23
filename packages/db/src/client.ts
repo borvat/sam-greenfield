@@ -6,7 +6,8 @@ if(!process.env.DATABASE_URL?.trim()){
     "DATABASE_URL_REQUIRED_IN_PRODUCTION" : "DATABASE_URL_REQUIRED");
 }
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis:5000,statement_timeout:30000
 });
 
 // Transactional helper for outbox pattern

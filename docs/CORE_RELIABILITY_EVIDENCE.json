@@ -1,0 +1,350 @@
+{
+  "baselineSha": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "branch": "codex/sam-core-reliability",
+  "sourceTestConfigDigest": "c6f46f02721e2e6fa75da8c21e2e1bee109ea09ef6306de52fdd0666124b28e0",
+  "digestConvention": "SHA256 of sorted source/test/config path + NUL + bytes + NUL; documentation excluded",
+  "classification": "ISOLATED_SYNTHETIC_LOCAL_POSTGRES_NOT_PRODUCTION",
+  "toolchains": {
+    "hostNode": "24.19.0",
+    "compatibilityNode": "22.23.4",
+    "postgres": "15.19"
+  },
+  "baseline": {
+    "typecheck": "PASS",
+    "phase1Through21Suites": 38,
+    "passed": 38,
+    "source": "git archive of baseline SHA"
+  },
+  "checks": [
+    {
+      "command": "npm run typecheck",
+      "status": "PASS"
+    },
+    {
+      "command": "npm run test:core-regression",
+      "status": "PASS",
+      "passed": 38,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:core-reliability",
+      "status": "PASS",
+      "assertionGroups": 15,
+      "childProcessCrashExitCode": 72
+    },
+    {
+      "command": "Fresh Node 22 acceptance image: node scripts/testing/core-reliability.cjs",
+      "status": "PASS",
+      "assertionGroups": 15,
+      "dependencies": "Fresh npm ci --omit=dev inside image; only test/scripts directories mounted; no host dependencies or application source mounted"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/provider_auth.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/postgres_tls.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/contracts.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/synthetic_pilot.ts",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/testing/core-reliability.cjs --suite tests/release/managed_schema_source.cjs",
+      "status": "PASS"
+    },
+    {
+      "command": "python3 tests/phase0/phase0_acceptance.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/real_postgres_test.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/test_rls_tenant_isolation.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "python3 tests/phase0_postgres/test_rls_fail_closed_security.py",
+      "status": "PASS",
+      "database": "dedicated sam_core_test_security in disposable container"
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    },
+    {
+      "command": "node scripts/development/build-image.cjs sam-core-reliability:acceptance",
+      "status": "PASS",
+      "observedFailure": "Historical reproduced failure: npm Exit handler never called; npm ci exit 1",
+      "diagnosis": "npm debug log and bounded metadata probe identify EAI_AGAIN proxy. Resolve the configured proxy through host and supply Docker --add-host; existing CA remains an ephemeral secret. Explicit COPY ownership fixes non-root EACCES.",
+      "image": "sha256:1aae1f38a51cae00d6ef6d9a095a592752e6ec9d33cf4659c67906372a135d5e"
+    }
+  ],
+  "regressionResults": [
+    {
+      "test": "tests/phase1/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/full_vertical_slice.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/kernel_smoke.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/replan_recovery.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase1/runtime_loop.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/authority_guard.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/brain_kernel_handoff.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/brain_replanning.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/gateway_resilience.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase2/model_gateway.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/capability_catalog.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/specialist_delegation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase3/specialist_supervisor.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase4/reconciliation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase4/tool_gateway.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase5/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase5/verified_learning.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/final_acceptance.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/operational_supervision.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase6/policy_evaluation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase7/production_readiness.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase7/runtime_service.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase8/chatgpt_tool_surface.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase9/production_wiring.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase10/mcp_transport.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase11/model_adapters.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase12/gmail_adapter.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase13/drive_adapters.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase14/eboekhouden_read.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase15/bol_read.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase16/bol_operational_intelligence.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase17/finance_reconciliation.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase18/operational_finance_loop.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase19/command_center.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase20/live_golden_chain_gate.ts",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "test": "tests/phase21/production_deployment.ts",
+      "passed": true,
+      "exit": 0
+    }
+  ],
+  "limitations": [
+    "No lint script or compiled build target configured.",
+    "Hosted CI and current PR reviews unavailable through GitHub API (Forbidden).",
+    "Platform-specific Replit development/service tests not run outside their pinned identity setup.",
+    "No production, Render, live model, business or stability-test execution.",
+    "Production migration/grant/backfill/rollback and continuous load tests not performed."
+  ],
+  "productionChanged": false,
+  "productionDataRead": false,
+  "paidModelCalls": 0,
+  "businessActions": 0,
+  "deploymentPerformed": false,
+  "merged": false,
+  "publication": {
+    "branchPushed": true,
+    "draftPullRequestCreated": false,
+    "graphqlCreateAttempt": "Forbidden",
+    "restCreateAttempt": "Forbidden",
+    "preparedDescription": "docs/CORE_RELIABILITY_PR.md",
+    "mergePerformed": false,
+    "apiTransportDiagnosis": "curl exit 56; proxy CONNECT 403; API upstream not reached"
+  },
+  "acceptanceRerun": {
+    "dateUTC": "2026-10-21",
+    "requestedStartingSha": "12f988f81dfa5a203eda14f9ad3d320d991a9ab0",
+    "testedImplementationSha": "3aee07abf2d7f48a3f8f90f02602ddd263ebf2bd",
+    "regressionSuitesPassed": 38,
+    "coreGroupsHost": 15,
+    "coreGroupsCleanImage": 15,
+    "focusedSuitesPassed": 5,
+    "phase0CommandsPassed": 4,
+    "cleanImageBuild": "PASS",
+    "migrationFromZero": "PASS via isolated core/regression schemas and Phase 0 database",
+    "migrationUpgradeAndRepeatApply": "PASS; 12 receipts; baseline row retained",
+    "postgresRestart": "PASS; pre-upgrade sentinel and 12 receipts retained",
+    "runtimeImageStartupAndRestart": "PASS; livez/readyz 200, statusz 401 without token, SIGTERM handled",
+    "githubApiTransport": "BLOCKED: proxy CONNECT 403; upstream HTTP 000; GitHub repository/API authorization cannot be assessed",
+    "manualDraftPrForm": "https://github.com/borvat/sam-greenfield/pull/new/codex/sam-core-reliability",
+    "report": "docs/CORE_RELIABILITY_ACCEPTANCE.md",
+    "evidenceDirectory": "docs/acceptance/2026-10-21",
+    "productionReady": false
+  },
+  "evidenceFiles": {
+    "docs/acceptance/2026-10-21/build-failure-excerpt.log": "08ff510c4852abf774a8a0bbeefdb55a65dbb72c11495fbbb4aff7e1453d9fcd",
+    "docs/acceptance/2026-10-21/build-fixed.log": "9bef6007d44d14089dffabf2b6b283562335e24c8a917f50bd2942197f87f2b1",
+    "docs/acceptance/2026-10-21/contracts.log": "b079802adc53349e7960a9a13db7a0ecbddad508868aa542d1f160bc3e72711f",
+    "docs/acceptance/2026-10-21/core.log": "f9afc6df5575d7cc13becf83e1696027ae1094f1406aca9bc35c9470e43717a2",
+    "docs/acceptance/2026-10-21/github-api.log": "648a5b62b57bc336af825d27561b96e952595d4a4255bd616e8cc2e7838cacbd",
+    "docs/acceptance/2026-10-21/image-core-fixed.log": "a8f52142b5e7e1895f0005e54c8dfb4d3b47e8059d7a0c306066c9b8a0e317ea",
+    "docs/acceptance/2026-10-21/image-smoke.log": "61bccec279e908785b679b130e4f2450b679b1586f0ac02e5ba136a0286f7baf",
+    "docs/acceptance/2026-10-21/managed_schema_source.log": "a46e9720f573e6f26e713ca420f4f170186db6dd6963313dc4b3da7e78734a40",
+    "docs/acceptance/2026-10-21/migration-upgrade-fixture.cjs": "9130a33f375066117637ea279ac283a1f4207d9e42f159c60db69a2fbd06c7cc",
+    "docs/acceptance/2026-10-21/migrations.log": "62a563e9327d9ff2422000e0f984cad9510e49cccec5cf1948b3c6c87761737e",
+    "docs/acceptance/2026-10-21/phase0_acceptance.py.log": "1604c8583344ee2dca7aca30f3b8e7957394c0f90f8216a06708aa49016bbf59",
+    "docs/acceptance/2026-10-21/postgres-restart.log": "fb6d92f0d8d8b08aff84233a15a78f41c3d18404f91170be7734a8d3cdf3957a",
+    "docs/acceptance/2026-10-21/postgres_tls.log": "bee70a7d2378bf548490fe3a11e3308633aa679b927a0c3bf2728145f9e8e7cf",
+    "docs/acceptance/2026-10-21/provider_auth.log": "c3fa8e78ffea06f96519131541e841854048a3abe72ec51bd080db865f86a552",
+    "docs/acceptance/2026-10-21/real_postgres_test.py.log": "cdbaae4dafd834a0769f1849f23499095055c3134d28720a8605070002842501",
+    "docs/acceptance/2026-10-21/regression.log": "60e5bf43dac69ddfd964c626bc88466c8dcc87f439860d11ac179724681d1527",
+    "docs/acceptance/2026-10-21/synthetic_pilot.log": "665df1455805f1862ad87775b8b21c59d78be9b6e188224757f8f9596d4ec527",
+    "docs/acceptance/2026-10-21/test_rls_fail_closed_security.py.log": "4462f04baa86c23293a76b4063b96c861becdf2e3dc3a1bcddda63ac4b26e5d2",
+    "docs/acceptance/2026-10-21/test_rls_tenant_isolation.py.log": "a3dbdd5749ccab61a0673a41fe1a1853ed70e79af0d8577d8f09082b4ce51948",
+    "docs/acceptance/2026-10-21/typecheck.log": "bdfa048bae1d4de047f903a4810022ee6bc425e179ec8bc21a768c4583049147"
+  },
+  "subsequentReview": "docs/PHASE2_INDEPENDENT_REVIEW.md (supersedes current-state claims; this file retains Phase 1 historical evidence)"
+}

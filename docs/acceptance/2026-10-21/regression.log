@@ -1,0 +1,48 @@
+
+> test:core-regression
+> node scripts/testing/core-reliability.cjs --regression
+
+PASS tests/phase1/final_acceptance.ts
+PASS tests/phase1/full_vertical_slice.ts
+PASS tests/phase1/kernel_smoke.ts
+PASS tests/phase1/replan_recovery.ts
+PASS tests/phase1/runtime_loop.ts
+PASS tests/phase2/authority_guard.ts
+PASS tests/phase2/brain_kernel_handoff.ts
+PASS tests/phase2/brain_replanning.ts
+PASS tests/phase2/final_acceptance.ts
+PASS tests/phase2/gateway_resilience.ts
+PASS tests/phase2/model_gateway.ts
+PASS tests/phase3/capability_catalog.ts
+PASS tests/phase3/final_acceptance.ts
+PASS tests/phase3/specialist_delegation.ts
+PASS tests/phase3/specialist_supervisor.ts
+PASS tests/phase4/reconciliation.ts
+PASS tests/phase4/tool_gateway.ts
+PASS tests/phase5/final_acceptance.ts
+PASS tests/phase5/verified_learning.ts
+PASS tests/phase6/final_acceptance.ts
+PASS tests/phase6/operational_supervision.ts
+PASS tests/phase6/policy_evaluation.ts
+PASS tests/phase7/production_readiness.ts
+PASS tests/phase7/runtime_service.ts
+PASS tests/phase8/chatgpt_tool_surface.ts
+PASS tests/phase9/production_wiring.ts
+PASS tests/phase10/mcp_transport.ts
+PASS tests/phase11/model_adapters.ts
+PASS tests/phase12/gmail_adapter.ts
+PASS tests/phase13/drive_adapters.ts
+PASS tests/phase14/eboekhouden_read.ts
+PASS tests/phase15/bol_read.ts
+PASS tests/phase16/bol_operational_intelligence.ts
+PASS tests/phase17/finance_reconciliation.ts
+PASS tests/phase18/operational_finance_loop.ts
+PASS tests/phase19/command_center.ts
+PASS tests/phase20/live_golden_chain_gate.ts
+PASS tests/phase21/production_deployment.ts
+{"passed":38,"failed":0,"results":[{"test":"tests/phase1/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase1/full_vertical_slice.ts","passed":true,"exit":0},{"test":"tests/phase1/kernel_smoke.ts","passed":true,"exit":0},{"test":"tests/phase1/replan_recovery.ts","passed":true,"exit":0},{"test":"tests/phase1/runtime_loop.ts","passed":true,"exit":0},{"test":"tests/phase2/authority_guard.ts","passed":true,"exit":0},{"test":"tests/phase2/brain_kernel_handoff.ts","passed":true,"exit":0},{"test":"tests/phase2/brain_replanning.ts","passed":true,"exit":0},{"test":"tests/phase2/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase2/gateway_resilience.ts","passed":true,"exit":0},{"test":"tests/phase2/model_gateway.ts","passed":true,"exit":0},{"test":"tests/phase3/capability_catalog.ts","passed":true,"exit":0},{"test":"tests/phase3/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase3/specialist_delegation.ts","passed":true,"exit":0},{"test":"tests/phase3/specialist_supervisor.ts","passed":true,"exit":0},{"test":"tests/phase4/reconciliation.ts","passed":true,"exit":0},{"test":"tests/phase4/tool_gateway.ts","passed":true,"exit":0},{"test":"tests/phase5/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase5/verified_learning.ts","passed":true,"exit":0},{"test":"tests/phase6/final_acceptance.ts","passed":true,"exit":0},{"test":"tests/phase6/operational_supervision.ts","passed":true,"exit":0},{"test":"tests/phase6/policy_evaluation.ts","passed":true,"exit":0},{"test":"tests/phase7/production_readiness.ts","passed":true,"exit":0},{"test":"tests/phase7/runtime_service.ts","passed":true,"exit":0},{"test":"tests/phase8/chatgpt_tool_surface.ts","passed":true,"exit":0},{"test":"tests/phase9/production_wiring.ts","passed":true,"exit":0},{"test":"tests/phase10/mcp_transport.ts","passed":true,"exit":0},{"test":"tests/phase11/model_adapters.ts","passed":true,"exit":0},{"test":"tests/phase12/gmail_adapter.ts","passed":true,"exit":0},{"test":"tests/phase13/drive_adapters.ts","passed":true,"exit":0},{"test":"tests/phase14/eboekhouden_read.ts","passed":true,"exit":0},{"test":"tests/phase15/bol_read.ts","passed":true,"exit":0},{"test":"tests/phase16/bol_operational_intelligence.ts","passed":true,"exit":0},{"test":"tests/phase17/finance_reconciliation.ts","passed":true,"exit":0},{"test":"tests/phase18/operational_finance_loop.ts","passed":true,"exit":0},{"test":"tests/phase19/command_center.ts","passed":true,"exit":0},{"test":"tests/phase20/live_golden_chain_gate.ts","passed":true,"exit":0},{"test":"tests/phase21/production_deployment.ts","passed":true,"exit":0}]}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

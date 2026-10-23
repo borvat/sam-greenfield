@@ -1,3 +1,4 @@
+import {compareReadback} from './contentVerification';
 import {BolRetailerClient} from "../../../packages/bol/src/client";
 import {EBoekhoudenClient} from "../../../packages/eboekhouden/src/client";
 import {FinanceReconciliationPreviewAdapter,FinanceOutstandingSnapshotAdapter} from "../../tools/src/financeReadAdapters";
@@ -33,11 +34,11 @@ export function withFinanceReconciliationFromEnv(bundle:ProductionBundle,env:Nod
           accounting.listMutations({limit:p.limit??100,offset:p.offset??0})
         ]);
         const preview=reconcileExactReferences(b,m);
-        return {result:"VERIFIED" as const,evidence:{method:"independent_cross_source_readback",counts:preview.counts},verifier:"finance-independent-readback"};
+        return compareReadback(input.execution.result?.preview,preview,'finance-independent-readback',{method:'independent_cross_source_readback'});
       }
       const body=await accounting.getOutstandingInvoices({limit:p.limit??100,offset:p.offset??0});
       const snapshot=outstandingSnapshot(body);
-      return {result:"VERIFIED" as const,evidence:{method:"independent_outstanding_readback",count:snapshot.count},verifier:"finance-independent-readback"};
+      return compareReadback(input.execution.result?.snapshot,snapshot,'finance-independent-readback',{method:'independent_outstanding_readback'});
     }
   });
 

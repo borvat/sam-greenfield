@@ -13,6 +13,7 @@ async function main(){
   assert.ok(defs.some((d)=>d.name==="sam_list_memory"));
   assert.ok(defs.some((d)=>d.name==="sam_list_financial_documents"));
   assert.equal(noActions.definition("sam_execute").availability,"UNAVAILABLE");
+  assert.equal(noActions.definition("sam_submit_goal").availability,"UNAVAILABLE");
 
   const denied=await noActions.invoke("sam_system_status",{},{
     actor:"chatgpt-test",
@@ -38,7 +39,9 @@ async function main(){
   assert.equal(unavailable.unavailable,true);
 
   let executed=0;
+  let submitted:{objective:string;legalEntityId:string;actor:string}|null=null;
   const dispatcher:ProductionActionDispatcher={
+    async submitGoal(input){submitted=input;return {status:"SUBMITTED",goalId:"test-goal"};},
     manifest(){
       return [{
         capabilityId:"phase8_safe_action",
@@ -58,6 +61,32 @@ async function main(){
 
   const withActions=createChatGPTToolSurface({dispatcher});
   assert.equal(withActions.definition("sam_execute").availability,"AVAILABLE");
+  assert.equal(withActions.definition("sam_submit_goal").availability,"AVAILABLE");
+
+  const goal=await withActions.invoke("sam_submit_goal",{
+    objective:"Read QNAN bol sales and inventory and report the findings",
+    legal_entity_id:"00000000-0000-0000-0000-000000000001"
+  },{
+    actor:"chatgpt-test",
+    systemOwner:true
+  });
+  assert.equal(goal.ok,true);
+  assert.deepEqual(submitted,{
+    objective:"Read QNAN bol sales and inventory and report the findings",
+    legalEntityId:"00000000-0000-0000-0000-000000000001",
+    actor:"chatgpt-test"
+  });
+
+  const noPlanner=createChatGPTToolSurface({dispatcher:{
+    ...dispatcher,
+    async submitGoal(){return {status:"UNAVAILABLE",message:"No planning model"};}
+  }});
+  const blocked=await noPlanner.invoke("sam_submit_goal",{
+    objective:"Read QNAN bol data",
+    legal_entity_id:"00000000-0000-0000-0000-000000000001"
+  },{actor:"chatgpt-test",systemOwner:true});
+  assert.equal(blocked.ok,false);
+  assert.equal(blocked.unavailable,true);
 
   const manifest=await withActions.invoke("sam_capability_manifest",{},{
     actor:"chatgpt-test",

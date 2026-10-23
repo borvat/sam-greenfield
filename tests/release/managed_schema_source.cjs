@@ -2,7 +2,7 @@
 const assert=require("node:assert/strict");
 const {prepare}=require("../../scripts/development/managed-schema-source.cjs");
 const {sql,migrations}=prepare();
-assert.equal(migrations.length,10);
+assert.equal(migrations.length,12);
 assert.match(sql,/current_database\(\)<>'heliumdb'/);
 assert.match(sql,/MANAGED_SOURCE_ALREADY_EXISTS/);
 assert.match(sql,/MANAGED_SOURCE_MUST_BE_EMPTY/);
@@ -13,4 +13,4 @@ assert.match(sql,/MANAGED_SOURCE_RLS_REQUIRED/);
 assert(sql.startsWith("BEGIN;")&&sql.endsWith("COMMIT;"));
 assert(!/CREATE ROLE|PASSWORD|process\.env|DATABASE_URL/.test(sql));
 for(const m of migrations)assert.match(m.sha256,/^[0-9a-f]{64}$/);
-console.log("PASS: empty managed development schema source, original 10 migrations, guarded atomic batch; no connections");
+console.log("PASS: empty managed development schema source, 12 reviewed migrations, guarded atomic batch; no connections");

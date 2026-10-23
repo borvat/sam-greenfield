@@ -136,6 +136,7 @@ def test_fail_closed():
     print("✓ PASS: Tenant B cannot read A doc")
 
     print("\n--- TEST 7: Tenant A can access own ---")
+    cur.execute("SET app.current_org_id = %s", (str(org_id),))
     cur.execute("SET app.current_legal_entity_id = %s", (str(entity_a),))
     cur.execute("SELECT id FROM goals WHERE id=%s", (goal_a,))
     assert len(cur.fetchall()) == 1

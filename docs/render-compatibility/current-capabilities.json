@@ -1,0 +1,506 @@
+[
+  {
+    "id": "bol_cancel_order_item",
+    "authority": "RED",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_offer",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_product_content",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_replenishment",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_return",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_shipment",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_shipping_label",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_create_subscription",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_delete_offer",
+    "authority": "RED",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_delete_subscription",
+    "authority": "RED",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_bulk_commissions",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_catalog_product",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_chunk_recommendations",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_commission",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_commission_rates",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_competing_offers",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_delivery_dates",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_delivery_options",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_inventory",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_invoice",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_invoice_requests",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_invoice_specification",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_load_carrier_labels",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_offer",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_offer_export",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_offer_insights",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_order",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_performance_indicators",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_pick_list",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_pickup_time_slots",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_price_star_boundaries",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_process_status",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_process_status_bulk",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_process_status_by_entity",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_assets",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_categories",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_destinations",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_ids",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_list",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_list_filters",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_placement",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_ranks",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_product_ratings",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_promotion",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_promotion_products",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_replenishment",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_retailer_information",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_return",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_sales_forecast",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_search_terms",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_shipment",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_shipping_label",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_signature_keys",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_subscription",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_unpublished_offer_report",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_get_upload_report",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_handle_return",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_invoices",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_orders",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_promotions",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_replenishments",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_returns",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_shipments",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_list_subscriptions",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_request_offer_export",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_request_product_destinations",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_request_product_labels",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_request_unpublished_offer_report",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_sales_stock_report",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_test_subscription",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_offer",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_offer_price",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_offer_stock",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_replenishment",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_subscription",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_update_transport",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "bol_upload_shipment_invoice",
+    "authority": "YELLOW",
+    "sideEffect": true,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_get_drive_file_content",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_get_drive_file_download_url",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_get_drive_shareable_link",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_get_gmail_message_content",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_get_gmail_messages_content_batch",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_search_drive_files",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  },
+  {
+    "id": "google_mcp_search_gmail_messages",
+    "authority": "GREEN",
+    "sideEffect": false,
+    "availability": "AVAILABLE"
+  }
+]

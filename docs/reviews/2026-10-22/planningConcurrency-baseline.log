@@ -1,0 +1,16 @@
+FAIL tests/core/planningConcurrency.ts
+AssertionError [ERR_ASSERTION]: pool pressure must not escape the per-goal guard
+
+15 !== 0
+
+    at main (/tmp/sam-phase2-baseline/tests/core/planningConcurrency.ts:13:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 15,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/planningConcurrency.ts","passed":false,"exit":1}]}

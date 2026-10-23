@@ -1,0 +1,432 @@
+{
+  "recordedAtUTC": "2026-10-21T21:48:25.018034+00:00",
+  "clientDate": "2026-10-22",
+  "clientTimezone": "Asia/Damascus",
+  "repository": "borvat/sam-greenfield",
+  "pr": 46,
+  "originalHead": "15e77cc8ca310af2607a2c2580a18007e8fa6c64",
+  "correctiveSourceSha": "1d7acf9213eb6e8a3bd9bb50b98bf914ae02bfc4",
+  "sourceTestConfigDigest": "13d3480162f3a7a11abf3fdc53a261efbec0b572487ce24d2f37362e0df9ef7d",
+  "digestConvention": "SHA256 sorted tracked non-doc path + NUL + bytes + NUL",
+  "applicationCodeChanged": false,
+  "correctionScope": [
+    ".github/workflows/phase0-postgres-verification.yml",
+    "tests/release/postgres_tls.ts"
+  ],
+  "hostedRun": {
+    "id": "39678917418",
+    "classification": "PRE_EXECUTION_ACCOUNT_ADMISSION_FAILURE",
+    "applicationTestsExecuted": false,
+    "annotation": "The job was not started because your account is locked due to a billing issue.",
+    "exactRunnerAssignmentState": "UNAVAILABLE; not assumed null or unassigned",
+    "rootCauseGap": "Closed at account-admission level by direct public annotation; account remediation details unavailable"
+  },
+  "externalEvidence": "docs/phase3/2026-10-22/external-api-findings.json",
+  "localChecks": {
+    "initialCore": {
+      "passed": 8,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/core/reliability.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningConcurrency.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/reservationRace.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/tenantWorkload.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/eventBacklog.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/learningScheduling.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/startupAdmission.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/core/planningDeadline.ts",
+          "passed": true,
+          "exit": 0
+        }
+      ]
+    },
+    "regression": {
+      "passed": 38,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/phase1/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/full_vertical_slice.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/kernel_smoke.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/replan_recovery.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase1/runtime_loop.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/authority_guard.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/brain_kernel_handoff.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/brain_replanning.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/gateway_resilience.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase2/model_gateway.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/capability_catalog.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/specialist_delegation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase3/specialist_supervisor.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase4/reconciliation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase4/tool_gateway.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase5/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase5/verified_learning.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/final_acceptance.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/operational_supervision.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase6/policy_evaluation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase7/production_readiness.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase7/runtime_service.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase8/chatgpt_tool_surface.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase9/production_wiring.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase10/mcp_transport.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase11/model_adapters.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase12/gmail_adapter.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase13/drive_adapters.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase14/eboekhouden_read.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase15/bol_read.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase16/bol_operational_intelligence.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase17/finance_reconciliation.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase18/operational_finance_loop.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase19/command_center.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase20/live_golden_chain_gate.ts",
+          "passed": true,
+          "exit": 0
+        },
+        {
+          "test": "tests/phase21/production_deployment.ts",
+          "passed": true,
+          "exit": 0
+        }
+      ]
+    },
+    "initialFocusedTls": "FAIL: missing OpenSSL on Alpine; retained; not hosted",
+    "originalDebianTls": "FAIL: listener ::1; ECONNREFUSED; retained; not hosted",
+    "fixedFocusedResults": [
+      {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/provider_auth.ts",
+            "passed": true,
+            "exit": 0
+          }
+        ]
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/postgres_tls.ts",
+            "passed": true,
+            "exit": 0
+          }
+        ]
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/contracts.ts",
+            "passed": true,
+            "exit": 0
+          }
+        ]
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/synthetic_pilot.ts",
+            "passed": true,
+            "exit": 0
+          }
+        ]
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "test": "tests/release/managed_schema_source.cjs",
+            "passed": true,
+            "exit": 0
+          }
+        ]
+      }
+    ],
+    "typecheckAfterFix": "PASS Node22.23.4",
+    "phase0": "PASS four commands, Python3.11.17 / psycopg2 2.9.13 / PG15.19 / vector0.8.7",
+    "cleanImage": "PASS fresh npm ci --omit=dev",
+    "lint": {
+      "tool": "actionlint",
+      "version": "1.7.7",
+      "source": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz",
+      "checksumManifest": "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_checksums.txt",
+      "archiveSha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757",
+      "checksumVerified": true,
+      "command": "/tmp/sam-phase3-actionlint/actionlint -no-color .github/workflows/phase0-postgres-verification.yml",
+      "originalExit": 0,
+      "fixedExit": 0,
+      "findings": [],
+      "notHostedExecution": true,
+      "originalWorkflowSha256": "a5e8a51d4abd086297bb988aee037d6c6e2701909653d33c344f2b456d7b7a5f",
+      "fixedWorkflowSha256": "7baac861c31ca10a277f59c4553ca53b723bf63d2379c292838dde58008e1cf9"
+    }
+  },
+  "applicationImage": "sha256:01809a0a2fa044eb52f6a0d48174be3905cbb38443ce8de99f885851b923172f",
+  "hostedOSExecutedLocally": false,
+  "workflowAccountGateBypassed": false,
+  "runnerRolloutNotice": "ubuntu-latest begins Ubuntu26 transition Oct19,2026; notice not cause",
+  "readiness": {
+    "localAcceptance": "PASS_RECORDED_SYNTHETIC_SCOPE",
+    "hostedCI": "BLOCKED_ACCOUNT_ADMISSION",
+    "merge": "BLOCKED_PENDING_HOSTED_SUCCESS_AND_GOVERNANCE",
+    "staging": "PLAN_PREPARED_EXECUTION_NOT_READY",
+    "production": "NOT_ESTABLISHED_NOT_READY"
+  },
+  "remainingDiagnosticGaps": [
+    "Runner assignment identities/timestamps not exposed",
+    "Account lock remediation state requires authorized owner/support",
+    "Effective required checks/reviews/inherited rulesets unverified"
+  ],
+  "safety": {
+    "merge": false,
+    "deployment": false,
+    "productionDatabaseAccess": false,
+    "billingChange": false,
+    "newPaidService": false,
+    "paidModelCalls": 0,
+    "businessActions": 0,
+    "permissionsBypassed": false,
+    "activeStabilityTestChanged": false,
+    "actionsRerunRequested": false
+  },
+  "evidenceFiles": {
+    "docs/phase3/2026-10-22/actionlint.json": "2282ed9a16354b0ef6c68a20a58d55f2c4c277e8ad37907ecb1c47359532c973",
+    "docs/phase3/2026-10-22/alpine-openssl-missing.log": "02060d515beff1f8651bc634d55e56be31313007fb696679b6d7713596c5ef17",
+    "docs/phase3/2026-10-22/alpine-tool-install-blocked.log": "6d17b09c88d03746a4fda0ca62ad74ee74aed173ff6582fd5314037e573d9127",
+    "docs/phase3/2026-10-22/api-blocked.log": "c9013cd214c6fb4b1a6ed93a1b92edafa69969952cab4cffcc9804c2cb5a2ee5",
+    "docs/phase3/2026-10-22/clean-image.log": "8383caee4d01d3b962fd048351e66ea36e04549b36b64f66656d8d48d78900d1",
+    "docs/phase3/2026-10-22/cleanup.log": "d4e05733dae02143fe24db77c67c813ee795146db1a1ebe7629688cd8fe2d3d2",
+    "docs/phase3/2026-10-22/commands.json": "2bb13f54da741e904ee3b4057047611b35e3a3f20d86507cdcaefe03ce82968b",
+    "docs/phase3/2026-10-22/core-job-initial.log": "3360e568524975149878638392f1dc855a213f4e7b2445711c90107c1de4f040",
+    "docs/phase3/2026-10-22/cross-branch-conflicts.json": "8fee370597fca421d7e9cda5677fcc36c3a3fd9f9579dfeb0470cd9ea74611dd",
+    "docs/phase3/2026-10-22/external-api-findings.json": "4f22d124809c9d01fb9e9ea442c855024235324502c23e8eebd0dc9d831c95f5",
+    "docs/phase3/2026-10-22/focused-fixed.log": "333069f244c7ac902577fc709d669937a9b8a5fe34eb26a72b738327d68657ca",
+    "docs/phase3/2026-10-22/focused-original-debian.log": "7171ebba0a52683d157e032b26aeafdbfb2cee51cb030ddca73b23b94e6784e3",
+    "docs/phase3/2026-10-22/hosted-annotations.txt": "18b34d51cf57abef3d23ff6f74f2d546c521eceba85dda8983d90affce939b24",
+    "docs/phase3/2026-10-22/hosted-run-observations.json": "acf933d88644af39d5c85708499ad81c42c6878019bc8abf02e290c9cfbcbe92",
+    "docs/phase3/2026-10-22/images.log": "f7b240d1d5a0212fa12f727f33bb7a01ae143dd4b686e8dd258964c07e8accf2",
+    "docs/phase3/2026-10-22/node22-fresh-install.log": "a70750edfd60e25066e61575b970d871bdaa0fa29b073407c14d027de7fe9b22",
+    "docs/phase3/2026-10-22/phase0-job.log": "40c7d23346c2ebc27e294e2df8859e8c4d3172dfb2bee69ebba8731c1f898a1e",
+    "docs/phase3/2026-10-22/phase0-migrations.log": "128794ac2ee2a4dba5d5663166a27f0b5cb47c13d60d383b60e597b98a9ccca5",
+    "docs/phase3/2026-10-22/process-exit-statuses.json": "2550f35644866226838c1d155b4ee858b2066db50624f2b4ec82edb713a078a5",
+    "docs/phase3/2026-10-22/public-main-protection.json": "269739bd28fe32e6998ad2405f5130dba6b72e98822fa2db4bbe1c0c075bf0af",
+    "docs/phase3/2026-10-22/public-pr-state.json": "04f3921949a91c0b24a367fd3343f90fd3979a798a245b329d293dbf8d808d47",
+    "docs/phase3/2026-10-22/tls-fixed-probe.log": "bee70a7d2378bf548490fe3a11e3308633aa679b927a0c3bf2728145f9e8e7cf",
+    "docs/phase3/2026-10-22/tls-original-diagnostic.log": "a61e5e562e3497ec19b38c7989b8fe944f4acbb37b4ff7ac723eddcde3b9dc60"
+  },
+  "commandsFile": "docs/phase3/2026-10-22/commands.json",
+  "cleanup": {
+    "containersRemoved": [
+      "sam-phase3-core-pg",
+      "sam-phase3-phase0-pg"
+    ],
+    "labelsVerified": "sam.scope=phase3-ci-diagnosis",
+    "anonymousVolumesRemoved": true,
+    "productionImageRetainedLocally": "sam-phase3:review"
+  },
+  "localProcessExitStatuses": {
+    "coreInitial": {
+      "exitCode": 1
+    },
+    "phase0": {
+      "exitCode": 0
+    },
+    "focusedOriginalDebian": {
+      "exitCode": 1
+    },
+    "focusedFixed": {
+      "exitCode": 0
+    },
+    "cleanImage": {
+      "exitCode": 0
+    },
+    "freshNodeInstall": {
+      "exitCode": 0
+    },
+    "pythonInstall": {
+      "exitCode": 0
+    }
+  }
+}

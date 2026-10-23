@@ -1,3 +1,4 @@
+import {compareReadback} from './contentVerification';
 import type { GoogleDriveApiClient } from "../../../packages/google-drive/src/client";
 import type { VerificationAdapter } from "./types";
 
@@ -15,11 +16,7 @@ export class DriveGetMetadataVerifier implements VerificationAdapter{
       };
     }
     const file=await this.client.getFile(fileId);
-    return {
-      result:file?.id===fileId?"VERIFIED" as const:"FAILED" as const,
-      evidence:{provider_file_id:file?.id??null,method:"drive_file_get"},
-      verifier:"drive-independent-readback"
-    };
+    return compareReadback(input.execution.result?.file,file,'drive-independent-readback',{provider_file_id:file?.id??null,method:'drive_file_get'});
   }
 }
 
@@ -32,14 +29,7 @@ export class DriveSearchVerifier implements VerificationAdapter{
     const parentId=input.execution.params?.parent_id?String(input.execution.params.parent_id):undefined;
     const limit=input.execution.params?.limit?Number(input.execution.params.limit):50;
     const result=await this.client.search({query,parentId,pageSize:limit});
-    return {
-      result:"VERIFIED" as const,
-      evidence:{
-        method:"drive_search_readback",
-        result_count:Array.isArray(result?.files)?result.files.length:0
-      },
-      verifier:"drive-independent-readback"
-    };
+    return compareReadback(input.execution.result,{files:Array.isArray(result?.files)?result.files:[],next_page_token:result?.nextPageToken??null},'drive-independent-readback',{method:'drive_search_readback',result_count:Array.isArray(result?.files)?result.files.length:0});
   }
 }
 

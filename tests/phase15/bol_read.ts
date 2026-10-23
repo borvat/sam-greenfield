@@ -196,12 +196,13 @@ async function main(){
   };
   for(const id of expectedBolCapabilities){
     const verifier=validated.verifiers.get(id)!;
+    const original=await validated.tools.adapter(id).execute({capabilityId:id,params:verificationInputs[id],idempotencyKey:"fixture"});
     const verified=await verifier.verify({
       execution:{
         id:`e15-${id}`,
         capabilityId:id,
         params:verificationInputs[id],
-        evidence:{readback:true},
+        result:original.result,evidence:{readback:true},
         operationKeyRef:null
       },
       contract:{id:`c15-${id}`,method:"api_readback",requiredEvidenceFields:{},independentQueryTemplate:{}}

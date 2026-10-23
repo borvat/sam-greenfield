@@ -4,20 +4,21 @@ import { persistPlanAndDelegateAtomic, type PersistPlanInput } from "./planning"
 import { assembleContext } from "../../brain/src/contextAssembler";
 import { withTransaction } from "../../../packages/db/src/client";
 
-export async function observeAndEnterPlanning(goalId: string): Promise<{
+export async function observeAndEnterPlanning(goalId: string, alreadyModeling=false): Promise<{
   entityType: string;
   entityId: string | null;
   facts: unknown[];
   memory: unknown[];
+  knowledge?: unknown[];
 }> {
   if (localDevelopment()) {
     await withTransaction(client => authorizeDevelopmentGoal(client, goalId));
   }
-  await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
+  if(!alreadyModeling) await transitionGoalAtomic(goalId, "NEW", "MODELING", "kernel_observe_started");
 
   const context = await withTransaction(async (client) => {
     const goal = await client.query(
-      "SELECT company_scope FROM goals WHERE id=$1",
+      "SELECT company_scope,objective FROM goals WHERE id=$1",
       [goalId]
     );
     if (goal.rowCount !== 1) throw new Error("Goal not found");
@@ -25,12 +26,13 @@ export async function observeAndEnterPlanning(goalId: string): Promise<{
     if (!entityId) {
       return { entityType: "legal_entity", entityId: null, facts: [], memory: [] };
     }
-    const assembled = await assembleContext(client, "legal_entity", entityId);
+    const assembled = await assembleContext(client, "legal_entity", entityId,goal.rows[0].objective);
     return {
       entityType: assembled.entity.type,
       entityId: assembled.entity.id,
       facts: assembled.facts,
-      memory: assembled.memory
+      memory: assembled.memory,
+      ...('knowledge' in assembled?{knowledge:assembled.knowledge}:{})
     };
   });
 

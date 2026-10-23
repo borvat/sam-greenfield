@@ -1,4 +1,4 @@
-import { withTransaction } from "../../../packages/db/src/client";
+import { withTransaction,pool } from "../../../packages/db/src/client";
 import { recordIndependentVerificationAtomic } from "../../kernel/src/verification";
 import type { ValidatedProductionBundle } from "./bundle";
 
@@ -7,13 +7,13 @@ export async function verifyNextExecution(
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
-      `SELECT e.id,e.capability_id,e.params,e.evidence,e.operation_key_ref,
+      `SELECT e.id,e.capability_id,e.params,e.result,e.evidence,e.operation_key_ref,
               vc.id AS contract_id,vc.verification_method,
               vc.required_evidence_fields,vc.independent_query_template
          FROM executions e
          JOIN goals g ON g.id=e.goal_id
          JOIN verification_contracts vc ON vc.capability_id=e.capability_id
-        WHERE g.state='VERIFYING'
+        WHERE g.state IN ('EXECUTING','VERIFYING') AND g.current_plan_id=e.plan_id
           AND e.status='EXECUTED'
           AND NOT EXISTS (
             SELECT 1 FROM verifications v WHERE v.execution_id=e.id
@@ -28,11 +28,21 @@ export async function verifyNextExecution(
   const verifier=bundle.verifiers.get(candidate.capability_id);
   if(!verifier) return {processed:false};
 
+  const lease=await pool.connect();
+  let locked=false;
+  try{
+  locked=(await lease.query("SELECT pg_try_advisory_lock(hashtext($1)) AS locked",["verify:"+candidate.id])).rows[0].locked;
+  if(!locked)return {processed:false};
+  // Recheck after acquiring the cross-worker lock; another verifier may have
+  // completed the candidate since the initial selection.
+  const eligible=await lease.query(`SELECT e.id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND g.state IN ('EXECUTING','VERIFYING') AND e.status='EXECUTED' AND e.plan_id=g.current_plan_id AND NOT EXISTS(SELECT 1 FROM verifications v WHERE v.execution_id=e.id)`,[candidate.id]);
+  if(!eligible.rowCount)return {processed:false};
   const outcome=await verifier.verify({
     execution:{
       id:candidate.id,
       capabilityId:candidate.capability_id,
       params:candidate.params??{},
+      result:candidate.result??{},
       evidence:candidate.evidence??{},
       operationKeyRef:candidate.operation_key_ref??null
     },
@@ -53,4 +63,5 @@ export async function verifyNextExecution(
   });
 
   return {processed:true,executionId:candidate.id,verificationId};
+  }finally{try{if(locked)await lease.query("SELECT pg_advisory_unlock(hashtext($1))",["verify:"+candidate.id])}finally{lease.release()}}
 }

@@ -1,0 +1,32 @@
+Setup: Org 25472e9e-b620-4471-a716-42b4d021bfe3, Entity A edcc754f-9497-4be3-a037-38e2f27cb412, B 577e0883-6995-4b73-ae8d-4cd33c77ac04
+Using NOSUPERUSER NOBYPASSRLS role - superuser bypass avoided, no stale NULL bypass comment
+
+--- TEST 1: No tenant context -> zero protected rows visible ---
+No context SELECT: count=0 (expected 0) - FAIL-CLOSED
+✓ PASS: No tenant context -> zero protected rows visible (fail-closed)
+✓ PASS: No context goals 0 rows
+
+--- TEST 2: No tenant context -> INSERT blocked ---
+✓ PASS: No context INSERT blocked (exception): new row violates row-level security policy for table "financial_documents"
+
+
+--- TEST 3: No context -> UPDATE blocked ---
+✓ PASS: No context UPDATE blocked (rowcount 0)
+
+--- TEST 4: No context -> DELETE blocked ---
+✓ PASS: No context DELETE blocked (rowcount 0)
+
+--- TEST 5: Tenant A cannot read/write B ---
+✓ PASS: Tenant A cannot read B doc
+✓ PASS: Tenant A can read own doc
+
+--- TEST 6: Tenant B cannot read/write A ---
+✓ PASS: Tenant B cannot read A doc
+
+--- TEST 7: Tenant A can access own ---
+✓ PASS: Tenant A can access own goal
+
+--- TEST 8: Service/admin bypass explicit, never via NULL ---
+✓ PASS: NULL context does NOT bypass - explicit bypass via service_role/is_admin only, never NULL - FAIL-CLOSED verified
+
+=== ALL SECURITY TESTS PASS - FAIL-CLOSED VERIFIED (NOSUPERUSER ROLE) ===
