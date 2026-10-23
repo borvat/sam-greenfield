@@ -1,0 +1,6 @@
+{"phase":"SNAPSHOT","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.315Z","detail":{"reference":"local-fixture-original"}}
+{"phase":"PAUSE_REQUESTED","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.315Z"}
+{"phase":"CREATE_REQUESTED","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.316Z"}
+{"phase":"FAILED","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.318Z","detail":{"code":"FIXTURE_CREATE_REPLY_LOST"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.321Z","detail":{"trialId":"623018d6-2bea-498e-a522-f5368adadb46","elapsedFromInsertMs":2}}
+{"phase":"RESTORED","requestHash":"c53aa619631a2c619e53274ddb54e74b050e6093a0e5715100ad6b9447015aa5","at":"2026-10-23T21:56:09.607Z"}

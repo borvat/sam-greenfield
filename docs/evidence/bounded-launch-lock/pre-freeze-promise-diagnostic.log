@@ -1,0 +1,35 @@
+{"case":"OLD_STALE_LOCK_RACE_REPRODUCED","sourceCommit":"08369e4e0d11b6cb0d22fc7596c82db18b59bd8c","sourceSha256":"2db4d8a8707a0ac50f5266f71828354af27084b35d8382bba54b507d3f8adf70","concurrentOwners":2}
+✔ independent exact old-function reproduction: stale unlink replaces a live owner (79.528779ms)
+✖ two concurrent stale recoverers have exactly one kernel-lock owner; close never unlinks its successor (50.144805ms)
+✖ unexpected lock keeper death aborts the lease and fences further journal use (34.645418ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 674.52476
+
+✖ failing tests:
+
+test at tests/isolated/launch_journal_race.ts:2:3569
+✖ two concurrent stale recoverers have exactly one kernel-lock owner; close never unlinks its successor (50.144805ms)
+  Error: LAUNCH_JOURNAL_LEASE_LOST
+      at active (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:32:67)
+      at tracked (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:34:52)
+      at Object.read (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:36:17)
+      at TestContext.<anonymous> (/tmp/sam-trial-launcher/tests/isolated/launch_journal_race.ts:36:87)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at tests/isolated/launch_journal_race.ts:2:4915
+✖ unexpected lock keeper death aborts the lease and fences further journal use (34.645418ms)
+  Error: LAUNCH_JOURNAL_LEASE_LOST
+      at active (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:32:67)
+      at tracked (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:34:52)
+      at Object.append (/tmp/sam-trial-launcher/apps/agents/src/evaluation/launchJournal.ts:40:24)
+      at TestContext.<anonymous> (/tmp/sam-trial-launcher/tests/isolated/launch_journal_race.ts:47:38)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

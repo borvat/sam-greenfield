@@ -1,0 +1,211 @@
+{
+  "classification": "FIXTURE_ONLY_LAUNCH_ORCHESTRATION_NOT_MODEL_QUALITY",
+  "liveCalls": 0,
+  "productionAuthority": false,
+  "results": [
+    {
+      "scenario": "normal",
+      "result": {
+        "outcome": "blocked",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 544,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "sign",
+      "result": {
+        "outcome": "failed",
+        "error": "FIXTURE_SIGN_FAILED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 263,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "bad-signature",
+      "result": {
+        "outcome": "failed",
+        "error": "LAUNCH_SIGNATURE_INVALID",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 259,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "delivery",
+      "result": {
+        "outcome": "failed",
+        "error": "FIXTURE_DELIVERY_FAILED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 261,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "restart",
+      "result": {
+        "outcome": "failed",
+        "error": "FIXTURE_RESTART_FAILED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 271,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "observe",
+      "result": {
+        "outcome": "failed",
+        "error": "FIXTURE_OBSERVE_FAILED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 563,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "uncertain-create",
+      "result": {
+        "outcome": "failed",
+        "error": "FIXTURE_CREATE_REPLY_LOST",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 295,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "expired",
+      "result": {
+        "outcome": "failed",
+        "error": "LAUNCH_EXPIRED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 266,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "restore",
+      "result": {
+        "outcome": "blocked",
+        "restored": false,
+        "code": "FIXTURE_RESTORE_FAILED"
+      },
+      "elapsedFromInsertMs": 580,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "quiesce",
+      "result": {
+        "outcome": "blocked",
+        "restored": false,
+        "code": "FIXTURE_QUIESCE_UNCERTAIN"
+      },
+      "elapsedFromInsertMs": 567,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "cancel",
+      "result": {
+        "outcome": "failed",
+        "error": "LAUNCH_CANCELLED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 335,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "db-cancel",
+      "result": {
+        "outcome": "failed",
+        "error": "LAUNCH_TRIAL_CLOSED",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 262,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "crash",
+      "result": {
+        "restored": true
+      },
+      "elapsedFromInsertMs": 293,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "crash-after-restart",
+      "result": {
+        "restored": true
+      },
+      "elapsedFromInsertMs": 625,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    },
+    {
+      "scenario": "lease-loss",
+      "result": {
+        "outcome": "failed",
+        "restored": true
+      },
+      "elapsedFromInsertMs": 304,
+      "deadlineMs": 300000,
+      "models": 0,
+      "costUsd": 0,
+      "restored": true,
+      "trialCount": 1
+    }
+  ]
+}

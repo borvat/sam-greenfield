@@ -1,0 +1,9 @@
+{"phase":"SNAPSHOT","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.037Z","detail":{"reference":"local-fixture-original"}}
+{"phase":"PAUSE_REQUESTED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.037Z"}
+{"phase":"CREATE_REQUESTED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.037Z"}
+{"phase":"CREATED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.040Z","detail":{"trialId":"9eb6a82e-05cc-4bcf-8a4f-d1c44806267b","createdAt":"2026-10-23T21:56:08.038Z","deadline":"2026-10-23T22:01:08.038Z","observedAt":"2026-10-23T21:56:08.040Z"}}
+{"phase":"SIGN_REQUESTED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.042Z"}
+{"phase":"DELIVER_REQUESTED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.043Z"}
+{"phase":"FAILED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.044Z","detail":{"code":"FIXTURE_DELIVERY_FAILED"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.047Z","detail":{"trialId":"9eb6a82e-05cc-4bcf-8a4f-d1c44806267b","elapsedFromInsertMs":7}}
+{"phase":"RESTORED","requestHash":"ae5355153a3ceaf4ea72782800074c0c25e6865a1ae6dff521f81d01012c8fba","at":"2026-10-23T21:56:08.293Z"}
