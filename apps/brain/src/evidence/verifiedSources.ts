@@ -11,7 +11,8 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
  const rows=(await client.query(`SELECT e.*,v.id verification_id,v.result verification_result,v.execution_hash verified_hash,v.plan_hash verified_plan_hash
   FROM executions e JOIN goals g ON g.id=e.goal_id
   JOIN LATERAL(SELECT id,result,execution_hash,plan_hash FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
-  WHERE e.id=ANY($1::uuid[]) AND e.goal_id=$2 AND g.company_scope=$3`,[ids,input.goalId,input.legalEntityId])).rows;
+  WHERE e.id=ANY($1::uuid[]) AND e.goal_id=$2 AND g.company_scope=$3
+  AND octet_length(e.result::text)<=250000 AND octet_length(e.params::text)<=16000 AND octet_length(e.evidence::text)<=16000`,[ids,input.goalId,input.legalEntityId])).rows;
  if(rows.length!==ids.length||rows.some((r:any)=>r.verification_result!=='VERIFIED'||r.execution_hash!==r.verified_hash))throw Error('EVIDENCE_VERIFIED_SCOPE_REQUIRED');
  const sources:Record<string,Dataset>={},bindings:Record<string,unknown>={};
  for(const [alias,id] of Object.entries(input.sources)){

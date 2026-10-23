@@ -64,7 +64,8 @@ filter selections, which require objective-scope review. Unknown VAT is preserve
 through arithmetic and fails monetary structural readiness. The three goal
 families use these same operations; no business-specific operation exists.
 
-Limits: 8 input sources, 500 rows/40 columns per relation, 12 operations/relations,
+Limits: SQL admission rejects stored results over 250 KB and params/evidence over
+16 KB each before transferring rows; 8 input sources, 500 rows/40 columns per relation, 12 operations/relations,
 10,000 join comparisons per operation, 16 KB plan, 1 MB aggregate input and 250 KB
 per relation/output, 30 integer and 12 decimal digits. Non-terminating division
 fails with ROUNDING_REQUIRED. No arbitrary expression, JavaScript, SQL or shell

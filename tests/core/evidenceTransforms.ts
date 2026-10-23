@@ -77,6 +77,8 @@ async function main(){
   await assert.rejects(transformVerifiedSources(pool,input,{review_echo:money}),/VERIFIED_SCOPE/);
  }
  // Same generic join/filter operators, with changing references and unavailable page.
+ const oversized=await evidence([{...payload([{period:'x',amount:'1',sku:'x'}]),unused:'x'.repeat(250001)}]);
+ await assert.rejects(transformVerifiedSources(pool,{goalId:oversized.goalId,legalEntityId:f.entity,sources:{s:oversized.ids[0]},plan:{version:1,source:'s',operations:[]}},{review_echo:money}),/VERIFIED_SCOPE/);
  const deliverySchema=schema({reference:{kind:'text'},date:{kind:'date'}});
  for(const ref of ['X-93','K-42']){
   const e=await evidence([payload([{reference:ref,date:'2026-10-21'},{reference:'missing',date:'2026-10-22'}]),payload([{reference:ref,date:'2026-10-23'}],'partial')]);
