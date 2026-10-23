@@ -82,3 +82,36 @@ items with explicit omissions, and derives no aggregates. Missing/unrecognized
 EUR/VAT/coverage or matching sales period blocks monetary completion. Unsupported
 valid evidence structures may conservatively block and need a reviewed contract
 extension. Synthetic success cannot establish live provider timing or task success.
+
+## Supported live retest path (parent only; not executed here)
+
+Acceptance finished with 59/59 PASS; nothing is running or stalled. The tested
+application commit remains `3a00d1db402bf2dad80d5cd8002789754860edcf`.
+
+For an eligible new-runtime goal with a recorded remainder, the supported
+review-only action is `sam_continue_review(goal_id, legal_entity_id)` through the
+existing owner-authenticated surface. It reuses verified evidence and preserves
+the two-attempt/four-call budget. Automatic retry is also bounded to that
+remainder. Neither mechanism selects unrelated WAITING_EXTERNAL goals for review.
+
+Legacy goal `489409b6-da01-4ab1-b29d-188b23fa3e74` is ineligible: its old blocked
+report has no recorded budget remainder. No currently implemented action can
+resume that exact goal without a new bounded allowance. Do not delete its report,
+edit its state/audit records, reset its budget, or use direct capability execution
+to bypass GOAL_CONTRACT_REQUIRED.
+
+The smallest already implemented end-to-end live retest path is, after reviewed
+release and explicit authorization for a fresh run, one `sam_submit_goal` request
+with the same tenant and precise sales objective/date/limitations. The dispatcher
+creates a NEW GREEN goal with the existing `sam.read_report.v1` contract; the
+normal planner, verification and report review gates apply. This is a separate
+run with its own ordinary budget and **will repeat source reads**. It is not a
+review-only continuation or evidence reuse, and must not be silently substituted
+for the requested existing-goal continuation or used as an automatic retry loop.
+
+If repeating source work is unacceptable, no supported live retest path currently
+exists for that legacy goal. The remaining work is a separately authorized,
+reviewed, narrowly bounded legacy review allowance that reuses its existing
+verified executions. That capability is not implemented by this PR. The parent
+must resolve this scope/authorization choice; the coding child has performed
+neither option. The earlier direct-read rejection remains binding.
