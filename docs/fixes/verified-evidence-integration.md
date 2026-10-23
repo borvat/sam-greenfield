@@ -92,3 +92,26 @@ ordinary intake, dynamic model-chosen operations, traceable raw and derived clai
 restart/replay consistency, no duplicate external work, and honest incompleteness.
 Only those live results could establish autonomous quality; synthetic acceptance
 cannot. No old goal replay, budget reset or production evaluation is authorized here.
+
+## Independent review corrections
+
+Monetary columns are identified by reviewed `semantic: monetary`, a VAT declaration,
+or conservatively currency-shaped units, independent of objective keywords. Missing
+VAT stays unknown through aggregation and downstream arithmetic. A generic invoice
+sum with EUR but no VAT is blocked even without sales keywords.
+
+Derived source rendering uses bounded canonical cell quotations containing artifact
+identity, output hash, row, field and value. Quotes cannot be borrowed from another
+field or row with the same scalar. Projection omissions remain explicit; only whole
+canonical cells are citable. Knowledge uses this same canonical representation.
+
+A two-connection barrier reproduced a revocation committed after final replay but
+before report commit, with a COMPLETED report and latest raw FAILED verification.
+Final review now locks all participating executions in sorted order before the goal,
+then locks verification receipts, replays, and holds locks through report/knowledge
+commit. Execution locks block new receipt FK inserts; receipt locks block updates.
+This uses existing runtime SELECT/UPDATE privileges, not new grants. Regression
+barriers verify both insert and update are blocked until commit. This establishes
+validity at report commit, not immunity to later revocation of historical evidence.
+
+The model-visible capability now exposes a full discriminated operation grammar, including required join keys, aggregate fields, comparisons and arithmetic operands. The same JSON schema is enforced by the ordinary executor; missing fields and unsupported operators are rejected before adapter execution.

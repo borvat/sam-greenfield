@@ -1,3 +1,6 @@
+import {validateParameters,validateToolParameters} from '../../packages/tool-gateway/src/validation';
+import {DERIVE_PARAMETERS} from '../../apps/brain/src/evidence/planSchema';
+import {derivedCellQuote,derivedReviewText} from '../../apps/production/src/derivedReviewEvidence';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {pool} from '../../packages/db/src/client';
@@ -23,7 +26,7 @@ async function main(){
  await pool.query(`INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES($1,$2,'db_query',$3,$4)`,[DERIVE_CAPABILITY,DERIVED_VERIFICATION_CONTRACT.description,DERIVED_VERIFICATION_CONTRACT.requiredEvidenceFields,DERIVED_VERIFICATION_CONTRACT.independentQueryTemplate]);
  assert(!f.bundle.catalog.planningDescriptors().some(d=>d.capabilityId===DERIVE_CAPABILITY),'default composition stays disabled');
  
- async function scenario(input:{objective:string;columns:Record<string,Column>;records:any[];operations:Operation[];field:string;value:string;expected:'complete'|'blocked';coverage?:string;revoke?:boolean}){
+ async function scenario(input:{objective:string;columns:Record<string,Column>;records:any[];operations:Operation[];field:string;value:string;expected:'complete'|'blocked';coverage?:string;revoke?:boolean;race?:'insert'|'update'}){
   const contract:OutputContract={id:'fixture.records.v1',capabilityId:'review_echo',description:'Reviewed synthetic record fields only',extraction:{version:'1',columns:input.columns,rowsPath:['records'],coveragePath:['coverage'],timeZonePath:['timeZone'],limitationsPath:['limitations']}};
   const bundle=validateProductionBundle(withVerifiedEvidence(f.bundle.raw,[contract]));
   assert.equal(bundle.catalog.get('review_echo').output?.extractionContracts?.[0].id,contract.id);
@@ -34,9 +37,18 @@ async function main(){
   const raw=await recordExecutionAndRequestVerificationAtomic({queueId:first.queueIds[0],fencingToken:lease.token,actor:'fixture',result:{records:input.records,coverage:input.coverage??'complete',timeZone:'Europe/Amsterdam',limitations:input.coverage==='partial'?['Next page unavailable']:[]},evidence:{readback:true}});
   await recordIndependentVerificationAtomic({executionId:raw.executionId,verifier:'independent-fixture',contractId:rawContract,independentEvidence:{readback:true},result:'VERIFIED'});
   const request:DeriveRequest={sources:{records:{executionId:raw.executionId,contractId:contract.id}},plan:{version:1,source:'records',operations:input.operations}};
-  let reviewCalls=0;
+  for(const op of [{op:'join',right:'records',kind:'inner'},{op:'group',keys:['batch'],aggregates:[{as:'sum',fn:'sum'}]},{op:'derive',as:'x',left:'a',right:'b',operator:'eval'}]){
+   assert.throws(()=>validateParameters(DERIVE_PARAMETERS,{...request,plan:{...request.plan,operations:[op]}}),'incomplete/unsupported operations must fail review admission');
+   assert.throws(()=>validateToolParameters(DERIVE_CAPABILITY,{...request,plan:{...request.plan,operations:[op]}},DERIVE_PARAMETERS),'executor enforces the same model-visible schema');
+  }
+ let reviewCalls=0;
   const continued=await reviewNextReadGoal(bundle,pool,async prompt=>{
-   reviewCalls++;assert.equal(prompt.objective,input.objective);assert(prompt.capabilities.some((c:any)=>c.capabilityId===DERIVE_CAPABILITY));
+   reviewCalls++;assert.equal(prompt.objective,input.objective);
+   const visible=prompt.capabilities.find((c:any)=>c.capabilityId===DERIVE_CAPABILITY);assert(visible);
+   const operations=visible.parameters.properties.plan.properties.operations.items.anyOf;
+   assert(operations.find((op:any)=>op.properties.op.enum[0]==='join').required.includes('leftKey'));
+   assert(operations.find((op:any)=>op.properties.op.enum[0]==='group').properties.aggregates.items.anyOf.find((a:any)=>a.properties.fn.enum[0]==='sum').required.includes('field'));
+   validateParameters(visible.parameters,request);
    return {status:'continue',summary:'Verified records need deterministic comparison',requirements:[{requirement:input.objective,fulfilled:false,evidenceIds:[raw.executionId]}],findings:[],limitations:[],steps:[{capabilityId:DERIVE_CAPABILITY,params:request}]};
   });assert.equal(continued.status,'continue');
   const queue=(await pool.query(`SELECT * FROM work_queue WHERE goal_id=$1 AND capability_id=$2`,[id,DERIVE_CAPABILITY])).rows[0];
@@ -61,16 +73,40 @@ async function main(){
   const tampered=structuredClone(artifact);tampered.output.dataset.rows[0].values[input.field]='999';await assert.rejects(replayArtifact(pool,scope,tampered,[contract]),/REPLAY_MISMATCH/);
   await assert.rejects(deriveArtifact(pool,scope,{...request,sources:{records:{executionId:raw.executionId,contractId:'invented'}}},[contract]),/SCHEMA_UNKNOWN/);
   if(input.revoke)await pool.query(`INSERT INTO verifications(execution_id,verifier,method,contract_id,independent_evidence,result,plan_hash,execution_hash,checked_at) SELECT execution_id,'revoked','db_query',contract_id,'{}','FAILED',plan_hash,execution_hash,now()+interval '1 second' FROM verifications WHERE execution_id=$1`,[raw.executionId]);
-  const reviewed=await reviewNextReadGoal(bundle,pool,async prompt=>{
+  let raceOutcome='not-run';
+  const reviewDb=input.race?{async connect(){
+   const c=await pool.connect();let final=false,fired=false;
+   return {release:()=>c.release(),async query(sql:string,params?:any[]){
+    const result=await c.query(sql,params);
+    if(sql.includes('SELECT state,current_plan_id FROM goals')&&sql.includes('FOR UPDATE'))final=true;
+    if(final&&!fired&&sql.includes('WHERE e.id=ANY')){
+     fired=true;const writer=await pool.connect();
+     try{await writer.query('BEGIN');await writer.query("SET LOCAL lock_timeout='100ms'");
+      if(input.race==='update')await writer.query("UPDATE verifications SET result='FAILED' WHERE execution_id=$1",[raw.executionId]);
+      else await writer.query(`INSERT INTO verifications(execution_id,verifier,method,contract_id,independent_evidence,result,plan_hash,execution_hash,checked_at) SELECT execution_id,'racing-revocation','db_query',contract_id,'{}','FAILED',plan_hash,execution_hash,now()+interval '1 second' FROM verifications WHERE execution_id=$1`,[raw.executionId]);
+      await writer.query('COMMIT');raceOutcome='revocation-committed-before-report';
+     }catch(error:any){await writer.query('ROLLBACK');if(error.code!=='55P03')throw error;raceOutcome='revocation-blocked-by-execution-lock';}
+     finally{writer.release();}
+    }
+    return result;
+   }};
+  }}:pool;
+  const reviewed=await reviewNextReadGoal(bundle,reviewDb,async prompt=>{
    reviewCalls++;
    if(prompt.proposedReport){assert(prompt.proposedReport.findings[0].derivedCitation.inputs.length);return {accepted:true,missing:[]};}
    const source=prompt.verifiedObservations.find((s:any)=>s.id===recorded.executionId);
    assert(source.derivedEvidence);assert(!source.derivedArtifact,'internal artifact is not duplicated into model prompt');
-   const quoteLine=source.lines.findIndex((line:string)=>line.includes(JSON.stringify(input.field)+': '+JSON.stringify(input.value)));
+   const quoteLine=source.lines.findIndex((line:string)=>line===derivedCellQuote(artifact,0,input.field));
    assert(source.citableLines.includes(quoteLine));
    return {status:'complete',summary:'Cited deterministic result with explicit coverage',requirements:[{requirement:input.objective,fulfilled:true,evidenceIds:[recorded.executionId]}],findings:[{text:'Derived '+input.field+' = '+input.value,executionId:recorded.executionId,quoteLine,derivedClaim:{row:0,field:input.field,value:input.value}}],limitations:[],steps:[]};
   });
   assert.equal(reviewed.status,input.revoke?'blocked':input.expected);
+  if(input.race){
+   const state=(await pool.query('SELECT state FROM goals WHERE id=$1',[id])).rows[0].state;
+   const latest=(await pool.query('SELECT result FROM verifications WHERE execution_id=$1 ORDER BY checked_at DESC,id DESC LIMIT 1',[raw.executionId])).rows[0].result;
+   console.log(JSON.stringify({raceOutcome,state,latestRawVerification:latest}));
+   assert.equal(raceOutcome,'revocation-blocked-by-execution-lock');assert.equal(state,'COMPLETED');assert.equal(latest,'VERIFIED');
+  }
   const reports=(await pool.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round',[id])).rows;
   if(!input.revoke){const report=reports.at(-1).decision;assert.equal(report.status,input.expected);if(input.expected==='complete')assert.equal(report.findings[0].derivedCitation.artifactId,artifact.artifactId);else assert(report.requirements.every((r:any)=>!r.fulfilled));}
   else {assert.equal(reviewCalls,1,'revoked lineage stops before another model call');assert.equal(reports.at(-1).decision.status,'blocked');assert(reports.at(-1).decision.limitations.includes('REVIEW_DERIVED_EVIDENCE_INVALID'));}
@@ -83,10 +119,11 @@ async function main(){
  // are explicit test doubles; these tests do not establish autonomous quality.
  await scenario({objective:'Compare revenue in the two supplied periods in EUR, state VAT and missing evidence.',columns:{period:{kind:'text'},amount:{kind:'decimal',unit:'EUR',vat:'unknown'}},records:[{period:'earlier-A93',amount:'0.10'},{period:'earlier-A93',amount:'0.20'},{period:'later-Z42',amount:'1.05'}],operations:[{op:'group',keys:['period'],aggregates:[{as:'total',field:'amount',fn:'sum'}]}],field:'total',value:'0.3',expected:'blocked'});
  await scenario({objective:'Compare supplier promises with delivery documents and identify late deliveries and missing pages.',columns:{reference:{kind:'text'},promised:{kind:'date'},delivered:{kind:'date'}},records:[{reference:'SUP-X31',promised:'2026-10-21',delivered:'2026-10-23'}],operations:[{op:'derive',as:'delay',left:'delivered',right:'promised',operator:'subtract'}],field:'delay',value:'2',coverage:'partial',expected:'blocked'});
+ await scenario({objective:'Total the supplied invoices and explain any missing tax basis.',columns:{batch:{kind:'text'},amount:{kind:'decimal',unit:'EUR'}},records:[{batch:'invoice-B31',amount:'1'},{batch:'invoice-B31',amount:'1'}],operations:[{op:'group',keys:['batch'],aggregates:[{as:'total',field:'amount',fn:'sum'}]}],field:'total',value:'2',expected:'blocked'});
  const duplicates={objective:'Inventory document duplicate counts by content, cite each group, and do not delete anything.',columns:{hash:{kind:'text' as const},document:{kind:'text' as const}},records:[{hash:'same',document:crypto.randomUUID()},{hash:'same',document:crypto.randomUUID()}],operations:[{op:'group' as const,keys:['hash'],aggregates:[{as:'copies',fn:'count' as const}]}],field:'copies',value:'2',expected:'complete' as const};
  const done=await scenario(duplicates);
  const knowledge=(await pool.query('SELECT * FROM knowledge_records WHERE goal_id=$1',[done.id])).rows;
- assert.equal(knowledge.length,1);assert.equal(knowledge[0].kind,'INFERENCE','derived quotations are not raw external facts');assert(knowledge[0].statement.includes('"copies": "2"'));
+ assert.equal(knowledge.length,1);assert.equal(knowledge[0].kind,'INFERENCE','derived quotations are not raw external facts');assert.equal(knowledge[0].statement,derivedCellQuote(done.artifact,0,'copies'));
  assert.equal((await recallKnowledge(pool,f.entity,'copies')).length,0,'default memory recall cannot silently bypass derived replay');
  // A real non-owner, non-bypass role exercises the existing RLS policies.
  const restricted=await pool.connect();const role='evidence_test_'+crypto.randomUUID().replaceAll('-','');
@@ -108,6 +145,18 @@ async function main(){
  const text=JSON.stringify({copies:'2'},null,2),source={id:done.recorded.executionId,capabilityId:DERIVE_CAPABILITY,params:{},text,truncated:false,actor:'fixture',retrievedAt:new Date().toISOString(),derivedArtifact:done.artifact};
  const claim={status:'complete',summary:'Derived count',requirements:[{requirement:'Count',fulfilled:true,evidenceIds:[source.id]}],findings:[{text:'Count is two',executionId:source.id,quoteLine:1,derivedClaim:{row:0,field:'copies',value:'999'}}],limitations:[],steps:[]};
  assert.throws(()=>validateReadReview(claim,[source],'Count documents',[]),/DERIVED_CLAIM_UNSUPPORTED/);
+ // Equal values in different fields/rows are not interchangeable citations.
+ const equal=structuredClone(done.artifact);equal.output.dataset.columns.money={kind:'decimal',unit:'EUR'};
+ equal.output.dataset.rows[0].values.money='2';equal.output.dataset.rows.push(structuredClone(equal.output.dataset.rows[0]));
+ const equalSource={...source,text:derivedReviewText(equal).text,derivedArtifact:equal};
+ const wrong={...claim,findings:[{text:'Money is two',executionId:source.id,quote:derivedCellQuote(equal,0,'copies'),derivedClaim:{row:0,field:'money',value:'2'}}]};
+ assert.throws(()=>validateReadReview(wrong,[equalSource],'Total invoices',[]),/DERIVED_CLAIM_UNSUPPORTED/);
+ wrong.findings[0].quote=derivedCellQuote(equal,1,'money');
+ assert.throws(()=>validateReadReview(wrong,[equalSource],'Total invoices',[]),/DERIVED_CLAIM_UNSUPPORTED/);
+ wrong.findings[0].quote=derivedCellQuote(equal,0,'money');
+ assert.equal(validateReadReview(wrong,[equalSource],'Total invoices',[]).findings.length,1);
+ await scenario({...duplicates,race:'insert'});
+ await scenario({...duplicates,race:'update'});
  await scenario({...duplicates,revoke:true});
  assert.equal((await pool.query('SELECT count(*)::int n FROM side_effect_operations')).rows[0].n,0);
  console.log(JSON.stringify({status:'PASS',liveModelCalls:0,productionRegistration:false,classification:'SYNTHETIC_SCRIPTED_DECISIONS_NOT_AUTONOMOUS_MODEL_QUALITY',checks:['ordinary review continuation','fenced artifact persistence','duplicate commit refused','independent replay verification','contract version/tamper/refusal','raw row citations','partial/unknown semantics blocked','knowledge capture as inference','revocation before review']}));

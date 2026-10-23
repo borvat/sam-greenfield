@@ -1,3 +1,4 @@
+import {derivedCellQuote,derivedReviewText} from './derivedReviewEvidence';
 import {DERIVE_CAPABILITY,replayStoredArtifact,type DerivedArtifact} from '../../brain/src/evidence/artifacts';
 import {assessDeliverables} from '../../brain/src/evidence/transforms';
 import {assertReviewInputBudget,reviewSourceAllowance} from './reviewInputBudget';
@@ -9,8 +10,8 @@ import {scopedCatalog} from "../../perception/src/policy";
 import { captureVerifiedKnowledge } from "../../brain/src/knowledge";
 import {pool} from "../../../packages/db/src/client";
 import {sha256Hex} from "../../../packages/shared/src/stableJson";
-import {validateParameters} from "../../../packages/tool-gateway/src/validation";
-const validateToolParameters=(_id:string,params:unknown,schema:any)=>validateParameters(schema,params);
+import {validateParameters,validateToolParameters as validateSchemaParameters} from "../../../packages/tool-gateway/src/validation";
+const validateToolParameters=(id:string,params:unknown,schema:any)=>{validateParameters(schema,params);if(id===DERIVE_CAPABILITY)validateSchemaParameters(id,params as Record<string,unknown>,schema);};
 import {ModelGateway} from "../../../packages/model-gateway/src/gateway";
 import {persistPlanAndDelegate} from "../../kernel/src/planning";
 import {transitionGoal} from "../../kernel/src/stateMachine";
@@ -52,7 +53,7 @@ export function validateReadReview(value:any,sources:Source[],objective:string,d
    const claim=f.derivedClaim,artifact=source.derivedArtifact;
    if(!object(claim)||!Number.isInteger(claim.row)||claim.row<0||typeof claim.field!=='string'||typeof claim.value!=='string')throw Error('REVIEW_DERIVED_CLAIM_REQUIRED');
    const row=artifact.output.dataset.rows[claim.row];
-   if(!row||!Object.hasOwn(row.values,claim.field)||row.values[claim.field]!==claim.value||!f.quote.includes(JSON.stringify(claim.value)))throw Error('REVIEW_DERIVED_CLAIM_UNSUPPORTED');
+   if(!row||!Object.hasOwn(row.values,claim.field)||row.values[claim.field]!==claim.value||f.quote!==derivedCellQuote(artifact,claim.row,claim.field))throw Error('REVIEW_DERIVED_CLAIM_UNSUPPORTED');
    f.derivedCitation={artifactId:artifact.artifactId,outputHash:artifact.output.outputHash,row:claim.row,field:claim.field,value:claim.value,inputs:row.citations};
   }else if(f.derivedClaim!==undefined||f.derivedCitation!==undefined)throw Error('REVIEW_DERIVED_CLAIM_UNSUPPORTED');
   if(requireConfidence&&(!["LOW","MEDIUM","HIGH"].includes(f.confidence)||typeof f.confidenceBasis!=="string"||!f.confidenceBasis.trim()||f.confidenceBasis.length>500))throw new Error("REVIEW_CONFIDENCE_REQUIRED");
@@ -134,16 +135,23 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   all.rows=all.rows.filter((e:any)=>!rejectedDerived.has(e.id));
   const sourceAllowance=derivedReplayBlocked&&all.rows.length===0?0:reviewSourceAllowance(all.rows.length);
   const projections:ReturnType<typeof projectReviewEvidence>[]=all.rows.map((e:any)=>{
-   try{return projectReviewEvidence(e.result,sourceAllowance);}catch{
+   try{
+    if(derived.has(e.id)){
+     const artifact=derived.get(e.id)!,projection=derivedReviewText(artifact,sourceAllowance);
+     return {text:projection.text,truncated:projection.omitted>0,omissions:projection.omitted?[`${projection.omitted} derived cells omitted; no full-detail claim`]:[],limitations:artifact.output.dataset.limitations,originalHash:sha256Hex(e.result),data:undefined};
+    }
+    return projectReviewEvidence(e.result,sourceAllowance);
+   }catch{
     return {text:'[Verified source cannot fit the review evidence budget without losing essential content]',truncated:true,
      omissions:[],limitations:['REVIEW_EVIDENCE_PROJECTION_BLOCKED: essential source content exceeds the bounded review input; full coverage cannot be claimed'],originalHash:sha256Hex(e.result),data:undefined};
    }
   });
   const sources:Source[]=all.rows.map((e:any,index:number)=>{
    const projection=projections[index],body=projection.text,provenance={independentReadback:"VERIFIED",originalContentHash:projection.originalHash};
-   const text=body+"\n[Verified execution evidence]\n"+JSON.stringify(provenance,null,2),raw=reviewSourceText(e.result);
+   const text=body+"\n[Verified execution evidence]\n"+JSON.stringify(provenance,null,2),raw=derived.has(e.id)?'':reviewSourceText(e.result);
+   const derivedQuotes=derived.has(e.id)?new Set(derivedReviewText(derived.get(e.id)!,sourceAllowance).quotes):undefined;
    const verifiedQuotes=Object.fromEntries(sourceLines(text).flatMap((line,index)=>{
-    const quote=line.trim();return quote.length>=3&&raw.includes(quote)?[[index,quote]]:[];
+    const quote=line.trim();return quote.length>=3&&(derivedQuotes?derivedQuotes.has(quote):raw.includes(quote))?[[index,quote]]:[];
    }));
    return {id:e.id,capabilityId:e.capability_id,params:e.params,text,verifiedQuotes,...(derived.has(e.id)?{derivedArtifact:derived.get(e.id)}:{}),truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
   });
@@ -218,7 +226,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
     const derivedGaps=decision.findings.flatMap((finding:any)=>{
      const artifact=derived.get(finding.executionId);if(!artifact)return [];
      const field=finding.derivedClaim.field;
-     return assessDeliverables(artifact.output.dataset,[{id:field,description:field,fields:[field],monetaryFields:artifact.output.dataset.columns[field]?.vat!==undefined?[field]:[],completeCoverage:true,knownTimeZone:false}])[0].gaps;
+     return assessDeliverables(artifact.output.dataset,[{id:field,description:field,fields:[field],completeCoverage:true,knownTimeZone:false}])[0].gaps;
     });
     if(derivedGaps.length&&decision.status==='complete')decision={...decision,status:'blocked',requirements:decision.requirements.map(r=>({...r,fulfilled:false})),steps:[],limitations:[...decision.limitations,...derivedGaps]};
     if(monetaryGaps.length&&decision.status==='complete')decision={status:'blocked',summary:'Verified evidence does not establish the requested monetary deliverables',
@@ -248,6 +256,15 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const savedDecision={...decision,runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
   await client.query("BEGIN");
   try{
+   if(derived.size){
+    // Follow the verifier's execution-before-goal order. Execution FOR UPDATE
+    // conflicts with verification FK inserts; receipt SHARE locks prevent an
+    // existing receipt from changing after replay. Hold both through COMMIT.
+    const ids=[...new Set([...all.rows.map((e:any)=>e.id),...Array.from(derived.values()).flatMap(a=>Object.values(a.output.bindings).map((b:any)=>b.executionId))])].sort();
+    const locked=await client.query('SELECT id FROM executions WHERE goal_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE',[goal.id,ids]);
+    if(locked.rowCount!==ids.length)throw Error('REVIEW_DERIVED_EVIDENCE_INVALID');
+    await client.query('SELECT id FROM verifications WHERE execution_id=ANY($1::uuid[]) ORDER BY execution_id,id FOR SHARE',[ids]);
+   }
    const current=await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goal.id]);
    if(current.rows[0]?.state!=="VERIFYING"||current.rows[0]?.current_plan_id!==goal.current_plan_id)throw new Error("REVIEW_STALE_PLAN");
    // Recheck lineage after model calls and before report/knowledge commit.

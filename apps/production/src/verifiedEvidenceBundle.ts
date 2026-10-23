@@ -1,13 +1,11 @@
+import {DERIVE_PARAMETERS} from '../../brain/src/evidence/planSchema';
+export {DERIVE_PARAMETERS} from '../../brain/src/evidence/planSchema';
 import {sha256Hex} from '../../../packages/shared/src/stableJson';
 import {pool} from '../../../packages/db/src/client';
 import {deriveArtifact,replayStoredArtifact,DERIVE_CAPABILITY,type DeriveRequest} from '../../brain/src/evidence/artifacts';
 import {freezeOutputContracts,type OutputContracts} from '../../brain/src/evidence/contracts';
 import type {ProductionBundle} from './types';
 export const DERIVED_VERIFICATION_CONTRACT={capabilityId:DERIVE_CAPABILITY,description:'Deterministic replay over current same-goal latest-verified records',verificationMethod:'db_query' as const,requiredEvidenceFields:{replayed:'boolean'},independentQueryTemplate:{method:'verified-evidence-replay-v1'}};
-export const DERIVE_PARAMETERS={type:'object',additionalProperties:false,required:['sources','plan'],properties:{
- sources:{type:'object',minProperties:1,maxProperties:8,additionalProperties:{type:'object',additionalProperties:false,required:['executionId','contractId'],properties:{executionId:{type:'string',format:'uuid'},contractId:{type:'string',maxLength:100}}}},
- plan:{type:'object',additionalProperties:false,required:['version','source','operations'],properties:{version:{const:1},source:{type:'string',maxLength:64},operations:{type:'array',maxItems:12,items:{type:'object',required:['op'],properties:{op:{enum:['save','from','select','filter','derive','group','join','distinct']}}}}}}
-}};
 /** Explicit opt-in composition. Not called by any production startup path. */
 export function withVerifiedEvidence(bundle:ProductionBundle,entries:OutputContracts,db:any=pool):ProductionBundle{
  const registry=freezeOutputContracts(entries);

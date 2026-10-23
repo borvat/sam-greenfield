@@ -1,5 +1,5 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
-export type Column={kind:'text'|'date'|'decimal';unit?:string;vat?:string;semanticUncertainty?:boolean};
+export type Column={kind:'text'|'date'|'decimal';unit?:string;semantic?:'monetary'|'quantity'|'ratio';vat?:string;semanticUncertainty?:boolean};
 export type Citation={executionId:string;verificationId:string;row:number;sourceHash:string};
 export type EvidenceRow={values:Record<string,string|null>;citations:Citation[]};
 export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[]};
@@ -18,6 +18,8 @@ const key=(k:string)=>{if(typeof k!=='string'||! /^[A-Za-z][A-Za-z0-9_]{0,63}$/.
 const bounded=(v:unknown,n=250000)=>{if(Buffer.byteLength(JSON.stringify(v),'utf8')>n)fail('SIZE_LIMIT');};
 const ten=(n:number)=>10n**BigInt(n);
 const known=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=100&&!/^(unknown|unspecified|undefined|null|n\/a)$/i.test(v);
+// Currency-shaped units are conservatively monetary even without a semantic tag.
+export const isMonetaryColumn=(c:Column)=>c.kind==='decimal'&&(c.semantic==='monetary'||c.vat!==undefined||/^(?:[A-Z]{3}|€|\$|£)$/i.test(c.unit??''));
 export function knownTimeZone(v:unknown):v is string{if(!known(v))return false;try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}}
 function decimal(v:string){if(typeof v!=='string'||! /^-?(0|[1-9]\d{0,29})(\.\d{1,12})?$/.test(v))fail('DECIMAL_INVALID');const [a,b='']=v.split('.');return {n:BigInt(a+b),scale:b.length};}
 function format(n:bigint,scale:number):string{const neg=n<0n;if(neg)n=-n;let s=n.toString().padStart(scale+1,'0');if(scale)s=s.slice(0,-scale)+'.'+s.slice(-scale);s=s.replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');const out=(neg&&n!==0n?'-':'')+s;decimal(out);return out;}
@@ -43,7 +45,7 @@ function validate(d:Dataset){
 }
 function compatible(a:Column,b:Column){if(a.kind!=='decimal'||b.kind!=='decimal'||!known(a.unit)||!known(b.unit)||a.unit!==b.unit||a.vat!==b.vat)fail('UNIT_OR_SEMANTICS_UNKNOWN');}
 function deriveColumn(a:Column,b:Column,op:string):Column{
- const uncertain=!!(a.semanticUncertainty||b.semanticUncertainty||a.vat!==undefined&&!known(a.vat)||b.vat!==undefined&&!known(b.vat));
+ const uncertain=!!(a.semanticUncertainty||b.semanticUncertainty||isMonetaryColumn(a)&&!known(a.vat)||isMonetaryColumn(b)&&!known(b.vat));
  const inherited=(c:Column):Column=>uncertain?{...c,semanticUncertainty:true}:c;
  if(op==='subtract'&&a.kind==='date'&&b.kind==='date')return {kind:'decimal',unit:'calendar_day'};
  if(op==='add'||op==='subtract'){compatible(a,b);return inherited({...a});}
@@ -114,7 +116,7 @@ export function assessDeliverables(d:Dataset,deliverables:Deliverable[]){
  return deliverables.map(r=>{const gaps:string[]=[];for(const f of r.fields){if(!Object.hasOwn(d.columns,f))gaps.push('FIELD_MISSING:'+f);else {if(d.rows.some(row=>row.values[f]===null))gaps.push('VALUE_MISSING:'+f);if(d.columns[f].semanticUncertainty)gaps.push('SEMANTIC_LINEAGE_UNKNOWN:'+f);}}
   if(r.completeCoverage&&d.selections?.length)gaps.push('FILTERED_SCOPE_REQUIRES_REVIEW');
   if(r.completeCoverage&&d.coverage!=='complete')gaps.push('COVERAGE_'+d.coverage.toUpperCase());if(r.knownTimeZone&&!d.timeZone)gaps.push('TIME_ZONE_UNKNOWN');
-  for(const f of r.monetaryFields??[]){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat)||c.semanticUncertainty)gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
+  for(const f of new Set([...(r.monetaryFields??[]),...r.fields.filter(f=>d.columns[f]&&isMonetaryColumn(d.columns[f]))])){const c=d.columns[f];if(c?.kind!=='decimal'||!known(c.unit)||!known(c.vat)||c.semanticUncertainty)gaps.push('MONETARY_SEMANTICS_UNKNOWN:'+f);}
   return {id:r.id,description:r.description,structurallyReady:gaps.length===0,gaps,limitations:d.limitations};
  });
 }
