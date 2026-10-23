@@ -1,16 +1,17 @@
+import {assertEvaluationPermit} from '../../../packages/model-gateway/src/evaluationPermit';
 import {ModelGateway} from '../../../packages/model-gateway/src/gateway';
 import type {ModelTask} from '../../../packages/model-gateway/src/types';
 import {assertEvaluationTrial,type EvaluationTrial} from '../../agents/src/evaluation/trial';
 import {sha256Hex} from '../../../packages/shared/src/stableJson';
 import type {ProductionBundle} from './types';
 export const evaluationBundleHash=(bundle:ProductionBundle)=>sha256Hex({tools:bundle.toolDefinitions,contracts:bundle.verifiedEvidenceContracts??[]});
-/** Explicit, fixture-only composition. Reuses the existing durable trial ledger.
+/** Explicit permit-bound composition. Reuses the existing durable trial ledger.
  * Agent keys encode immutable goal enrollment, so reopening cannot shuffle quotas.
  * No entrypoint calls this factory; live release/owner interlocks remain intact.
  */
 export function withGoalEvaluation(bundle:ProductionBundle,trial:EvaluationTrial,expectedCommit:string):ProductionBundle{
- assertEvaluationTrial(trial);
- if(trial.spec.mode!=='fixture'||trial.permit.mode!=='fixture'||trial.spec.commit!==expectedCommit||
+ assertEvaluationTrial(trial);assertEvaluationPermit(trial.permit);
+ if(trial.spec.mode!==trial.permit.mode||trial.spec.commit!==expectedCommit||
   trial.spec.capabilityHash!==evaluationBundleHash(bundle)||bundle.modelGatewayForGoal||bundle.plannerGateway)
   throw Error('EVALUATION_COMPOSITION_DENIED');
  const slots=Object.keys(trial.spec.agents).filter(k=>k!=='executive-bootstrap');

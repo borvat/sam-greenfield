@@ -1,3 +1,4 @@
+import {prepareBoundedEvaluationComposition} from '../../apps/production/src/boundedEvaluationBootstrap';
 import {Client} from 'pg';
 import {frozenEvaluationSources} from '../../apps/agents/src/evaluation/frozenSources';
 import {createGoalEvaluationComposition,admitEvaluationSource} from '../../apps/production/src/goalEvaluationComposition';
@@ -82,7 +83,8 @@ async function worker(){
   else output={steps:[{capabilityId:'source.read',params:{channel:'record'}}]};
   return {model:'fixture',usage:{inputTokens:5,outputTokens:10},output};
  });
- const composition=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(runtimeAdapter),trial:runtimeTrial,expectedCommit:runtimeTrial.spec.commit,workerId:'evaluation-fixture'});
+ await assert.rejects(()=>prepareBoundedEvaluationComposition({sourceBundle:runtimeFixtureBundle(runtimeAdapter),trial:runtimeTrial,expectedCommit:'0'.repeat(40),workerId:'denied'}),/COMMIT_MISMATCH/);
+ const composition=await prepareBoundedEvaluationComposition({sourceBundle:runtimeFixtureBundle(runtimeAdapter),trial:runtimeTrial,expectedCommit:runtimeTrial.spec.commit,workerId:'evaluation-fixture'});
  for(let i=0;i<30;i++){await composition.runWorkTick();const done=(await pool.query("SELECT count(*)::int n FROM goals WHERE id=ANY($1::uuid[]) AND state='COMPLETED'",[trials['goal-runtime'].goals])).rows[0].n;if(done===3)break;}
  const states=(await pool.query('SELECT id,state,planning_attempts FROM goals WHERE id=ANY($1::uuid[])',[trials['goal-runtime'].goals])).rows;
  assert(states.every(x=>x.state==='COMPLETED'),JSON.stringify(states));

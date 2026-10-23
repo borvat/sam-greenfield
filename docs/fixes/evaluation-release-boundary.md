@@ -52,7 +52,7 @@ provider test was required or performed.
    verification_contracts row using the existing operator mechanism and review any
    necessary capability availability/scope binding. Runtime startup now verifies it.
 3. A live evaluation remains genuinely blocked by LIVE_EVALUATION_ENABLED=false,
-   withGoalEvaluation's fixture-only admission and registered-evaluation-adapter
+   the permit requirement and registered-evaluation-adapter
    checks. Ordinary provider adapters cannot be substituted. Enabling a live path
    requires an explicit reviewed release and separately signed owner approval;
    this patch does not flip those guards or mint signing credentials.
@@ -88,8 +88,12 @@ The spec hash binds the three enrolled IDs, per-goal/shared call/token/cost/time
 limits and capability hash. Prices bind provider/model and input/output rates;
 endpoint is HTTPS with no embedded credentials/query/fragment. Expiry matches the
 trial deadline. Matching signature alone cannot bypass the release-disabled flag.
-No key, signature, permit or billable invocation was created here.
+No production signing key, owner approval signature, live permit or billable invocation was created here. Existing tests use fixture signing material and permits only.
 
 Synthetic fixture completion is evidence of runtime composition and safety only.
 Opaque Google search schemas, monetary/VAT meanings, population coverage and live
 model autonomy remain unresolved. Attachment byte identity is not document meaning.
+
+The follow-up branch adds an inactive boundedEvaluationCompositionModule, read-only
+bootstrap and binding to the existing compatible provider/model configuration.
+See bounded-live-entry.md for exact configuration and remaining operator boundaries.

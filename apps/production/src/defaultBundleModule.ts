@@ -1,3 +1,4 @@
+import {withReadOutputMetadata} from './readOutputMetadata';
 import type { ProductionBundle } from "./types";
 import {withSamGoogleMcpFromEnv} from "./samGoogleBundle";
 import { withStandardModelProvidersFromEnv } from "./standardModels";
@@ -30,7 +31,7 @@ async function buildBundle():Promise<ProductionBundle>{
       toolAdapters:bundle.toolAdapters.filter(a=>keep(a.capabilityId)),
       verificationAdapters:bundle.verificationAdapters?.filter(v=>keep(v.capabilityId))};
   }
-  return bundle;
+  return withReadOutputMetadata(bundle);
 }
 
 export default buildBundle;

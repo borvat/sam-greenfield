@@ -1,3 +1,6 @@
+import {compatibleEvaluationBinding,existingEvaluationAdapter} from '../../packages/model-providers/src/evaluationBinding';
+import {frozenGoalEvaluationBundle} from '../../apps/production/src/boundedEvaluationBootstrap';
+import {spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync,sign,randomUUID} from 'node:crypto';
 import {pool} from '../../packages/db/src/client';
@@ -24,6 +27,17 @@ async function main(){
  await assert.rejects(()=>new ModelGateway({'eval-fixture':wrong}).invoke(task),/MODEL_MISMATCH/);
  const live=liveEvaluationAdapter({providerId:'eval-fixture',endpoint:'https://example.invalid/chat/completions',permit,credential:()=>{credentialsRead++;return undefined;}});
  process.env.SAM_LIVE_EVALUATION_ENABLED='1';await assert.rejects(()=>live.invoke(task,'fixture'),/RELEASE_DISABLED/);assert.equal(credentialsRead,0);delete process.env.SAM_LIVE_EVALUATION_ENABLED;
+ const metadata:any={DEEPSEEK_MODEL:'existing-fixture-model',DEEPSEEK_COST_PER_1K_INPUT:'0.001',DEEPSEEK_COST_PER_1K_OUTPUT:'0.002'};
+ Object.defineProperty(metadata,'DEEPSEEK_API_KEY',{get(){credentialsRead++;throw Error('credential must remain unread');}});
+ assert.deepEqual(compatibleEvaluationBinding('deepseek',metadata),{providerId:'deepseek',model:'existing-fixture-model',endpoint:'https://api.deepseek.com/chat/completions',inputPer1k:0.001,outputPer1k:0.002});
+ assert.throws(()=>compatibleEvaluationBinding('anthropic',metadata),/EXISTING_COMPATIBLE_PROVIDER_REQUIRED/);
+ assert.throws(()=>compatibleEvaluationBinding('deepseek',{...metadata,DEEPSEEK_BASE_URL:'https://user:password@example.invalid'}),/EXISTING_PROVIDER_CONFIG_REQUIRED/);
+ assert.throws(()=>compatibleEvaluationBinding('deepseek',{DEEPSEEK_MODEL:'x'}),/PRICE_REQUIRED/);
+ assert.throws(()=>existingEvaluationAdapter(permit,[],new Proxy({}, {get(){throw Error('environment must remain unread');}})),/RELEASE_DISABLED/);
+ const child=spawnSync(process.execPath,['--import','tsx','--input-type=module','-e',`import('./apps/runtime/src/boundedEvaluationCompositionModule.ts').then(async m=>{await (m.default?.default??m.default)}).then(()=>process.exit(2)).catch(e=>{if(e.message!=='LIVE_EVALUATION_RELEASE_DISABLED'){console.error(e.message);process.exit(3);}console.log('disabled before database/environment imports');})`],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:10000});
+ assert.equal(child.status,0,child.stdout+child.stderr);assert.match(child.stdout,/disabled before database/);
+ const frozen=frozenGoalEvaluationBundle('industrial-refrigeration');assert.equal(frozen.toolAdapters.length,1);assert.equal(frozen.toolDefinitions[0].sideEffect,false);assert(!JSON.stringify(frozen.capabilities).includes('expected'));assert(!JSON.stringify(frozen.capabilities).includes('"value":"24"'));
+ assert.equal(credentialsRead,0);
  const owner=generateKeyPairSync('ed25519');const payload={kind:'SAM_LIVE_EVALUATION_APPROVAL',trialId:randomUUID(),rootGoalId:randomUUID(),companyId:randomUUID(),specHash:'a'.repeat(64),commit:'a'.repeat(40),corpusHash:'b'.repeat(64),endpoint:'https://example.invalid/chat/completions',prices,expiresAt:new Date(Date.now()+60000).toISOString()};
  const authorization={payload,expectedPayload:payload,signature:sign(null,Buffer.from(stableStringify(payload)),owner.privateKey).toString('base64'),trustedOwnerPublicKey:owner.publicKey.export({format:'pem',type:'spki'}).toString()};
  assert.throws(()=>authorizeLiveEvaluation(authorization),/RELEASE_DISABLED/,'even genuine fixture owner signature cannot activate this release');

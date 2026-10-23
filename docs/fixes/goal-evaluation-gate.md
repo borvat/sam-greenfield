@@ -33,7 +33,7 @@ and 4,096 output per attempt, 674,304 reserved tokens total and US$1 total. This
 only a test configuration, not authorization to spend. Actual provider prices and
 framing must pass the existing reviewed permit/adapter checks before any live use.
 
-The factory currently accepts fixture mode only. The existing trial spec also pins
+The factory now accepts only authentic mode-matched evaluation permits. Live permits remain impossible while the release interlock is false. The existing trial spec also pins
 an enrolled synthetic case/corpus; this work does not loosen that registry into an
 arbitrary production-data evaluation. Test goal labels do not supply tool plans.
 No synthetic outcome is evidence of model autonomy.

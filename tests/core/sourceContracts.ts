@@ -1,3 +1,5 @@
+import {readOutputMetadata,withReadOutputMetadata} from '../../apps/production/src/readOutputMetadata';
+import {CapabilityCatalog} from '../../apps/agents/src/capabilityCatalog';
 import {evidenceReleaseContracts} from '../../apps/production/src/evidenceReleaseContracts';
 import {withVerifiedEvidence,DERIVED_VERIFICATION_CONTRACT,assertLocalDerivedAdapter} from '../../apps/production/src/verifiedEvidenceBundle';
 import {validateProductionBundle} from '../../apps/production/src/bundle';
@@ -17,6 +19,15 @@ import {FinanceReconciliationPreviewAdapter} from '../../apps/tools/src/financeR
 import {buildBolAnalysis} from '../../apps/production/src/bolAnalysis';
 async function main(){
  const f=await reviewFixture();
+ const meta=readOutputMetadata('bol_get_order')!;
+ const item:any=(meta.schema as any).properties.data.properties.orderItems.items;
+ for(const field of ['unitPrice','totalPrice','offerPrice','commission']){assert.equal(item.properties[field].type,'number');assert.equal(meta.units[field],'UNKNOWN');}
+ assert.equal(item.required,undefined,'raw financial fields are optional');assert.equal(readOutputMetadata('google_mcp_search_drive_files')?.schemaStatus,'UNKNOWN');
+ const discovered=withReadOutputMetadata({...f.bundle.raw,capabilities:[{...f.bundle.raw.capabilities[0],capabilityId:'bol_get_order'}]});
+ const descriptors=new CapabilityCatalog(discovered.capabilities).planningDescriptors();assert.equal((descriptors[0].output.schema as any).properties.data.properties.orderItems.items.properties.unitPrice.type,'number');
+ assert(meta.limitations.some(x=>x.includes('not reviewed monetary')));
+ assert(!REVIEWED_OUTPUT_CONTRACTS.find(c=>c.capabilityId==='bol_get_order')!.extraction.columns.unitPrice,'metadata must not silently create monetary extraction');
+
  assert.deepEqual(evidenceReleaseContracts(f.bundle),[],'ordinary startup remains inactive');
  const contract={id:'fixture.v1',capabilityId:'review_echo',description:'Synthetic reviewed records',extraction:{version:'1',rowsPath:['records'],columns:{id:{kind:'text' as const}},coveragePath:[],timeZonePath:[],limitationsPath:[]}};
  const enabled=validateProductionBundle(withVerifiedEvidence(f.bundle.raw,[contract]));
