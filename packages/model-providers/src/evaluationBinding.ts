@@ -1,3 +1,4 @@
+import {evaluationWireProfile} from '../../model-gateway/src/evaluationWireProfile';
 import type {EvaluationPermit} from '../../model-gateway/src/evaluationPermit';
 import {assertEvaluationPermit,LIVE_EVALUATION_ENABLED} from '../../model-gateway/src/evaluationPermit';
 import {liveEvaluationAdapter} from '../../model-gateway/src/evaluationAdapter';
@@ -11,6 +12,7 @@ export function compatibleEvaluationBinding(providerId:string,env:NodeJS.Process
  const base=env[prefix+'_BASE_URL']||(providerId==='deepseek'?'https://api.deepseek.com':'');
  const endpoint=base.replace(/\/$/,'')+'/chat/completions';let url:URL;try{url=new URL(endpoint);}catch{throw Error('EVALUATION_EXISTING_PROVIDER_CONFIG_REQUIRED');}
  if(!model||url.protocol!=='https:'||url.username||url.password||url.search||url.hash)throw Error('EVALUATION_EXISTING_PROVIDER_CONFIG_REQUIRED');
+ evaluationWireProfile(providerId,model,endpoint);
  const cost=(key:string)=>{const value=env[prefix+key];const n=Number(value);if(!value||!Number.isFinite(n)||n<=0)throw Error('EVALUATION_PRICE_REQUIRED');return n;};
  return {providerId,model,endpoint,inputPer1k:cost('_COST_PER_1K_INPUT'),outputPer1k:cost('_COST_PER_1K_OUTPUT')};
 }

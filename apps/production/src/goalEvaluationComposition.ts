@@ -22,7 +22,7 @@ export function createGoalEvaluationComposition(input:{bundle:ProductionBundle;t
  validateProductionBundle(raw);
  const goals=Object.keys(input.trial.spec.agents).filter(k=>k.startsWith('goal.')).map(k=>k.slice(5));
  const compositions=goals.map(goalId=>{
-  const bundle=validateProductionBundle({...raw,toolAdapters:raw.toolAdapters.map(adapter=>({...adapter,execute:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.execute(request))}))});
+  const bundle=validateProductionBundle({...raw,toolAdapters:raw.toolAdapters.map(adapter=>({...adapter,execute:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.execute(request),'tool',adapter.capabilityId)})),verificationAdapters:raw.verificationAdapters?.map(adapter=>({...adapter,verify:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.verify(request),'readback',adapter.capabilityId)}))});
   return createProductionComposition({bundle,workerId:input.workerId,
   ordinaryFailurePolicy:'record',readReportReview:true,planning:{goalId},specialistScopeGoalId:goalId,
   reviewGoalId:goalId,verificationGoalId:goalId,
@@ -39,7 +39,15 @@ export function createGoalEvaluationComposition(input:{bundle:ProductionBundle;t
 }
 
 /** Hold trial admission through the frozen source call; cancellation serializes after dispatch. */
-export async function admitEvaluationSource<T>(trial:EvaluationTrial,goalId:string,execute:()=>Promise<T>):Promise<T>{
+export async function admitEvaluationSource<T>(trial:EvaluationTrial,goalId:string,execute:()=>Promise<T>,kind:'tool'|'readback'='tool',capabilityId='source.read'):Promise<T>{
  assertEvaluationTrial(trial);if(!Object.hasOwn(trial.spec.agents,'goal.'+goalId))throw Error('EVALUATION_GOAL_NOT_ENROLLED');
- return withTransaction(async c=>{await trial.scope(c,goalId);await trial.live(c,'goal.'+goalId);return execute();});
+ const agentId='goal.'+goalId;
+ // Commit reservation before dispatch: failures/crashes never refund consumed work.
+ const ticket=await withTransaction(c=>trial.reserve(c,{goalId,agentId,kind,delta:{tools:1},metadata:{capabilityId,workGoalId:goalId}}));
+ await trial.begin(ticket,{agentId,kind,capabilityId,workGoalId:goalId});
+ try{
+  const result=await withTransaction(async c=>{await trial.scope(c,goalId);await trial.live(c,agentId);return execute();});
+  await trial.finish(ticket,{status:'success'});return result;
+ }catch(error){await trial.finish(ticket,{status:'failure'});throw error;}
+
 }

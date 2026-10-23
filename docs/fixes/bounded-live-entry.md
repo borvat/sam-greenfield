@@ -78,3 +78,41 @@ its semantics. Existing quantity extraction still excludes these financial field
 
 Google MCP outputs remain explicit UNKNOWN except for separately reviewed local
 artifact metadata. No text-to-document parser or task-specific workflow was invented.
+
+## Reviewed wire limits (2026-10-23)
+
+The prior da0285f acceptance is superseded for readiness by review findings:
+provider output-limit fields and goal-composition tool/decision accounting required
+correction. No live requests occurred. Exact endpoint/model profiles now fail closed
+before credentials. DeepSeek Flash/V4 Pro use max_tokens; selected exact Qwen
+3.7/3.8 Max/Plus/Flash names use max_completion_tokens. Unknown aliases, snapshots,
+providers and endpoints require review, never automatic model substitution.
+The Qwen request cap is the reserved output allowance minus 10; allowances <=10
+are rejected. Its documented tolerance therefore fits inside the existing reservation
+and price ceiling, including reasoning. No signed budget increases. Provider behavior
+is not proven by no-network body tests. Sources:
+
+- [DeepSeek Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/)
+- [Qwen request parameters and tolerance](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions)
+- [Qwen JSON output support](https://www.alibabacloud.com/help/en/model-studio/qwen-structured-output)
+
+Goal planning/review decisions now consume an iteration before gateway admission.
+Each source dispatch and independent readback consumes a separate durable tool
+reservation, invocation and result. Crashes retain consumption. Fixture test limits
+include both reads and readbacks; these values authorize no live spending.
+
+## Same-service pause and restore (operator-only)
+
+Selecting SAM_COMPOSITION_MODULE replaces ordinary composition on the existing
+runtime service. It is not a parallel evaluation worker. Before an authorized run,
+record the current release/configuration, pause ordinary scheduling and allow active
+work to drain using the existing shutdown/lease recovery procedure. Verify no ordinary
+worker still claims work. Only then select the reviewed evaluation module and scoped
+synthetic principal with its signed trial; do not silently reuse the serving tenant.
+Ordinary goal processing remains paused during evaluation. Stop the evaluation after
+its bounded run or any failure, preserve its ledger, and restore the original reviewed
+release and original SAM_COMPOSITION_MODULE/configuration before resuming ordinary
+processing. Reconcile existing leases through supported recovery, without budget
+resets or replaying old blocked goals. No pause, switch, restart or restore was executed
+by this coding task. Scoped principal availability remains unverified; blocked access
+must not be bypassed to establish it.

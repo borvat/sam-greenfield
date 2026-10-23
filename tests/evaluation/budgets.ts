@@ -89,9 +89,24 @@ async function worker(){
  const states=(await pool.query('SELECT id,state,planning_attempts FROM goals WHERE id=ANY($1::uuid[])',[trials['goal-runtime'].goals])).rows;
  assert(states.every(x=>x.state==='COMPLETED'),JSON.stringify(states));
  const coordinator=(await pool.query('SELECT state,planning_attempts FROM goals WHERE id=$1',[runtimeTrial.rootGoalId])).rows[0];assert.equal(coordinator.state,'NEW');assert.equal(coordinator.planning_attempts,0);
- const runtimeUsed=(await pool.query('SELECT used,agent_used FROM evaluation_trials WHERE id=$1',[runtimeTrial.id])).rows[0];assert.equal(runtimeUsed.used.models,runtimeCalls);assert(runtimeCalls>=6&&runtimeCalls<=24);for(const id of trials['goal-runtime'].goals)assert(runtimeUsed.agent_used['goal.'+id].models<=8);
+ const runtimeUsed=(await pool.query('SELECT used,agent_used FROM evaluation_trials WHERE id=$1',[runtimeTrial.id])).rows[0];assert.equal(runtimeUsed.used.models,runtimeCalls);assert.equal(runtimeUsed.used.iterations,runtimeCalls);assert.equal(runtimeUsed.used.tools,6);assert(runtimeCalls>=6&&runtimeCalls<=24);for(const id of trials['goal-runtime'].goals)assert(runtimeUsed.agent_used['goal.'+id].models<=8);
  assert.equal((await pool.query('SELECT count(*)::int n FROM goal_read_reviews WHERE goal_id=ANY($1::uuid[])',[trials['goal-runtime'].goals])).rows[0].n,3);
  console.log('PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting');
+ for(const suffix of ['zero-tools','zero-iterations','readback-cap']){
+  const name='goal-runtime-'+suffix,t=await openEvaluationTrial(trials[name].id);let dispatches=0,readbacks=0,decisions=0;
+  const model=fixtureEvaluationAdapter('eval-a',async request=>{decisions++;return runtimeAdapter.invoke({...task,input:JSON.parse(request.messages[1].content),boundedEvaluation:{permit:t.permit,maxInputTokens:24000,maxOutputTokens:4000,async reserveAttempt(){return randomUUID();}}},'fixture');});
+  const bundle=runtimeFixtureBundle(model),read=bundle.toolAdapters[0].execute,verify=bundle.verificationAdapters![0].verify;
+  bundle.toolAdapters[0].execute=async request=>{dispatches++;return read(request);};
+  bundle.verificationAdapters![0].verify=async request=>{readbacks++;return verify(request);};
+  const composition=createGoalEvaluationComposition({bundle,trial:t,expectedCommit:t.spec.commit,workerId:'zero-budget'});
+  for(let i=0;i<3;i++)await composition.runWorkTick();
+  assert.equal(readbacks,0,suffix+' prevents verifier callback');
+  assert.equal(dispatches,suffix==='readback-cap'?3:0,suffix+' prevents unreserved source callback');
+  if(suffix==='zero-iterations')assert.equal(decisions,0,'zero decision allowance prevents model callback');
+  const used=(await pool.query('SELECT used FROM evaluation_trials WHERE id=$1',[t.id])).rows[0].used;
+  assert.equal(used.tools,dispatches);if(suffix==='zero-iterations')assert.equal(used.models,0);
+ }
+ console.log('PASS actual composition zero tools/iterations and separately charged readback deny callbacks');
  // Barriers occur after the SQL insert and after model acceptance, before COMMIT.
  for(const phase of ['plan','review'])for(const reason of ['cancel','expire']){
   const name='goal-runtime-'+phase+'-'+reason,t=await openEvaluationTrial(trials[name].id),id=trials[name].goals[0];
@@ -194,11 +209,11 @@ async function parent(){
    const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(['agent-time','admission-race'].includes(name)?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:goal,spec}),goal,entity:tenant};
   }
-  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money','goal-runtime','goal-runtime-plan-cancel','goal-runtime-plan-expire','goal-runtime-review-cancel','goal-runtime-review-expire','goal-runtime-dispatch-cancel','goal-runtime-dispatch-expire']){
+  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money','goal-runtime','goal-runtime-plan-cancel','goal-runtime-plan-expire','goal-runtime-review-cancel','goal-runtime-review-expire','goal-runtime-dispatch-cancel','goal-runtime-dispatch-expire','goal-runtime-zero-tools','goal-runtime-zero-iterations','goal-runtime-readback-cap']){
    const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Synthetic evaluation root','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
    const goals:string[]=[];for(let i=0;i<3;i++)goals.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'NEW','GREEN') RETURNING id",[randomUUID(),entity,root,['Compare supplied periods','Compare promises and deliveries','Inventory duplicate records'][i]])).rows[0].id);
-   const l={...limits,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1,...(name.startsWith('goal-runtime')?{maxInputTokens:24000,maxOutputTokens:4000,tokens:672000}: {})};
-   const per={...l,models:Math.min(l.models,8),...(name.endsWith('-expire')?{elapsedMs:1500}: {})};
+   const l={...limits,iterations:32,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1,...(name.startsWith('goal-runtime')?{tools:6,maxInputTokens:24000,maxOutputTokens:4000,tokens:672000}: {})};
+   const per={...l,models:Math.min(l.models,8),...(name.endsWith('zero-tools')?{tools:0}:{}),...(name.endsWith('zero-iterations')?{iterations:0}:{}),...(name.endsWith('readback-cap')?{tools:1}:{}),...(name.endsWith('-expire')?{elapsedMs:1500}: {})};
    const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:entity,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...l,models:0},...Object.fromEntries(goals.map(id=>['goal.'+id,per]))},prices,capabilityHash:evaluationBundleHash(name.startsWith('goal-runtime')?runtimeFixtureBundle(null):{capabilities:[],toolDefinitions:[],toolAdapters:[]})};
    if(name.startsWith('goal-runtime'))await c.query("UPDATE goals SET completion_definition='sam.read_report.v1',objective='Read and verify supplied fixture record' WHERE id=ANY($1::uuid[])",[goals]);
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:root,spec}),goal:root,entity,goals};

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {generateKeyPairSync,sign,randomUUID} from 'node:crypto';
 import {pool} from '../../packages/db/src/client';
 import {ModelGateway} from '../../packages/model-gateway/src/gateway';
-import {fixtureEvaluationAdapter,liveEvaluationAdapter,evaluationRequest} from '../../packages/model-gateway/src/evaluationAdapter';
+import {fixtureEvaluationAdapter,liveEvaluationAdapter,evaluationRequest,evaluationWireRequest} from '../../packages/model-gateway/src/evaluationAdapter';
 import {fixtureEvaluationPermit,authorizeLiveEvaluation,LIVE_EVALUATION_ENABLED,type EvaluationPermit} from '../../packages/model-gateway/src/evaluationPermit';
 import {stableStringify} from '../../packages/shared/src/stableJson';
 async function main(){
@@ -25,14 +25,32 @@ async function main(){
  await assert.rejects(()=>fixture.invoke({...task,boundedEvaluation:undefined},'fixture'),/LIMITS_REQUIRED/);assert.equal(calls,1);
  const wrong=fixtureEvaluationAdapter('eval-fixture',async()=>({model:'different-model',usage:{inputTokens:1,outputTokens:1},output:{}}));
  await assert.rejects(()=>new ModelGateway({'eval-fixture':wrong}).invoke(task),/MODEL_MISMATCH/);
+ const canonical=evaluationRequest(task,'deepseek-flash');
+ const common={model:'deepseek-flash',messages:canonical.messages,response_format:{type:'json_object'}};
+ assert.deepEqual(JSON.parse(JSON.stringify(evaluationWireRequest('deepseek','https://api.deepseek.com/chat/completions',canonical))),{...common,max_tokens:1000});
+ for(const model of ['qwen3.7-max','qwen3.8-max','qwen3.7-plus','qwen3.7-flash','qwen3.8-flash']){
+  const endpoint='https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
+  const body=evaluationWireRequest('qwen',endpoint,{...canonical,model});
+  assert.deepEqual(JSON.parse(JSON.stringify(body)),{...common,model,max_completion_tokens:990});
+  for(const cap of [0,1,10,NaN,Infinity,10.5])assert.throws(()=>evaluationWireRequest('qwen',endpoint,{...canonical,model,max_completion_tokens:cap}),/OUTPUT_MARGIN_REQUIRED/);
+  assert.equal(evaluationWireRequest('qwen',endpoint,{...canonical,model,max_completion_tokens:11}).max_completion_tokens,1);
+ }
+ for(const [provider,model,endpoint] of [
+  ['deepseek','deepseek-chat','https://api.deepseek.com/chat/completions'],
+  ['deepseek','deepseek-flash','https://example.invalid/chat/completions'],
+  ['qwen','qwen-plus','https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'],
+  ['qwen','qwen3.8-max','https://dashscope-intl.aliyuncs.com.evil.invalid/compatible-mode/v1/chat/completions'],
+  ['qwen','qwen3.8-max','https://dashscope-intl.aliyuncs.com/chat/completions'],
+ ])assert.throws(()=>evaluationWireRequest(provider,endpoint,{...canonical,model}),/WIRE_PROFILE_REQUIRED/);
+ assert.equal(evaluationWireRequest('deepseek','https://api.deepseek.com/v1/chat/completions',{...canonical,max_completion_tokens:1}).max_tokens,1);
  const live=liveEvaluationAdapter({providerId:'eval-fixture',endpoint:'https://example.invalid/chat/completions',permit,credential:()=>{credentialsRead++;return undefined;}});
  process.env.SAM_LIVE_EVALUATION_ENABLED='1';await assert.rejects(()=>live.invoke(task,'fixture'),/RELEASE_DISABLED/);assert.equal(credentialsRead,0);delete process.env.SAM_LIVE_EVALUATION_ENABLED;
- const metadata:any={DEEPSEEK_MODEL:'existing-fixture-model',DEEPSEEK_COST_PER_1K_INPUT:'0.001',DEEPSEEK_COST_PER_1K_OUTPUT:'0.002'};
+ const metadata:any={DEEPSEEK_MODEL:'deepseek-flash',DEEPSEEK_COST_PER_1K_INPUT:'0.001',DEEPSEEK_COST_PER_1K_OUTPUT:'0.002'};
  Object.defineProperty(metadata,'DEEPSEEK_API_KEY',{get(){credentialsRead++;throw Error('credential must remain unread');}});
- assert.deepEqual(compatibleEvaluationBinding('deepseek',metadata),{providerId:'deepseek',model:'existing-fixture-model',endpoint:'https://api.deepseek.com/chat/completions',inputPer1k:0.001,outputPer1k:0.002});
+ assert.deepEqual(compatibleEvaluationBinding('deepseek',metadata),{providerId:'deepseek',model:'deepseek-flash',endpoint:'https://api.deepseek.com/chat/completions',inputPer1k:0.001,outputPer1k:0.002});
  assert.throws(()=>compatibleEvaluationBinding('anthropic',metadata),/EXISTING_COMPATIBLE_PROVIDER_REQUIRED/);
  assert.throws(()=>compatibleEvaluationBinding('deepseek',{...metadata,DEEPSEEK_BASE_URL:'https://user:password@example.invalid'}),/EXISTING_PROVIDER_CONFIG_REQUIRED/);
- assert.throws(()=>compatibleEvaluationBinding('deepseek',{DEEPSEEK_MODEL:'x'}),/PRICE_REQUIRED/);
+ assert.throws(()=>compatibleEvaluationBinding('deepseek',{DEEPSEEK_MODEL:'deepseek-flash'}),/PRICE_REQUIRED/);
  assert.throws(()=>existingEvaluationAdapter(permit,[],new Proxy({}, {get(){throw Error('environment must remain unread');}})),/RELEASE_DISABLED/);
  const child=spawnSync(process.execPath,['--import','tsx','--input-type=module','-e',`import('./apps/runtime/src/boundedEvaluationCompositionModule.ts').then(async m=>{await (m.default?.default??m.default)}).then(()=>process.exit(2)).catch(e=>{if(e.message!=='LIVE_EVALUATION_RELEASE_DISABLED'){console.error(e.message);process.exit(3);}console.log('disabled before database/environment imports');})`],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:10000});
  assert.equal(child.status,0,child.stdout+child.stderr);assert.match(child.stdout,/disabled before database/);

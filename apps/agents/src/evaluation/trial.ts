@@ -92,7 +92,7 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
     const controller=new AbortController();const signal=task.signal?AbortSignal.any([task.signal,controller.signal]):controller.signal;
     let ticket:string|void;let timer:ReturnType<typeof setTimeout>|undefined;
     try{
-     const admission=await withTransaction(async c=>{await scope(c,goalId);await live(c,agentId);if(agentId==='executive-bootstrap')await reserve(c,{goalId,agentId,delta:{iterations:1},kind:'iteration'});return live(c,agentId);});
+     const admission=await withTransaction(async c=>{await scope(c,goalId);await live(c,agentId);if(agentId==='executive-bootstrap'||agentId.startsWith('goal.'))await reserve(c,{goalId,agentId,delta:{iterations:1},kind:'iteration'});return live(c,agentId);});
      const maxMs=Math.min(new Date(admission.agent_deadlines[agentId]??row.deadline).getTime()-Date.now(),new Date(row.deadline).getTime()-Date.now(),l.modelCallMs,spec.limits.modelCallMs);if(maxMs<=0)throw Error('EVALUATION_CANCELLED_OR_EXPIRED');
      const call=base.invoke({...task,boundedSynthetic:undefined,signal,maxCostUsd:Math.min(task.maxCostUsd??spec.limits.costUsd,l.costUsd,spec.limits.costUsd),
       boundedEvaluation:{permit,maxInputTokens:inputTokens,maxOutputTokens:outputTokens,

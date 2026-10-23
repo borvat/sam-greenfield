@@ -1,3 +1,4 @@
+import {evaluationWireProfile} from './evaluationWireProfile';
 import type {ModelTask,ModelProviderAdapter,ProviderResult} from './types';
 import {assertEvaluationPermit,LIVE_EVALUATION_ENABLED,type EvaluationPermit} from './evaluationPermit';
 const registered=new WeakMap<object,'fixture'|'live'>();
@@ -11,6 +12,14 @@ export function evaluationRequest(task:ModelTask,model:string):EvaluationRequest
  // framing bound must be independently approved before release activation.
  if(Buffer.byteLength(JSON.stringify(request.messages),'utf8')+512>bounds.maxInputTokens)throw Error('EVALUATION_INPUT_ENVELOPE_EXHAUSTED');
  return request;
+}
+/** Exact body used by live fetch; pure so it can be tested without credentials/network. */
+export function evaluationWireRequest(providerId:string,endpoint:string,request:EvaluationRequest):Omit<EvaluationRequest,'max_completion_tokens'> & {max_tokens?:number;max_completion_tokens?:number}{
+ const profile=evaluationWireProfile(providerId,request.model,endpoint),reserved=request.max_completion_tokens;
+ if(!Number.isSafeInteger(reserved)||reserved<=profile.tolerance)throw Error('EVALUATION_OUTPUT_MARGIN_REQUIRED');
+ const {max_completion_tokens:_,...body}=request;
+ // Reservation includes documented tolerance. Never enlarge signed budgets.
+ return {...body,[profile.field]:reserved-profile.tolerance};
 }
 /** Provider-independent fixture transport. Never marked as live intelligence. */
 export function fixtureEvaluationAdapter(providerId:string,transport:(request:EvaluationRequest,signal?:AbortSignal)=>Promise<ProviderResult>):ModelProviderAdapter{
@@ -28,7 +37,7 @@ export function liveEvaluationAdapter(input:{providerId:string;endpoint:string;p
   assertEvaluationPermit(input.permit);
   if(task.boundedEvaluation?.permit!==input.permit||input.permit.mode!=='live'||input.endpoint!==input.permit.endpoint)throw Error('EVALUATION_AUTHORIZATION_REQUIRED');
   const url=new URL(input.endpoint);if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash)throw Error('EVALUATION_ENDPOINT_DENIED');
-  const request=evaluationRequest(task,model),credential=input.credential();if(!credential?.trim())throw Error('EVALUATION_CREDENTIAL_REQUIRED');
+  const request=evaluationWireRequest(input.providerId,input.endpoint,evaluationRequest(task,model)),credential=input.credential();if(!credential?.trim())throw Error('EVALUATION_CREDENTIAL_REQUIRED');
   const response=await fetch(url,{method:'POST',redirect:'error',signal:task.signal,headers:{authorization:'Bearer '+credential,'content-type':'application/json'},body:JSON.stringify(request)});
   if(!response.ok)throw Error('EVALUATION_PROVIDER_REJECTED');
   if(!response.body)throw Error('EVALUATION_RESPONSE_REQUIRED');
