@@ -1,0 +1,14 @@
+PASS tests/evaluation/budgets.ts
+PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial
+REPRODUCED: trial A tick wakes cancelled trial B root in same synthetic tenant
+PASS actual trial + ordinary planner + source execution + verification + review; three completed fixture children, NEW coordinator untouched, shared accounting
+PASS actual composition zero tools/iterations and separately charged readback deny callbacks
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"verification","details":"withheld"}
+REPRODUCED: three completed ordinary goal reports cannot seal via specialist-root evaluation capture
+
+{"passed":1,"failed":0,"results":[{"test":"tests/evaluation/budgets.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T15:40:12.600Z","completedAt":"2026-10-23T15:40:33.647Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T15:40:12.604Z","completedAt":"2026-10-23T15:40:12.905Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/budgets.ts"],"startedAt":"2026-10-23T15:40:12.905Z","completedAt":"2026-10-23T15:40:33.647Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

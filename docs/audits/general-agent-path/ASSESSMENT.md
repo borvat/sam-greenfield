@@ -73,8 +73,9 @@ and coverage failures, not established provider faults or insufficient user prom
 11. Recovery: SIGKILL model reservation tests exist. Ordinary composition also invokes
     tenant-visible recovery, dependency reconciliation and event relay without a
     trial goal filter. Trial row admission does not itself limit their affected rows.
-    This is a static scope concern requiring a two-trial same-tenant regression,
-    not a claimed executed exploit. Source/readback crash points and derived artifact
+    The two-trial synthetic PostgreSQL diagnostic reproduced this: an active trial A
+    tick moved cancelled trial B's due WAITING_EXTERNAL root to MODELING in the same
+    tenant. This is a reproduced scope defect, not merely static analysis. Source/readback crash points and derived artifact
     recovery require whole-path tests too.
 12. Operation: the optional module replaces ordinary composition on the same runtime
     service. Explicit drain/pause/restore is required. Current scoped principal is

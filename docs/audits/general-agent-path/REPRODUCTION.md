@@ -20,3 +20,14 @@ agent deadline under concurrent full-suite load before reaching capture. That fa
 is retained in initial-diagnostic.log. The focused diagnostic preserves all assertions
 on the path being reproduced; it reached the capture rejection at 15:36:12 UTC.
 No application source change is included in this audit branch beyond its base.
+
+## Same-company trial scope reproduction
+
+scope-and-seal-reproduction.patch adds one controlled same-tenant trial B, marks it
+cancelled with a due WAITING_EXTERNAL coordinator, then runs trial A's actual goal
+composition. The assertion confirms trial B's root becomes MODELING through generic
+wakeDueGoals. No B source/model callback is invoked by this reproduction; the proven
+violation is a state mutation outside A's enrolled goals despite B's cancellation.
+The independent diagnostic passed at 15:40:33 UTC and retains the seal rejection too.
+Apply this patch instead of seal-reproduction.patch, not on top of it. This diagnostic
+is not counted as the unchanged full acceptance suite.
