@@ -24,6 +24,7 @@ export function assessBoundObligation(dataset:Dataset,obligation:GoalObligations
    if(identityGap||collection.identities.length!==identities.size||collection.identities.some(id=>!identities.has(id)))gaps.push('REQUESTED_POPULATION_ROWS_NOT_ACCOUNTED');}
  }
  else gaps.push('REQUESTED_SCOPE_UNKNOWN');
+ if(!['UNKNOWN','NOT_APPLICABLE'].includes(obligation.period)&&(!dataset.sourceContexts?.length||dataset.sourceContexts.some(context=>context.period!==obligation.period)))gaps.push('REQUESTED_PERIOD_NOT_ESTABLISHED');
  if(obligation.timeZone!=='UNKNOWN'&&dataset.timeZone!==obligation.timeZone)gaps.push('REQUESTED_TIME_ZONE_MISMATCH');
  // Metadata meanings are not inferred from arithmetic or prose.
  if(obligation.units!=='UNKNOWN'&&fields.some(f=>dataset.columns[f]?.kind==='decimal'&&dataset.columns[f]?.unit!==obligation.units))gaps.push('REQUESTED_UNIT_MISMATCH');

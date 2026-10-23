@@ -48,3 +48,15 @@ test('union preserves exact decimal provenance and requested-query coverage with
  assert.equal(assessBoundObligation(unknown,obligation,['total']).structurallyReady,false);
  assert.throws(()=>replayTransform(plan,{a,b:{...b,columns:{...b.columns,amount:{kind:'decimal',unit:'USD',vat:'net'}}}}),/UNION_SCHEMA_MISMATCH/);
 });
+
+import {derivedReviewText} from '../../apps/production/src/derivedReviewEvidence';
+import {evaluationInputBytes} from '../../packages/model-gateway/src/evaluationAdapter';
+test('bounded derived projection prioritizes every requested cell without inventing quotations',()=>{
+ const columns:any=Object.fromEntries(Array.from({length:10},(_,i)=>['detail'+i,{kind:'text'}]));columns.wanted={kind:'decimal',unit:'count'};
+ const rows=Array.from({length:3},(_,row)=>({values:{...Object.fromEntries(Array.from({length:10},(_,i)=>['detail'+i,'x'.repeat(30)])),wanted:String(row+1)},citations:[]}));
+ const artifact:any={artifactId:'a'.repeat(64),output:{outputHash:'b'.repeat(64),dataset:{columns,rows,coverage:'unknown',timeZone:null,limitations:[]}}};
+ const projection=derivedReviewText(artifact,2000,['wanted']);
+ const cells=projection.quotes.map(q=>JSON.parse(q));assert.deepEqual(cells.filter(c=>c.field==='wanted').map(c=>c.value),['1','2','3']);assert(projection.omitted>0);
+ for(const cell of cells)assert.equal(cell.value,(rows[cell.row].values as Record<string,string>)[cell.field]);
+ assert(evaluationInputBytes({text:'\\'.repeat(500)})>Buffer.byteLength(JSON.stringify({text:'\\'.repeat(500)})),'evaluation framing and escaping must be budgeted before dispatch');
+});

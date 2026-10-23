@@ -1,7 +1,13 @@
+import {evidenceFamily} from '../../apps/brain/src/evidence/delegationScope';
+import {writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {sealGoalFamilyEvaluation} from '../../apps/agents/src/evaluation/goalFamilyCapture';
+import {exportEvaluationTrace} from '../../apps/agents/src/evaluation/capture';
+import {scoreAuthenticatedEvaluation,verifyEvaluationTrace} from '../../apps/agents/src/evaluation/trace';
 import {applySharedGoalProfile} from '../../packages/db/src/sharedGoalProfile';
 import assert from 'node:assert/strict';
-import {randomUUID} from 'node:crypto';
-import {spawnSync,execFileSync} from 'node:child_process';
+import {randomUUID,generateKeyPairSync} from 'node:crypto';
+import {spawn,spawnSync,execFileSync} from 'node:child_process';
 import {pool} from '../../packages/db/src/client';
 import {applyIntegrationProfile,provisionIntegrationAccess} from '../../packages/db/src/integrationProfile';
 import {applySpecialistProfile,provisionSpecialistAccess} from '../../packages/db/src/specialistProfile';
@@ -28,21 +34,24 @@ async function worker(){
    else if(!derived){
     const sources=Object.fromEntries(reads.map((e:any,i:number)=>['s'+i,{executionId:e.id,contractId:'fixture-records-v1'}]));
     const operations:any[]=reads.slice(1).map((_:any,i:number)=>({op:'union',right:'s'+(i+1)}));
-    operations.push(...(query==='ledger'?[{op:'group',keys:['period'],aggregates:[{fn:'sum',field:'amount',as:'total'}]}]:query==='delivery'?[{op:'derive',as:'delay',left:'delivered',right:'promised',operator:'subtract'}]:[{op:'group',keys:['digest'],aggregates:[{fn:'count',as:'count'}]}]));
+    operations.push(...(query==='ledger'?[{op:'group',keys:['period'],aggregates:[{fn:'sum',field:'amount',as:'total'}]}]:query==='delivery'?[{op:'derive',as:'delay',left:'delivered',right:'promised',operator:'subtract'},{op:'select',fields:{supplier:'supplier',promised:'promised',delivered:'delivered',delay:'delay'}}]:[{op:'group',keys:['digest'],aggregates:[{fn:'count',as:'count'}]}]));
+    // Adversarial decision fixture: the same engine must recover from a rejected
+    // transform using its verified records, without replaying source reads.
+    if(query==='ledger'&&!input.verifiedContext.tasks.some((task:any)=>['FAILED','REPLANNING'].includes(task.state)))operations[0].aggregates[0].field='unobserved';
     output=dispatch('derive_verified_evidence',{sources,plan:{version:1,source:'s0',operations}});
    }else {const value=derived.result.derivedEvidence.output.dataset.rows[0].values[field];output={action:'report',understanding:objective,plan:['Cite verified derivation'],summary:'Bounded fixture comparison',claims:[{topic:field,value,path:['derivedEvidence','output','dataset','rows','0','values',field],evidenceIds:[derived.id]}],uncertainties:['Synthetic source coverage only'],completionCriteria:['Requested records accounted for']};}
   }else if(input.proposedReport)output={accepted:true,missing:[]};
   else if(input.verifiedObservations){
    const source=input.verifiedObservations.find((s:any)=>s.derivedEvidence);assert(source,'shared review must see descendant derivation');
-   const quoteLine=source.citableLines.find((i:number)=>{try{return JSON.parse(source.lines[i]).field===field;}catch{return false;}});assert.notEqual(quoteLine,undefined);
-   const cell=JSON.parse(source.lines[quoteLine]);output={status:'complete',summary:'Requested bounded fixture analysis',requirements:[{obligationId:'analysis',requirement:objective,fulfilled:true,evidenceIds:[source.id]}],findings:[{text:'Derived '+field,executionId:source.id,quoteLine,derivedClaim:{row:cell.row,field,value:cell.value}}],limitations:['Synthetic fixtures, not live evidence'],steps:[]};
+   const quoteLines=source.citableLines.filter((i:number)=>{try{return JSON.parse(source.lines[i]).field===field;}catch{return false;}});assert(quoteLines.length>0);
+   const findings=quoteLines.map((quoteLine:number)=>{const cell=JSON.parse(source.lines[quoteLine]);return {text:'Derived '+field+' = '+cell.value,executionId:source.id,quoteLine,derivedClaim:{row:cell.row,field,value:cell.value}};});const raw=input.verifiedObservations.find((s:any)=>s.capabilityId==='records.search');const rawLine=raw.citableLines.find((i:number)=>raw.lines[i].includes('\"id\"'));assert.notEqual(rawLine,undefined);findings.push({text:'Verified source identity',executionId:raw.id,quoteLine:rawLine} as any);output={status:'complete',summary:'Requested bounded fixture analysis',requirements:[{obligationId:'analysis',requirement:objective,fulfilled:true,evidenceIds:[source.id]}],findings,limitations:['Synthetic fixtures, not live evidence'],steps:[]};
   }else output={assumptions:{goalObligations:{version:1,deliverables:[{id:'analysis',description:objective,fields:[field],scope:{kind:'population',filter:query,query:{capabilityId:'records.search',params:{query}}},units,vat,period:'UNKNOWN',timeZone:'UTC'}],unresolved:[]}},steps:[{capabilityId:'reason.records',params:{objective}}]};
   return {model:'fixture',usage:{inputTokens:5,outputTokens:20},output};
  });
  const composition=await createSharedGoalComposition({bundle:fixtureBundle(t.spec.companyId,adapter),trial:t,expectedCommit:t.spec.commit,workerId:'shared-fixture',diagnostic:(stage,error)=>console.error(stage,error)});
  await composition.recover();
- for(let i=0;i<160;i++){try{await composition.runWorkTick();}catch(error){console.error('FIXTURE_FAILURE_STATE',JSON.stringify({goals:(await pool.query('SELECT id,parent_goal_id,state FROM goals')).rows,sessions:(await pool.query("SELECT state->>'phase' phase,state->>'reason' reason FROM specialist_sessions")).rows,reviews:(await pool.query('SELECT goal_id,decision FROM goal_read_reviews')).rows,verifications:(await pool.query('SELECT result,independent_evidence FROM verifications')).rows}));throw error;}const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state)))break;if(i%20===0)console.log(JSON.stringify({tick:i,goals:rows,calls}));}
- const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(!rows.every(g=>g.state==='COMPLETED'))console.error('FINAL_REPORT_DIAGNOSTIC',JSON.stringify((await pool.query('SELECT goal_id,decision FROM goal_read_reviews')).rows));assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
+ for(let i=0;i<160;i++){try{const outcome:any=await composition.runWorkTick();if(outcome?.review?.reason)console.error('REVIEW_RUNTIME_DIAGNOSTIC',JSON.stringify(outcome.review));}catch(error){console.error('FIXTURE_FAILURE_STATE',JSON.stringify({goals:(await pool.query('SELECT objective,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows,reviews:(await pool.query("SELECT goal_id,decision->>'status' status,decision->'limitations' limitations FROM goal_read_reviews")).rows}));throw error;}const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state)))break;if(process.argv[2]==='crash'&&i===11){console.log('SHARED_RESTART_BARRIER');await new Promise(()=>{});}if(i%20===0)console.log(JSON.stringify({tick:i,goals:rows,calls}));}
+ const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(!rows.every(g=>g.state==='COMPLETED'))console.error('FINAL_REPORT_DIAGNOSTIC',JSON.stringify((await pool.query("SELECT goal_id,decision->>'status' status,decision->'limitations' limitations FROM goal_read_reviews")).rows));assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));const usage=(await pool.query('SELECT used FROM evaluation_trials WHERE id=$1',[t.id])).rows[0].used;assert(usage.models<=24);assert.equal(usage.models,usage.iterations);assert.equal(usage.tools,18);assert.equal((await pool.query('SELECT count(*)::int n FROM executions')).rows[0].n,10);assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
 }
 async function parent(){const c=await pool.connect(),role='sam_shared_'+process.pid;let made=false;try{
  await applyIntegrationProfile(c);await applySpecialistProfile(c);await applyEvaluationProfile(c);await applySharedGoalProfile(c);
@@ -57,6 +66,56 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  const limits={...ceiling,models:24,maxOutputTokens:4000,tokens:672000};const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:sharedCorpus.id,corpusHash:sharedCorpusHash(),companyId:entity,rootCapabilityId:'reason.records',limits,agents:{'executive-bootstrap':{...limits,models:0},...Object.fromEntries(ids.map(id=>['goal.'+id,{...limits,models:8}]))},prices:[{providerId:'eval-shared',model:'fixture',inputPer1k:0.001,outputPer1k:0.001}],capabilityHash:evaluationBundleHash(fixtureBundle(entity,null))};
  const trial=await createEvaluationTrial(c,{rootGoalId:root,spec});
  const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity} -c jit=off`);
- const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env:{PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1'},encoding:'utf8',timeout:150000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
+ const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1',SAM_KNOWLEDGE_ENABLED:'true'};
+ const child=spawn(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);
+ const started=Date.now();while(!log.includes('SHARED_RESTART_BARRIER')&&child.exitCode===null&&Date.now()-started<60000)await new Promise(r=>setTimeout(r,25));
+ const ready=log.includes('SHARED_RESTART_BARRIER');const closed=new Promise(r=>child.once('close',r));child.kill('SIGKILL');await closed;assert(ready,log);
+ const before=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;
+ const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env,encoding:'utf8',timeout:150000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
+ const after=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;for(const key of ['models','tools','iterations','delegations'])assert(after[key]>=before[key]);
+ // Same guard under the actual profile: no coordinator-state workaround.
+ const source=(await c.query("SELECT e.* FROM executions e WHERE capability_id='records.search' LIMIT 1")).rows[0];
+ const link=(await c.query('SELECT w.goal_id owner FROM specialist_delegations d JOIN work_queue w ON w.id=d.parent_queue_id WHERE d.goal_id=$1',[source.goal_id])).rows[0];
+ const copy=()=>c.query(`INSERT INTO executions(queue_id,goal_id,plan_id,plan_hash,execution_hash,capability_id,params,result,evidence,fencing_token,actor,status)
+ SELECT queue_id,goal_id,plan_id,plan_hash,execution_hash,capability_id,params,result,evidence,fencing_token,actor,status FROM executions WHERE id=$1`,[source.id]);
+ for(const variant of ['valid','coordinator-cancelled','owner-paused','family-cancelled','unrelated-coordinator']){
+  await c.query('BEGIN');try{
+   await c.query("UPDATE goals SET state='EXECUTING' WHERE id=ANY($1::uuid[])",[[source.goal_id,link.owner]]);
+   if(variant==='coordinator-cancelled')await c.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[root]);
+   if(variant==='owner-paused')await c.query("UPDATE goals SET state='WAITING_EXTERNAL' WHERE id=$1",[link.owner]);
+   if(variant==='family-cancelled')await c.query('UPDATE specialist_budgets SET cancelled=true');
+   if(variant==='unrelated-coordinator'){const other=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Unenrolled coordinator','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;await c.query('UPDATE goals SET parent_goal_id=$2 WHERE id=$1',[link.owner,other]);}
+   if(variant==='valid')await copy();else await assert.rejects(copy,/SPECIALIST_EXECUTION_CANCELLED_OR_EXPIRED|EVALUATION_CANCELLED_OR_EXPIRED/);
+  }finally{await c.query('ROLLBACK');}
+ }
+ assert.equal((await c.query("SELECT count(*)::int n FROM knowledge_records WHERE kind='SOURCE_FACT'")).rows[0].n,3);assert.equal((await c.query("SELECT count(*)::int n FROM knowledge_records WHERE kind<>'SOURCE_FACT'")).rows[0].n,0);
+ // Historical capture must retain failed/blocked owners' assigned descendants,
+ // while the runtime resolver continues to deny dispatch from those owners.
+ for(const state of ['FAILED','WAITING_EXTERNAL','CANCELLED','BLOCKED']){
+  const testBundle=fixtureBundle(entity,null);
+  const captureClient={query:async(sql:any,params?:any)=>{
+   const result=await c.query(sql==='COMMIT'?'ROLLBACK':sql,params);
+   if(sql==='BEGIN'){
+    await c.query('UPDATE goals SET state=$2,next_wake_at=NULL WHERE id=$1',[link.owner,state]);
+    await c.query('DELETE FROM goal_read_reviews WHERE goal_id=$1',[link.owner]);
+    await assert.rejects(()=>evidenceFamily(c,link.owner,entity,testBundle.descendantEvidencePolicy!),/EVIDENCE_DELEGATION_SCOPE_INVALID/);
+   }
+   return result;
+  }};
+  const failed=await sealGoalFamilyEvaluation(captureClient as any,trial,testBundle);
+  assert.equal(failed.goals.find(g=>g.id===link.owner)?.state,state);
+  assert(failed.sources.some(s=>s.goal_id===source.goal_id));
+  assert(!failed.reports.some(r=>r.goal_id===link.owner));
+ }
+ const snapshot=await sealGoalFamilyEvaluation(c,trial,fixtureBundle(entity,null));assert.equal(snapshot.goals.filter(g=>g.state==='COMPLETED').length,3);assert.equal(Object.keys(snapshot.obligations).length,3);
+ const key=generateKeyPairSync('ed25519'),trace=await exportEvaluationTrace(c,trial,key.privateKey),score=scoreAuthenticatedEvaluation(trace,key.publicKey,spec.commit);assert.equal(score.status,'PASS');assert.equal(score.liveReasoningValidated,false);verifyEvaluationTrace(trace,key.publicKey);
+ // Benchmark assertions are outside the runtime and absent from every prompt.
+ const reports=snapshot.reports.map(r=>r.decision);assert(reports.every(r=>r.findings.length>=2));
+ const datasets=snapshot.sources.filter(s=>s.capability_id==='derive_verified_evidence').map(s=>s.result.derivedEvidence.output.dataset);
+ assert.deepEqual(datasets.find(d=>d.columns.total).rows.map((r:any)=>r.values.total),['12.1','15.35']);
+ assert.deepEqual(datasets.find(d=>d.columns.delay).rows.map((r:any)=>r.values.delay),['3','0']);
+ assert.deepEqual(datasets.find(d=>d.columns.count).rows.map((r:any)=>r.values.count),['2','1']);
+ if(process.env.SAM_EVALUATION_ARTIFACT_DIR){writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'shared-path-trace.json'),JSON.stringify(trace));writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'shared-path-public.pem'),key.publicKey.export({format:'pem',type:'spki'}));}
+ console.log('PASS shared SIGKILL/restart, no duplicate execution, 18 source/readback charges including rejected transform, signed descendant capture, original obligations and coordinator/cancellation guards; fixture decisions only');
  }finally{if(made){await c.query('DROP OWNED BY '+role);await c.query('DROP ROLE '+role);}c.release();}}
 (process.argv[2]?worker():parent()).catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>pool.end());

@@ -5,7 +5,7 @@ export type EvidenceFamily={rootGoalId:string;goalIds:string[];hash:string;links
 const bad=():never=>{throw Error('EVIDENCE_DELEGATION_SCOPE_INVALID');};
 /** Resolve only persisted specialist assignments, not arbitrary parent_goal_id.
  * A replan, changed assignment, tenant or revoked ancestor invalidates replay. */
-export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:DelegationPolicy):Promise<EvidenceFamily>{
+export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:DelegationPolicy,historical=false):Promise<EvidenceFamily>{
  const decorate=`SELECT f.*,p.goal_assumptions authorization,
  CASE WHEN d.goal_id IS NULL THEN NULL ELSE to_jsonb(d)||jsonb_build_object('parent_goal_id',w.goal_id,'parent_plan_id',w.plan_id,'parent_plan_hash',assigned.plan_hash,'parent_capability',w.capability_id) END assignment
  FROM family f LEFT JOIN plans p ON p.id=f.current_plan_id AND p.goal_id=f.id
@@ -21,7 +21,7 @@ export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:De
  for(const child of goals){
   const link=child.assignment;if(!link)break;
   const parent=goals.find((g:any)=>g.id===link.parent_goal_id);
-  validateLink(child,parent,link,tenant,policy);root=parent;
+  validateLink(child,parent,link,tenant,policy,historical);root=parent;
  }
  const members=(await c.query(`WITH RECURSIVE family AS (
  SELECT id,parent_goal_id,company_scope,current_plan_id,state,0 depth FROM goals WHERE id=$1
@@ -32,16 +32,16 @@ export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:De
  const accepted:any[]=[];
  for(const child of members.filter((g:any)=>g.id!==root.id)){
   const link=child.assignment;
-  const parent=members.find((g:any)=>g.id===child.parent_goal_id);validateLink(child,parent,link,tenant,policy);
+  const parent=members.find((g:any)=>g.id===child.parent_goal_id);validateLink(child,parent,link,tenant,policy,historical);
   accepted.push({goalId:child.id,planId:child.current_plan_id,parentGoalId:parent.id,parentPlanId:link.parent_plan_id,parentQueueId:link.parent_queue_id,rootQueueId:link.root_queue_id,capabilityId:link.capability_id,paramsHash:link.params_hash,depth:link.depth});
  }
  if(!members.some((g:any)=>g.id===goalId))bad();
  const content={rootGoalId:root.id,policyHash:sha256Hex(policy),links:accepted};
  return {rootGoalId:root.id,goalIds:members.map((g:any)=>g.id).sort(),links:accepted,hash:sha256Hex(content)};
 }
-function validateLink(child:any,parent:any,link:any,tenant:string,policy:DelegationPolicy){
+function validateLink(child:any,parent:any,link:any,tenant:string,policy:DelegationPolicy,historical:boolean){
  if(!link||!parent||child.parent_goal_id!==parent.id||child.company_scope!==tenant||parent.company_scope!==tenant||link.legal_entity_id!==tenant||(parent.current_plan_id!==link.parent_plan_id&&!parent.authorization?.verifiedDelegationPlans?.includes(link.parent_plan_hash))||
-  !['EXECUTING','VERIFYING','COMPLETED','REPLANNING','PLANNING'].includes(parent.state)||!policy[link.parent_capability]?.includes(link.capability_id)||!Number.isInteger(link.depth)||link.depth<1||link.depth>3)bad();
+  (!historical&&!['EXECUTING','VERIFYING','COMPLETED','REPLANNING','PLANNING'].includes(parent.state))||!policy[link.parent_capability]?.includes(link.capability_id)||!Number.isInteger(link.depth)||link.depth<1||link.depth>3)bad();
 }
 export async function assertAssignedExecution(c:any,row:any,family:EvidenceFamily){
  if(!family.goalIds.includes(row.goal_id))bad();

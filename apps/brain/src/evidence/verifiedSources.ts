@@ -6,10 +6,10 @@ export type ExtractionContract={collection?:CollectionContract;version:string;ro
 const at=(v:any,path:string[])=>{if(!Array.isArray(path)||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_PATH_INVALID');for(const k of path){if(v===null||typeof v!=='object'||!Object.hasOwn(v,k))return undefined;v=v[k];}return v;};
 /** Internal API only. Contract registry is trusted application configuration,
  * never model parameters. No production capability/registry is installed here. */
-export async function transformVerifiedSources(client:any,input:{goalId:string;legalEntityId:string;sources:Record<string,string>;plan:TransformPlan},contracts:Readonly<Record<string,ExtractionContract>>,delegationPolicy?:DelegationPolicy){
+export async function loadVerifiedSources(client:any,input:{goalId:string;legalEntityId:string;sources:Record<string,string>;plan:TransformPlan},contracts:Readonly<Record<string,ExtractionContract>>,delegationPolicy?:DelegationPolicy,historicalReplay=false){
  const ids=Object.values(input.sources);if(!ids.length||ids.length>8||new Set(ids).size!==ids.length)throw Error('EVIDENCE_SOURCE_LIMIT');
  if([input.goalId,input.legalEntityId,...ids].some(id=>! /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)))throw Error('EVIDENCE_ID_INVALID');
- const family=delegationPolicy?await evidenceFamily(client,input.goalId,input.legalEntityId,delegationPolicy):undefined;
+ const family=delegationPolicy?await evidenceFamily(client,input.goalId,input.legalEntityId,delegationPolicy,historicalReplay):undefined;
  const goalIds=family?.goalIds??[input.goalId];
  // Single snapshot query; tenant RLS remains in force in addition to exact scope.
  const rows=(await client.query(`SELECT e.*,v.id verification_id,v.result verification_result,v.execution_hash verified_hash,v.plan_hash verified_plan_hash
@@ -51,6 +51,11 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
    limitations:[...(contract.sourceLimitations??[]),...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
   bindings[alias]={...(family?{delegationHash:sourceDelegationHash(family,row.goal_id,delegationPolicy!),sourceGoalId:row.goal_id}:{}),executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
  }
+ return {sources,bindings};
+}
+
+export async function transformVerifiedSources(client:any,input:{goalId:string;legalEntityId:string;sources:Record<string,string>;plan:TransformPlan},contracts:Readonly<Record<string,ExtractionContract>>,delegationPolicy?:DelegationPolicy){
+ const {sources,bindings}=await loadVerifiedSources(client,input,contracts,delegationPolicy);
  const result=replayTransform(input.plan,sources);
  return {...result,bindings,provenanceHash:sha256Hex({bindings,planHash:result.planHash,outputHash:result.outputHash})};
 }

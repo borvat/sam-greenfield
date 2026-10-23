@@ -305,7 +305,7 @@ async function main(){
     if(hash(fs.readFileSync(path.join(source,file)))!==expected)throw Error('SNAPSHOT_SOURCE_CHANGED: '+file);
    fs.writeFileSync(path.join(output,s.log),'PASS: all '+Object.keys(manifest).length+' tracked source files retain the archived SHA256; generated Dockerfile recorded separately.\n');
   });
-  await step('shared-goal-path',s=>suite(s,'tests/evaluation/sharedPath.ts'));
+  await step('shared-goal-path',s=>suite(s,'tests/evaluation/sharedPath.ts',evaluationEvidence()));
  }catch(error){report.unresolvedDefects.push(error.message);console.error('VERIFY_FAILED:',error.message);}
  finally{
   try{await step('cleanup',cleanup);}catch(error){report.unresolvedDefects.push(error.message);}

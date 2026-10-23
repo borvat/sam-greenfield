@@ -29,6 +29,8 @@ export interface VerificationAdapter{
 }
 
 export interface ProductionBundle{
+  reviewEvidenceChars?:number;
+  reviewInputAdmission?:(goalId:string,input:unknown)=>void;
   requireGoalObligations?:boolean;
   descendantEvidencePolicy?:import("../../brain/src/evidence/delegationScope").DelegationPolicy;
   /** Explicit composition only; no production registry is installed by default. */

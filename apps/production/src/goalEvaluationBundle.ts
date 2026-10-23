@@ -1,3 +1,4 @@
+import {evaluationInputBytes} from '../../../packages/model-gateway/src/evaluationAdapter';
 import {assertEvaluationPermit} from '../../../packages/model-gateway/src/evaluationPermit';
 import {ModelGateway} from '../../../packages/model-gateway/src/gateway';
 import type {ModelTask} from '../../../packages/model-gateway/src/types';
@@ -19,7 +20,9 @@ export function withGoalEvaluation(bundle:ProductionBundle,trial:EvaluationTrial
   trial.spec.limits.models>24||slots.some(k=>trial.spec.agents[k].models>8)||
   trial.spec.agents['executive-bootstrap'].models!==0)throw Error('EVALUATION_GOAL_ENROLLMENT_REQUIRED');
  const base=new ModelGateway(Object.fromEntries((bundle.modelAdapters??[]).map(a=>[a.providerId,a])));
- return {...bundle,modelGatewayForGoal(goalId:string){
+ return {...bundle,reviewEvidenceChars:Math.min(16000,Math.floor(Math.min(trial.spec.limits.maxInputTokens,...slots.map(k=>trial.spec.agents[k].maxInputTokens))*0.4)),reviewInputAdmission(goalId,input){
+  const owner=trial.spec.agents['goal.'+goalId];if(!owner||evaluationInputBytes(input)>Math.min(owner.maxInputTokens,trial.spec.limits.maxInputTokens))throw Error('REVIEW_INPUT_BUDGET_EXCEEDED');
+ },modelGatewayForGoal(goalId:string){
   const key='goal.'+goalId;
   if(!slots.includes(key))throw Error('EVALUATION_GOAL_NOT_ENROLLED');
   const bounded=trial.gateway(base,goalId,key);

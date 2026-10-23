@@ -105,7 +105,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
 
  const callDeadlineMs=options.callDeadlineMs??40000;
  if(!Number.isSafeInteger(callDeadlineMs)||callDeadlineMs<1||callDeadlineMs>40000)throw Error('REVIEW_POLICY_INVALID');
- const client=await db.connect();let lockedId:string|undefined;
+ const client=await db.connect();let lockedId:string|undefined;let runtimePhase='reservation';
  try{
   const candidates=await client.query(`SELECT g.* FROM goals g WHERE g.state='VERIFYING' AND g.completion_definition=$1 AND ($2::uuid IS NULL OR g.id=$2)
    AND NOT EXISTS(SELECT 1 FROM work_queue w WHERE w.goal_id=g.id AND w.plan_id=g.current_plan_id AND w.status<>'EXECUTED')
@@ -128,6 +128,9 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   }
   const reviewAttempt=(budget?.attempts??0)+1;
   let callsUsed=budget?.callsUsed??0;
+  const planRow=await client.query("SELECT goal_assumptions FROM plans WHERE goal_id=$1 ORDER BY version ASC LIMIT 1",[goal.id]);
+  const obligations=planRow.rows[0]?.goal_assumptions?.goalObligations===undefined?undefined:validateGoalObligations(planRow.rows[0].goal_assumptions.goalObligations,goal.objective);
+  runtimePhase='source_loading';
   const family=bundle.raw.descendantEvidencePolicy?await evidenceFamily(client,goal.id,goal.company_scope,bundle.raw.descendantEvidencePolicy):undefined;
   if(family&&family.rootGoalId!==goal.id)throw Error('REVIEW_ROOT_SCOPE_REQUIRED');
   const sourceGoalIds=family?.goalIds??[goal.id];
@@ -135,6 +138,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   if(family)for(const execution of all.rows)await assertAssignedExecution(client,execution,family);
   const failedHistory=all.rows.filter((x:any)=>!x.verified).map((x:any)=>({capabilityId:x.capability_id,params:x.params,reason:"NONVERIFIED_PRIOR_EXECUTION"}));
   all.rows=all.rows.filter((x:any)=>x.verified);
+  runtimePhase='source_replay';
   const derived=new Map<string,DerivedArtifact>(),rejectedDerived=new Set<string>();
   for(const execution of all.rows.filter((e:any)=>e.capability_id===DERIVE_CAPABILITY)){
    try{
@@ -145,12 +149,12 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   // Invalid/revoked derivations never become model observations or quotations.
   const derivedReplayBlocked=rejectedDerived.size>0;
   all.rows=all.rows.filter((e:any)=>!rejectedDerived.has(e.id));
-  const sourceAllowance=derivedReplayBlocked&&all.rows.length===0?0:reviewSourceAllowance(all.rows.length);
+  const sourceAllowance=derivedReplayBlocked&&all.rows.length===0?0:reviewSourceAllowance(all.rows.length,bundle.raw.reviewEvidenceChars);
   const canonicalDerivedQuotes=new Map<string,Set<string>>();
   const projections:ReturnType<typeof projectReviewEvidence>[]=all.rows.map((e:any)=>{
    try{
     if(derived.has(e.id)){
-     const artifact=derived.get(e.id)!,projection=derivedReviewText(artifact,sourceAllowance);
+     const artifact=derived.get(e.id)!,projection=derivedReviewText(artifact,sourceAllowance,obligations?.deliverables.flatMap(d=>d.fields));
      canonicalDerivedQuotes.set(e.id,new Set(projection.quotes));
      return {text:projection.text,truncated:projection.omitted>0,omissions:projection.omitted?[`${projection.omitted} derived cells omitted; no full-detail claim`]:[],limitations:artifact.output.dataset.limitations,originalHash:sha256Hex(e.result),data:undefined};
     }
@@ -186,8 +190,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})));
   const invoiceNotice=sources.some(s=>/invoice|factuur/i.test(s.capabilityId))?
    ['Invoice/settlement periods are source-specific; an invoice is not evidence of daily sales revenue. Compare its period to the requested sales period.']:[];
-  const planRow=await client.query("SELECT goal_assumptions FROM plans WHERE goal_id=$1 ORDER BY version ASC LIMIT 1",[goal.id]);
-  const obligations=planRow.rows[0]?.goal_assumptions?.goalObligations===undefined?undefined:validateGoalObligations(planRow.rows[0].goal_assumptions.goalObligations,goal.objective);
+  runtimePhase='objective_contract';
   const savedResearchPlan=object(planRow.rows[0]?.goal_assumptions)?planRow.rows[0].goal_assumptions.research_plan:undefined;
   const researchPlan=isResearchObjective(goal.objective)?validateResearchPlan(savedResearchPlan):undefined;
   // Failed attempts are control history, never VERIFIED source content.
@@ -206,7 +209,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const invokeModel=invoke??(async(input:any,signal:AbortSignal)=>(await gateway.invoke({task:"executive_planning",capability:"planning",input,signal,dataClassification:bundle.raw.dataClassification??"INTERNAL",maxCostUsd:perResearchCallCeiling??(bundle.raw.planningMaxCostUsd??0.25)/3})).result.output);
   const call=async(input:any)=>{
    // Include every field and JSON escaping, before reserving/spending a model call.
-   const promptBytes=assertReviewInputBudget(input);
+   const promptBytes=assertReviewInputBudget(input);bundle.raw.reviewInputAdmission?.(goal.id,input);
    const remaining=2*callDeadlineMs-(performance.now()-attemptStarted);
    if(remaining<=0||callsUsed>=4)throw Error('REVIEW_MODEL_DEADLINE');
    options.signal?.throwIfAborted();
@@ -243,6 +246,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    "On continue, include only still-needed GREEN sideEffect=false steps. At round 5 stop with blocked if any original deliverable remains unmet.",
    "Never claim success from raw status alone or claim independent reasoning by specialist executors. No provider writes, sending, sharing or deletion."
   ]}};
+  runtimePhase='model_review';
   let decision:Review|undefined,error:string|undefined=budget?.errorCode;
   {
    try{
@@ -286,6 +290,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   if(!decision)decision={status:"blocked",summary:"Objective review could not establish completion",requirements:obligations?obligations.deliverables.map(d=>({obligationId:d.id,requirement:d.description,fulfilled:false,evidenceIds:[]})):[{requirement:"Validated objective completion",fulfilled:false,evidenceIds:[]}],findings:[],limitations:[error??"REVIEW_FAILED"],steps:[]};
   decision.limitations=[...new Set([...decision.limitations,...evidenceLimitations,...monetaryGaps,...invoiceNotice])];
   const savedDecision={...decision,runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
+  runtimePhase='report_commit';
   await client.query("BEGIN");
   try{
    if(all.rows.length){
@@ -319,7 +324,15 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    await recordReadReviewBudget(client,goal.id,goal.current_plan_id,savedDecision.runtimeReview);
    if(!retryable)await client.query('INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash) VALUES($1,$2,$3,$4::jsonb,$5)',
     [goal.id,goal.current_plan_id,round,JSON.stringify(savedDecision),sha256Hex(savedDecision)]);
-   if(decision.status==="complete"&&process.env.SAM_INTEGRATION_ENABLED==="1") await captureVerifiedKnowledge(client,goal.id,decision.findings.filter(f=>all.rows.some((e:any)=>e.id===f.executionId&&e.goal_id===goal.id&&e.evidence?.classification!=='MODEL_INFERENCE')),sourceText);
+   if(decision.status==="complete"&&process.env.SAM_INTEGRATION_ENABLED==="1"){
+    // The existing SOURCE_FACT policy still requires the source execution's own
+    // goal. Store only literal raw quotations after locked family validation;
+    // derived values and specialist interpretations remain in report ledgers.
+    for(const sourceGoalId of sourceGoalIds){
+     const facts=decision.findings.filter(f=>all.rows.some((e:any)=>e.id===f.executionId&&e.goal_id===sourceGoalId&&e.capability_id!==DERIVE_CAPABILITY&&e.evidence?.classification!=='MODEL_INFERENCE'));
+     if(facts.length)await captureVerifiedKnowledge(client,sourceGoalId,facts,sourceText);
+    }
+   }
    if(decision.status==="continue"){
     await transitionGoal(client,goal.id,"VERIFYING","REPLANNING","verified_observation_continuation");
     await transitionGoal(client,goal.id,"REPLANNING","PLANNING","concrete_observed_reads");
@@ -330,16 +343,18 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
    await assertCommitAdmission(client);
    await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e}
-  return {processed:true,goalId:goal.id,status:decision.status};
+  return {processed:true,goalId:goal.id,status:decision.status,...(error?{reason:error}: {})};
  }catch(error){
   if(!lockedId)throw error;
+  const candidateCode=error instanceof Error?error.message:'';
+  const failureCode=/^[A-Z][A-Z_0-9]{2,80}$/.test(candidateCode)?candidateCode:typeof (error as any)?.code==='string'&&/^[A-Z0-9]{5}$/.test((error as any).code)?'REVIEW_DATABASE_'+(error as any).code:'REVIEW_RUNTIME_FAILURE';
   await client.query("BEGIN");
   try{
    const state=await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE",[lockedId]);
-   if(state.rows[0]?.state==="VERIFYING")await transitionGoal(client,lockedId,"VERIFYING","WAITING_EXTERNAL","objective_review_runtime_failed",{reason:"REVIEW_FAILED"});
+   if(state.rows[0]?.state==="VERIFYING")await transitionGoal(client,lockedId,"VERIFYING","WAITING_EXTERNAL","objective_review_runtime_failed",{reason:failureCode,phase:runtimePhase});
    await assertCommitAdmission(client);
    await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e}
-  return {processed:true,goalId:lockedId,status:"blocked"};
+  return {processed:true,goalId:lockedId,status:"blocked",reason:failureCode,phase:runtimePhase};
  }finally{try{if(lockedId)await client.query("SELECT pg_advisory_unlock(hashtext($1))",["read-review:"+lockedId])}finally{client.release()}}
 }
