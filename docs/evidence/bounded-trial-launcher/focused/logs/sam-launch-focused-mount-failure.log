@@ -1,0 +1,3 @@
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/workspace/sam-greenfield/node_modules" to rootfs at "/app/node_modules": create mountpoint for /app/node_modules mount: mkdirat /var/lib/docker/vfs/dir/bbf3826fd43576d03030249591847c804f1900ec3ce96f07ab0f545f5f8a7006/app/node_modules: read-only file system: unknown
+
+Run 'docker run --help' for more information

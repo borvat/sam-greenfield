@@ -1,0 +1,17 @@
+FAIL tests/evaluation/operatorLaunch.ts
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'blocked'
+- 'failed'
+
+    at main (/tmp/sam-trial-launcher/tests/evaluation/operatorLaunch.ts:57:12) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'blocked',
+  expected: 'failed',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/operatorLaunch.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T21:32:19.069Z","completedAt":"2026-10-23T21:32:20.915Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T21:32:19.071Z","completedAt":"2026-10-23T21:32:19.245Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/operatorLaunch.ts"],"startedAt":"2026-10-23T21:32:19.245Z","completedAt":"2026-10-23T21:32:20.915Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

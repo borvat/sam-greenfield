@@ -1,0 +1,140 @@
+{
+  "applicationCommit": "08369e4e0d11b6cb0d22fc7596c82db18b59bd8c",
+  "tree": "43fbb43adb73f518f29a50d51e0e70c5aef8eeed",
+  "node": "22.23.4",
+  "classification": "FIXTURE_ONLY_LAUNCH_ORCHESTRATION_NOT_MODEL_QUALITY",
+  "typecheck": "PASS",
+  "suites": [
+    {
+      "passed": 1,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/evaluation/operatorLaunch.ts",
+          "passed": true,
+          "status": "PASS",
+          "exit": 0,
+          "startedAt": "2026-10-23T21:40:24.945Z",
+          "completedAt": "2026-10-23T21:40:31.686Z",
+          "commands": [
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "packages/db/src/migrate.js",
+                "--apply"
+              ],
+              "startedAt": "2026-10-23T21:40:24.947Z",
+              "completedAt": "2026-10-23T21:40:25.084Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            },
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "--import",
+                "tsx",
+                "tests/evaluation/operatorLaunch.ts"
+              ],
+              "startedAt": "2026-10-23T21:40:25.085Z",
+              "completedAt": "2026-10-23T21:40:31.686Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            }
+          ],
+          "testExecuted": true
+        }
+      ]
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/evaluation/budgets.ts",
+          "passed": true,
+          "status": "PASS",
+          "exit": 0,
+          "startedAt": "2026-10-23T21:40:31.768Z",
+          "completedAt": "2026-10-23T21:41:28.652Z",
+          "commands": [
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "packages/db/src/migrate.js",
+                "--apply"
+              ],
+              "startedAt": "2026-10-23T21:40:31.770Z",
+              "completedAt": "2026-10-23T21:40:31.930Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            },
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "--import",
+                "tsx",
+                "tests/evaluation/budgets.ts"
+              ],
+              "startedAt": "2026-10-23T21:40:31.930Z",
+              "completedAt": "2026-10-23T21:41:28.652Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            }
+          ],
+          "testExecuted": true
+        }
+      ]
+    },
+    {
+      "passed": 1,
+      "failed": 0,
+      "results": [
+        {
+          "test": "tests/evaluation/orchestration.ts",
+          "passed": true,
+          "status": "PASS",
+          "exit": 0,
+          "startedAt": "2026-10-23T21:41:28.733Z",
+          "completedAt": "2026-10-23T21:41:49.184Z",
+          "commands": [
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "packages/db/src/migrate.js",
+                "--apply"
+              ],
+              "startedAt": "2026-10-23T21:41:28.734Z",
+              "completedAt": "2026-10-23T21:41:28.881Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            },
+            {
+              "argv": [
+                "/usr/local/bin/node",
+                "--import",
+                "tsx",
+                "tests/evaluation/orchestration.ts"
+              ],
+              "startedAt": "2026-10-23T21:41:28.881Z",
+              "completedAt": "2026-10-23T21:41:49.184Z",
+              "exitCode": 0,
+              "signal": null,
+              "error": null
+            }
+          ],
+          "testExecuted": true
+        }
+      ]
+    }
+  ],
+  "launcherScenarios": 14,
+  "normalElapsedFromInsertMs": 624,
+  "sourceFiles": 775,
+  "noPaidCalls": true,
+  "fullAcceptanceRepeated": false
+}

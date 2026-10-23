@@ -1,0 +1,14 @@
+{"phase":"SNAPSHOT","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.482Z","detail":{"reference":"local-fixture-original"}}
+{"phase":"PAUSE_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.482Z"}
+{"phase":"CREATE_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.482Z"}
+{"phase":"CREATED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.484Z","detail":{"trialId":"3715d792-6298-4239-afc3-e92432ca126a","createdAt":"2026-10-23T21:40:28.483Z","deadline":"2026-10-23T21:45:28.483Z","observedAt":"2026-10-23T21:40:28.484Z"}}
+{"phase":"SIGN_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.485Z"}
+{"phase":"DELIVER_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.486Z"}
+{"phase":"RESTART_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.487Z"}
+{"phase":"OBSERVE_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.762Z"}
+{"phase":"FINAL_RECEIPT_REQUESTED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.763Z"}
+{"phase":"OBSERVED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.763Z","detail":{"outcome":"blocked"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.772Z","detail":{"trialId":"3715d792-6298-4239-afc3-e92432ca126a","elapsedFromInsertMs":287}}
+{"phase":"RESTORATION_PENDING","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.772Z","detail":{"code":"FIXTURE_RESTORE_FAILED"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:28.778Z","detail":{"trialId":"3715d792-6298-4239-afc3-e92432ca126a","elapsedFromInsertMs":293}}
+{"phase":"RESTORED","requestHash":"6c93789a1ea51fcfe348598bb75cf5844f429acbf796715a2d7f0f6be55225cc","at":"2026-10-23T21:40:29.028Z"}

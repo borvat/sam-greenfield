@@ -1,0 +1,13 @@
+{"phase":"SNAPSHOT","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.039Z","detail":{"reference":"local-fixture-original"}}
+{"phase":"PAUSE_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.041Z"}
+{"phase":"CREATE_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.041Z"}
+{"phase":"CREATED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.043Z","detail":{"trialId":"a4020e65-fc46-465b-a2eb-552294c68316","createdAt":"2026-10-23T21:40:29.042Z","deadline":"2026-10-23T21:45:29.042Z","observedAt":"2026-10-23T21:40:29.043Z"}}
+{"phase":"SIGN_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.043Z"}
+{"phase":"DELIVER_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.045Z"}
+{"phase":"RESTART_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.046Z"}
+{"phase":"OBSERVE_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.308Z"}
+{"phase":"FINAL_RECEIPT_REQUESTED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.309Z"}
+{"phase":"OBSERVED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.310Z","detail":{"outcome":"blocked"}}
+{"phase":"RESTORATION_PENDING","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.317Z","detail":{"code":"FIXTURE_QUIESCE_UNCERTAIN"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.321Z","detail":{"trialId":"a4020e65-fc46-465b-a2eb-552294c68316","elapsedFromInsertMs":277}}
+{"phase":"RESTORED","requestHash":"89f07b905932681fe041f4d8fbfb829b2ed731a61f72ca4c4daa0360e3bd294c","at":"2026-10-23T21:40:29.579Z"}

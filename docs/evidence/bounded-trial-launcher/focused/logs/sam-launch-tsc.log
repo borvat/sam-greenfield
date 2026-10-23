@@ -1,0 +1,10 @@
+apps/agents/src/evaluation/operatorLaunch.ts(71,36): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+apps/agents/src/evaluation/operatorLaunch.ts(72,43): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+apps/agents/src/evaluation/operatorLaunch.ts(81,21): error TS18048: 'b.signer' is possibly 'undefined'.
+apps/agents/src/evaluation/operatorLaunch.ts(104,57): error TS18048: 'b.signer' is possibly 'undefined'.
+tests/evaluation/launchFixture.ts(46,104): error TS2353: Object literal may only specify known properties, and 'startup' does not exist in type 'RuntimeComposition'.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
