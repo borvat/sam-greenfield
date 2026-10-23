@@ -27,7 +27,7 @@ async function main(){
   const url=new URL(process.env.DATABASE_URL!);url.username=role;url.password='ephemeral-launch-fixture';url.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const keys=generateKeyPairSync('ed25519'),privateKey=keys.privateKey.export({format:'pem',type:'pkcs8'}).toString(),publicKey=keys.publicKey.export({format:'pem',type:'spki'}).toString();
   const results:any[]=[];
-  for(const scenario of ['normal','sign','bad-signature','delivery','restart','observe','uncertain-create','expired','restore','quiesce','cancel','db-cancel','crash','crash-after-restart']){
+  for(const scenario of ['normal','sign','bad-signature','delivery','restart','observe','uncertain-create','expired','restore','quiesce','cancel','db-cancel','crash','crash-after-restart','lease-loss']){
    const dir=join(temporary,scenario);await mkdir(dir);process.env.LAUNCH_FIXTURE_DIR=dir;
    const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Launcher fixture coordinator','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
    const ownerIds=[];for(let i=0;i<3;i++)ownerIds.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling,completion_definition) VALUES($1,$2,$3,'Synthetic launcher child','NEW','GREEN','sam.read_report.v1') RETURNING id",[randomUUID(),entity,root])).rows[0].id);
@@ -51,7 +51,16 @@ async function main(){
      assert.equal((await c.query('SELECT count(*)::int n FROM evaluation_trials WHERE root_goal_id=$1',[root])).rows[0].n,0);
     }
     const cancel=new AbortController();const timer=scenario==='cancel'?setTimeout(()=>cancel.abort(),50):undefined;
-    try{result=await rehearseFixtureTrialLaunch(request,{...b,journal:opened.journal,signal:cancel.signal});}finally{if(timer)clearTimeout(timer);}await b.close();
+    try{
+     if(scenario==='lease-loss'){
+      const launched=rehearseFixtureTrialLaunch(request,{...b,journal:opened.journal});const rejected=assert.rejects(launched,/LEASE_LOST/);
+      const until=Date.now()+5000;while(true){try{await readFile(join(dir,'signer-waiting'));break;}catch{if(Date.now()>until)throw Error('SIGNER_BARRIER_TIMEOUT');await new Promise(r=>setTimeout(r,10));}}
+      const keeper=JSON.parse(await readFile(join(dir,'journal/operator.lock'),'utf8'));process.kill(keeper.keeperPid,'SIGKILL');await rejected;
+      const abortedUntil=Date.now()+5000;while(true){try{assert.equal(await readFile(join(dir,'signer-aborted'),'utf8'),'yes');break;}catch{if(Date.now()>abortedUntil)throw Error('SIGNER_ABORT_TIMEOUT');await new Promise(r=>setTimeout(r,10));}}
+      await opened.close();await writeFile(join(dir,'fixture.json'),JSON.stringify({...meta,scenario:'normal'}));opened=await openLaunchJournal(join(dir,'journal'),true);
+      const fixed=await createLaunchBindings(request);result={outcome:'failed',...await recoverTrialLaunch(request,{...fixed,journal:opened.journal})};await fixed.close();
+     }else result=await rehearseFixtureTrialLaunch(request,{...b,journal:opened.journal,signal:cancel.signal});
+    }finally{if(timer)clearTimeout(timer);}await b.close();
     await assert.rejects(rehearseFixtureTrialLaunch(request,{...b,journal:opened.journal}),/LAUNCH_ALREADY_STARTED_USE_RECOVERY/);
     await assert.rejects(recoverTrialLaunch({...request,rootGoalId:randomUUID()},{...b,journal:opened.journal}),/LAUNCH_RECOVERY_SCOPE_INVALID/);
     if(['restore','quiesce'].includes(scenario)){

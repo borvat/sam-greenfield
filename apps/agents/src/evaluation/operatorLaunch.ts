@@ -6,7 +6,7 @@ import {validateTrialSpec,type TrialSpec} from './trialSpec';
 export type LaunchRequest={version:1;rootGoalId:string;spec:TrialSpec};
 export type TrialReceipt={id:string;rootGoalId:string;companyId:string;specHash:string;createdAt:string;deadline:string;observedAt:string;cancelled:boolean;sealed:boolean};
 export type LaunchEvent={phase:string;requestHash:string;at:string;detail?:Record<string,unknown>};
-export interface LaunchJournal {read():Promise<LaunchEvent[]>;append(event:LaunchEvent):Promise<void>}
+export interface LaunchJournal {readonly signal?:AbortSignal;read():Promise<LaunchEvent[]>;append(event:LaunchEvent):Promise<void>}
 /** Implemented by a separately authorized operator, never by runtime credentials.
  * All methods must honor AbortSignal; quiesce must reconcile in-flight remote
  * actions before restoration. Snapshot is an opaque durable reference, no secrets. */
@@ -63,18 +63,20 @@ export async function recoverTrialLaunch(input:LaunchRequest,b:Bindings){
  if(typeof snapshot!=='string'||!snapshot)failure('LAUNCH_RECOVERY_SNAPSHOT_REQUIRED');
  const record=async(phase:string,detail?:Record<string,unknown>)=>b.journal.append({phase,requestHash:hash,at:new Date().toISOString(),detail});
  try{
-  await bounded(s=>b.admin.preflight(request,s),15000);
+  await bounded(s=>b.admin.preflight(request,s),15000,b.journal.signal);
   // Do not restore over an uncertain remote restart/delivery operation.
-  await bounded(s=>b.admin.quiesce(request.rootGoalId,s),15000);
-  const found=await bounded(s=>b.admin.lookup(request.rootGoalId,s),5000);
-  if(found){receipt(request,found);await bounded(s=>b.admin.cancelAndCapture(found,s),15000);await record('TRIAL_CAPTURED',{trialId:found.id,elapsedFromInsertMs:Date.parse(found.observedAt)-Date.parse(found.createdAt)});}
-  await bounded(s=>b.admin.restore(snapshot as string,s),15000);
-  await bounded(s=>b.admin.verifyRestored(snapshot as string,s),10000);
+  await bounded(s=>b.admin.quiesce(request.rootGoalId,s),15000,b.journal.signal);
+  const found=await bounded(s=>b.admin.lookup(request.rootGoalId,s),5000,b.journal.signal);
+  if(found){receipt(request,found);await bounded(s=>b.admin.cancelAndCapture(found,s),15000,b.journal.signal);await record('TRIAL_CAPTURED',{trialId:found.id,elapsedFromInsertMs:Date.parse(found.observedAt)-Date.parse(found.createdAt)});}
+  await bounded(s=>b.admin.restore(snapshot as string,s),15000,b.journal.signal);
+  await bounded(s=>b.admin.verifyRestored(snapshot as string,s),10000,b.journal.signal);
   await record('RESTORED');return {restored:true as const};
  }catch(e){await record('RESTORATION_PENDING',{code:code(e)});return {restored:false as const,code:code(e)};}
 }
 async function launch(input:LaunchRequest,b:Bindings,mode:'fixture'|'live'){
  const request=requestCopy(input),hash=sha256Hex(request);
+ const signals=[b.signal,b.journal.signal].filter((s):s is AbortSignal=>!!s);
+ b={...b,signal:signals.length?AbortSignal.any(signals):undefined};
  if(request.spec.mode!==mode||b.admin.mode!==mode)failure('LAUNCH_MODE_MISMATCH');
  if(mode==='live'&&!LIVE_EVALUATION_ENABLED)failure('LIVE_EVALUATION_RELEASE_DISABLED');
  if(!b.signer||b.signer.authority!==(mode==='live'?'owner-attested':'fixture-only'))failure('LAUNCH_SIGNER_REQUIRED');

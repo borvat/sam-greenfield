@@ -42,6 +42,7 @@ export async function createLaunchBindings(request:LaunchRequest){
   async verifyRestored(){if(!ready||!child||child.exitCode!==null||child.signalCode!==null||(await readFile(join(dir(),'service-state'),'utf8'))!=='ordinary')throw Error('FIXTURE_NOT_RESTORED');}
  };
  return {admin,signer:{authority:'fixture-only' as const,publicKey:metadata.publicKey,async sign(payload:Record<string,unknown>,signal:AbortSignal){
+  if(metadata.scenario==='lease-loss'){const waiting=new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>{void writeFile(join(dir(),'signer-aborted'),'yes');reject(Error('FIXTURE_ABORTED'));},{once:true}));await writeFile(join(dir(),'signer-waiting'),'yes');await waiting;}
   if(metadata.scenario==='cancel')await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('FIXTURE_ABORTED')),{once:true}));
   if(metadata.scenario==='crash'){console.log('FIXTURE_AFTER_INSERT');await new Promise<void>((_,reject)=>signal.addEventListener('abort',()=>reject(Error('FIXTURE_ABORTED')),{once:true}));}
   if(metadata.scenario==='sign')throw Error('FIXTURE_SIGN_FAILED');
