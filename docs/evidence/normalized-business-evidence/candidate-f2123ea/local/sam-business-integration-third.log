@@ -1,0 +1,17 @@
+FAIL tests/core/evidenceIntegration.ts
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+'0.10' !== '0.1'
+
+    at scenario (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:81:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:143:3) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '0.10',
+  expected: '0.1',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/evidenceIntegration.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T19:16:52.455Z","completedAt":"2026-10-23T19:16:54.351Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T19:16:52.457Z","completedAt":"2026-10-23T19:16:52.649Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/evidenceIntegration.ts"],"startedAt":"2026-10-23T19:16:52.649Z","completedAt":"2026-10-23T19:16:54.351Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

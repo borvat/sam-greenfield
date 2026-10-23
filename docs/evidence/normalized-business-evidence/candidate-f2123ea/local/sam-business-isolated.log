@@ -1,0 +1,37 @@
+✔ collection receipts require an exact connected terminal query, independent of page order (12.949895ms)
+✔ missing pagination and unreviewed identities cannot become completion receipts (0.600766ms)
+✔ bol v10 synthetic shape retains prices, VAT and provenance without inventing currency or coverage (8.108646ms)
+✔ Drive read and independent readback forward same cursor and retain incomplete-search evidence (15.205527ms)
+✔ one monetary assessment rejects missing units, VAT, period and scope; invoices never stand in for sales (2.335812ms)
+/tmp/sam-business-evidence/packages/db/src/client.ts:6
+  throw new Error(process.env.NODE_ENV==="production" ?
+        ^
+
+Error: DATABASE_URL_REQUIRED
+    at <anonymous> (/tmp/sam-business-evidence/packages/db/src/client.ts:6:9)
+    at Object.<anonymous> (/tmp/sam-business-evidence/packages/db/src/client.ts:41:23)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object.transformer (/workspace/sam-greenfield/node_modules/tsx/dist/register-B1c7OH6V.cjs:22:2188)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at <anonymous> (/tmp/sam-business-evidence/apps/kernel/src/stateMachine.ts:2:33)
+
+Node.js v24.19.0
+✖ tests/isolated/shared_goal_contract.ts (270.124733ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 301.913508
+
+✖ failing tests:
+
+test at tests/isolated/shared_goal_contract.ts:1:1
+✖ tests/isolated/shared_goal_contract.ts (270.124733ms)
+  'test failed'

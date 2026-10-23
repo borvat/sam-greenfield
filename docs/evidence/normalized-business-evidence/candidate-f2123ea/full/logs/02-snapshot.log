@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-8osGki/source.tar f2123ea9cdd1d1b80cb35ae5000f4e148b6ce6c8
+$ tar -xf /tmp/sam-verify-8osGki/source.tar -C /tmp/sam-verify-8osGki/source

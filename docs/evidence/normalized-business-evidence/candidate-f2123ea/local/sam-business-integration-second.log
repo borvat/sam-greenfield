@@ -1,0 +1,12 @@
+FAIL tests/core/evidenceIntegration.ts
+Error: EVIDENCE_UNIT_OR_SEMANTICS_UNKNOWN
+    at fail (/tmp/sam-business-evidence/apps/brain/src/evidence/transforms.ts:17:40)
+    at replayTransform (/tmp/sam-business-evidence/apps/brain/src/evidence/transforms.ts:92:92)
+    at deriveArtifact (/tmp/sam-business-evidence/apps/brain/src/evidence/artifacts.ts:41:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.execute (/tmp/sam-business-evidence/apps/production/src/verifiedEvidenceBundle.ts:29:20)
+    at async Object.executors.<computed> (/tmp/sam-business-evidence/apps/tools/src/executorFactory.ts:67:22)
+    at async scenario (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:75:17)
+    at async main (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:143:3)
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/evidenceIntegration.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T19:16:07.960Z","completedAt":"2026-10-23T19:16:09.952Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T19:16:07.962Z","completedAt":"2026-10-23T19:16:08.154Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/evidenceIntegration.ts"],"startedAt":"2026-10-23T19:16:08.154Z","completedAt":"2026-10-23T19:16:09.952Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

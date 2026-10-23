@@ -1,0 +1,17 @@
+/tmp/sam-business-evidence/packages/db/src/client.ts:6
+  throw new Error(process.env.NODE_ENV==="production" ?
+        ^
+
+Error: DATABASE_URL_REQUIRED
+    at <anonymous> (/tmp/sam-business-evidence/packages/db/src/client.ts:6:9)
+    at Object.<anonymous> (/tmp/sam-business-evidence/packages/db/src/client.ts:41:23)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object.transformer (/workspace/sam-greenfield/node_modules/tsx/dist/register-B1c7OH6V.cjs:22:2188)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at <anonymous> (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:9:20)
+
+Node.js v24.19.0

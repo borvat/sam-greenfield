@@ -1,0 +1,17 @@
+✔ collection receipts require an exact connected terminal query, independent of page order (12.999756ms)
+✔ missing pagination and unreviewed identities cannot become completion receipts (0.553494ms)
+✔ bol v10 synthetic shape retains prices, VAT and provenance without inventing currency or coverage (7.947842ms)
+✔ Drive read and independent readback forward same cursor and retain incomplete-search evidence (11.211138ms)
+✔ one monetary assessment rejects missing units, VAT, period and scope; invoices never stand in for sales (2.274119ms)
+✔ shared planner requires visible validated obligations and runtime objective binding (24.939933ms)
+✔ verified specialist interpretation alone cannot satisfy source obligations (0.784904ms)
+✔ union preserves exact decimal provenance and requested-query coverage without global completeness (20.069518ms)
+✔ bounded derived projection prioritizes every requested cell without inventing quotations (1.227762ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 466.05381

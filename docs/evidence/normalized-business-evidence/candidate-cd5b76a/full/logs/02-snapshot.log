@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-XmsYYP/source.tar cd5b76aa73dabdf9b64e6a63a4392657cdbb917a
+$ tar -xf /tmp/sam-verify-XmsYYP/source.tar -C /tmp/sam-verify-XmsYYP/source

@@ -1,0 +1,17 @@
+FAIL tests/core/evidenceIntegration.ts
+AssertionError [ERR_ASSERTION]: restricted profile must retain continuation round accounting
+
+1 !== 2
+
+    at scenario (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:135:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (/tmp/sam-business-evidence/tests/core/evidenceIntegration.ts:144:3) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 2,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/evidenceIntegration.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T19:29:16.626Z","completedAt":"2026-10-23T19:29:24.299Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T19:29:16.629Z","completedAt":"2026-10-23T19:29:16.904Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/evidenceIntegration.ts"],"startedAt":"2026-10-23T19:29:16.904Z","completedAt":"2026-10-23T19:29:24.299Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}
