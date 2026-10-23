@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-jRnpcK/source.tar 49ec0ebd0ff979587d6600ca9c00754679b52adb
+$ tar -xf /tmp/sam-verify-jRnpcK/source.tar -C /tmp/sam-verify-jRnpcK/source
