@@ -1,3 +1,4 @@
+import {sha256Hex} from '../../packages/shared/src/stableJson';
 import {readReviewBudget} from '../../apps/kernel/src/readReviewBudget';
 import {test} from "node:test";
 import assert from "node:assert/strict";
@@ -42,8 +43,8 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
  await db.exec(`CREATE TABLE goals(id UUID PRIMARY KEY,state TEXT,completion_definition TEXT,current_plan_id UUID,objective TEXT,updated_at TIMESTAMPTZ DEFAULT now(),next_wake_at TIMESTAMPTZ);
  CREATE TABLE plans(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,version INT,goal_assumptions JSONB,constraints JSONB,dependencies JSONB,steps JSONB,plan_hash TEXT);
  CREATE TABLE work_queue(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,plan_id UUID,step_id UUID,capability_id TEXT,params JSONB,priority INT,due_at TIMESTAMPTZ,queued_at TIMESTAMPTZ DEFAULT now(),status TEXT DEFAULT 'QUEUED', idempotency_key TEXT,operation_key_ref TEXT,step_key TEXT,depends_on UUID[],result_refs JSONB);
- CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,capability_id TEXT,params JSONB,result JSONB,actor TEXT,evidence JSONB DEFAULT '{}',started_at TIMESTAMPTZ DEFAULT now());
- CREATE TABLE verifications(execution_id UUID,result TEXT,id UUID DEFAULT gen_random_uuid(),checked_at TIMESTAMPTZ DEFAULT now());
+ CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,capability_id TEXT,params JSONB,result JSONB,actor TEXT,queue_id UUID,plan_hash TEXT,execution_hash TEXT,fencing_token BIGINT,operation_key_ref TEXT,evidence JSONB DEFAULT '{}',started_at TIMESTAMPTZ DEFAULT now());
+ CREATE TABLE verifications(execution_id UUID,result TEXT,plan_hash TEXT,execution_hash TEXT,id UUID DEFAULT gen_random_uuid(),checked_at TIMESTAMPTZ DEFAULT now());
  CREATE TABLE outbox_events(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),aggregate_type TEXT,aggregate_id TEXT,event_type TEXT,payload JSONB);
  ALTER TABLE goals ADD COLUMN replan_attempts INT DEFAULT 0;
  CREATE TABLE audit_log(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,actor TEXT,entity_type TEXT,entity_id UUID,source TEXT,authority_class TEXT,result TEXT,action TEXT,after_ref JSONB,timestamp TIMESTAMPTZ DEFAULT now());`);
@@ -55,8 +56,16 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
  try{
   await db.query<any>("INSERT INTO goals(id,state,completion_definition,current_plan_id,objective,updated_at) VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
   await db.query<any>("INSERT INTO plans(id,goal_id,version) VALUES($1,$2,1)",[plan,id]);
-  await db.query<any>("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[execution,id,plan,source.capabilityId,source.params,{content:[{type:"text",text:source.text}]}]);
-  await db.query<any>("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[execution]);
+  const insertVerified=async(executionId:string,planId:string,queueId:string,capabilityId:string,params:unknown,result:unknown)=>{
+   const planHash=(await db.query<any>('SELECT plan_hash FROM plans WHERE id=$1',[planId])).rows[0].plan_hash;
+   const payload={queue_id:queueId,goal_id:id,plan_id:planId,plan_hash:planHash,capability_id:capabilityId,params,result,evidence:{fixture:'verified read'},fencing_token:1,operation_key_ref:null};
+   const hash=sha256Hex(payload);
+   await db.query("INSERT INTO executions(id,goal_id,plan_id,queue_id,plan_hash,execution_hash,fencing_token,capability_id,params,result,evidence,actor) VALUES($1,$2,$3,$4,$5,$6,1,$7,$8,$9,$10,'communications@1.0.0')",
+    [executionId,id,planId,queueId,planHash,hash,capabilityId,params,result,payload.evidence]);
+   await db.query("INSERT INTO verifications(execution_id,result,plan_hash,execution_hash) VALUES($1,'VERIFIED',$2,$3)",[executionId,planHash,hash]);
+  };
+  await db.query('UPDATE plans SET plan_hash=$1 WHERE id=$2',[sha256Hex({goalId:id,version:1}),plan]);
+  await insertVerified(execution,plan,'55555555-5555-4555-8555-555555555555',source.capabilityId,source.params,{content:[{type:"text",text:source.text}]});
   failEnqueue=true;
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>review("continue"))).status,"blocked");
   assert.equal((await db.query<any>('SELECT * FROM goal_read_reviews')).rows.length,0);
@@ -71,8 +80,8 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   assert.equal((await db.query<any>("SELECT * FROM work_queue")).rows.length,1);
   const second="44444444-4444-4444-8444-444444444444";
   await db.query<any>("UPDATE work_queue SET status='EXECUTED'");await db.query<any>("UPDATE goals SET state='VERIFYING'");
-  await db.query<any>("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[second,id,g.current_plan_id,descriptors[0].capabilityId,{message_id:"actual-message"},{content:[{type:"text",text:"Supplier confirms release."}]}]);
-  await db.query<any>("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[second]);
+  const queueId=(await db.query<any>('SELECT id FROM work_queue WHERE plan_id=$1',[g.current_plan_id])).rows[0].id;
+  await insertVerified(second,g.current_plan_id,queueId,descriptors[0].capabilityId,{message_id:"actual-message"},{content:[{type:"text",text:"Supplier confirms release."}]});
   const final=review("complete");final.requirements[0].evidenceIds=[second];final.findings[0].executionId=second;
   await db.query<any>("UPDATE goals SET replan_attempts=1");
   await db.query<any>("INSERT INTO audit_log(goal_id,action,after_ref) VALUES($1,'RUNTIME_RECOVERY_REQUESTED',$2)",[id,{queue_id:"failed-work",capability_id:"google_mcp_get_drive_file_content",params:{file_id:"missing"},error_code:"READ_SOURCE_NOT_FOUND"}]);
