@@ -1,3 +1,21 @@
+# Active shared-path checkpoint — 2026-10-23 17:54 UTC
+
+No test process is running or stalled. Work continues in the same task.
+
+Published work-in-progress candidate: `b5ee05c734198a71789cc93ef6310997d3058a2e`, branch `feat/shared-profile-compat`, following `66c937fef92e42b7271e67a8f930bf62e9e4ea3c` on `feat/shared-goal-path`.
+
+The actual shared builder now completes all three nominal fixture task families through discovery, pagination, specialist reasoning, exact derivation, independent verification and objective review under a provisioned restricted role. Latest isolated run PASS: 17:51:51–17:52:45 UTC (`tests/evaluation/sharedPath.ts`). These are scripted model decisions, not autonomous model quality. TypeScript passes.
+
+Current uncommitted follow-up adds actual SIGKILL/restart, signed descendant capture with original obligations, exact source/readback accounting and cancellation/unenrolled-coordinator rejection tests. Those additions have not run yet; no final full-suite pass is claimed.
+
+The old profile rejected delegated execution because the evaluation coordinator is NEW. A separate opt-in compatibility profile is prepared and used only in the isolated database: permit that NEW ancestor only through an active trial with the immutable enrolled owner, matching tenant and live owner deadline. No new grants/RLS policies, credentials or startup activation. Production remains unchanged; applying this profile there would require a reviewed operator release action.
+
+Exact-head full run of `66c937f` failed: 13 PASS, 1 FAIL, 46 NOT_RUN. Legacy regression:49/49; core:12/13. The failing race-test barrier matched only scalar SQL; the follow-up matches the new ANY scope while retaining all before/after-lock revocation assertions. Failed logs are preserved. Review input is now allocated within the unchanged signed adapter envelope, with duplicated embedded specialist evidence replaced by separately verified source references.
+
+Still required: finish the new lifecycle/capture tests, chained derivation and adversarial variants, freeze final head and complete full acceptance. This is NOT release readiness or completion of the general-agent objective. Progress commentary is being sent but appears absent from parent thread reads; this document is the durable checkpoint.
+
+---
+
 # Verified offline checkpoint — 2026-10-23 16:56 UTC
 
 Application: `5bfe7b8342756623f77f4c3d158a12b7435d32d1`, branch
