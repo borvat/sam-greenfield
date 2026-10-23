@@ -8,6 +8,7 @@ import {DriveSearchVerifier} from '../../apps/production/src/driveVerifiers';
 import {NORMALIZED_CONNECTOR_CONTRACTS} from '../../apps/production/src/normalizedConnectorContracts';
 import {loadVerifiedSources} from '../../apps/brain/src/evidence/verifiedSources';
 import {assessCollection,collectionReceipt} from '../../apps/brain/src/evidence/collectionReceipts';
+import {replayTransform} from '../../apps/brain/src/evidence/transforms';
 import {assessBoundObligation} from '../../apps/brain/src/evidence/fulfillment';
 import {assessMonetaryEvidence} from '../../apps/brain/src/evidence/monetaryEvidence';
 import {monetaryEvidenceLimitations} from '../../apps/production/src/reviewEvidence';
@@ -21,6 +22,11 @@ async function extract(result:any){
 test('bol v10 synthetic shape retains prices, VAT and provenance without inventing currency or coverage',async()=>{
  const data={data:{orderId:'synthetic-order',orderPlacedDateTime:'2026-10-22T23:30:00+02:00',orderItems:[{orderItemId:'item-X',quantity:2,quantityCancelled:0,quantityShipped:2,unitPrice:12.99,totalPrice:23.98,commission:1.99}]}};
  const d=await extract(data);assert.equal(d.rows[0].values.totalPrice,'23.98');assert.equal(d.columns.totalPrice.vat,'gross');assert.equal(d.columns.totalPrice.unit,'UNKNOWN');assert.equal(d.columns.commission.vat,'UNKNOWN');assert.equal(d.coverage,'unknown');assert.equal(d.timeZone,null);assert.equal(d.sourceContexts![0].period,undefined);assert.equal(d.rows[0].citations[0].sourceHash,sha256Hex(data));
+ const repeated=await extract(data);
+ const doubled=replayTransform({version:1,source:'a',operations:[{op:'union',right:'b'},{op:'group',keys:['orderId'],aggregates:[{as:'total',field:'quantity',fn:'sum'}]}]},{a:d,b:repeated}).dataset;
+ assert.equal(doubled.rows[0].values.total,'4');
+ const quantityObligation:any={id:'quantity',description:'Provided item',fields:['total'],scope:{kind:'enumerated',identities:['item-X']},units:'item',vat:'UNKNOWN',period:'UNKNOWN',timeZone:'UNKNOWN'};
+ assert(assessBoundObligation(doubled,quantityObligation,['total']).gaps.includes('REQUESTED_IDENTITIES_AMBIGUOUS'),'two observations of one item cannot establish a doubled single-item quantity');
  assert.deepEqual(d.sourceContexts![0].rowIdentities,['item-X']);assert.equal(d.rows[0].values.orderPlacedDateTime,data.data.orderPlacedDateTime);
  for(const price of [0.001,1e30,NaN,Infinity,'12.99']){const bad=structuredClone(data);(bad.data.orderItems[0] as any).unitPrice=price;await assert.rejects(extract(bad),/DECIMAL_ENCODING_INVALID/);}
  const duplicate=structuredClone(data);duplicate.data.orderItems.push(structuredClone(duplicate.data.orderItems[0]));await assert.rejects(extract(duplicate),/DUPLICATE_RECORD_IDENTITY/);

@@ -14,6 +14,14 @@ export function assessBoundObligation(dataset:Dataset,obligation:GoalObligations
   const identity=(context?.collection?.identities??context?.rowIdentities)?.[citation.row];
   if(identity===undefined)identityGap=true;else identities.add(identity);
  }
+ // Normalized detail reads lack collection receipts. Do not collapse repeated
+ // observations of the same requested identity into apparent scope completeness.
+ const normalizedIdentities=new Set<string>();
+ for(const context of dataset.sourceContexts??[])for(const identity of context.rowIdentities??[]){
+  if(!identities.has(identity))continue;
+  if(normalizedIdentities.has(identity))gaps.push('REQUESTED_IDENTITIES_AMBIGUOUS');
+  normalizedIdentities.add(identity);
+ }
  if(obligation.scope.kind==='enumerated'){
   const expected=new Set(obligation.scope.identities);
   if(identityGap||expected.size!==identities.size||[...expected].some(id=>!identities.has(id)))gaps.push('REQUESTED_IDENTITIES_NOT_ESTABLISHED');
