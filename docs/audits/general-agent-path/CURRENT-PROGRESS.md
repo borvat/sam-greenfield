@@ -1,34 +1,40 @@
-# Current checkpoint — 2026-10-23T16:49:45.632385+00:00
+# Verified offline checkpoint — 2026-10-23 16:56 UTC
 
-Frozen application candidate: `5bfe7b8342756623f77f4c3d158a12b7435d32d1`,
-branch `feat/goal-evidence-obligations`. Clean worktree; no edits during acceptance.
+Application: `5bfe7b8342756623f77f4c3d158a12b7435d32d1`, branch
+`feat/goal-evidence-obligations`, clean frozen source tree
+`86e0a07fc26afbf0406983ed785695edeaafbe6c`.
 
-Full acceptance: {'PASS': 30, 'RUNNING': 1, 'NOT_RUN': 28}. Running: [('specialist-reasoning', '2026-10-23T16:48:56.033Z')].
-No current failed stage. No deliberate diagnostic barrier or duplicate suite running.
-The full process is `node /tmp/sam-obligations-harness/verify-full.cjs --output /tmp/sam-obligations-5bfe-full`.
-Its report is updated on stage transitions; logs are preserved for publication.
+**59/59 full acceptance stages PASS**, 16:42:24.208–16:56:13.165 UTC.
+Includes 49 regression cases, 13 core suites, 43 isolated contract tests, actual
+source-callback/persistence SIGKILL, recovery, exhaustion, capture and restart tests.
+All 85 report artifacts rehashed. 101-file evidence manifest includes diagnostics,
+signed family/crash traces, public keys and external TCP-readiness harness patch.
+Evidence branch `evidence/unified-goal-family`, directory
+`docs/evidence/unified-goal-family/obligations-5bfe7b8` (publication commit 6fcffbe).
 
-Completed baseline: `080d9cd4104f7b149bfeab9b885eb1139a828aa3`, **59/59 PASS**,
-16:24:40.824–16:38:32.867 UTC, all 81 report artifacts rehashed. Published on
-`evidence/unified-goal-family` at `685e4c9`, directory
-`docs/evidence/unified-goal-family/hashed-fixture-080d9cd`.
-That result does NOT cover the new candidate above. Failed 9dea66 evidence remains.
+The family trace authenticates 64 events and 3 fixture-completed children; its
+`liveReasoningValidated` is false. The source-persistence crash trace authenticates
+8 events and correctly scores FAIL / AUTHENTICATED_INCOMPLETE_CAPTURE. Failed
+barrier/teardown diagnostics remain available; none were counted as passing proof.
+No test process or deliberate barrier is left running. Disposable diagnostic DB stopped.
 
-New candidate targeted checks passed: actual PostgreSQL completed-expired-child
-recovery, active-child exhaustion, zero tool/iteration/readback terminal failure and
-capture, concurrent late execution-set rejection, bidirectional operation accounting,
-actual SIGKILL after source callback before execution INSERT, persisted charge and
-refusal of complete capture, source-loader collection receipts, obligation carry and
-review accounting, TypeScript and isolated tests. Failed diagnostic runs are retained,
-including the multiline SQL barrier mistake and teardown overlap; none count as pass.
+Separate baseline `080d9cd4104f7b149bfeab9b885eb1139a828aa3` passed 59/59 earlier;
+its evidence is retained at `hashed-fixture-080d9cd`. Failed 9dea66 evidence remains.
+Neither baseline nor synthetic completion is represented as live task success.
 
-Architecture implementation remains incomplete: shared discovery/derive/specialist
-composition, conserved delegation ownership, authorized descendant evidence replay,
-and requested-scope fulfillment from collection receipts. See CONTRACT-DESIGN.md
-for the exact seam; no claim that frozen fixtures establish general-agent autonomy.
+Implemented: hashed fixture repair; carried goal obligations and review accounting;
+reviewed verified-source page receipts; terminal-child recovery and budget exhaustion;
+stable capture execution set; reverse successful-operation persistence accounting;
+signed family/crash artifact publication. No production registration or activation.
 
-No production access, paid calls, activation, deployment, merge or production
-permission changes. No current permission denial; remaining work is implementation.
+**General-agent delivery is still incomplete.** Required bounded redesign remains:
+shared discovery/derive/specialist composition; logical specialist identity separated
+from conserved enrolled-goal budget ownership; authorized descendant evidence replay;
+requested-scope fulfillment from collection receipts; model-visible obligation binding;
+benchmark oracles separated from runtime acceptance. See CONTRACT-DESIGN.md for
+precise code seams and must-pass nominal/adversarial tests. This is unfinished code
+work, not a request for another host, credentials or permission bypass.
 
-Commentary updates are emitted during work, but the parent has reported that thread
-reads omit them. This pushed checkpoint provides an independently readable reference.
+No production access, paid calls, deployment, merge or production permission changes.
+No current denied action or pending permission request. PR55's audited checkpoint
+remains separate; follow-up code and evidence are isolated branches.
