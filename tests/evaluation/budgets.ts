@@ -1,3 +1,4 @@
+import {scoreGoalFamilyCapture} from '../../apps/agents/src/evaluation/goalFamilyScore';
 import {sealGoalFamilyEvaluation} from '../../apps/agents/src/evaluation/goalFamilyCapture';
 import {startRuntimeService} from '../../apps/runtime/src/service';
 import {ingestEvent} from '../../apps/event-fabric/src/index';
@@ -24,7 +25,7 @@ import {sha256Hex} from '../../packages/shared/src/stableJson';
 import {ModelGateway} from '../../packages/model-gateway/src/gateway';
 import {fixtureEvaluationAdapter} from '../../packages/model-gateway/src/evaluationAdapter';
 import {sealEvaluationTrial,exportEvaluationTrace} from '../../apps/agents/src/evaluation/capture';
-import {scoreAuthenticatedEvaluation} from '../../apps/agents/src/evaluation/trace';
+import {scoreAuthenticatedEvaluation,verifyEvaluationTrace} from '../../apps/agents/src/evaluation/trace';
 import {writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 const task={task:'executive_planning',capability:'planning',dataClassification:'INTERNAL' as const,input:{objective:'Synthetic bounded objective'}};
@@ -251,6 +252,14 @@ async function parent(){
   const familyScore=scoreAuthenticatedEvaluation(familyTrace,familyKey.publicKey,familyTrace.payload.trial.spec.commit);
   assert.equal(familyScore.classification,'AUTHENTICATED_GOAL_FAMILY_FIXTURE');assert.equal(familyScore.liveReasoningValidated,false);
   assert.equal((familyScore as any).declaredCompletedGoals,3);
+  const checked=verifyEvaluationTrace(familyTrace,familyKey.publicKey);
+  const unlinked=structuredClone(checked);delete unlinked.events.at(-1).payload.sources[0].evidence.evaluationReservation;
+  assert.throws(()=>scoreGoalFamilyCapture(unlinked),/EXECUTION_RESERVATION_REQUIRED/);
+  const nonterminal=structuredClone(checked);nonterminal.events.at(-1).payload.goals[0].state='NEW';
+  assert.throws(()=>scoreGoalFamilyCapture(nonterminal),/GOAL_CAPTURE_INVALID/);
+  const uncited=structuredClone(checked);uncited.events.at(-1).payload.reports[0].decision.requirements[0].evidenceIds=[randomUUID()];
+  uncited.events.at(-1).payload.reports[0].report_hash=sha256Hex(uncited.events.at(-1).payload.reports[0].decision);
+  assert.throws(()=>scoreGoalFamilyCapture(uncited),/EVIDENCE_REVOKED/);
   const altered=structuredClone(familyTrace);altered.payload.events.at(-1).payload.root.state='COMPLETED';
   assert.throws(()=>scoreAuthenticatedEvaluation(altered,familyKey.publicKey,altered.payload.trial.spec.commit),/AUTHENTICATION_FAILED/);
   console.log('PASS actual service child reports seal/export/authenticate with coordinator NEW; no live-quality claim');

@@ -25,8 +25,10 @@ export function scoreGoalFamilyCapture(capture:any){
  for(const goal of snapshot.goals){
   const report=snapshot.reports.find((r:any)=>r.goal_id===goal.id&&r.plan_id===goal.currentPlanId);
   if(goal.state==='COMPLETED'&&report?.decision.status!=='complete'||report&&sha256Hex(report.decision)!==report.report_hash)throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
-  for(const finding of report?.decision.findings??[]){
-   const source=snapshot.sources.find((s:any)=>s.id===finding.executionId&&s.goal_id===goal.id);
+  if(!['COMPLETED','WAITING_EXTERNAL','FAILED','CANCELLED','BLOCKED'].includes(goal.state))throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
+  const references=new Set([...(report?.decision.findings??[]).map((f:any)=>f.executionId),...(report?.decision.requirements??[]).flatMap((r:any)=>r.evidenceIds)]);
+  for(const reference of references){
+   const source=snapshot.sources.find((s:any)=>s.id===reference&&s.goal_id===goal.id);
    if(!source||source.verification_result!=='VERIFIED'||source.execution_hash!==source.verified_hash)throw Error('EVALUATION_EVIDENCE_REVOKED');assertExecutionIntegrity(source);
   }
  }
