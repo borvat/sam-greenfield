@@ -1,3 +1,4 @@
+import {withGoalEvaluation,evaluationBundleHash} from '../../apps/production/src/goalEvaluationBundle';
 import {contentHash} from '../../apps/agents/src/evaluation/harness';
 import assert from 'node:assert/strict';
 import {randomUUID,generateKeyPairSync} from 'node:crypto';
@@ -24,6 +25,18 @@ async function worker(){
  const good=fixtureEvaluationAdapter('eval-a',async()=>{calls++;return reply();});
  const gateway=new ModelGateway({'eval-a':good});
  const run=async(name:string)=>{const t=await openEvaluationTrial(trials[name].id);return {t,call:()=>t.gateway(gateway,t.rootGoalId,'executive-bootstrap').invoke(task)};};
+ const genericBundle={capabilities:[],toolDefinitions:[],toolAdapters:[],modelAdapters:[good]};
+ const generic=async(name:string)=>{const t=await openEvaluationTrial(trials[name].id);return withGoalEvaluation(genericBundle,t,t.spec.commit);};
+ if(process.argv[2]==='goal-crash'){
+  const t=await openEvaluationTrial(trials['goal-crash'].id);
+  const hanging=fixtureEvaluationAdapter('eval-b',async()=>{console.log('TRIAL_ATTEMPT_RESERVED');return new Promise(()=>{});});
+  const b=withGoalEvaluation({...genericBundle,modelAdapters:[hanging]},t,t.spec.commit);
+  await b.modelGatewayForGoal!(trials['goal-crash'].goals[0]).invoke({...task,preferredProviders:['eval-b']});return;
+ }
+ if(process.argv[2]==='goal-recover'){
+  const t=await openEvaluationTrial(trials['goal-crash'].id);const b=withGoalEvaluation({...genericBundle,modelAdapters:[fixtureEvaluationAdapter('eval-b',async()=>{calls++;return reply();})]},t,t.spec.commit);await assert.rejects(()=>b.modelGatewayForGoal!(trials['goal-crash'].goals[0]).invoke({...task,preferredProviders:['eval-b']}),/BUDGET_EXHAUSTED/);
+  assert.equal(calls,0);console.log('PASS goal evaluation reopen cannot refund SIGKILL reservation');return;
+ }
  if(process.argv[2]==='admission'){await assert.rejects(()=>openEvaluationTrial(trials.scope.id),/MIGRATION_REQUIRED|FIXED_POLICY_REQUIRED/);console.log('PASS evaluation profile receipt/fence admission fails closed');return;}
  if(process.argv[2]==='crash'){
   const {t}=await run('crash');const hanging=fixtureEvaluationAdapter('eval-b',async()=>{console.log('TRIAL_ATTEMPT_RESERVED');return new Promise(()=>{});});
@@ -32,6 +45,25 @@ async function worker(){
  if(process.argv[2]==='recover'){
   const {t}=await run('crash');await assert.rejects(()=>t.gateway(new ModelGateway({'eval-b':fixtureEvaluationAdapter('eval-b',async()=>{calls++;return reply();})}),t.rootGoalId,'executive-bootstrap').invoke({...task,preferredProviders:['eval-b']}),/BUDGET_EXHAUSTED/);assert.equal(calls,0);console.log('PASS restart cannot reset uncertain bootstrap reservation');return;
  }
+ const gt=await openEvaluationTrial(trials['three-goals'].id);
+ const gb=withGoalEvaluation(genericBundle,gt,gt.spec.commit),goalIds=trials['three-goals'].goals;
+ assert.throws(()=>withGoalEvaluation(genericBundle,gt,'0'.repeat(40)),/COMPOSITION_DENIED/);
+ assert.throws(()=>withGoalEvaluation({...genericBundle,toolDefinitions:[{capabilityId:'different'} as any]},gt,gt.spec.commit),/COMPOSITION_DENIED/);
+ assert.throws(()=>gb.modelGatewayForGoal!(trials.model.goal),/NOT_ENROLLED/);
+ assert.throws(()=>gb.modelGatewayForGoal!(goalIds[0]).invoke({...task,boundedSynthetic:{} as any}),/OVERRIDE_DENIED/);
+ const ga=fixtureEvaluationAdapter('eval-a',async()=>{calls++;throw Error('fixture failure');});
+ const gfb=withGoalEvaluation({...genericBundle,modelAdapters:[ga,fixtureEvaluationAdapter('eval-b',async()=>{calls++;return reply();})]},gt,gt.spec.commit);
+ const beforeGoals=calls;await gfb.modelGatewayForGoal!(goalIds[0]).invoke(task);
+ for(let i=0;i<3;i++){for(let n=0;n<(i===0?6:8);n++)await gb.modelGatewayForGoal!(goalIds[i]).invoke(task);await assert.rejects(()=>gb.modelGatewayForGoal!(goalIds[i]).invoke(task),/BUDGET_EXHAUSTED/);}
+ assert.equal(calls-beforeGoals,24,'fallback plus retries share exactly 24 durable provider attempts');
+ const reopenedGoals=await generic('three-goals');
+ for(const id of goalIds)await assert.rejects(()=>reopenedGoals.modelGatewayForGoal!(id).invoke(task),/BUDGET_EXHAUSTED/);
+ assert.equal(calls-beforeGoals,24);
+ const used=(await pool.query('SELECT used,agent_used FROM evaluation_trials WHERE id=$1',[gt.id])).rows[0];
+ assert.equal(used.used.models,24);for(const id of goalIds)assert.equal(used.agent_used['goal.'+id].models,8);
+ for(const name of ['goal-tokens','goal-money']){const b=await generic(name);if(name==='goal-money')await b.modelGatewayForGoal!(trials[name].goals[0]).invoke(task);const before=calls;await assert.rejects(()=>b.modelGatewayForGoal!(trials[name].goals[0]).invoke(task),/BUDGET_EXHAUSTED/);assert.equal(calls,before);}
+ console.log('PASS three fixed goals / 24 attempts / per-goal 8 / fallback and retry charging / reopen / token and dollar denial');
+ calls=0;
  const cap=await run('model');await cap.call();await assert.rejects(cap.call,/BUDGET_EXHAUSTED/);assert.equal(calls,1);
  await pool.query("UPDATE goals SET state='REPLANNING',planning_attempts=0 WHERE id=$1",[cap.t.rootGoalId]);
  const reopened=await run('model');await assert.rejects(reopened.call,/BUDGET_EXHAUSTED/);assert.equal(calls,1);
@@ -111,6 +143,14 @@ async function parent(){
    const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(['agent-time','admission-race'].includes(name)?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:goal,spec}),goal,entity:tenant};
   }
+  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money']){
+   const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Synthetic evaluation root','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
+   const goals:string[]=[];for(let i=0;i<3;i++)goals.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'NEW','GREEN') RETURNING id",[randomUUID(),entity,root,['Compare supplied periods','Compare promises and deliveries','Inventory duplicate records'][i]])).rows[0].id);
+   const l={...limits,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1};
+   const per={...l,models:Math.min(l.models,8)};
+   const spec:TrialSpec={version:1,mode:'fixture',syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:entity,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...l,models:0},...Object.fromEntries(goals.map(id=>['goal.'+id,per]))},prices,capabilityHash:evaluationBundleHash({capabilities:[],toolDefinitions:[],toolAdapters:[]})};
+   trials[name]={id:await createEvaluationTrial(c,{rootGoalId:root,spec}),goal:root,entity,goals};
+  }
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='fixture-evaluation-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIALS:JSON.stringify(trials)};
   const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:25000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
@@ -119,6 +159,10 @@ async function parent(){
   const started=Date.now();while(!output.includes('TRIAL_ATTEMPT_RESERVED')&&Date.now()-started<8000)await new Promise(r=>setTimeout(r,25));
   assert.match(output,/TRIAL_ATTEMPT_RESERVED/);const closed=new Promise(r=>child.once('close',r));child.kill('SIGKILL');await closed;
   assert.equal((await c.query('SELECT used->>\'models\' n FROM evaluation_trials WHERE id=$1',[trials.crash.id])).rows[0].n,'1');run('recover');
+  const goalChild=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','goal-crash'],{env,stdio:['ignore','pipe','pipe']});let goalOutput='';goalChild.stdout.on('data',x=>goalOutput+=x);goalChild.stderr.on('data',x=>goalOutput+=x);
+  const goalStarted=Date.now();while(!goalOutput.includes('TRIAL_ATTEMPT_RESERVED')&&Date.now()-goalStarted<8000)await new Promise(r=>setTimeout(r,25));
+  assert.match(goalOutput,/TRIAL_ATTEMPT_RESERVED/);const goalClosed=new Promise(r=>goalChild.once('close',r));goalChild.kill('SIGKILL');await goalClosed;run('goal-recover');
+  assert.equal((await c.query("SELECT used->>'models' n FROM evaluation_trials WHERE id=$1",[trials['goal-crash'].id])).rows[0].n,'1');
   await assert.rejects(()=>sealEvaluationTrial(c,trials.crash.id),/UNCERTAIN_ATTEMPTS_REQUIRE_REVIEW/);
   const keys=generateKeyPairSync('ed25519'),incomplete=JSON.parse(JSON.stringify(await exportEvaluationTrace(c,trials.crash.id,keys.privateKey,{incomplete:true})));
   const partial=scoreAuthenticatedEvaluation(incomplete,keys.publicKey,incomplete.payload.trial.spec.commit);assert.equal(partial.status,'FAIL');assert.equal(partial.traceAuthenticated,true);assert.equal(partial.classification,'AUTHENTICATED_INCOMPLETE_CAPTURE');

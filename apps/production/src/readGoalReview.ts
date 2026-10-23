@@ -178,7 +178,8 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
        AND action='RUNTIME_RECOVERY_REQUESTED' ORDER BY timestamp,id`,[goal.id])).rows
     :[];
   const descriptors=(process.env.SAM_INTEGRATION_ENABLED==="1"?await scopedCatalog(client,bundle.catalog,goal.id):bundle.catalog).planningDescriptors().filter(d=>d.sideEffect===false&&d.authorityClass==="GREEN"&&(!d.companyScopes||d.companyScopes.includes(goal.company_scope)));
-  const gateway=new ModelGateway(Object.fromEntries((bundle.raw.modelAdapters??[]).map(a=>[a.providerId,a])));
+  if(invoke&&bundle.raw.modelGatewayForGoal)throw Error("EVALUATION_BOUNDARY_OVERRIDE_DENIED");
+  const gateway=bundle.raw.modelGatewayForGoal?.(goal.id)??new ModelGateway(Object.fromEntries((bundle.raw.modelAdapters??[]).map(a=>[a.providerId,a])));
   const perResearchCallCeiling=researchPlan?(researchPlan.maxCostUsd*0.6)/(researchPlan.maxIterations*3):undefined;
   const runtimeReview={attempts:reviewAttempt,maxAttempts:2,callsUsed,retryable:reviewAttempt<2,phase:'reserved',elapsedMs:0};
   // Append-only reservations respect the existing insert-only report permissions.

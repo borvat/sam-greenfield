@@ -41,6 +41,8 @@ export interface ProductionBundle{
   planningMaxCostUsd?:number;
   workerLeaseTtlSeconds?:number;
   plannerGateway?:()=>ModelGateway;
+  /** Explicit isolated evaluation composition; shared planning/review budget. */
+  modelGatewayForGoal?:(goalId:string)=>ModelGateway;
   deferVerification?:boolean;
   replanPolicy?:{recoverableEvidenceReasons:string[]};
   verifiedLearning?:{

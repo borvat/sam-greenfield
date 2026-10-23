@@ -105,7 +105,7 @@ async function main(){
     return result;
    }};
   }}:profileDb;
-  const reviewed=await reviewNextReadGoal(bundle,reviewDb,async prompt=>{
+  const reviewDecision=async (prompt:any)=>{
    reviewCalls++;
    if(prompt.proposedReport){assert(prompt.proposedReport.findings[0].derivedCitation.inputs.length);return {accepted:true,missing:[]};}
    const source=prompt.verifiedObservations.find((s:any)=>s.id===recorded.executionId);
@@ -115,7 +115,11 @@ async function main(){
    const rawObservation=prompt.verifiedObservations.find((s:any)=>s.id===raw.executionId);
    const extra=input.rawFinding?[{text:'Raw fixture content hash label',executionId:raw.executionId,quoteLine:rawObservation.lines.findIndex((l:string)=>l.includes('"hash": "same"'))}]:[];
    return {status:'complete',summary:'Cited deterministic result with explicit coverage',requirements:[{requirement:input.objective,fulfilled:true,evidenceIds:[recorded.executionId]}],findings:[{text:'Derived '+input.field+' = '+input.value,executionId:recorded.executionId,quoteLine,derivedClaim:{row:0,field:input.field,value:input.value}},...extra],limitations:[],steps:[]};
-  });
+  };
+  let routed=0;
+  if(input.rawFinding)bundle.raw.modelGatewayForGoal=goal=>{assert.equal(goal,id);return {invoke:async(task:any)=>{routed++;return {result:{output:await reviewDecision(task.input)}};}} as any;};
+  const reviewed=await reviewNextReadGoal(bundle,reviewDb,input.rawFinding?undefined:reviewDecision);
+  if(input.rawFinding)assert(routed>0,'review must use the goal-scoped gateway');
   assert.equal(reviewed.status,input.revoke?'blocked':input.expected);
   if(input.oversized)assert.equal(reviewCalls,1,'projection failure must not invoke another model call');
   if(input.race){

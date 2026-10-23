@@ -1,3 +1,4 @@
+import {googleReadEvidence} from '../../apps/production/src/samGoogleEvidence';
 import assert from 'node:assert/strict';
 import {pool} from '../../packages/db/src/client';
 import {reviewFixture} from './reviewFixture';
@@ -23,6 +24,15 @@ async function main(){
   await recordIndependentVerificationAtomic({executionId:ex.executionId,verifier:'independent-fixture',contractId:vc,independentEvidence:{readback:true},result:'VERIFIED'});
   return deriveArtifact(pool,{goalId:id,legalEntityId:f.entity},{sources:{s:{executionId:ex.executionId,contractId:contract.id}},plan:{version:1,source:'s',operations:[]}},REVIEWED_OUTPUT_CONTRACTS);
  }
+ for(const name of ['get_drive_file_download_url','get_gmail_message_content'] as const){
+  const raw={content:[{type:'text',text:'Download URL: https://sam-google-workspace-mcp.onrender.com/attachments/11111111-1111-4111-8111-111111111111'}]};
+  const checked=await googleReadEvidence(name,raw,async()=>({sha256:'a'.repeat(64),bytes:30000,mimeType:'text/plain',text:'omitted',truncated:true}));
+  const derived=await extract('google_mcp_'+name,checked.result);
+  assert.equal(derived.output.dataset.rows[0].values.sha256,'a'.repeat(64));assert.equal(derived.output.dataset.rows[0].values.bytes,'30000');
+  assert(!Object.hasOwn(derived.output.dataset.columns,'text'));assert.equal(derived.output.dataset.coverage,'unknown');
+  await assert.rejects(extract('google_mcp_'+name,{content:[{type:'text',text:'opaque response without download artifact'}]}),/EVIDENCE_RECORDS_INVALID/);
+ }
+ assert(!REVIEWED_OUTPUT_CONTRACTS.some(c=>c.capabilityId==='google_mcp_search_drive_files'),'opaque text search has no reviewed record schema');
  for(const token of [null,'next-page-X']){
   const adapter=new DriveSearchAdapter({search:async()=>({files:[{id:'file-'+String(token),name:'Supplier document',mimeType:'text/plain',modifiedTime:'2026-10-20T12:00:00Z'}],nextPageToken:token})} as any);
   const output=await adapter.execute({capabilityId:'drive_search',params:{limit:5},idempotencyKey:'fixture'});

@@ -8,6 +8,7 @@ No new grants, policies, triggers, credentials, provider or model configuration.
 
 | Existing capability | Checked-in response path | Guarantees and unknowns |
 | --- | --- | --- |
+| google_mcp_get_drive_file_download_url / google_mcp_get_gmail_message_content | Locally produced samArtifacts | Full downloaded-byte hash/count/MIME only; no original document identity, business fields or collection coverage |
 | bol_get_order | Both legacy adapter and default bolMcpBundle wrap orderItems under data | Required item identity; safe integer quantities only; no declared price, currency or VAT; single order, period and population coverage unknown |
 | bol_sales_stock_report | buildBolAnalysis report.products | Integer quantities/stock; source period, retailer identity and limitations retained; sold products are not all catalog items; no money or returns proof |
 | drive_search / drive_get_metadata | Legacy Drive adapters files / file | Required ID and optional metadata; no content hashes; pagination/collection coverage unknown |
@@ -20,7 +21,8 @@ IDs or used to activate an alternative integration. No stable structured documen
 or message record schema is declared by that wrapper, so those mappings remain
 unavailable there. googleReadEvidence retains verified artifact hashes/text, but
 that does not establish document identity, promise/delivery extraction, or complete
-pagination. A reviewed versioned parser/extraction contract with representative
+pagination. The locally produced samArtifacts metadata now has a narrow reviewed mapping;
+opaque search/content records still need a reviewed versioned parser/extraction contract with representative
 checked-in response fixtures is still needed. Unknown schemas remain explicit.
 
 The bol wrapper's order response is not a reviewed monetary schema. This does not
@@ -70,3 +72,9 @@ means removing the explicit capability composition/availability binding through 
 normal reviewed release path, retaining immutable reports and executions; no data
 erasure, schema rollback or budget reset. Parent coordinates any approved release
 and live run. This child does neither.
+
+The previously missing evaluation-wide composition now exists as disabled fixture
+code, reusing existing accounting. The earlier proposed US$3/65,536-input-token
+limits are not implemented: existing lower ceilings remain binding. See
+[goal evaluation gate](goal-evaluation-gate.md) for exact limits, tests and the
+separate evaluation-profile/live-release boundaries.
