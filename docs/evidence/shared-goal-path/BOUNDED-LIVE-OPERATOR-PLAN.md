@@ -12,6 +12,12 @@ Prepared 2026-10-23. **Proposal only: no activation, signature, production acces
 - `f8b570ac` cannot make live calls: `LIVE_EVALUATION_ENABLED=false`. Activation requires a separately reviewed minimal release commit R. Pin R, its exact manifest and applicable full acceptance before deployment; do not describe f8 acceptance as testing R. The signed spec.commit and SAM_EVALUATION_COMMIT must equal actual RENDER_GIT_COMMIT=R.
 - Compute capabilityHash using `evaluationBundleHash(frozenSharedGoalEvaluationBundle(actualSyntheticEntityId))` from R. Company scopes affect the hash, so it cannot be truthfully prefilled without the verified entity ID. Do not use fixture UUIDs as production identifiers.
 
+## Independent authentication gate
+
+Parent-relayed independent review of application `f8b570ac` and evidence `28d7e2e` passes: **96/96 package hashes, 88/88 report artifacts, eight signatures and 757 events**, exact commit/tree, the 764-path source manifest and implementation digest, and reservation reconciliation. The shared capture contains three owners, ten executions, twenty model attempts and eighteen tool/readback charges. Deliberate incomplete captures remain incomplete. No authentication blocker was found.
+
+Scope limit: that reviewer did **not** independently rehash all 764 source-file contents or rerun PostgreSQL. The earlier source-content rehash and 60-stage execution are implementation-side evidence, not additional independent execution. Authentication verifies the recorded fixture evidence; it does not prove autonomous model quality, production readiness, or grant permission to spend. **Fixture signatures and fixture public keys are not owner authorization** and must never be reused as the live approval trust anchor.
+
 ## Three natural-language inputs
 
 Submit these exact goals once, with ordinary `sam.read_report.v1` completion contracts, GREEN authority and the verified synthetic company. Supply no tool names, schema paths, operation plans, expected values or fixture-decision callbacks.
