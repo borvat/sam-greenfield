@@ -127,3 +127,61 @@ transports, not only helper calls or disabled-import tests:
 
 These complement the goal-scope/collection/transform/delegation requirements above.
 No green component total can substitute for the combined gates.
+
+## Concrete delegation seam identified at 5bfe7b8 (not implemented)
+
+The remaining shared graph cannot safely be implemented by concatenating bundles:
+
+- `intelligence/engine.ts` reserves under `specialist_sessions.agent_id` and creates
+  goals linked by `specialist_delegations`; its gateway uses the specialist ID.
+- `withGoalEvaluation` authorizes exactly three `goal.<uuid>` principals and charges
+  those immutable accounts. Adding specialist IDs would create a different budget
+  contract, not merely expose a tool.
+- `transformVerifiedSources` requires every raw execution to belong to the exact
+  goal. Specialist child records cannot be silently read as parent records.
+- Legacy intelligence composition hashes catalog/tool definitions differently,
+  requires a root specialist report and has its own capture/learning semantics.
+  The ordinary goal-family path uses goal_read_reviews and leaves its coordinator NEW.
+
+The coherent adaptation must keep logical specialist identity distinct from its
+budget owner. Resolve that owner from an immutable, bounded delegation chain rooted
+in one of the three enrolled goals, not from model parameters. Each delegation
+reserves once before inserting the child, shares remaining parent/trial allowance,
+and is included in the same capture. No new allowance or late agent enrollment.
+
+Verified descendant evidence needs a distinct scoped loader contract, not removal
+of the same-goal check. Require current delegation receipts, same tenant, bounded
+acyclic ancestry, active parent plan identity, the exact authorized assigned read,
+current verification and hash, and original execution/goal IDs in every citation.
+Revoke replay if any delegation, plan or raw receipt ceases to be current. Ordinary
+same-goal callers retain their current stricter contract. Derived lineage locks must
+include authorized descendant executions in deterministic order through report commit.
+
+The shared entry builder must bind the above ownership protocol, obligations schema,
+source/extraction schemas, collection semantics, provider wire profile and report/
+capture versions in one manifest. It must install discovery, derived operations and
+specialist advancers together; fixture substitution replaces transport bytes only.
+A separate interpretation claim may never masquerade as a raw SOURCE_FACT. Existing
+learning policies/grants remain unchanged.
+
+Must-pass integrated tests before this graph is called a candidate:
+
+1. Three unfamiliar objectives discover changed source IDs, collect multiple pages,
+   derive reproducible outputs and optionally delegate reasoning on the same runtime.
+   No tool names/plans supplied in goal text and no hidden expected-value solver.
+2. Two logical specialists share one enrolled goal allowance; zero delegation,
+   model, tool and readback budgets deny callbacks before dispatch. Restart cannot
+   create fresh allowances; an unrelated same-company family remains untouched.
+3. Parent transforms can use only explicitly delegated verified descendants;
+   siblings, other trials, reparented goals, changed assignments and revoked source
+   receipts fail replay and final commit. Preserve raw provenance rather than copy it.
+4. Actual child reports feed the single ordinary objective review/capture route;
+   coordinator stays NEW. Raw observations, deterministic results and interpretations
+   stay distinct. Nominal sufficient-evidence variants must complete; missing-unit,
+   VAT, period and unavailable-page variants must remain explicitly incomplete.
+
+This is a bounded redesign of composition ownership and provenance contracts. It
+reuses the queue, fencing, verifiers, exact arithmetic and ledger. No wholesale
+replacement, permission bypass or new infrastructure is justified by this finding.
+The offline redesign itself is authorized code work; production registration, scoped
+profile admission and live spending remain separate operator decisions.
