@@ -188,7 +188,10 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const round=prior?.round??Math.max(existing.rows.length,priorRounds)+1;
   const evidenceLimitations=[...new Set(projections.flatMap(p=>[...p.limitations,...p.omissions]))];
   const projectionBlocked=projections.some(p=>p.limitations.some(l=>l.startsWith('REVIEW_EVIDENCE_PROJECTION_BLOCKED')));
-  let monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})));
+  // Input guidance reflects already replayed evidence. Completion below still
+  // requires the model's exact validated row/field citations and bound requirements.
+  const availableMoney=obligations?obligations.deliverables.flatMap(bound=>Array.from(derived.values()).flatMap(artifact=>derivedMonetaryEvidence(artifact.output.dataset,bound,bound.fields))):[];
+  let monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})),availableMoney);
   const invoiceNotice=sources.some(s=>/invoice|factuur/i.test(s.capabilityId))?
    ['Invoice/settlement periods are source-specific; an invoice is not evidence of daily sales revenue. Compare its period to the requested sales period.']:[];
   runtimePhase='objective_contract';

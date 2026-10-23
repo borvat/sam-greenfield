@@ -41,7 +41,7 @@ async function main(){
  await pool.query(`INSERT INTO verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template) VALUES($1,$2,'db_query',$3,$4)`,[DERIVE_CAPABILITY,DERIVED_VERIFICATION_CONTRACT.description,DERIVED_VERIFICATION_CONTRACT.requiredEvidenceFields,DERIVED_VERIFICATION_CONTRACT.independentQueryTemplate]);
  assert(!f.bundle.catalog.planningDescriptors().some(d=>d.capabilityId===DERIVE_CAPABILITY),'default composition stays disabled');
  
- async function scenario(input:{objective:string;columns:Record<string,Column>;records:any[];operations:Operation[];field:string;value:string;expected:'complete'|'blocked';coverage?:string;revoke?:boolean;race?:'insert'|'update';oversized?:boolean;rawFinding?:boolean;boundMoney?:boolean;period?:unknown}){
+ async function scenario(input:{objective:string;columns:Record<string,Column>;records:any[];operations:Operation[];field:string;value:string;expected:'complete'|'blocked';coverage?:string;revoke?:boolean;race?:'insert'|'update';oversized?:boolean;rawFinding?:boolean;boundMoney?:boolean;omitMoneyCitation?:boolean;period?:unknown}){
   const contract:OutputContract={id:'fixture.records.v1',capabilityId:'review_echo',description:'Reviewed synthetic record fields only',extraction:{version:'1',...(input.boundMoney?{collection:{cursorParameter:'cursor',nextCursorPath:['next'],identityPath:['id']},periodPath:['period']}:{}),...(input.oversized?{sourceLimitations:['x'.repeat(9000)]}:{}),columns:input.columns,rowsPath:['records'],coveragePath:['coverage'],timeZonePath:['timeZone'],limitationsPath:['limitations']}};
   const bundle=validateProductionBundle(withVerifiedEvidence(f.bundle.raw,[contract]));
   assert.equal(bundle.catalog.get('review_echo').output?.extractionContracts?.[0].id,contract.id);
@@ -110,13 +110,15 @@ async function main(){
   const reviewDecision=async (prompt:any)=>{
    reviewCalls++;
    if(prompt.proposedReport){assert(prompt.proposedReport.findings[0].derivedCitation.inputs.length);return {accepted:true,missing:[]};}
+   if(input.boundMoney)assert.equal(prompt.evidenceLimitations.some((l:string)=>l.startsWith('REVIEW_MONETARY_COVERAGE_UNPROVEN')),input.expected!=='complete'&&!input.omitMoneyCitation,'review input must reflect available replayed monetary evidence, not only preassembled reports');
    const source=prompt.verifiedObservations.find((s:any)=>s.id===recorded.executionId);
    assert(source.derivedEvidence);assert(!source.derivedArtifact,'internal artifact is not duplicated into model prompt');
-   const quoteLine=source.lines.findIndex((line:string)=>line===derivedCellQuote(artifact,0,input.field));
+   const citedField=input.omitMoneyCitation?'batch':input.field,citedValue=input.omitMoneyCitation?'day':input.value;
+   const quoteLine=source.lines.findIndex((line:string)=>line===derivedCellQuote(artifact,0,citedField));
    assert(source.citableLines.includes(quoteLine));
    const rawObservation=prompt.verifiedObservations.find((s:any)=>s.id===raw.executionId);
    const extra=input.rawFinding?[{text:'Raw fixture content hash label',executionId:raw.executionId,quoteLine:rawObservation.lines.findIndex((l:string)=>l.includes('"hash": "same"'))}]:[];
-   return {status:'complete',summary:'Cited deterministic result with explicit coverage',requirements:[{...(input.boundMoney?{obligationId:'money'}:{}),requirement:input.objective,fulfilled:true,evidenceIds:[recorded.executionId]}],findings:[{text:'Derived '+input.field+' = '+input.value,executionId:recorded.executionId,quoteLine,derivedClaim:{row:0,field:input.field,value:input.value}},...extra],limitations:[],steps:[]};
+   return {status:'complete',summary:'Cited deterministic result with explicit coverage',requirements:[{...(input.boundMoney?{obligationId:'money'}:{}),requirement:input.objective,fulfilled:true,evidenceIds:[recorded.executionId]}],findings:[{text:'Derived '+citedField+' = '+citedValue,executionId:recorded.executionId,quoteLine,derivedClaim:{row:0,field:citedField,value:citedValue}},...extra],limitations:[],steps:[]};
   };
   let routed=0;
   if(input.rawFinding)bundle.raw.modelGatewayForGoal=goal=>{assert.equal(goal,id);return {invoke:async(task:any)=>{routed++;return {result:{output:await reviewDecision(task.input)}};}} as any;};
@@ -139,8 +141,8 @@ async function main(){
 
   return {id,recorded,artifact,scope,request,contract};
  }
- for(const variant of ['complete','currency','vat','period','settlement','unit-price'] as const){
-  await scenario({objective:'Report sales revenue in EUR with VAT basis for 2026-10-22.',boundMoney:true,
+ for(const variant of ['complete','currency','vat','period','settlement','unit-price','uncited'] as const){
+  await scenario({objective:'Report sales revenue in EUR with VAT basis for 2026-10-22.',boundMoney:true,omitMoneyCitation:variant==='uncited',
    columns:{id:{kind:'text'},batch:{kind:'text'},amount:{kind:'decimal',unit:variant==='currency'?'UNKNOWN':'EUR',vat:variant==='vat'?'UNKNOWN':'net',monetaryMeaning:variant==='settlement'?'settlement':variant==='unit-price'?'unit-price':'customer-charge'}},
    records:[{id:'item-a',batch:'day',amount:'0.10'},{id:'item-b',batch:'day',amount:'0.20'}],operations:variant==='currency'?[{op:'select',fields:{total:'amount',id:'id'}}]:[{op:'group',keys:['batch'],aggregates:[{as:'total',field:'amount',fn:'sum'}]}],field:'total',value:variant==='currency'?'0.10':'0.3',
    period:variant==='period'?{startDate:'2026-09-01',endDate:'2026-09-30'}:undefined,expected:variant==='complete'?'complete':'blocked'});
