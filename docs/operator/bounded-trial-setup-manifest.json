@@ -1,0 +1,102 @@
+{
+  "applicationCommit": "cd5b76aa73dabdf9b64e6a63a4392657cdbb917a",
+  "purpose": "PROPOSAL_ONLY_NOT_APPLIED",
+  "orderedSql": [
+    {
+      "path": "packages/db/migrations/00001_initial_org_legal_entities.sql",
+      "sha256": "4b01452c74004121424fe145c3e24cf0fe1f3d2f3b98ff5390bdfa7ad5826736"
+    },
+    {
+      "path": "packages/db/migrations/00002_audit_framework.sql",
+      "sha256": "1532b32e2a3ca7aaf5fa4ac93aa4516837441ebbe8b55d80f56bd6f5a9211325"
+    },
+    {
+      "path": "packages/db/migrations/00003_event_fabric.sql",
+      "sha256": "d942ee36640bdd3629c788306e952c77ae9a855e3c4415fcc433bc36246f3b75"
+    },
+    {
+      "path": "packages/db/migrations/00004_outbox_and_side_effect.sql",
+      "sha256": "06888f2a03e31f6ea82e997501c6b56aa75491f2b5b2e84db0d10f63de3cf597"
+    },
+    {
+      "path": "packages/db/migrations/00005_world_facts_memory.sql",
+      "sha256": "b9bcb63c289fdae9f9e094cfa113783590cb5ff4d2412a3a64b6d6c163f4c348"
+    },
+    {
+      "path": "packages/db/migrations/00006_policy_approvals_verification.sql",
+      "sha256": "1b09604a3363455ae366e4b49caa48eefc6a45001764d58c87c38fea9e629073"
+    },
+    {
+      "path": "packages/db/migrations/00007_goals_plans_financial.sql",
+      "sha256": "4d60577ef6b47dae4267e07d15472cfa0e8b84c78fb0cc4b2564de44bb4b8191"
+    },
+    {
+      "path": "packages/db/migrations/00008_rls_tenant_isolation_policies.sql",
+      "sha256": "c41bc43f7501ee91ce18381270180400ad9c7bacaad24ee2109dc4222432b40a"
+    },
+    {
+      "path": "packages/db/migrations/00009_fix_rls_fail_closed.sql",
+      "sha256": "255e3fa1fe2cbfb190fac28718c6e8296b2b999479eebd0097cf39062cb25289"
+    },
+    {
+      "path": "packages/db/migrations/00010_fix_global_business_id_sequence.sql",
+      "sha256": "001630b5347f1fdf07a0cc662920b7c240428192c90c2ec49763a7d3acee17da"
+    },
+    {
+      "path": "packages/db/migrations/00012_core_reliability.sql",
+      "sha256": "78205ef98aa952f3e7a98cdc436406d86beb0aebb8293538d0352a60cbdb8a37"
+    },
+    {
+      "path": "packages/db/migrations/00013_operational_tenant_policies.sql",
+      "sha256": "18586d04848985d233d7c6c3e1f4a595968a8eea104759785d8b75ed19b5d0e5"
+    },
+    {
+      "path": "packages/db/integration-migrations/00011_mcp_internal_oauth.sql",
+      "sha256": "9bceae24618447455ca05351d401b94d529f6c18559cb91ad328be043618ec92"
+    },
+    {
+      "path": "packages/db/integration-migrations/00099_sam_google_oauth.sql",
+      "sha256": "e8890c451c732238f82c8729d47c6a250d1fbe2b986192afb2f6743d07050a76"
+    },
+    {
+      "path": "packages/db/integration-migrations/00100_sam_google_oauth_runtime.sql",
+      "sha256": "ffcfc08b3d16972d6aa1a7a8834029d4054de497d4a0d3f0e1767b1d273aa210"
+    },
+    {
+      "path": "packages/db/integration-migrations/00101_goal_read_reviews.sql",
+      "sha256": "a118d796178147db17fa4839b20863dbd2191e41e951657571fc4c03cd3b008d"
+    },
+    {
+      "path": "packages/db/integration-migrations/00102_scoped_knowledge.sql",
+      "sha256": "701cc4bc6afbe8622d1f0e67df80128d6a56b5867abbaca4060289afb1c3138a"
+    },
+    {
+      "path": "packages/db/integration-migrations/00103_research_mcp_verification.sql",
+      "sha256": "d1bdaf8386d1aba5de117f2a06d59e62be415d0f3a9c33faaf4b8e1f54b45597"
+    },
+    {
+      "path": "packages/db/integration-migrations/00104_perception_action.sql",
+      "sha256": "442c6ac219317e7b6b7fbb6297fd03c8aa0e8f2887ca3e3050fc6e25bed8dc88"
+    },
+    {
+      "path": "packages/db/integration-migrations/00105_owner_notifications.sql",
+      "sha256": "ac9e7661be5889149b5fabd05f79ac09d085418fce79fc8f63f0151c1ef1c122"
+    },
+    {
+      "path": "packages/db/specialist-migrations/00106_specialist_intelligence.sql",
+      "sha256": "c6c054c2edfbd3860251496d1ec4c356b36874848b40cdd13f97d1c267cb1951"
+    },
+    {
+      "path": "packages/db/specialist-migrations/00107_learning_provenance.sql",
+      "sha256": "a0175f47c6188be789ab0595cbbbc03418be12161ba36a6500761f2f60c000d4"
+    },
+    {
+      "path": "packages/db/evaluation-migrations/00108_evaluation_trials.sql",
+      "sha256": "e78ec9208ec375e4147535027662ceff3a0106d954fa42e603282049f4da39e9"
+    },
+    {
+      "path": "packages/db/shared-goal-profile/001_shared_coordinator.sql",
+      "sha256": "3bf9daf70d6c068035e1da27731953845f2521eaf1acd64a9ae7798d81577bbd"
+    }
+  ]
+}
