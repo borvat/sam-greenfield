@@ -1,0 +1,25 @@
+✖ actual launcher with simulated Render: none (159.989957ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 549.899608
+
+✖ failing tests:
+
+test at tests/isolated/render_transport.ts:2:9622
+✖ actual launcher with simulated Render: none (159.989957ms)
+  Error: RENDER_GROUP_SHAPE_INVALID
+      at fail (/tmp/sam-render-transport/apps/agents/src/evaluation/renderTransport.ts:29:40)
+      at groups (/tmp/sam-render-transport/apps/agents/src/evaluation/renderTransport.ts:89:199)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async config (/tmp/sam-render-transport/apps/agents/src/evaluation/renderTransport.ts:95:236)
+      at async <anonymous> (/tmp/sam-render-transport/apps/agents/src/evaluation/renderTransport.ts:150:104)
+      at async exclusive (/tmp/sam-render-transport/apps/agents/src/evaluation/renderTransport.ts:145:197)
+      at async bounded (/tmp/sam-render-transport/apps/agents/src/evaluation/operatorLaunch.ts:53:13)
+      at async launch (/tmp/sam-render-transport/apps/agents/src/evaluation/operatorLaunch.ts:87:2)
+      at async TestContext.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:74:148)
+      at async Test.run (node:internal/test_runner/test:1389:7)

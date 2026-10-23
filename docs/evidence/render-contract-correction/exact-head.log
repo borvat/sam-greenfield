@@ -1,0 +1,150 @@
+v22.23.4
+TAP version 13
+# {"scenario":"none","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":22}
+# Subtest: actual launcher with simulated Render: none
+ok 1 - actual launcher with simulated Render: none
+  ---
+  duration_ms: 317.116773
+  type: 'test'
+  ...
+# {"scenario":"file-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":5}
+# Subtest: actual launcher with simulated Render: file-denial
+ok 2 - actual launcher with simulated Render: file-denial
+  ---
+  duration_ms: 149.494743
+  type: 'test'
+  ...
+# {"scenario":"file-loss","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":6}
+# Subtest: actual launcher with simulated Render: file-loss
+ok 3 - actual launcher with simulated Render: file-loss
+  ---
+  duration_ms: 157.066831
+  type: 'test'
+  ...
+# {"scenario":"deploy-loss","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":20}
+# Subtest: actual launcher with simulated Render: deploy-loss
+ok 4 - actual launcher with simulated Render: deploy-loss
+  ---
+  duration_ms: 229.901519
+  type: 'test'
+  ...
+# {"scenario":"restore-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":23}
+# Subtest: actual launcher with simulated Render: restore-denial
+ok 5 - actual launcher with simulated Render: restore-denial
+  ---
+  duration_ms: 280.975918
+  type: 'test'
+  ...
+# {"scenario":"suspended-deploy-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":19}
+# Subtest: actual launcher with simulated Render: suspended-deploy-denial
+ok 6 - actual launcher with simulated Render: suspended-deploy-denial
+  ---
+  duration_ms: 194.664228
+  type: 'test'
+  ...
+# {"scenario":"deploy-queued","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":22}
+# Subtest: actual launcher with simulated Render: deploy-queued
+ok 7 - actual launcher with simulated Render: deploy-queued
+  ---
+  duration_ms: 225.707811
+  type: 'test'
+  ...
+# Subtest: unknown delayed write blocks restoration until authoritative readback; no blind retry
+ok 8 - unknown delayed write blocks restoration until authoritative readback; no blind retry
+  ---
+  duration_ms: 234.113355
+  type: 'test'
+  ...
+# Subtest: actual SIGKILL after remote deploy application resumes recovery without duplicate deploy
+ok 9 - actual SIGKILL after remote deploy application resumes recovery without duplicate deploy
+  ---
+  duration_ms: 520.732479
+  type: 'test'
+  ...
+# Subtest: cancellation reaches HTTP transport; applied request is reconciled, not repeated
+ok 10 - cancellation reaches HTTP transport; applied request is reconciled, not repeated
+  ---
+  duration_ms: 131.303302
+  type: 'test'
+  ...
+# Subtest: configuration drift is preserved and blocks restoration, then exact verification catches later drift
+ok 11 - configuration drift is preserved and blocks restoration, then exact verification catches later drift
+  ---
+  duration_ms: 149.903711
+  type: 'test'
+  ...
+# Subtest: service allowlist and simulation origin reject before credential access
+ok 12 - service allowlist and simulation origin reject before credential access
+  ---
+  duration_ms: 0.759516
+  type: 'test'
+  ...
+# Subtest: redirects never forward authentication and leave the unknown write pending
+ok 13 - redirects never forward authentication and leave the unknown write pending
+  ---
+  duration_ms: 116.603752
+  type: 'test'
+  ...
+# Subtest: ambiguous deployment receipt never chooses a candidate or repeats POST
+ok 14 - ambiguous deployment receipt never chooses a candidate or repeats POST
+  ---
+  duration_ms: 116.774309
+  type: 'test'
+  ...
+# Subtest: private snapshot lock excludes a second operator and scope cannot change on recovery
+ok 15 - private snapshot lock excludes a second operator and scope cannot change on recovery
+  ---
+  duration_ms: 133.279517
+  type: 'test'
+  ...
+# Subtest: linked environment group drift blocks writes without modifying the group
+ok 16 - linked environment group drift blocks writes without modifying the group
+  ---
+  duration_ms: 58.452475
+  type: 'test'
+  ...
+# Subtest: restoration rolls back the exact original deploy even when commit hashes match
+ok 17 - restoration rolls back the exact original deploy even when commit hashes match
+  ---
+  duration_ms: 150.706713
+  type: 'test'
+  ...
+# Subtest: official bare envGroupMeta succeeds; required fields are enforced before mutation
+ok 18 - official bare envGroupMeta succeeds; required fields are enforced before mutation
+  ---
+  duration_ms: 66.474802
+  type: 'test'
+  ...
+# Subtest: bare full group page fails completeness without inventing a cursor from an ID
+ok 19 - bare full group page fails completeness without inventing a cursor from an ID
+  ---
+  duration_ms: 32.818044
+  type: 'test'
+  ...
+# Subtest: documented generic cursor envelope is validated and follows the opaque cursor
+ok 20 - documented generic cursor envelope is validated and follows the opaque cursor
+  ---
+  duration_ms: 41.624352
+  type: 'test'
+  ...
+# Subtest: mixed, duplicated and cursorless envelope responses fail closed
+ok 21 - mixed, duplicated and cursorless envelope responses fail closed
+  ---
+  duration_ms: 98.41383
+  type: 'test'
+  ...
+# Subtest: repeated cursor cannot conceal an incomplete group collection
+ok 22 - repeated cursor cannot conceal an incomplete group collection
+  ---
+  duration_ms: 34.975146
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3803.631746

@@ -1,0 +1,106 @@
+{
+  "classification": "SIMULATED_RENDER_API_NO_HOSTED_ACCEPTANCE",
+  "fault": "restore-denial",
+  "hostedCalls": 0,
+  "paidCalls": 0,
+  "mutations": [
+    {
+      "method": "POST",
+      "path": "/suspend"
+    },
+    {
+      "method": "PUT",
+      "path": "/secret-files/sam-eval-owner-public.pem"
+    },
+    {
+      "method": "PUT",
+      "path": "/secret-files/sam-eval-approval.json"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/DATABASE_URL"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/SAM_COMPOSITION_MODULE"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/SAM_EVALUATION_TRIAL_ID"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/SAM_EVALUATION_COMMIT"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/SAM_EVALUATION_APPROVAL_PATH"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/SAM_EVALUATION_OWNER_PUBLIC_KEY_PATH"
+    },
+    {
+      "method": "POST",
+      "path": "/deploys",
+      "body": {
+        "buildId": "bld-prepared"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/resume"
+    },
+    {
+      "method": "POST",
+      "path": "/suspend"
+    },
+    {
+      "method": "DELETE",
+      "path": "/secret-files/sam-eval-owner-public.pem"
+    },
+    {
+      "method": "DELETE",
+      "path": "/secret-files/sam-eval-approval.json"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/DATABASE_URL"
+    },
+    {
+      "method": "PUT",
+      "path": "/env-vars/DATABASE_URL"
+    },
+    {
+      "method": "DELETE",
+      "path": "/env-vars/SAM_COMPOSITION_MODULE"
+    },
+    {
+      "method": "DELETE",
+      "path": "/env-vars/SAM_EVALUATION_TRIAL_ID"
+    },
+    {
+      "method": "DELETE",
+      "path": "/env-vars/SAM_EVALUATION_COMMIT"
+    },
+    {
+      "method": "DELETE",
+      "path": "/env-vars/SAM_EVALUATION_APPROVAL_PATH"
+    },
+    {
+      "method": "DELETE",
+      "path": "/env-vars/SAM_EVALUATION_OWNER_PUBLIC_KEY_PATH"
+    },
+    {
+      "method": "POST",
+      "path": "/rollback",
+      "body": {
+        "deployId": "dep-original"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/resume"
+    }
+  ]
+}

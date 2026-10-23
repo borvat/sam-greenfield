@@ -1,0 +1,245 @@
+✖ actual launcher with simulated Render: none (123.205931ms)
+✖ actual launcher with simulated Render: file-denial (70.609951ms)
+✖ actual launcher with simulated Render: file-loss (69.126433ms)
+✖ actual launcher with simulated Render: deploy-loss (74.625879ms)
+✖ actual launcher with simulated Render: restore-denial (81.468781ms)
+✖ actual launcher with simulated Render: suspended-deploy-denial (68.904397ms)
+✖ unknown delayed write blocks restoration until authoritative readback; no blind retry (68.086479ms)
+✖ actual SIGKILL after remote deploy application resumes recovery without duplicate deploy (273.776839ms)
+✖ cancellation reaches HTTP transport; applied request is reconciled, not repeated (45.989931ms)
+✖ configuration drift is preserved and blocks restoration, then exact verification catches later drift (34.411179ms)
+✔ service allowlist and simulation origin reject before credential access (1.140761ms)
+✖ redirects never forward authentication and leave the unknown write pending (37.068247ms)
+✖ ambiguous deployment receipt never chooses a candidate or repeats POST (32.397983ms)
+✖ private snapshot lock excludes a second operator and scope cannot change on recovery (34.730902ms)
+✖ linked environment group drift blocks writes without modifying the group (41.746384ms)
+✖ restoration rolls back the exact original deploy even when commit hashes match (52.01856ms)
+
+Interrupted while running:
+
+⚠ tests/isolated/render_transport.ts (tests/isolated/render_transport.ts:1:1)
+✖ tests/isolated/render_transport.ts (40011.503055ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 1
+ℹ fail 15
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40017.903872
+
+✖ failing tests:
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: none (123.205931ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: file-denial (70.609951ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: file-loss (69.126433ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: deploy-loss (74.625879ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: restore-denial (81.468781ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:10661
+✖ actual launcher with simulated Render: suspended-deploy-denial (68.904397ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:11998
+✖ unknown delayed write blocks restoration until authoritative readback; no blind retry (68.086479ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:13636
+✖ actual SIGKILL after remote deploy application resumes recovery without duplicate deploy (273.776839ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:15327
+✖ cancellation reaches HTTP transport; applied request is reconciled, not repeated (45.989931ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:16493
+✖ configuration drift is preserved and blocks restoration, then exact verification catches later drift (34.411179ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:18222
+✖ redirects never forward authentication and leave the unknown write pending (37.068247ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:18901
+✖ ambiguous deployment receipt never chooses a candidate or repeats POST (32.397983ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:19740
+✖ private snapshot lock excludes a second operator and scope cannot change on recovery (34.730902ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:20389
+✖ linked environment group drift blocks writes without modifying the group (41.746384ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:2:20911
+✖ restoration rolls back the exact original deploy even when commit hashes match (52.01856ms)
+  TypeError: Cannot read properties of undefined (reading '_zod')
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:1356:46)
+      at eval (eval at compile (/workspace/sam-greenfield/node_modules/zod/v4/core/doc.cjs:36:16), <anonymous>:257:47)
+      at /workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:896:34
+      at inst._zod.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/schemas.cjs:921:23)
+      at Object.parse (/workspace/sam-greenfield/node_modules/zod/v4/core/parse.cjs:32:32)
+      at inst.parse (/workspace/sam-greenfield/node_modules/zod/v4/classic/schemas.cjs:156:42)
+      at assertOfficialWire (/tmp/sam-render-transport/tests/fixtures/renderWireContracts.ts:38:84)
+      at send (/tmp/sam-render-transport/tests/isolated/render_transport.ts:30:63)
+      at Server.<anonymous> (/tmp/sam-render-transport/tests/isolated/render_transport.ts:39:17)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+test at tests/isolated/render_transport.ts:1:1
+✖ tests/isolated/render_transport.ts (40011.503055ms)
+  'Promise resolution is still pending but the event loop has already resolved'
