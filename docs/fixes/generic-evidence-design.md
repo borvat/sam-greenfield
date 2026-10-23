@@ -81,3 +81,7 @@ slice provides generic evidence machinery and removes forced business routing;
 it is not a claim that the complete general-agent objective is finished.
 
 Semantic guards: date subtraction dispatches on date operand kinds, never unit labels. Unknown VAT lineage survives dimensionless ratios and downstream scaling. Inner joins record a scope selection and unmatched counts; complete input coverage cannot certify population-wide deliverables after that selection.
+
+## Integration follow-up
+
+The subsequent [verified-evidence integration](verified-evidence-integration.md) connects the internal interpreter to an explicitly opted-in existing work/review composition and persists artifacts in the execution ledger. Production registration remains disabled; the original unregistered-slice results alone do not certify this follow-up.
