@@ -61,7 +61,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   };
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),deadlineMs);
   try{
-    const input={catalog:bundle.catalog,gateway:options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
+    const input={catalog:bundle.catalog,gateway:bundle.raw.modelGatewayForGoal?.(next.id)??options.gatewayForGoal?.(next.id)??bundle.raw.plannerGateway?.()??new ModelGateway(Object.fromEntries(adapters.map(a=>[a.providerId,a]))),
       goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal,
       candidatePolicy:{singleCandidate:true,onDiagnostic,
         validationFeedback:validationCode}};

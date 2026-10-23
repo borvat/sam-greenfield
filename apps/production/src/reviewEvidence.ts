@@ -1,8 +1,10 @@
+import {derivedReviewText} from './derivedReviewEvidence';
 import {sha256Hex} from '../../../packages/shared/src/stableJson';
 export const REVIEW_SOURCE_CHARS=24000;
 const object=(x:any):x is Record<string,any>=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const essential=/^(limitations?|warnings?|coverage|totals?|period|currency|vat|btw|tax|includedOrders|orderItems|candidates)$/i;
 export function reviewSourceText(result:any):string{
+ if(result?.derivedEvidence?.version===1)return derivedReviewText(result.derivedEvidence).text;
  const texts=(result?.content??[]).filter((x:any)=>x.type==='text').map((x:any)=>String(x.text));
  for(const a of result?.samArtifacts??[])if(typeof a.text==='string')texts.push(a.text);
  return (texts.length?texts.join('\n'):JSON.stringify(result,null,2)).replace(/https:\/\/[^\s<>]+\/attachments\/[a-f0-9-]{36}/gi,'[temporary artifact; see retrieved content]');

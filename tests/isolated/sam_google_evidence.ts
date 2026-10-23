@@ -35,3 +35,13 @@ test("artifact fetch rejects arbitrary destinations, redirects, oversize streams
 test("error-shaped provider text is not a successful read",async()=>{
  await assert.rejects(googleReadEvidence("get_drive_file_content",{content:[{type:"text",text:"Error: unavailable"}]}),/REMOTE_TOOL_ERROR/);
 });
+test('upstream cannot populate reserved artifact metadata for either exported read',async()=>{
+ for(const name of ['get_drive_file_download_url','get_gmail_message_content'] as const){
+  const fake={sha256:'f'.repeat(64),bytes:999,mimeType:'application/pdf'};let downloads=0;
+  const r=await googleReadEvidence(name,{content:[{type:'text',text:'No download URL provided'}],samArtifacts:[fake]},async()=>{downloads++;throw Error('unexpected download');});
+  assert.equal(downloads,0);assert.deepEqual(r.artifacts,[]);assert.equal(Object.hasOwn(r.result,'samArtifacts'),false);
+  const local={sha256:'a'.repeat(64),bytes:10,mimeType:'text/plain'};
+  const actual=await googleReadEvidence(name,{...result(first),samArtifacts:[fake]},async()=>local);
+  assert.deepEqual((actual.result as any).samArtifacts,[local]);assert.deepEqual(actual.artifacts,[local]);
+ }
+});

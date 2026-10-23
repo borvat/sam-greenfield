@@ -25,7 +25,8 @@ async function main(){
   await pause(260); // Each response fits; two responses cannot share one deadline.
   return routed(calls===1?{steps:[...valid.steps,...valid.steps]}:valid);
  }} as unknown as ModelGateway;
- const run=()=>planNextNewGoal(f.bundle,{...options,goalId:repaired,gatewayForGoal:()=>gateway});
+ f.bundle.raw.modelGatewayForGoal=goalId=>{assert.equal(goalId,repaired);return gateway;};
+ const run=()=>planNextNewGoal(f.bundle,{...options,goalId:repaired,gatewayForGoal:()=>{throw Error('must not bypass evaluation composition');}});
  const first=await run();assert.equal(first.failed,true);assert.equal(calls,1);
  assert.equal(await count('plans',repaired),0);
  await retry(repaired);
@@ -45,6 +46,7 @@ async function main(){
  assert(!JSON.stringify(events).includes('private objective'));
  assert(!JSON.stringify(events).includes('review_echo'));
  assert.equal(planningValidationCode(new Error('PLAN_EVIL_PRIVATE_VALUE')),'PLAN_CONTRACT_INVALID');
+ delete f.bundle.raw.modelGatewayForGoal;
  // A rejected replan has already entered PLANNING. Every later reservation
  // must still load failed reads and offer safe alternatives, without beginReplan.
  const recoveryBundle=validateProductionBundle({...f.bundle.raw,

@@ -1,3 +1,4 @@
+import {evidenceReleaseContracts} from '../../production/src/evidenceReleaseContracts';
 import {BOL_VERIFICATION_CONTRACTS as BOL_MCP_CONTRACTS} from '../../production/src/bolMcpBundle';
 import {SAM_GOOGLE_VERIFICATION_CONTRACTS} from '../../production/src/samGoogleBundle';
 import {GMAIL_READ_VERIFICATION_CONTRACTS} from '../../production/src/gmailReadBundle';
@@ -21,6 +22,7 @@ if(config.mode==='production'){
 }
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
+await syncVerificationContracts(evidenceReleaseContracts(bundle));
 await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
 if(bundle.raw.capabilities.some(c=>c.capabilityId.startsWith("google_mcp_")))await syncVerificationContracts(SAM_GOOGLE_VERIFICATION_CONTRACTS);
 if(bundle.raw.capabilities.some(c=>c.capabilityId==="gmail_list_messages"))await syncVerificationContracts(GMAIL_READ_VERIFICATION_CONTRACTS);

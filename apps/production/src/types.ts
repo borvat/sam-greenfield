@@ -29,6 +29,8 @@ export interface VerificationAdapter{
 }
 
 export interface ProductionBundle{
+  /** Explicit composition only; no production registry is installed by default. */
+  verifiedEvidenceContracts?:import("../../brain/src/evidence/contracts").OutputContracts;
   capabilities:CapabilityDefinition[];
   toolDefinitions:ToolDefinition[];
   toolAdapters:ToolAdapter[];
@@ -39,6 +41,8 @@ export interface ProductionBundle{
   planningMaxCostUsd?:number;
   workerLeaseTtlSeconds?:number;
   plannerGateway?:()=>ModelGateway;
+  /** Explicit isolated evaluation composition; shared planning/review budget. */
+  modelGatewayForGoal?:(goalId:string)=>ModelGateway;
   deferVerification?:boolean;
   replanPolicy?:{recoverableEvidenceReasons:string[]};
   verifiedLearning?:{

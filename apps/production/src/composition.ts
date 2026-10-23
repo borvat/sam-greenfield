@@ -20,6 +20,8 @@ export function createProductionComposition(input:{
   workerId:string;
   ordinaryFailurePolicy?:"retry"|"record";
   readReportReview?:boolean;
+  reviewGoalId?:string;
+  verificationGoalId?:string;
   specialistConcurrency?:number;
   specialistScopeGoalId?:string;
   planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
@@ -67,7 +69,7 @@ export function createProductionComposition(input:{
         tools:input.bundle.tools,
         limit:25
       })):null;
-      const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle)):null;
+      const earlyVerification=input.bundle.raw.deferVerification?await attempt("verification",()=>verifyNextExecution(input.bundle,{goalId:input.verificationGoalId})):null;
       const earlyLearning=input.bundle.raw.deferVerification?await attempt("learning",()=>learnNextVerifiedExecution(input.bundle)):null;
       const planning=await attempt("planning",()=>planNextNewGoal(input.bundle,{...input.planning,excludeDelegatedSpecialistTasks:input.excludeDelegatedSpecialistPlanning}));
       const execution=await attempt("execution",()=>runCatalogSpecialistTick({
@@ -76,9 +78,9 @@ export function createProductionComposition(input:{
         ttlSeconds:ttl,
         executors,advancers:input.specialistAdvancers,maxConcurrency:input.specialistConcurrency,rootGoalId:input.specialistScopeGoalId
       }));
-      const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle));
+      const verification=earlyVerification??await attempt("verification",()=>verifyNextExecution(input.bundle,{goalId:input.verificationGoalId}));
       const learning=earlyLearning??await attempt("learning",()=>learnNextVerifiedExecution(input.bundle));
-      const review=input.readReportReview?await attempt("review",()=>reviewNextReadGoal(input.bundle)):null;
+      const review=input.readReportReview?await attempt("review",()=>reviewNextReadGoal(input.bundle,undefined,undefined,{goalId:input.reviewGoalId})):null;
       const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
       return {events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};

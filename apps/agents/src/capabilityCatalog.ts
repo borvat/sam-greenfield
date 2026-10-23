@@ -3,6 +3,15 @@ import type { AuthorityClass } from "../../../packages/shared/src/types";
 import type { SpecialistAgentDefinition } from "./types";
 import { SpecialistRegistry } from "./registry";
 
+export interface CapabilityOutputMetadata {
+  extractionContracts?:import("../../brain/src/evidence/contracts").OutputContracts;
+  schemaStatus:'DECLARED'|'UNKNOWN';
+  schema?:Record<string,unknown>;
+  units:Record<string,string>;
+  timeSemantics:string;
+  coverageSemantics:string;
+  limitations:string[];
+}
 export interface CapabilityDefinition {
   capabilityId: string;
   authorityClass: AuthorityClass;
@@ -12,6 +21,7 @@ export interface CapabilityDefinition {
   parameters?: Record<string,unknown>;
   sideEffect?: boolean;
   companyScopes?: string[];
+  output?:CapabilityOutputMetadata;
 }
 
 export class CapabilityCatalog {
@@ -70,6 +80,7 @@ export class CapabilityCatalog {
     return [...this.definitions.values()].map(item=>({
       capabilityId:item.capabilityId,authorityClass:item.authorityClass,
       description:item.description??item.capabilityId,parameters:item.parameters??{},
+      output:item.output??{schemaStatus:'UNKNOWN',units:{},timeSemantics:'UNKNOWN',coverageSemantics:'UNKNOWN',limitations:['Output fields and completeness are not declared; inspect verified evidence before composing dependent operations']},
       ...(item.sideEffect===undefined?{}:{sideEffect:item.sideEffect}),
       ...(item.companyScopes===undefined?{}:{companyScopes:item.companyScopes})
     }));

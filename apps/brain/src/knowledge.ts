@@ -1,3 +1,4 @@
+import {DERIVE_CAPABILITY} from './evidence/artifacts';
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 
 type Finding = { executionId: string; quote: string };
@@ -14,6 +15,9 @@ export async function captureVerifiedKnowledge(client:any, goalId:string, findin
       FROM executions e JOIN LATERAL (SELECT id,result FROM verifications
        WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) v ON true
       WHERE e.id=$1 AND e.goal_id=$2 AND v.result='VERIFIED'`,[finding.executionId,goalId])).rows[0];
+    // The provisioned knowledge profile permits literal external SOURCE_FACT only.
+    // Derived provenance remains in its execution/report ledger; do not broaden ACLs.
+    if(evidence?.capability_id===DERIVE_CAPABILITY)continue;
     if (!evidence || typeof finding.quote !== "string" || finding.quote.length < 3 || finding.quote.length > 1500 ||
         !sourceText(evidence.result).includes(finding.quote)) {
       throw new Error("KNOWLEDGE_UNSUPPORTED_SOURCE");
@@ -37,6 +41,7 @@ export async function recallKnowledge(client:any, legalEntityId:string, objectiv
            ELSE 'Explicit owner decision; never expands execution authority' END AS interpretation
     FROM knowledge_records k WHERE legal_entity_id=$1 AND superseded_at IS NULL
       AND source_timestamp <= $3 AND expires_at > $3
+      AND NOT EXISTS(SELECT 1 FROM executions derived WHERE derived.id=k.execution_id AND derived.capability_id='derive_verified_evidence')
       AND (kind<>'SOURCE_FACT' OR verification_id=(SELECT v.id FROM verifications v WHERE v.execution_id=k.execution_id ORDER BY v.checked_at DESC,v.id DESC LIMIT 1) AND EXISTS(SELECT 1 FROM verifications v WHERE v.id=k.verification_id AND v.result='VERIFIED'))
       AND EXISTS (SELECT 1 FROM unnest(regexp_split_to_array(lower($2),'[^[:alnum:]_]+')) AS words(term)
         WHERE length(term)>2 AND to_tsvector('simple',statement) @@ plainto_tsquery('simple',term))

@@ -3,7 +3,7 @@ import { recordIndependentVerificationAtomic } from "../../kernel/src/verificati
 import type { ValidatedProductionBundle } from "./bundle";
 
 export async function verifyNextExecution(
-  bundle:ValidatedProductionBundle
+  bundle:ValidatedProductionBundle,options:{goalId?:string}={}
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
@@ -13,13 +13,13 @@ export async function verifyNextExecution(
          FROM executions e
          JOIN goals g ON g.id=e.goal_id
          JOIN verification_contracts vc ON vc.capability_id=e.capability_id
-        WHERE g.state IN ('EXECUTING','VERIFYING') AND g.current_plan_id=e.plan_id
+        WHERE g.state IN ('EXECUTING','VERIFYING') AND g.current_plan_id=e.plan_id AND ($1::uuid IS NULL OR g.id=$1)
           AND e.status='EXECUTED'
           AND NOT EXISTS (
             SELECT 1 FROM verifications v WHERE v.execution_id=e.id
           )
         ORDER BY e.finished_at NULLS LAST,e.started_at,e.id
-        LIMIT 1`
+        LIMIT 1`,[options.goalId??null]
     );
     return res.rows[0]??null;
   });
