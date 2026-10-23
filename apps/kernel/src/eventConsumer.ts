@@ -1,3 +1,4 @@
+import {isWaitingReadReview} from './continuation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { nextEventForConsumer, markConsumerEventProcessed } from "../../event-fabric/src/index";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
@@ -26,11 +27,11 @@ export async function processNextKernelEventAtomic(): Promise<{
 
     if (goalId && WAKE_EVENTS.has(event.event_type)) {
       const goal = await client.query(
-        "SELECT id,state FROM goals WHERE id=$1 FOR UPDATE",
+        "SELECT id,state,completion_definition,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
         [goalId]
       );
       if (
-        goal.rowCount === 1 &&
+        goal.rowCount === 1 && !(await isWaitingReadReview(client,goal.rows[0])) &&
         ["WAITING_EXTERNAL","WAITING_OWNER","BLOCKED"].includes(goal.rows[0].state)
       ) {
         const from = goal.rows[0].state;

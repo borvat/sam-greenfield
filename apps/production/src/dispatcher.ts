@@ -1,3 +1,4 @@
+import {continueReadReview} from './readReviewContinuation';
 import {encodeGoalAcceptance} from '../../kernel/src/goalAcceptance';
 import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
@@ -130,6 +131,7 @@ export function createKernelProductionDispatcher(
   bundle:ValidatedProductionBundle
 ):ProductionActionDispatcher{
   return {
+    continueReview:continueReadReview,
     async submitGoal(input){
       const objective=input.objective.trim();
       if(!objective) throw new Error("objective is required");

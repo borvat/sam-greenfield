@@ -36,6 +36,15 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
   return [
     ...directBolTools,
     {
+      definition:{name:'sam_continue_review',description:'Resume a waiting read-report review using existing verified execution evidence and only its remaining review budget. Never repeats source work or resets an exhausted budget. Requires the existing goal contract and owner authorization.',risk:'YELLOW',
+        availability:dispatcher?.continueReview?'AVAILABLE':'UNAVAILABLE',inputSchema:{type:'object',properties:{goal_id:{type:'string',format:'uuid'},legal_entity_id:{type:'string',format:'uuid'}},required:['goal_id','legal_entity_id'],additionalProperties:false}},
+      handler:async(args,context)=>{
+        if(!context.systemOwner)return {ok:false,error:'System-owner context is required'};
+        if(!dispatcher?.continueReview)return {ok:false,unavailable:true,error:'Review continuation is unavailable'};
+        return {ok:true,data:await dispatcher.continueReview({goalId:String(args.goal_id),legalEntityId:String(args.legal_entity_id),actor:context.actor})};
+      }
+    },
+    {
       definition:{
         name:"sam_submit_goal",
         description:"Submit a new business objective to SAM's autonomous production planner. SAM creates a NEW goal; the Render worker chooses and persists the plan, delegates its steps, executes them, and verifies the results. YELLOW/RED or unknown capabilities remain blocked by SAM authority controls. Requires a configured planning model; no provider write is authorized by this tool.",

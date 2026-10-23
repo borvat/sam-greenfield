@@ -29,7 +29,7 @@ test("review rejects invented IDs, unsafe actions, repeated reads, unsupported c
 test("isolated PostgreSQL: observation commits next plan, final report gates completion and survives reconstruction",async()=>{
  const db=new PGlite();
  // Minimal real SQL schema for this boundary; no production database or network.
- await db.exec(`CREATE TABLE goals(id UUID PRIMARY KEY,state TEXT,completion_definition TEXT,current_plan_id UUID,objective TEXT,updated_at TIMESTAMPTZ DEFAULT now());
+ await db.exec(`CREATE TABLE goals(id UUID PRIMARY KEY,state TEXT,completion_definition TEXT,current_plan_id UUID,objective TEXT,updated_at TIMESTAMPTZ DEFAULT now(),next_wake_at TIMESTAMPTZ);
  CREATE TABLE plans(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,version INT,goal_assumptions JSONB,constraints JSONB,dependencies JSONB,steps JSONB,plan_hash TEXT);
  CREATE TABLE work_queue(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),goal_id UUID,plan_id UUID,step_id UUID,capability_id TEXT,params JSONB,priority INT,due_at TIMESTAMPTZ,queued_at TIMESTAMPTZ DEFAULT now(),status TEXT DEFAULT 'QUEUED', idempotency_key TEXT,operation_key_ref TEXT,step_key TEXT,depends_on UUID[],result_refs JSONB);
  CREATE TABLE executions(id UUID PRIMARY KEY,goal_id UUID,plan_id UUID,capability_id TEXT,params JSONB,result JSONB,actor TEXT,evidence JSONB DEFAULT '{}',started_at TIMESTAMPTZ DEFAULT now());
@@ -43,13 +43,16 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
  const connection={query:async(q:string,args?:any[])=>{const r=await query(q,args);return {...r,rowCount:r.rows.length};},release(){}};const sql={connect:async()=>connection};
  const bundle:any={catalog:{planningDescriptors:()=>descriptors},raw:{}};
  try{
-  await db.query<any>("INSERT INTO goals VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
+  await db.query<any>("INSERT INTO goals(id,state,completion_definition,current_plan_id,objective,updated_at) VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
   await db.query<any>("INSERT INTO plans(id,goal_id,version) VALUES($1,$2,1)",[plan,id]);
   await db.query<any>("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[execution,id,plan,source.capabilityId,source.params,{content:[{type:"text",text:source.text}]}]);
   await db.query<any>("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[execution]);
   failEnqueue=true;
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>review("continue"))).status,"blocked");
-  assert.equal((await db.query<any>("SELECT * FROM goal_read_reviews")).rows.length,0);
+  const reserved:any=(await db.query<any>("SELECT * FROM goal_read_reviews")).rows[0];
+  assert.equal(reserved.decision.status,'blocked');
+  assert.equal(reserved.decision.runtimeReview.attempts,1);
+  assert.equal(reserved.decision.limitations[0],'REVIEW_IN_PROGRESS');
   assert.equal((await db.query<any>("SELECT * FROM plans")).rows.length,1);
   assert.equal((await db.query<any>("SELECT state FROM goals")).rows[0].state,"WAITING_EXTERNAL");
   await db.query<any>("UPDATE goals SET state='VERIFYING'");
