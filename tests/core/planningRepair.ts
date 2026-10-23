@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {pool} from '../../packages/db/src/client';
 import {planNextNewGoal} from '../../apps/production/src/planner';
 import {proposePlan,planningValidationCode} from '../../apps/brain/src/planner';
+import {persistPlanAndDelegateAtomic} from '../../apps/kernel/src/planning';
+import {validateProductionBundle} from '../../apps/production/src/bundle';
 import {reviewFixture} from './reviewFixture';
 import type {ModelGateway} from '../../packages/model-gateway/src/gateway';
 
@@ -43,6 +45,43 @@ async function main(){
  assert(!JSON.stringify(events).includes('private objective'));
  assert(!JSON.stringify(events).includes('review_echo'));
  assert.equal(planningValidationCode(new Error('PLAN_EVIL_PRIVATE_VALUE')),'PLAN_CONTRACT_INVALID');
+ // A rejected replan has already entered PLANNING. Every later reservation
+ // must still load failed reads and offer safe alternatives, without beginReplan.
+ const recoveryBundle=validateProductionBundle({...f.bundle.raw,
+  capabilities:[...f.bundle.raw.capabilities,{capabilityId:'drive_get_metadata',authorityClass:'GREEN',specialistAgentId:'review',specialistVersion:'1'},{capabilityId:'review_search',authorityClass:'GREEN',specialistAgentId:'review',specialistVersion:'1'}],
+  toolDefinitions:[...f.bundle.raw.toolDefinitions,{capabilityId:'drive_get_metadata',authorityClass:'GREEN',sideEffect:false},{capabilityId:'review_search',authorityClass:'GREEN',sideEffect:false}],
+  toolAdapters:[...f.bundle.raw.toolAdapters,{capabilityId:'drive_get_metadata',async execute(){throw Error('MUST_NOT_EXECUTE_DURING_PLANNING');}},{capabilityId:'review_search',async execute(){throw Error('MUST_NOT_EXECUTE_DURING_PLANNING');}}]
+ });
+ const recovery=await f.goal('read-only drive_get_metadata','PLANNING');
+ await persistPlanAndDelegateAtomic({goalId:recovery,steps:[{capabilityId:'drive_get_metadata',params:{fileId:'synthetic-file'}}]});
+ await pool.query("UPDATE work_queue SET status='FAILED' WHERE goal_id=$1",[recovery]);
+ await pool.query("UPDATE goals SET state='REPLANNING' WHERE id=$1",[recovery]);
+ let recoveryCalls=0;
+ const recoveryGateway={async invoke(task:any){
+  recoveryCalls++;
+  assert.deepEqual(task.input.forbiddenReadSteps,[{capabilityId:'drive_get_metadata',params:{fileId:'synthetic-file'}}]);
+  assert(task.input.capabilities.some((c:any)=>c.capabilityId==='review_search'),'safe alternatives remain available on every repair');
+  assert(task.input.context.previousPlan,'previous plan retained on every repair');
+  if(recoveryCalls===1)return routed({steps:[]});
+  if(recoveryCalls===2)return routed({steps:[{capabilityId:'drive_get_metadata',params:{file_id:'synthetic-file'}}]}); // Alias cannot bypass failed-read protection.
+  assert.equal(task.input.validationFeedback,'PLAN_FAILED_READ_REPLAY');
+  return routed({steps:[{capabilityId:'review_search',params:{}}]});
+ }} as unknown as ModelGateway;
+ for(let i=0;i<3;i++){
+  const result=await planNextNewGoal(recoveryBundle,{...options,goalId:recovery,gatewayForGoal:()=>recoveryGateway});
+  assert.equal((await pool.query('SELECT replan_attempts FROM goals WHERE id=$1',[recovery])).rows[0].replan_attempts,1);
+  if(i<2){
+   assert.equal(result.failed,true);
+   assert.equal(await count('plans',recovery),1,'invalid repair cannot persist another plan');
+   const row=(await pool.query('SELECT state,planning_failure FROM goals WHERE id=$1',[recovery])).rows[0];
+   assert.equal(row.state,'PLANNING');
+   assert.equal(row.planning_failure.validationCode,i===0?'PLAN_STEPS_REQUIRED':'PLAN_FAILED_READ_REPLAY');
+   await retry(recovery);
+  }else assert.equal(result.failed,undefined);
+ }
+ assert.equal(recoveryCalls,3);assert.equal(await count('plans',recovery),2);
+ assert.equal((await pool.query("SELECT count(*)::int n FROM work_queue WHERE goal_id=$1 AND status='QUEUED'",[recovery])).rows[0].n,1);
+ assert.equal(await count('executions',recovery),0);
  const exhausted=await f.goal('exhaustion');let rejected=0;
  for(let i=0;i<3;i++){
   const r=await planNextNewGoal(f.bundle,{...options,goalId:exhausted,gatewayForGoal:()=>({async invoke(){rejected++;return routed({steps:[]});}} as unknown as ModelGateway)});

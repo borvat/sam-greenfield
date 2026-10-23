@@ -11,7 +11,9 @@ Production now generates one candidate per durable planning reservation. A
 validation rejection is saved as an allowlisted code in `goals.planning_failure`
 and supplied as feedback on the next reservation. That repair receives a fresh
 AbortSignal with the same deadline. Existing attempt exhaustion, backoff and
-WAITING_OWNER restrictions still apply. No rejected model text is persisted or
+WAITING_OWNER restrictions still apply. A PLANNING goal with a persisted replan
+episode resumes the replan path: failed-read exclusions, safe recovery capabilities
+and prior-plan context are reloaded without incrementing the replan budget again. No rejected model text is persisted or
 replayed. Non-production direct callers retain their existing in-call repair.
 
 The default budget remains three 30-second reservations: at most three candidate

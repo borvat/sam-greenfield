@@ -20,7 +20,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   // A short row-locked transaction commits the durable deadline reservation.
   // No pool connection is held while nested kernel transactions or models run.
   const reservation=await withTransaction(async client=>{
-    const next=(await client.query(`SELECT id,state,planning_attempts,planning_failure FROM goals
+    const next=(await client.query(`SELECT id,state,planning_attempts,planning_failure,replan_attempts,replan_reason FROM goals
       WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
       AND ($1::uuid IS NULL OR id=$1)
       AND (planning_retry_at IS NULL OR planning_retry_at<=now())
@@ -65,7 +65,12 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
       goalId:next.id,dataClassification:bundle.raw.dataClassification??'INTERNAL',maxCostUsd:bundle.raw.planningMaxCostUsd??0.25,signal:controller.signal,
       candidatePolicy:{singleCandidate:true,onDiagnostic,
         validationFeedback:validationCode}};
-    if(current.state==='REPLANNING')await runCatalogReplanCycle({...input,reason:'independent_verification_failed'});
+    // beginReplanAtomic durably enters PLANNING before proposing. Repairs must
+    // resume that same episode, retaining failed-read exclusions and recovery
+    // capabilities without consuming another replan budget entry.
+    const resumingReplan=current.state==='PLANNING'&&current.replan_attempts>0&&typeof current.replan_reason==='string';
+    if(current.state==='REPLANNING'||resumingReplan)await runCatalogReplanCycle({...input,
+      alreadyStarted:resumingReplan,reason:resumingReplan?current.replan_reason:'independent_verification_failed'});
     else await runCatalogPlanningCycle(input);
     await withTransaction(client=>client.query('UPDATE goals SET planning_attempts=0,last_planning_at=now(),planning_retry_at=NULL,planning_failure=NULL WHERE id=$1 AND planning_attempts=$2',[next.id,current.planning_attempts+1]));
     return {processed:true,goalId:next.id};
