@@ -179,3 +179,42 @@ accounted for; it must never imply full-population completeness. Unknown monetar
 or supplier-promise meaning remains unknown independently of coverage. Add paired
 regressions: same evidence fulfills the enumerated subset and blocks the broader
 population claim, with missing members, partial pages and conflicting periods.
+
+## Consolidated independent findings and implementation boundaries
+
+Independent whole-path review agrees with the no-go verdict and reuse recommendation.
+Additional seams: the transformation grammar has no general multi-page union and
+stored derived artifacts cannot be chained as inputs through the current raw-source
+contract resolver. Ordinary work failures are recorded terminally; the narrow missing-
+Drive recovery case is not generic recovery from a rejected safe transformation.
+These must be designed together rather than disguised by fixtures supplying a finished
+aggregate or calling internal transform APIs directly.
+
+The durable obligation should be versioned and bound to the original objective hash,
+with each deliverable declaring requested scope, evidence fields, units/meaning,
+period/timezone and unresolved questions. Model proposals may refine requirements but
+must not silently weaken them after a failure. Preserve predecessor hashes and reasons
+across continuations. Use existing authorized persistence or a reviewed migration;
+do not turn ordinary rows into authority grants.
+
+Normalized evidence must separate observed provider fields, deterministic derived
+values and interpretations. A collection receipt is evidence about acquisition, not
+a model assertion: bind authorized query, filters, every page/execution hash, cursor
+chain, identity deduplication and termination/omissions. Union must retain all inputs,
+reject incompatible units/schemas and preserve unknown coverage. Derived chaining
+must replay the entire bounded acyclic lineage under same-goal/tenant constraints;
+no cross-goal record access is implied by specialist delegation.
+
+Safe recovery must use typed failures (schema-invalid proposal, missing authorized
+read, incomplete collection, revoked evidence, ambiguous semantics). Only reviewed
+read-only/derive categories can request replanning within the remaining budget.
+Authorization failures, cancellation, exhaustion and writes with uncertain side effects
+must never become retryable through this route. A rejected transform should produce
+an actionable evidence gap; no goal-specific formula or hidden repair script.
+
+Nominal fixtures must supply sufficient reviewed evidence and require correct complete
+reports. For each nominal case, generate missing-page, unknown-unit/VAT, contradiction,
+revocation and unavailable-source variants that require correction or honest partial
+reports. Passing only blocked variants is insufficient. Scripted model decisions test
+this mechanism; a separately authorized fixed-version held-out model evaluation tests
+whether an agent actually chooses and composes it.
