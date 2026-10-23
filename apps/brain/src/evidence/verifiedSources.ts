@@ -1,6 +1,7 @@
+import {collectionReceipt,type CollectionContract} from './collectionReceipts';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {replayTransform,knownTimeZone,type Column,type Dataset,type TransformPlan} from './transforms';
-export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[];rowsMode?:'array'|'single';fields?:Record<string,{path:string[];from?:'record'|'root';encoding?:'safe-integer'}>;requiredFields?:string[];sourceLimitations?:string[];periodPath?:string[];identityPath?:string[];evidenceBinding?:{path:string[];fields:string[]}};
+export type ExtractionContract={collection?:CollectionContract;version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[];rowsMode?:'array'|'single';fields?:Record<string,{path:string[];from?:'record'|'root';encoding?:'safe-integer'}>;requiredFields?:string[];sourceLimitations?:string[];periodPath?:string[];identityPath?:string[];evidenceBinding?:{path:string[];fields:string[]}};
 const at=(v:any,path:string[])=>{if(!Array.isArray(path)||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_PATH_INVALID');for(const k of path){if(v===null||typeof v!=='object'||!Object.hasOwn(v,k))return undefined;v=v[k];}return v;};
 /** Internal API only. Contract registry is trusted application configuration,
  * never model parameters. No production capability/registry is installed here. */
@@ -42,7 +43,7 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
    }));
    return {values,citations:[{executionId:id,verificationId:row.verification_id,row:index,sourceHash}]};
   }),coverage:['complete','partial'].includes(coverage)?coverage:'unknown',timeZone:knownTimeZone(timeZone)?timeZone:null,
-   sourceContexts:[{sourceHash,...(contract.periodPath?{period:at(row.result,contract.periodPath)??null}:{}),...(contract.identityPath?{identity:at(row.result,contract.identityPath)??null}:{})}],
+   sourceContexts:[{sourceHash,...(contract.collection?{collection:collectionReceipt(row,records,contract.collection)}:{}),...(contract.periodPath?{period:at(row.result,contract.periodPath)??null}:{}),...(contract.identityPath?{identity:at(row.result,contract.identityPath)??null}:{})}],
    limitations:[...(contract.sourceLimitations??[]),...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
   bindings[alias]={executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
  }

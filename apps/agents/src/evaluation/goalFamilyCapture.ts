@@ -28,6 +28,7 @@ export async function sealGoalFamilyEvaluation(c:PoolClient,trialId:string,bundl
   const sources=(await c.query(`SELECT e.*,v.id verification_id,v.result verification_result,v.execution_hash verified_hash,v.plan_hash verified_plan_hash,v.independent_evidence verification_evidence
    FROM executions e LEFT JOIN LATERAL(SELECT * FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
    WHERE e.goal_id=ANY($1::uuid[]) ORDER BY e.id`,[ids])).rows;
+  if(sha256Hex(sources.map(s=>s.id))!==sha256Hex(executions.map(e=>e.id)))throw Error('EVALUATION_CAPTURE_SOURCE_SET_CHANGED');
   for(const goal of children){
    const report=reports.find(r=>r.goal_id===goal.id);
    if(goal.state==='COMPLETED'&&report?.decision.status!=='complete'||report&&(sha256Hex(report.decision)!==report.report_hash||report.decision.runtimeReview?.retryable))throw Error('EVALUATION_FINAL_REPORT_REQUIRED');

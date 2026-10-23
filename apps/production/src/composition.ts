@@ -28,6 +28,7 @@ export function createProductionComposition(input:{
   planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
   excludeDelegatedSpecialistPlanning?:boolean;
   specialistAdvancers?:Parameters<typeof runCatalogSpecialistTick>[0]['advancers'];
+  onStageError?:(stage:string,error:unknown)=>void;
   operationalTick?:()=>Promise<unknown>;
   executeTool?:(work:import('../../kernel/src/workerRuntime').ClaimedWork,execute:import('../../kernel/src/workerRuntime').CapabilityExecutor)=>ReturnType<import('../../kernel/src/workerRuntime').CapabilityExecutor>;
   authorizeWork?:(work:import('../../kernel/src/workerRuntime').ClaimedWork)=>Promise<void>;
@@ -55,7 +56,8 @@ export function createProductionComposition(input:{
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);
 
   const attempt=async<T>(stage:string,run:()=>Promise<T>):Promise<T|{processed:false;failed:true;reason:string}>=>{
-    try{return await run();}catch{
+    try{return await run();}catch(error){
+      input.onStageError?.(stage,error);
       console.error(JSON.stringify({event:'RUNTIME_STAGE_FAILED',stage,details:'withheld'}));
       return {processed:false,failed:true,reason:'STAGE_FAILED'};
     }

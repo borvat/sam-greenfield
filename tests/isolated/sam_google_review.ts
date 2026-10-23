@@ -8,7 +8,7 @@ import {validateReadReview,reviewNextReadGoal} from "../../apps/production/src/r
 const id="11111111-1111-4111-8111-111111111111",plan="22222222-2222-4222-8222-222222222222",execution="33333333-3333-4333-8333-333333333333";
 const descriptors=[{capabilityId:"google_mcp_get_gmail_message_content",authorityClass:"GREEN",sideEffect:false,parameters:{type:"object",properties:{message_id:{type:"string"}},required:["message_id"],additionalProperties:false}}];
 const source={id:execution,capabilityId:"google_mcp_search_gmail_messages",params:{query:"business"},text:"Found message ID: actual-message. Supplier confirms release.",truncated:false,actor:"communications@1.0.0",retrievedAt:"2026-10-22T00:00:00Z"};
-const review=(status:string)=>({status,summary:"Evidence-linked result",requirements:[{requirement:"Read the source",fulfilled:status==="complete",evidenceIds:[execution]}],findings:[{text:"Supplier confirms release",executionId:execution,quote:"Supplier confirms release."}],limitations:[],steps:status==="continue"?[{capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}}]:[]});
+const review=(status:string)=>({status,summary:"Evidence-linked result",requirements:[{obligationId:"read-source",requirement:"Read the source",fulfilled:status==="complete",evidenceIds:[execution]}],findings:[{text:"Supplier confirms release",executionId:execution,quote:"Supplier confirms release."}],limitations:[],steps:status==="continue"?[{capabilityId:descriptors[0].capabilityId,params:{message_id:"actual-message"}}]:[]});
 test("review rejects invented IDs, unsafe actions, repeated reads, unsupported citations and premature completion",()=>{
  const indexed:any=review("complete");indexed.findings[0]={text:"Source finding",executionId:execution,quoteLine:0,quote:"Retyped wrong value"};
  assert.equal(validateReadReview(indexed,[source],"Read",descriptors).findings[0].quote,source.text);
@@ -66,6 +66,8 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   };
   await db.query('UPDATE plans SET plan_hash=$1 WHERE id=$2',[sha256Hex({goalId:id,version:1}),plan]);
   await insertVerified(execution,plan,'55555555-5555-4555-8555-555555555555',source.capabilityId,source.params,{content:[{type:"text",text:source.text}]});
+  const obligations={version:1,objectiveHash:sha256Hex('Read the source'),deliverables:[{id:'read-source',description:'Read the source',fields:[],scope:{kind:'unknown'},units:'UNKNOWN',vat:'UNKNOWN',period:'UNKNOWN',timeZone:'UNKNOWN'}],unresolved:[]};
+  await db.query('UPDATE plans SET goal_assumptions=$1 WHERE id=$2',[{goalObligations:obligations},plan]);
   failEnqueue=true;
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>review("continue"))).status,"blocked");
   assert.equal((await db.query<any>('SELECT * FROM goal_read_reviews')).rows.length,0);
@@ -78,6 +80,7 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>review("continue"))).status,"continue");
   let g:any=(await db.query<any>("SELECT * FROM goals")).rows[0];assert.equal(g.state,"EXECUTING");assert.notEqual(g.current_plan_id,plan);
   assert.equal((await db.query<any>("SELECT * FROM work_queue")).rows.length,1);
+  assert.deepEqual((await db.query<any>('SELECT goal_assumptions FROM plans WHERE id=$1',[g.current_plan_id])).rows[0].goal_assumptions.goalObligations,obligations);
   const second="44444444-4444-4444-8444-444444444444";
   await db.query<any>("UPDATE work_queue SET status='EXECUTED'");await db.query<any>("UPDATE goals SET state='VERIFYING'");
   const queueId=(await db.query<any>('SELECT id FROM work_queue WHERE plan_id=$1',[g.current_plan_id])).rows[0].id;
@@ -87,6 +90,7 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   await db.query<any>("INSERT INTO audit_log(goal_id,action,after_ref) VALUES($1,'RUNTIME_RECOVERY_REQUESTED',$2)",[id,{queue_id:"failed-work",capability_id:"google_mcp_get_drive_file_content",params:{file_id:"missing"},error_code:"READ_SOURCE_NOT_FOUND"}]);
   let calls=0;
   assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>{
+   assert.deepEqual(input.goalObligations,obligations);
    assert.equal(input.failedReadAttempts.length,1);
    assert.equal(input.failedReadAttempts[0].after_ref.error_code,"READ_SOURCE_NOT_FOUND");
    assert.equal(input.verifiedObservations.length,2);

@@ -244,6 +244,7 @@ async function main(){
   await step('render-migration-compatibility',s=>suite(s,'tests/compatibility/renderMigrations.ts'));
   await step('render-google-oauth-contracts',s=>node(s,['node','--import','tsx','--test',
     ...fs.readdirSync(path.join(source,'tests/isolated')).filter(f=>/^sam_google_.*\.ts$/.test(f)).sort().map(f=>'tests/isolated/'+f),
+    'tests/isolated/goal_obligations.ts','tests/isolated/collection_receipts.ts',
     'tests/phase21/mcp_internal_oauth.ts','tests/phase22/submit_goal_surface.ts'],
     ['--env','NODE_ENV=test','--env','DATABASE_URL=postgres://fixture:fixture@127.0.0.1:9/sam_core_test']));
   const life=['--env' ,'DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test_lifecycle'];

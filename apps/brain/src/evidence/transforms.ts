@@ -2,7 +2,7 @@ import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 export type Column={kind:'text'|'date'|'decimal';unit?:string;semantic?:'monetary'|'quantity'|'ratio';vat?:string;semanticUncertainty?:boolean};
 export type Citation={executionId:string;verificationId:string;row:number;sourceHash:string};
 export type EvidenceRow={values:Record<string,string|null>;citations:Citation[]};
-export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[];sourceContexts?:{sourceHash:string;period?:unknown;identity?:unknown}[]};
+export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[];sourceContexts?:{collection?:import('./collectionReceipts').CollectionReceipt;sourceHash:string;period?:unknown;identity?:unknown}[]};
 export type Operation=
  |{op:'save';as:string}
  |{op:'from';source:string}

@@ -2,6 +2,12 @@ import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {assertExecutionIntegrity} from '../../../brain/src/evidence/verifiedSources';
 /** Every persisted operation must have its exact durable pre-dispatch reservation. */
 export function assertGoalFamilyOperationLinks(snapshot:any,capture:any){
+ for(const reserved of capture.events.filter((e:any)=>e.kind==='RESERVED'&&['tool','readback'].includes(e.payload.kind))){
+  const finished=capture.events.find((e:any)=>e.kind==='FINISHED'&&e.reservation_id===reserved.reservation_id&&e.payload.status==='success');
+  if(!finished)continue;
+  const matches=snapshot.sources.filter((s:any)=>(reserved.payload.kind==='tool'?s.evidence:s.verification_evidence)?.evaluationReservation?.id===reserved.reservation_id);
+  if(matches.length!==1)throw Error('EVALUATION_OPERATION_PERSISTENCE_UNCONFIRMED');
+ }
  for(const source of snapshot.sources){
   const link=source.evidence?.evaluationReservation;
   const dispatched=capture.events.find((e:any)=>e.kind==='RESERVED'&&e.reservation_id===link?.id&&e.payload.kind==='tool'&&e.payload.queueId===source.queue_id&&e.payload.fencingToken===Number(source.fencing_token)&&e.payload.goalId===source.goal_id);

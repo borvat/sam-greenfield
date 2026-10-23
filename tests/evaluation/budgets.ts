@@ -43,6 +43,14 @@ async function worker(){
  const run=async(name:string)=>{const t=await openEvaluationTrial(trials[name].id);return {t,call:()=>t.gateway(gateway,t.rootGoalId,'executive-bootstrap').invoke(task)};};
  const genericBundle={capabilities:[],toolDefinitions:[],toolAdapters:[],modelAdapters:[good]};
  const generic=async(name:string)=>{const t=await openEvaluationTrial(trials[name].id);return withGoalEvaluation(genericBundle,t,t.spec.commit);};
+ if(process.argv[2]==='source-crash'){
+  const t=await openEvaluationTrial(trials['goal-runtime-source-crash'].id);
+  const adapter=fixtureEvaluationAdapter('eval-a',async()=>({model:'fixture',usage:{inputTokens:5,outputTokens:10},output:{steps:[{capabilityId:'source.read',params:{channel:'record'}}]}}));
+  const original=Client.prototype.query;
+  (Client.prototype as any).query=async function(...args:any[]){if(/INSERT INTO executions\b/.test(String(args[0]))){console.log('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE');return new Promise(()=>{});}return (original as any).apply(this,args);};
+  const composition=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(adapter),trial:t,expectedCommit:t.spec.commit,workerId:'source-crash'});
+  for(let i=0;i<12;i++)await composition.runWorkTick();return;
+ }
  if(process.argv[2]==='goal-crash'){
   const t=await openEvaluationTrial(trials['goal-crash'].id);
   const hanging=fixtureEvaluationAdapter('eval-b',async()=>{console.log('TRIAL_ATTEMPT_RESERVED');return new Promise(()=>{});});
@@ -89,6 +97,20 @@ async function worker(){
   const deadline=(await pool.query('SELECT agent_deadlines->$2 AS deadline FROM evaluation_trials WHERE id=$1',[t.id,'goal.'+id])).rows[0].deadline;
   assert(deadline);await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(deadline)-Date.now())+20));
  };
+ const recoveryTrial=await openEvaluationTrial(trials['goal-runtime-recovery-expire'].id);
+ const recoveryGoal=trials['goal-runtime-recovery-expire'].goals[0];
+ await withTransaction(c=>recoveryTrial.reserve(c,{goalId:recoveryGoal,agentId:'goal.'+recoveryGoal,kind:'iteration',delta:{iterations:1}}));
+ await pool.query("UPDATE goals SET state='COMPLETED' WHERE id=$1",[recoveryGoal]);
+ await expireAgent(recoveryTrial,recoveryGoal);
+ const recoveryComposition=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(good),trial:recoveryTrial,expectedCommit:recoveryTrial.spec.commit,workerId:'recovery-fixture'});
+ await recoveryComposition.recover();
+ assert.equal((await pool.query('SELECT state FROM goals WHERE id=$1',[recoveryGoal])).rows[0].state,'COMPLETED');
+ const activeExpired=trials['goal-runtime-recovery-expire'].goals[1];
+ await withTransaction(c=>recoveryTrial.reserve(c,{goalId:activeExpired,agentId:'goal.'+activeExpired,kind:'iteration',delta:{iterations:1}}));
+ await expireAgent(recoveryTrial,activeExpired);await recoveryComposition.recover();
+ assert.equal((await pool.query('SELECT state FROM goals WHERE id=$1',[activeExpired])).rows[0].state,'FAILED');
+ assert.equal((await pool.query('SELECT agent_used->$2 AS used FROM evaluation_trials WHERE id=$1',[recoveryTrial.id,'goal.'+activeExpired])).rows[0].used.iterations,1);
+ console.log('PASS completed expired child does not prevent sibling startup recovery');
  const runtimeTrial=await openEvaluationTrial(trials['goal-runtime'].id);let runtimeCalls=0;
  const runtimeAdapter=fixtureEvaluationAdapter('eval-a',async request=>{
   runtimeCalls++;const prompt=JSON.parse(request.messages[1].content);let output:any;
@@ -127,6 +149,8 @@ async function worker(){
   assert.equal(dispatches,suffix==='readback-cap'?3:0,suffix+' prevents unreserved source callback');
   if(suffix==='zero-iterations')assert.equal(decisions,0,'zero decision allowance prevents model callback');
   const used=(await pool.query('SELECT used FROM evaluation_trials WHERE id=$1',[t.id])).rows[0].used;
+  const terminalStates=(await pool.query('SELECT state FROM goals WHERE id=ANY($1::uuid[])',[trials[name].goals])).rows;
+  assert(terminalStates.every(g=>g.state==='FAILED'),JSON.stringify(terminalStates));
   assert.equal(used.tools,dispatches);if(suffix==='zero-iterations')assert.equal(used.models,0);
  }
  console.log('PASS actual composition zero tools/iterations and separately charged readback deny callbacks');
@@ -232,7 +256,7 @@ async function parent(){
    const spec:TrialSpec={version:1,mode:name==='live'?'live':'fixture',...(name==='live'?{liveEndpoint:'https://example.invalid/chat/completions'}:{}),syntheticOnly:true,commit:process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseId:'industrial-refrigeration',corpusHash:contentHash(publicCases()),companyId:tenant,rootCapabilityId:'specialist.executive',limits:l,agents:{'executive-bootstrap':{...limits,...(name==='agent'?{models:0}:{}),...(['agent-time','admission-race'].includes(name)?{elapsedMs:50}:{})}},prices,capabilityHash:'f'.repeat(64)};
    trials[name]={id:await createEvaluationTrial(c,{rootGoalId:goal,spec}),goal,entity:tenant};
   }
-  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money','goal-runtime','goal-runtime-plan-cancel','goal-runtime-plan-expire','goal-runtime-review-cancel','goal-runtime-review-expire','goal-runtime-dispatch-cancel','goal-runtime-dispatch-expire','goal-runtime-zero-tools','goal-runtime-zero-iterations','goal-runtime-readback-cap','goal-runtime-unrelated']){
+  for(const name of ['three-goals','goal-crash','goal-tokens','goal-money','goal-runtime','goal-runtime-plan-cancel','goal-runtime-plan-expire','goal-runtime-review-cancel','goal-runtime-review-expire','goal-runtime-dispatch-cancel','goal-runtime-dispatch-expire','goal-runtime-zero-tools','goal-runtime-zero-iterations','goal-runtime-readback-cap','goal-runtime-unrelated','goal-runtime-recovery-expire','goal-runtime-source-crash']){
    const root=(await c.query("INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,'Synthetic evaluation root','NEW','GREEN') RETURNING id",[randomUUID(),entity])).rows[0].id;
    const goals:string[]=[];for(let i=0;i<3;i++)goals.push((await c.query("INSERT INTO goals(business_id,company_scope,parent_goal_id,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'NEW','GREEN') RETURNING id",[randomUUID(),entity,root,['Compare supplied periods','Compare promises and deliveries','Inventory duplicate records'][i]])).rows[0].id);
    const l={...limits,iterations:32,models:name==='goal-crash'?1:24,tokens:name==='goal-tokens'?1:100000,costUsd:name==='goal-money'?0.003:1,...(name.startsWith('goal-runtime')?{tools:6,maxInputTokens:24000,maxOutputTokens:4000,tokens:672000}: {})};
@@ -245,7 +269,34 @@ async function parent(){
   const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='fixture-evaluation-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIALS:JSON.stringify(trials)};
   const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:75000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
+  const sourceChild=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','source-crash'],{env,stdio:['ignore','pipe','pipe']});let sourceOutput='';sourceChild.stdout.on('data',x=>sourceOutput+=x);sourceChild.stderr.on('data',x=>sourceOutput+=x);
+  const sourceStarted=Date.now();while(!sourceOutput.includes('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE')&&Date.now()-sourceStarted<8000)await new Promise(r=>setTimeout(r,25));
+  if(!sourceOutput.includes('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE')){sourceChild.kill('SIGKILL');throw Error('SOURCE_PERSISTENCE_BARRIER_NOT_REACHED:'+sourceOutput);}
+  const sourceClosed=new Promise(r=>sourceChild.once('close',r));sourceChild.kill('SIGKILL');await sourceClosed;
+  const sourceTrial=trials['goal-runtime-source-crash'];
+  assert.equal((await c.query('SELECT count(*)::int n FROM executions WHERE goal_id=ANY($1::uuid[])',[sourceTrial.goals])).rows[0].n,0);
+  assert.equal((await c.query("SELECT used->>'tools' n FROM evaluation_trials WHERE id=$1",[sourceTrial.id])).rows[0].n,'1');
+  // Synthetic operator disposition after the killed fixture; no successful goal claim.
+  await c.query("UPDATE goals SET state='FAILED' WHERE id=ANY($1::uuid[])",[sourceTrial.goals]);
+  await assert.rejects(()=>sealGoalFamilyEvaluation(c,sourceTrial.id,runtimeFixtureBundle(null)),/OPERATION_PERSISTENCE_UNCONFIRMED/);
+  const sourceKey=generateKeyPairSync('ed25519'),sourceTrace=await exportEvaluationTrace(c,sourceTrial.id,sourceKey.privateKey,{incomplete:true});
+  if(process.env.SAM_EVALUATION_ARTIFACT_DIR){writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'source-persistence-crash-trace.json'),JSON.stringify(sourceTrace));writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'source-persistence-crash-public.pem'),sourceKey.publicKey.export({format:'pem',type:'spki'}));}
+  console.log('PASS actual SIGKILL after successful source callback preserves charge and refuses complete capture without execution persistence');
   run('worker');
+  const lateId=randomUUID();let insertedLate=false;
+  const barrier={query:async(sql:string,params?:any[])=>{
+   const result=await c.query(sql,params);
+   if(!insertedLate&&sql.includes('SELECT * FROM executions')&&sql.includes('FOR UPDATE')){
+    insertedLate=true;
+    // Separate connection commits after the capture's initial execution lock set.
+    await pool.query("INSERT INTO executions SELECT (jsonb_populate_record(NULL::executions,to_jsonb(e)||jsonb_build_object('id',$2::text))).* FROM executions e WHERE id=$1",[result.rows[0].id,lateId]);
+   }
+   return result;
+  }};
+  try{await assert.rejects(()=>sealGoalFamilyEvaluation(barrier as any,trials['goal-runtime'].id,runtimeFixtureBundle(null)),/CAPTURE_SOURCE_SET_CHANGED/);assert(insertedLate);}
+  finally{await pool.query('DELETE FROM executions WHERE id=$1',[lateId]);}
+  assert.equal((await c.query('SELECT sealed FROM evaluation_trials WHERE id=$1',[trials['goal-runtime'].id])).rows[0].sealed,false);
+  console.log('PASS concurrent execution-set change refuses capture and leaves trial unsealed');
   await sealGoalFamilyEvaluation(c,trials['goal-runtime'].id,runtimeFixtureBundle(null));
   const familyKey=generateKeyPairSync('ed25519');
   const familyTrace=await exportEvaluationTrace(c,trials['goal-runtime'].id,familyKey.privateKey);
@@ -254,7 +305,9 @@ async function parent(){
   assert.equal((familyScore as any).declaredCompletedGoals,3);
   const checked=verifyEvaluationTrace(familyTrace,familyKey.publicKey);
   const unlinked=structuredClone(checked);delete unlinked.events.at(-1).payload.sources[0].evidence.evaluationReservation;
-  assert.throws(()=>scoreGoalFamilyCapture(unlinked),/EXECUTION_RESERVATION_REQUIRED/);
+  assert.throws(()=>scoreGoalFamilyCapture(unlinked),/OPERATION_PERSISTENCE_UNCONFIRMED/);
+  const orphan=structuredClone(checked);orphan.events.at(-1).payload.sources=[];
+  assert.throws(()=>scoreGoalFamilyCapture(orphan),/OPERATION_PERSISTENCE_UNCONFIRMED/,'successful callbacks cannot disappear from capture after a persistence crash');
   const nonterminal=structuredClone(checked);nonterminal.events.at(-1).payload.goals[0].state='NEW';
   assert.throws(()=>scoreGoalFamilyCapture(nonterminal),/GOAL_CAPTURE_INVALID/);
   const uncited=structuredClone(checked);uncited.events.at(-1).payload.reports[0].decision.requirements[0].evidenceIds=[randomUUID()];
@@ -262,6 +315,8 @@ async function parent(){
   assert.throws(()=>scoreGoalFamilyCapture(uncited),/EVIDENCE_REVOKED/);
   const altered=structuredClone(familyTrace);altered.payload.events.at(-1).payload.root.state='COMPLETED';
   assert.throws(()=>scoreAuthenticatedEvaluation(altered,familyKey.publicKey,altered.payload.trial.spec.commit),/AUTHENTICATION_FAILED/);
+  if(process.env.SAM_EVALUATION_ARTIFACT_DIR){writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'goal-family-trace.json'),JSON.stringify(familyTrace));writeFileSync(join(process.env.SAM_EVALUATION_ARTIFACT_DIR,'goal-family-public.pem'),familyKey.publicKey.export({format:'pem',type:'spki'}));}
+  for(const suffix of ['zero-tools','zero-iterations','readback-cap']){const snapshot=await sealGoalFamilyEvaluation(c,trials['goal-runtime-'+suffix].id,runtimeFixtureBundle(null));assert(snapshot.goals.every(g=>g.state==='FAILED'));}
   console.log('PASS actual service child reports seal/export/authenticate with coordinator NEW; no live-quality claim');
   await c.query('REVOKE INSERT ON goal_read_reviews FROM '+role);run('report-admission');await c.query('GRANT INSERT ON goal_read_reviews TO '+role);
   const child=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',x=>output+=x);child.stderr.on('data',x=>output+=x);

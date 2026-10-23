@@ -1,3 +1,4 @@
+import {assessCollection} from '../../apps/brain/src/evidence/collectionReceipts';
 import assert from 'node:assert/strict';
 import {pool} from '../../packages/db/src/client';
 import {reviewFixture} from './reviewFixture';
@@ -25,6 +26,13 @@ async function main(){
  }
  const schema=(columns:ExtractionContract['columns']):ExtractionContract=>({version:'fixture-v1',rowsPath:['records'],columns,coveragePath:['coverage'],timeZonePath:['timeZone'],limitationsPath:['limitations']});
  const payload=(records:any[],coverage='complete')=>({records,coverage,timeZone:'Europe/Amsterdam',limitations:coverage==='complete'?[]:['Next page unavailable; not full population']});
+ const collected=await evidence([{...payload([{identity:'bounded-id'}],'unknown'),page:{next:null}}]);
+ const collectedInput={goalId:collected.goalId,legalEntityId:f.entity,sources:{page:collected.ids[0]},plan:{version:1 as const,source:'page',operations:[]}};
+ const collectedResult=await transformVerifiedSources(pool,collectedInput,{review_echo:{...schema({identity:{kind:'text'}}),collection:{cursorParameter:'cursor',nextCursorPath:['page','next'],identityPath:['identity']}}});
+ const receipt=collectedResult.dataset.sourceContexts![0].collection!;
+ assert.equal(receipt.executionId,collected.ids[0]);assert.equal(assessCollection([receipt]).complete,true);
+ assert.equal(collectedResult.dataset.coverage,'unknown','query receipts do not silently promote objective coverage');
+ await assert.rejects(transformVerifiedSources(pool,collectedInput,{review_echo:{...schema({identity:{kind:'text'}}),collection:{cursorParameter:'cursor',nextCursorPath:['invented'],identityPath:['identity']}}}),/METADATA_MISSING/);
  const catalog=new CapabilityCatalog([
   ...['bol_sales_stock_report','read_records','read_documents'].map(capabilityId=>({capabilityId,authorityClass:'GREEN' as const,specialistAgentId:'fixture',specialistVersion:'1',sideEffect:false})),
   {capabilityId:'delete_records',authorityClass:'RED',specialistAgentId:'writer',specialistVersion:'1',sideEffect:true}

@@ -1,3 +1,4 @@
+import {carryGoalObligations} from './goalObligations';
 import { randomUUID } from 'node:crypto';
 import {normalizeDependencies,validateStepGraph,type ResultReference} from './dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
@@ -40,13 +41,18 @@ export async function persistPlanAndDelegate(client:import('pg').PoolClient,inpu
   validateStepGraph(input.steps);
 
     const goal = await client.query(
-      "SELECT id, state FROM goals WHERE id=$1 FOR UPDATE",
+      "SELECT id, state, objective FROM goals WHERE id=$1 FOR UPDATE",
       [input.goalId]
     );
     if (goal.rowCount !== 1) throw new Error("Goal not found");
     if (goal.rows[0].state !== "PLANNING") {
       throw new Error(`Goal must be PLANNING before plan persistence, got ${goal.rows[0].state}`);
     }
+
+    const initial=await client.query('SELECT goal_assumptions FROM plans WHERE goal_id=$1 ORDER BY version ASC LIMIT 1',[input.goalId]);
+    if(initial.rows.length&&initial.rows[0]?.goal_assumptions?.goalObligations===undefined&&input.assumptions?.goalObligations!==undefined)throw Error('GOAL_OBLIGATIONS_LATE_BINDING');
+    const obligations=carryGoalObligations(goal.rows[0].objective,initial.rows[0]?.goal_assumptions?.goalObligations,input.assumptions?.goalObligations);
+    if(obligations)input={...input,assumptions:{...input.assumptions,goalObligations:obligations}};
 
     const versionRes = await client.query(
       "SELECT COALESCE(MAX(version),0)+1 AS version FROM plans WHERE goal_id=$1",
