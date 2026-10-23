@@ -1,0 +1,3 @@
+{"phase":"SNAPSHOT","requestHash":"c1ce2ca968d144a71e8449e9856f162b59153d0ea3ed78d9509391a3e34029dd","at":"2026-10-23T22:17:32.640Z","detail":{"reference":"render:63f0e5fa3ec9734d53b6d6971603fe5d5cfb9feb0a1731b87a687de33a3fd7dd"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"c1ce2ca968d144a71e8449e9856f162b59153d0ea3ed78d9509391a3e34029dd","at":"2026-10-23T22:17:32.788Z","detail":{"trialId":"11111111-2222-4333-8444-555555555555","elapsedFromInsertMs":139}}
+{"phase":"RESTORED","requestHash":"c1ce2ca968d144a71e8449e9856f162b59153d0ea3ed78d9509391a3e34029dd","at":"2026-10-23T22:17:32.809Z"}

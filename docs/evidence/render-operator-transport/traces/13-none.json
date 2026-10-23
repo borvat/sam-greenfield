@@ -1,0 +1,12 @@
+{
+  "classification": "SIMULATED_RENDER_API_NO_HOSTED_ACCEPTANCE",
+  "fault": "none",
+  "hostedCalls": 0,
+  "paidCalls": 0,
+  "mutations": [
+    {
+      "method": "POST",
+      "path": "/suspend"
+    }
+  ]
+}

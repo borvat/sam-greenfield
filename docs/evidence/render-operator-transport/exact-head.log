@@ -1,0 +1,113 @@
+v22.23.4
+TAP version 13
+# {"scenario":"none","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":22}
+# Subtest: actual launcher with simulated Render: none
+ok 1 - actual launcher with simulated Render: none
+  ---
+  duration_ms: 286.553869
+  type: 'test'
+  ...
+# {"scenario":"file-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":5}
+# Subtest: actual launcher with simulated Render: file-denial
+ok 2 - actual launcher with simulated Render: file-denial
+  ---
+  duration_ms: 129.809837
+  type: 'test'
+  ...
+# {"scenario":"file-loss","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":6}
+# Subtest: actual launcher with simulated Render: file-loss
+ok 3 - actual launcher with simulated Render: file-loss
+  ---
+  duration_ms: 148.271997
+  type: 'test'
+  ...
+# {"scenario":"deploy-loss","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":20}
+# Subtest: actual launcher with simulated Render: deploy-loss
+ok 4 - actual launcher with simulated Render: deploy-loss
+  ---
+  duration_ms: 191.030233
+  type: 'test'
+  ...
+# {"scenario":"restore-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":23}
+# Subtest: actual launcher with simulated Render: restore-denial
+ok 5 - actual launcher with simulated Render: restore-denial
+  ---
+  duration_ms: 248.281101
+  type: 'test'
+  ...
+# {"scenario":"suspended-deploy-denial","restored":true,"modelCalls":0,"hostedCalls":0,"mutationCount":19}
+# Subtest: actual launcher with simulated Render: suspended-deploy-denial
+ok 6 - actual launcher with simulated Render: suspended-deploy-denial
+  ---
+  duration_ms: 176.242871
+  type: 'test'
+  ...
+# Subtest: unknown delayed write blocks restoration until authoritative readback; no blind retry
+ok 7 - unknown delayed write blocks restoration until authoritative readback; no blind retry
+  ---
+  duration_ms: 241.764889
+  type: 'test'
+  ...
+# Subtest: actual SIGKILL after remote deploy application resumes recovery without duplicate deploy
+ok 8 - actual SIGKILL after remote deploy application resumes recovery without duplicate deploy
+  ---
+  duration_ms: 515.565823
+  type: 'test'
+  ...
+# Subtest: cancellation reaches HTTP transport; applied request is reconciled, not repeated
+ok 9 - cancellation reaches HTTP transport; applied request is reconciled, not repeated
+  ---
+  duration_ms: 120.782154
+  type: 'test'
+  ...
+# Subtest: configuration drift is preserved and blocks restoration, then exact verification catches later drift
+ok 10 - configuration drift is preserved and blocks restoration, then exact verification catches later drift
+  ---
+  duration_ms: 122.42456
+  type: 'test'
+  ...
+# Subtest: service allowlist and simulation origin reject before credential access
+ok 11 - service allowlist and simulation origin reject before credential access
+  ---
+  duration_ms: 0.401896
+  type: 'test'
+  ...
+# Subtest: redirects never forward authentication and leave the unknown write pending
+ok 12 - redirects never forward authentication and leave the unknown write pending
+  ---
+  duration_ms: 116.087359
+  type: 'test'
+  ...
+# Subtest: ambiguous deployment receipt never chooses a candidate or repeats POST
+ok 13 - ambiguous deployment receipt never chooses a candidate or repeats POST
+  ---
+  duration_ms: 123.810786
+  type: 'test'
+  ...
+# Subtest: private snapshot lock excludes a second operator and scope cannot change on recovery
+ok 14 - private snapshot lock excludes a second operator and scope cannot change on recovery
+  ---
+  duration_ms: 120.673654
+  type: 'test'
+  ...
+# Subtest: linked environment group drift blocks writes without modifying the group
+ok 15 - linked environment group drift blocks writes without modifying the group
+  ---
+  duration_ms: 53.479314
+  type: 'test'
+  ...
+# Subtest: restoration rolls back the exact original deploy even when commit hashes match
+ok 16 - restoration rolls back the exact original deploy even when commit hashes match
+  ---
+  duration_ms: 117.943493
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3050.673841

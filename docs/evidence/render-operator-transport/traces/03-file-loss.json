@@ -1,0 +1,32 @@
+{
+  "classification": "SIMULATED_RENDER_API_NO_HOSTED_ACCEPTANCE",
+  "fault": "file-loss",
+  "hostedCalls": 0,
+  "paidCalls": 0,
+  "mutations": [
+    {
+      "method": "POST",
+      "path": "/suspend"
+    },
+    {
+      "method": "PUT",
+      "path": "/secret-files/sam-eval-owner-public.pem"
+    },
+    {
+      "method": "PUT",
+      "path": "/secret-files/sam-eval-approval.json"
+    },
+    {
+      "method": "DELETE",
+      "path": "/secret-files/sam-eval-owner-public.pem"
+    },
+    {
+      "method": "DELETE",
+      "path": "/secret-files/sam-eval-approval.json"
+    },
+    {
+      "method": "POST",
+      "path": "/resume"
+    }
+  ]
+}
