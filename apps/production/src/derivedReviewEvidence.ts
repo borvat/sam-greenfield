@@ -5,7 +5,7 @@ export function derivedCellQuote(artifact:DerivedArtifact,row:number,field:strin
 }
 export function derivedReviewText(artifact:DerivedArtifact,limit=Infinity){
  const d=artifact.output.dataset;
- const metadata={artifactId:artifact.artifactId,outputHash:artifact.output.outputHash,columns:d.columns,coverage:d.coverage,timeZone:d.timeZone,limitations:d.limitations,selections:d.selections??[]};
+ const metadata={artifactId:artifact.artifactId,outputHash:artifact.output.outputHash,columns:d.columns,coverage:d.coverage,timeZone:d.timeZone,limitations:d.limitations,selections:d.selections??[],sourceContexts:d.sourceContexts??[]};
  const lines=[JSON.stringify(metadata)];let used=lines[0].length,omitted=0;
  if(used+200>limit)throw Error('REVIEW_ESSENTIAL_EVIDENCE_TOO_LARGE');
  for(let row=0;row<d.rows.length;row++)for(const field of Object.keys(d.rows[row].values)){

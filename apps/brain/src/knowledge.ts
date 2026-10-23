@@ -15,6 +15,9 @@ export async function captureVerifiedKnowledge(client:any, goalId:string, findin
       FROM executions e JOIN LATERAL (SELECT id,result FROM verifications
        WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) v ON true
       WHERE e.id=$1 AND e.goal_id=$2 AND v.result='VERIFIED'`,[finding.executionId,goalId])).rows[0];
+    // The provisioned knowledge profile permits literal external SOURCE_FACT only.
+    // Derived provenance remains in its execution/report ledger; do not broaden ACLs.
+    if(evidence?.capability_id===DERIVE_CAPABILITY)continue;
     if (!evidence || typeof finding.quote !== "string" || finding.quote.length < 3 || finding.quote.length > 1500 ||
         !sourceText(evidence.result).includes(finding.quote)) {
       throw new Error("KNOWLEDGE_UNSUPPORTED_SOURCE");
@@ -24,9 +27,9 @@ export async function captureVerifiedKnowledge(client:any, goalId:string, findin
     const key=sha256Hex({capability:evidence.capability_id,params:evidence.params,quote:finding.quote});
     await client.query(`INSERT INTO knowledge_records
       (legal_entity_id,kind,statement,execution_id,verification_id,goal_id,source_key,source_timestamp,expires_at)
-      VALUES($1,$8,$2,$3,$4,$5,$6,$7,$7::timestamptz + interval '30 days')
+      VALUES($1,'SOURCE_FACT',$2,$3,$4,$5,$6,$7,$7::timestamptz + interval '30 days')
       ON CONFLICT (legal_entity_id,kind,goal_id,source_key) DO NOTHING`,
-      [goal.company_scope,finding.quote,evidence.id,evidence.verification_id,goalId,key,evidence.started_at,evidence.capability_id===DERIVE_CAPABILITY?'INFERENCE':'SOURCE_FACT']);
+      [goal.company_scope,finding.quote,evidence.id,evidence.verification_id,goalId,key,evidence.started_at]);
   }
 }
 

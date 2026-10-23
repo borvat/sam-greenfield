@@ -46,7 +46,9 @@ partial coverage and selected scope block structural completion. Objective criti
 still decides whether supported claims address the actual requested deliverables.
 Arithmetic is not treated as independent business truth.
 
-Knowledge capture retains a literal derived quotation as INFERENCE, not SOURCE_FACT.
+Derived findings are excluded from separate knowledge capture. The provisioned
+SOURCE_FACT-only policy and literal raw-source provenance trigger remain unchanged.
+Derived provenance stays in the replay-backed report and execution ledger.
 Default memory recall excludes derived executions because it has no reviewed contract
 registry for replay. Reuse in the goal's review occurs through the execution ledger
 and fresh replay; no stale derived knowledge is promoted to an external fact.
@@ -61,7 +63,7 @@ and fresh replay; no stale derived knowledge is promoted to an external fact.
 | Persistence/retry | Same artifact identity on retry, one queue commit, cold replay; no repeated raw reads |
 | Scope | Non-owner/non-bypass role: own tenant succeeds; missing/foreign context denied |
 | Integrity | Stored hash tampering, changed contracts, forged values and revoked inputs denied |
-| Report/knowledge | Derived provenance preserved; inference label; invalid lineage blocks before model call |
+| Report/knowledge | Derived provenance preserved in report; raw SOURCE_FACT capture preserved under actual provisioned LOGIN role; invalid lineage blocks before model call |
 | Compatibility | Full exact-head acceptance including prior PR54 citation/knowledge tests |
 
 Natural-language fixture goals have no tool names or plans. Their model decisions
@@ -103,7 +105,7 @@ sum with EUR but no VAT is blocked even without sales keywords.
 Derived source rendering uses bounded canonical cell quotations containing artifact
 identity, output hash, row, field and value. Quotes cannot be borrowed from another
 field or row with the same scalar. Projection omissions remain explicit; only whole
-canonical cells are citable. Knowledge uses this same canonical representation.
+canonical cells are citable. Separate knowledge capture excludes these derived cells; they remain citable in the report.
 
 A two-connection barrier reproduced a revocation committed after final replay but
 before report commit, with a COMPLETED report and latest raw FAILED verification.
@@ -115,3 +117,18 @@ barriers verify both insert and update are blocked until commit. This establishe
 validity at report commit, not immunity to later revocation of historical evidence.
 
 The model-visible capability now exposes a full discriminated operation grammar, including required join keys, aggregate fields, comparisons and arithmetic operands. The same JSON schema is enforced by the ordinary executor; missing fields and unsupported operators are rejected before adapter execution.
+
+## Restricted-profile and projection corrections
+
+Integration acceptance provisions the existing service-role profile on an isolated
+database and connects as its actual non-owner LOGIN role with knowledge enabled.
+Completion persists both the derived report citation and one raw SOURCE_FACT, with
+no derived knowledge insertion or policy/trigger/grant changes. A projection that
+cannot fit required metadata persists a sanitized projection-blocked report, makes
+no review model call, and never re-renders the failing source outside its catch.
+
+The real profile hides reports belonging to older plans. A regression reproduced
+round 1 where round 2 was required. Review now also counts distinct earlier plans
+with completed, goal-scoped READ_REVIEW_BUDGET audit receipts. Current-plan retries
+are excluded. This preserves the existing round limit without broadening report
+visibility. See [source contracts and proposed evaluation](reviewed-source-contracts.md).

@@ -2,7 +2,7 @@ import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 export type Column={kind:'text'|'date'|'decimal';unit?:string;semantic?:'monetary'|'quantity'|'ratio';vat?:string;semanticUncertainty?:boolean};
 export type Citation={executionId:string;verificationId:string;row:number;sourceHash:string};
 export type EvidenceRow={values:Record<string,string|null>;citations:Citation[]};
-export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[]};
+export type Dataset={columns:Record<string,Column>;rows:EvidenceRow[];coverage:'complete'|'partial'|'unknown';timeZone:string|null;limitations:string[];selections?:string[];sourceContexts?:{sourceHash:string;period?:unknown;identity?:unknown}[]};
 export type Operation=
  |{op:'save';as:string}
  |{op:'from';source:string}
@@ -102,7 +102,7 @@ export function replayTransform(plan:TransformPlan,sources:Record<string,Dataset
    for(const left of d.rows){let matches=0;for(const rr of right.rows){if(++comparisons>10000)fail('JOIN_WORK_LIMIT');if(left.values[op.leftKey]===null||left.values[op.leftKey]!==rr.values[op.rightKey])continue;
     matches++;rows.push({values:{...left.values,...Object.fromEntries(Object.entries(rr.values).map(([k,v])=>['right_'+k,v]))},citations:citations([left,rr])});if(rows.length>500)fail('ROW_OR_COLUMN_LIMIT');}
     if(!matches){unmatched++;if(op.kind==='left')rows.push({values:{...left.values,...Object.fromEntries(Object.keys(right.columns).map(k=>['right_'+k,null]))},citations:left.citations});}}
-   d={columns,rows,coverage:d.coverage==='complete'&&right.coverage==='complete'?'complete':d.coverage==='partial'||right.coverage==='partial'?'partial':'unknown',timeZone:d.timeZone===right.timeZone?d.timeZone:null,
+   d={columns,rows,sourceContexts:[...(d.sourceContexts??[]),...(right.sourceContexts??[])],coverage:d.coverage==='complete'&&right.coverage==='complete'?'complete':d.coverage==='partial'||right.coverage==='partial'?'partial':'unknown',timeZone:d.timeZone===right.timeZone?d.timeZone:null,
     selections:[...(d.selections??[]),...(right.selections??[]),...(op.kind==='inner'?[JSON.stringify(op)]:[])],limitations:[...d.limitations,...right.limitations,`Join ${op.kind}: ${unmatched} unmatched left records; no absence inferred beyond recorded coverage`]};
   }else fail('OPERATION_UNSUPPORTED');
   validate(d);

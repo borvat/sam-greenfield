@@ -134,10 +134,12 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const derivedReplayBlocked=rejectedDerived.size>0;
   all.rows=all.rows.filter((e:any)=>!rejectedDerived.has(e.id));
   const sourceAllowance=derivedReplayBlocked&&all.rows.length===0?0:reviewSourceAllowance(all.rows.length);
+  const canonicalDerivedQuotes=new Map<string,Set<string>>();
   const projections:ReturnType<typeof projectReviewEvidence>[]=all.rows.map((e:any)=>{
    try{
     if(derived.has(e.id)){
      const artifact=derived.get(e.id)!,projection=derivedReviewText(artifact,sourceAllowance);
+     canonicalDerivedQuotes.set(e.id,new Set(projection.quotes));
      return {text:projection.text,truncated:projection.omitted>0,omissions:projection.omitted?[`${projection.omitted} derived cells omitted; no full-detail claim`]:[],limitations:artifact.output.dataset.limitations,originalHash:sha256Hex(e.result),data:undefined};
     }
     return projectReviewEvidence(e.result,sourceAllowance);
@@ -149,14 +151,19 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const sources:Source[]=all.rows.map((e:any,index:number)=>{
    const projection=projections[index],body=projection.text,provenance={independentReadback:"VERIFIED",originalContentHash:projection.originalHash};
    const text=body+"\n[Verified execution evidence]\n"+JSON.stringify(provenance,null,2),raw=derived.has(e.id)?'':reviewSourceText(e.result);
-   const derivedQuotes=derived.has(e.id)?new Set(derivedReviewText(derived.get(e.id)!,sourceAllowance).quotes):undefined;
+   const derivedQuotes=derived.has(e.id)?canonicalDerivedQuotes.get(e.id)??new Set<string>():undefined;
    const verifiedQuotes=Object.fromEntries(sourceLines(text).flatMap((line,index)=>{
     const quote=line.trim();return quote.length>=3&&(derivedQuotes?derivedQuotes.has(quote):raw.includes(quote))?[[index,quote]]:[];
    }));
    return {id:e.id,capabilityId:e.capability_id,params:e.params,text,verifiedQuotes,...(derived.has(e.id)?{derivedArtifact:derived.get(e.id)}:{}),truncated:projection.truncated,actor:e.actor,retrievedAt:new Date(e.started_at).toISOString(),uri:body.match(/https?:\/\/[^\s<>"']+/i)?.[0]??(typeof e.evidence?.sourceUri==="string"?e.evidence.sourceUri:undefined)};
   });
   if(sources.length>20)throw new Error("REVIEW_SOURCE_BUDGET_EXCEEDED");
-  const round=prior?.round??existing.rows.length+1;
+  // Restricted report policies hide old-plan reports. Runtime audit receipts
+  // retain the goal-scoped round history without broadening report visibility.
+  const priorRounds=Number((await client.query(`SELECT count(DISTINCT after_ref->>'planId')::int count FROM audit_log
+   WHERE goal_id=$1 AND action='READ_REVIEW_BUDGET' AND actor='read_review'
+    AND after_ref->>'planId'<>$2 AND after_ref->'runtimeReview'->>'phase'='finished'`,[goal.id,goal.current_plan_id])).rows[0]?.count??0);
+  const round=prior?.round??Math.max(existing.rows.length,priorRounds)+1;
   const evidenceLimitations=[...new Set(projections.flatMap(p=>[...p.limitations,...p.omissions]))];
   const projectionBlocked=projections.some(p=>p.limitations.some(l=>l.startsWith('REVIEW_EVIDENCE_PROJECTION_BLOCKED')));
   const monetaryGaps=monetaryEvidenceLimitations(goal.objective,sources.map((s,i)=>({capabilityId:s.capabilityId,data:projections[i].data})));

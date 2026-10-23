@@ -1,6 +1,6 @@
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {replayTransform,knownTimeZone,type Column,type Dataset,type TransformPlan} from './transforms';
-export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[]};
+export type ExtractionContract={version:string;rowsPath:string[];columns:Record<string,Column>;coveragePath:string[];timeZonePath:string[];limitationsPath:string[];rowsMode?:'array'|'single';fields?:Record<string,{path:string[];from?:'record'|'root';encoding?:'safe-integer'}>;requiredFields?:string[];sourceLimitations?:string[];periodPath?:string[];identityPath?:string[]};
 const at=(v:any,path:string[])=>{if(!Array.isArray(path)||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('EVIDENCE_PATH_INVALID');for(const k of path){if(v===null||typeof v!=='object'||!Object.hasOwn(v,k))return undefined;v=v[k];}return v;};
 /** Internal API only. Contract registry is trusted application configuration,
  * never model parameters. No production capability/registry is installed here. */
@@ -18,15 +18,26 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
  for(const [alias,id] of Object.entries(input.sources)){
   if(!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(alias)||['constructor','prototype','__proto__'].includes(alias))throw Error('EVIDENCE_ALIAS_INVALID');
   const row=rows.find((r:any)=>r.id===id),contract=contracts[row.capability_id];if(!contract?.version)throw Error('EVIDENCE_OUTPUT_SCHEMA_UNKNOWN');
-  const records=at(row.result,contract.rowsPath);if(!Array.isArray(records)||records.length>500)throw Error('EVIDENCE_RECORDS_INVALID');
+  const selected=at(row.result,contract.rowsPath),records=contract.rowsMode==='single'?[selected]:selected;if(!Array.isArray(records)||records.length>500)throw Error('EVIDENCE_RECORDS_INVALID');
   const coverage=at(row.result,contract.coveragePath),timeZone=at(row.result,contract.timeZonePath),limitations=at(row.result,contract.limitationsPath);
   assertExecutionIntegrity(row);
   const sourceHash=sha256Hex(row.result);
   sources[alias]={columns:contract.columns,rows:records.map((record:any,index:number)=>{
    if(!record||typeof record!=='object'||Array.isArray(record))throw Error('EVIDENCE_RECORD_INVALID');
-   return {values:Object.fromEntries(Object.keys(contract.columns).map(k=>[k,Object.hasOwn(record,k)?record[k]:null])),citations:[{executionId:id,verificationId:row.verification_id,row:index,sourceHash}]};
+   const values=Object.fromEntries(Object.keys(contract.columns).map(k=>{
+    const mapping=contract.fields?.[k];let value=mapping?at(mapping.from==='root'?row.result:record,mapping.path):(Object.hasOwn(record,k)?record[k]:null);
+    if(value===undefined)value=null;
+    if(value===null&&(contract.requiredFields??[]).includes(k))throw Error('EVIDENCE_REQUIRED_FIELD_MISSING');
+    if(value!==null&&mapping?.encoding==='safe-integer'){
+     if(contract.columns[k].kind!=='decimal'||typeof value!=='number'||!Number.isSafeInteger(value))throw Error('EVIDENCE_INTEGER_ENCODING_INVALID');
+     value=String(value);
+    }
+    return [k,value];
+   }));
+   return {values,citations:[{executionId:id,verificationId:row.verification_id,row:index,sourceHash}]};
   }),coverage:['complete','partial'].includes(coverage)?coverage:'unknown',timeZone:knownTimeZone(timeZone)?timeZone:null,
-   limitations:[...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
+   sourceContexts:[{sourceHash,...(contract.periodPath?{period:at(row.result,contract.periodPath)??null}:{}),...(contract.identityPath?{identity:at(row.result,contract.identityPath)??null}:{})}],
+   limitations:[...(contract.sourceLimitations??[]),...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
   bindings[alias]={executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
  }
  const result=replayTransform(input.plan,sources);
