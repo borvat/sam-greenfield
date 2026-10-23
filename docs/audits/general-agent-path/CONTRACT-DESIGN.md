@@ -80,8 +80,8 @@ Add a versioned ordinary goal-family capture, preserving specialist capture v1.
 Capture reads actual terminal goal_read_reviews and current raw/derived verification
 lineage, obligations, reservations, operations and learning/report references under
 consistent locks/snapshot. All enrolled goals must be accounted for, including honest
-blocked/failed outcomes. Coordinator terminality represents an evaluation outcome;
-it is not a synthetic business execution or proof that all tasks succeeded.
+blocked/failed outcomes. The coordinator remains NEW; trial sealing records the evaluation outcome without
+inventing a completed coordinator execution or claiming every task succeeded.
 
 Authenticated capture scoring separates integrity, safety, functional fulfillment
 and human/model quality. A valid blocked report passes honesty but fails a nominal
@@ -104,3 +104,26 @@ unchanged; unsupported derived learning is retained only in report provenance.
 
 No step is satisfied solely by a new helper unit test or a fixture bypassing the
 selected entrypoint. Preserve the prior checkpoints; report remaining gaps explicitly.
+
+## Joint invariant gates from complementary independent audit
+
+These must run through one positive service assembly with substituted fixture
+transports, not only helper calls or disabled-import tests:
+
+1. Reviewed model/endpoint cap includes reasoning and provider tolerance.
+2. Every source, readback and goal decision reserves durably before entry; zero
+   limits and crashes between every transition retain charges and deny dispatch.
+3. Startup recovery, dependencies, outbox/event consumption and ongoing maintenance
+   are confined to the enrolled family, including same-company cancelled/due goals.
+4. Bootstrap validates the integration/report permissions actually used, as well as
+   specialist/evaluation profiles. Test provisioning extra profiles cannot mask a
+   missing production preflight. No grant expansion follows from this check.
+5. Raw-only reports recheck latest source receipts under final commit locks even with
+   knowledge capture disabled. Test both insertion and update revocation races.
+6. Versioned capture certifies actual three child reports while the coordinator stays
+   NEW; no fabricated specialist report or completed root.
+7. A shared lifecycle harness crosses restart, concurrency, cancellation and receipt
+   revocation with the exact same runtime assembly and immutable manifest.
+
+These complement the goal-scope/collection/transform/delegation requirements above.
+No green component total can substitute for the combined gates.
