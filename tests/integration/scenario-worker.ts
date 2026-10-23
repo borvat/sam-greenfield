@@ -55,7 +55,13 @@ async function main(){
    assert(observations.length===2);assert(observations.every((s:any)=>s.trustBoundary));
    return {model:'fixture',usage:{inputTokens:1,outputTokens:1},output:{status:'complete',summary:'FixtureBox: source price EUR 23; verified analysis agrees. A failed analysis was replanned and a specialist retry recovered. Synthetic evidence only.',
     requirements:[{requirement:'Source terms and consolidated decision',fulfilled:true,evidenceIds:observations.map((s:any)=>s.id)}],
-    findings:observations.map((s:any)=>({text:s.lines[0].text,executionId:s.id,quoteLine:0,confidence:'MEDIUM',confidenceBasis:'Synthetic independently reread source; no real market evidence'})),
+    findings:observations.map((s:any)=>{
+     const detail=s.lines.findIndex((line:string)=>line.includes('"sku"'));
+     const quoteLine=detail>=0?detail:0;
+     assert(s.citableLines.includes(quoteLine));
+     if(detail>=0){assert(s.sourceTruncated);const wrapper=s.lines.findIndex((line:string)=>line.includes('"items"'));assert(wrapper>=0&&!s.citableLines.includes(wrapper));}
+     return {text:s.lines[quoteLine],executionId:s.id,quoteLine,confidence:'MEDIUM',confidenceBasis:'Synthetic independently reread source; no real market evidence'};
+    }),
     limitations:['Model/critic responses are fixtures; specialist executors do not perform independent reasoning.'],contradictions:[],steps:[]}};
   }
   assert.match(input.objective,/FixtureBox/);assert(input.capabilities.some((d:any)=>d.capabilityId===readId));
@@ -70,7 +76,7 @@ async function main(){
  const capabilities=[...discovered.capabilities,{capabilityId:analysis,authorityClass:'GREEN' as const,specialistAgentId:'decision-analyst',specialistVersion:'1',sideEffect:false,parameters:{type:'object',properties:{value:{type:'number'}},required:['value'],additionalProperties:false}}].map(d=>({...d,companyScopes:[entity]}));
  const tools=[...discovered.toolDefinitions,{capabilityId:analysis,authorityClass:'GREEN' as const,sideEffect:false}].map(d=>({...d,companyScopes:[entity]}));
  const bundle=validateProductionBundle({capabilities,toolDefinitions:tools,
-  toolAdapters:[...discovered.toolAdapters,{capabilityId:analysis,async execute(r){return {result:{value:r.params.value,content:[{type:'text',text:`FixtureBox independent decision uses price EUR ${r.params.value}.`}]},evidence:{readback:true}};}}],
+  toolAdapters:[...discovered.toolAdapters,{capabilityId:analysis,async execute(r){const result={value:r.params.value,report:{products:Array.from({length:90},(_,i)=>({sku:'FixtureBox-'+i,description:'detail '.repeat(15),quantity:2}))}};assert(JSON.stringify(result,null,2).length>16000&&JSON.stringify(result,null,2).length<22000);return {result,evidence:{readback:true}};}}],
   verificationAdapters:[...discovered.verificationAdapters,{capabilityId:analysis,async verify(r){return {result:r.execution.result?.value===terms.structuredContent.price?'VERIFIED' as const:'FAILED' as const,evidence:{readback:true,value:terms.structuredContent.price},verifier:'synthetic-independent-price-query'};} }],
   modelAdapters:[adapter],modelProviderConfigs:[{providerId:adapter.providerId,models:['fixture'],capabilities:['planning'],privacyClasses:['INTERNAL'],health:'HEALTHY',costPer1kInput:0,costPer1kOutput:0}],workerLeaseTtlSeconds:1});
  const composition=await createIntegrationComposition({bundle,workerId:'integration-acceptance'});
@@ -88,6 +94,8 @@ async function main(){
  assert.equal(initial,1);assert.equal(replans,1);assert.equal(reviews,1);assert.equal(critiques,1);
  const rows=(await pool.query('SELECT * FROM goal_read_reviews WHERE goal_id=$1',[goalId])).rows;assert.equal(rows.length,1);
  const report=rows[0].decision;assert.equal(report.findings.length,2);
+ const detail=report.findings.find((f:any)=>f.quote.includes('\"sku\"'));assert(detail,'projected detail citation persisted');assert.equal(detail.quote,detail.quote.trim());
+ assert.equal((await one('SELECT count(*)::int n FROM knowledge_records WHERE statement=$1',[detail.quote])).n,1,'literal nested detail survives knowledge capture under restricted runtime');
  assert.equal((await one('SELECT count(*)::int n FROM knowledge_records')).n,2);
  const hands=(await pool.query('SELECT handoff,status,attempt FROM work_queue WHERE goal_id=$1',[goalId])).rows;
  assert(hands.some(w=>Number(w.attempt)>=2),'durable lease retry after transient specialist failure');
