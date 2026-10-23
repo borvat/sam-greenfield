@@ -43,7 +43,7 @@ function add(name,kind='test'){const step={name,kind,status:'NOT_RUN',startedAt:
 const plan={};
 for(const name of ['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','workflow-validation','configuration-validation','typecheck','regression','core-reliability',
  'provider-auth','postgres-tls','contracts','synthetic-pilot','managed-schema','local-bundle','closed-setup','database-contract','prelaunch-gate',
- 'service-provisioning','operator-provisioning','provisioning-backup-recovery','render-migration-compatibility','render-google-oauth-contracts','integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-learning-fairness','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','cleanup'])
+ 'service-provisioning','operator-provisioning','provisioning-backup-recovery','render-migration-compatibility','render-google-oauth-contracts','integration-migrations','integration-oauth-mcp','integration-orchestration','specialist-reasoning','specialist-gateway','specialist-provenance','specialist-learning-fairness','specialist-evaluation','evaluation-budget','evaluation-adapter','evaluation-orchestration','evaluation-independent-review','evaluation-commercial-market','evaluation-commercial-profitability','evaluation-commercial-suppliers','migration-upgrade-rollback','specialist-restart-prepare','evaluation-restart-prepare','postgres-restart','migration-after-restart','specialist-restart-check','evaluation-restart-check','phase0-migrations','phase0-acceptance','phase0-postgres','tenant-isolation','fail-closed-security','clean-image','image-contract','application-startup-restart','source-integrity','shared-goal-path','cleanup'])
  plan[name]=add(name,['preflight','snapshot','images','isolated-postgres','node-dependencies','python-dependencies','runtime-versions','workflow-tool','cleanup'].includes(name)?'infrastructure':'test');
 function save(){
  report.artifacts={};
@@ -244,7 +244,7 @@ async function main(){
   await step('render-migration-compatibility',s=>suite(s,'tests/compatibility/renderMigrations.ts'));
   await step('render-google-oauth-contracts',s=>node(s,['node','--import','tsx','--test',
     ...fs.readdirSync(path.join(source,'tests/isolated')).filter(f=>/^sam_google_.*\.ts$/.test(f)).sort().map(f=>'tests/isolated/'+f),
-    'tests/isolated/goal_obligations.ts','tests/isolated/collection_receipts.ts',
+    'tests/isolated/goal_obligations.ts','tests/isolated/collection_receipts.ts','tests/isolated/shared_goal_contract.ts','tests/isolated/delegation_scope.ts',
     'tests/phase21/mcp_internal_oauth.ts','tests/phase22/submit_goal_surface.ts'],
     ['--env','NODE_ENV=test','--env','DATABASE_URL=postgres://fixture:fixture@127.0.0.1:9/sam_core_test']));
   const life=['--env' ,'DATABASE_URL=postgres://postgres:verification-fixture@127.0.0.1:5432/sam_core_test_lifecycle'];
@@ -305,6 +305,7 @@ async function main(){
     if(hash(fs.readFileSync(path.join(source,file)))!==expected)throw Error('SNAPSHOT_SOURCE_CHANGED: '+file);
    fs.writeFileSync(path.join(output,s.log),'PASS: all '+Object.keys(manifest).length+' tracked source files retain the archived SHA256; generated Dockerfile recorded separately.\n');
   });
+  await step('shared-goal-path',s=>suite(s,'tests/evaluation/sharedPath.ts'));
  }catch(error){report.unresolvedDefects.push(error.message);console.error('VERIFY_FAILED:',error.message);}
  finally{
   try{await step('cleanup',cleanup);}catch(error){report.unresolvedDefects.push(error.message);}
