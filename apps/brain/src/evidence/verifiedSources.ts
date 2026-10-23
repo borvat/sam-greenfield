@@ -1,4 +1,4 @@
-import {evidenceFamily,assertAssignedExecution,type DelegationPolicy} from './delegationScope';
+import {evidenceFamily,sourceDelegationHash,assertAssignedExecution,type DelegationPolicy} from './delegationScope';
 import {collectionReceipt,type CollectionContract} from './collectionReceipts';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
 import {replayTransform,knownTimeZone,type Column,type Dataset,type TransformPlan} from './transforms';
@@ -49,7 +49,7 @@ export async function transformVerifiedSources(client:any,input:{goalId:string;l
   }),coverage:['complete','partial'].includes(coverage)?coverage:'unknown',timeZone:knownTimeZone(timeZone)?timeZone:null,
    sourceContexts:[{sourceHash,...(contract.collection?{collection:collectionReceipt(row,records,contract.collection)}:{}),...(contract.periodPath?{period:at(row.result,contract.periodPath)??null}:{}),...(contract.identityPath?{identity:at(row.result,contract.identityPath)??null}:{})}],
    limitations:[...(contract.sourceLimitations??[]),...(Array.isArray(limitations)?limitations.filter(x=>typeof x==='string'):[]),'Source metadata is attributed verified-read evidence, not independent business truth']};
-  bindings[alias]={...(family?{delegationHash:family.hash,sourceGoalId:row.goal_id}:{}),executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
+  bindings[alias]={...(family?{delegationHash:sourceDelegationHash(family,row.goal_id,delegationPolicy!),sourceGoalId:row.goal_id}:{}),executionId:id,verificationId:row.verification_id,executionHash:row.execution_hash,sourceHash,contractHash:sha256Hex(contract)};
  }
  const result=replayTransform(input.plan,sources);
  return {...result,bindings,provenanceHash:sha256Hex({bindings,planHash:result.planHash,outputHash:result.outputHash})};

@@ -1,0 +1,19 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"27cec314-a319-4e39-94c5-80dfd28093cc","state":"NEW"},{"id":"cdab9a40-74e6-407e-8706-cc82e085e1f8","state":"NEW"},{"id":"dea17fd2-0d04-4b6c-a2d1-e41a18b0697c","state":"EXECUTING"}],"calls":2}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+{"event":"RUNTIME_STAGE_FAILED","stage":"execution","details":"withheld"}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+null !== 0
+
+    at parent (/tmp/sam-shared-path/tests/evaluation/sharedPath.ts:59:325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:28:10.769Z","completedAt":"2026-10-23T17:29:21.953Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:28:10.771Z","completedAt":"2026-10-23T17:28:10.949Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:28:10.949Z","completedAt":"2026-10-23T17:29:21.953Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

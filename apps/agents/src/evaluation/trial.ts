@@ -127,7 +127,7 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
   begin,record:(c:PoolClient,kind:string,payload:unknown)=>appendTrialEvent(c,trialId,kind,payload),
   cancel:()=>withTransaction(async c=>{await fixedPath(c);await c.query('UPDATE evaluation_trials SET cancelled=true WHERE id=$1',[trialId]);await appendTrialEvent(c,trialId,'CANCELLED',{});}),
   checkSource:(value:Record<string,unknown>)=>{
-   const source=(commercialScenario(spec.caseId)??evaluationCases.find(c=>c.id===spec.caseId))!.sources.find(s=>s.id===value.sourceId);
+   const source=(commercialScenario(spec.caseId)??evaluationCases.find(c=>c.id===spec.caseId))?.sources.find(s=>s.id===value.sourceId);
    if(!source||sha256Hex(source.data)!==sha256Hex(value.sourceData))throw Error('EVALUATION_FROZEN_SOURCE_REQUIRED');
    // Forward only enrolled corpus bytes. An adapter cannot smuggle extra
    // company fields alongside an otherwise valid sourceData envelope.

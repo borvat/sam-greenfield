@@ -38,7 +38,7 @@ export function sharedGoalBundle(base:ProductionBundle,contracts:OutputContracts
  configured.toolDefinitions=configured.toolDefinitions.map(t=>({...t,companyScopes:[tenant],costUpperBoundUsd:t.costUpperBoundUsd??0}));
  const copied=structuredClone(configs);bundles.set(configured,{configs:copied,tenant,digest:evaluationBundleHash(configured)});return configured;
 }
-export async function createSharedGoalComposition(input:{bundle:ProductionBundle;trial:EvaluationTrial;expectedCommit:string;workerId:string}){
+export async function createSharedGoalComposition(input:{bundle:ProductionBundle;trial:EvaluationTrial;expectedCommit:string;workerId:string;diagnostic?:(stage:string,error:unknown)=>void}){
  assertEvaluationTrial(input.trial);
  const setup=bundles.get(input.bundle);if(!setup||setup.tenant!==input.trial.spec.companyId||setup.digest!==evaluationBundleHash(input.bundle))throw Error('SHARED_GOAL_ASSEMBLY_REQUIRED');
  const raw=withGoalEvaluation(input.bundle,input.trial,input.expectedCommit),policy=raw.descendantEvidencePolicy!;
@@ -54,9 +54,10 @@ export async function createSharedGoalComposition(input:{bundle:ProductionBundle
  for(const cfg of setup.configs)for(const id of roots)if(cfg.limits.tools<input.trial.spec.agents['goal.'+id].tools)throw Error('SHARED_TOOL_LIMIT_MISMATCH');
  await withTransaction(async c=>{await assertIntegrationAccess(c);const access=(await c.query("SELECT (has_table_privilege(current_user,'goal_read_reviews','SELECT') AND has_table_privilege(current_user,'goal_read_reviews','INSERT')) allowed")).rows[0];if(!access?.allowed)throw Error('EVALUATION_REPORT_ACCESS_REQUIRED');await input.trial.live(c);});
  const checked=validateProductionBundle(raw);
- const engine=await createSpecialistIntelligence({configs:setup.configs,catalog:checked.catalog,tools:checked.tools,gateway:new ModelGateway(Object.fromEntries((raw.modelAdapters??[]).map(a=>[a.providerId,a]))),trial:input.trial,sharedGoalPolicy:policy});
+ const engine=await createSpecialistIntelligence({configs:setup.configs,catalog:checked.catalog,tools:checked.tools,gateway:new ModelGateway(Object.fromEntries((raw.modelAdapters??[]).map(a=>[a.providerId,a]))),trial:input.trial,sharedGoalPolicy:policy,diagnostic:error=>input.diagnostic?.('specialist',error)});
  const family=(c:any,id:string)=>evidenceFamily(c,id,setup.tenant,policy);
- const scope=async(c:any,root:string)=>{await input.trial.scope(c,root);await input.trial.live(c,'goal.'+root);return family(c,root);};
+ const admission=async(c:any,root:string)=>{await input.trial.scope(c,root);await input.trial.live(c,'goal.'+root);};
+ const scope=async(c:any,root:string)=>{await admission(c,root);return family(c,root);};
  const terminal=(s:string)=>['COMPLETED','FAILED','CANCELLED','BLOCKED'].includes(s);
  const exhaustion=(error:unknown)=>{const message=error instanceof Error?error.message:String(error);return /^EVALUATION_(?:AGENT_)?(?:BUDGET_EXHAUSTED|TIME_EXHAUSTED)(?::[A-Za-z]+)?$/.test(message)?message:undefined;};
  const failExhausted=async(root:string,reason:string)=>withTransaction(async c=>{
@@ -81,19 +82,19 @@ export async function createSharedGoalComposition(input:{bundle:ProductionBundle
   const f=await scope(c,root);if(!f.goalIds.includes(work.goalId))throw Error('EVALUATION_GOAL_NOT_ENROLLED');
   if(work.goalId!==root)await assertAssignedExecution(c,{goal_id:work.goalId,plan_id:work.planId,capability_id:work.capabilityId,queue_id:work.queueId,params:work.params},f);
  });
- const active=()=>withTransaction(async c=>{await input.trial.live(c);return (await c.query('SELECT id,state FROM goals WHERE id=ANY($1::uuid[])',[roots])).rows.filter(g=>!terminal(g.state)).map(g=>g.id as string);});
+ const active=()=>withTransaction(async c=>{await input.trial.live(c);return (await c.query('SELECT id,state FROM goals WHERE id=ANY($1::uuid[]) ORDER BY id',[roots])).rows.filter(g=>!terminal(g.state)).map(g=>g.id as string);});
  return {async recover(){
-  for(const root of await active()){try{const f=await withTransaction(c=>scope(c,root));await withCommitAdmission(c=>scope(c,root),()=>recoverKernelAfterRestart(f.goalIds));}catch(error){const reason=exhaustion(error);if(!reason)throw error;await failExhausted(root,reason);}}
+  for(const root of await active()){try{const f=await withTransaction(c=>scope(c,root));await withCommitAdmission(c=>admission(c,root),()=>recoverKernelAfterRestart(f.goalIds));}catch(error){const reason=exhaustion(error);if(!reason)throw error;await failExhausted(root,reason);}}
  },async supervise(){return withTransaction(async c=>{await input.trial.live(c);return {coverage:'SHARED_GOAL_FAMILY_ONLY'};});},async runWorkTick(){
   const ids=await active();if(!ids.length)return {processed:false};const root=ids[cursor++%ids.length];
   let exhausted:string|undefined;
-  try{const result=await withCommitAdmission(c=>scope(c,root),async()=>{
+  try{const result=await withCommitAdmission(c=>admission(c,root),async()=>{
    const f=await withTransaction(c=>scope(c,root)),n=verifierCursors.get(root)??0;verifierCursors.set(root,n+1);
    const advancers=Object.fromEntries(Object.entries(engine.advancers).map(([id,advance])=>[id,async(work:any)=>{
     await authorize(work,root);const result=await advance(work);if(!result)return null;
     return sharedGoalOperation({trial:input.trial,goalId:work.goalId,policy,kind:'reasoning-result',capabilityId:id,queueId:work.queueId,fencingToken:work.fencingToken},async()=>result);
    }]));
-   return createProductionComposition({bundle,workerId:input.workerId,ordinaryFailurePolicy:'record',onStageError:(_stage,error)=>{exhausted=exhaustion(error)??exhausted;},readReportReview:true,planning:{goalId:root},excludeDelegatedSpecialistPlanning:true,specialistScopeGoalId:root,specialistAdvancers:advancers,maintenanceGoalIds:f.goalIds,verificationGoalId:f.goalIds[n%f.goalIds.length],reviewGoalId:root,authorizeWork:w=>authorize(w,root)}).runWorkTick();
+   return createProductionComposition({bundle,workerId:input.workerId,ordinaryFailurePolicy:'record',onStageError:(stage,error)=>{input.diagnostic?.(stage,error);exhausted=exhaustion(error)??exhausted;},readReportReview:true,planning:{goalId:root},excludeDelegatedSpecialistPlanning:true,specialistScopeGoalId:root,specialistAdvancers:advancers,maintenanceGoalIds:f.goalIds,verificationGoalId:f.goalIds[n%f.goalIds.length],reviewGoalId:root,authorizeWork:w=>authorize(w,root)}).runWorkTick();
   });exhausted=exhaustion((result as any)?.planning?.reason)??exhausted;
    if(exhausted){await failExhausted(root,exhausted);return {processed:true,failed:true,reason:exhausted};}return result;
   }catch(error){const reason=exhaustion(error);if(!reason)throw error;await failExhausted(root,reason);return {processed:true,failed:true,reason};

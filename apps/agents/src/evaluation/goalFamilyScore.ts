@@ -13,6 +13,7 @@ export function assertGoalFamilyOperationLinks(snapshot:any,capture:any){
   const link=source.evidence?.evaluationReservation;
   const dispatched=capture.events.find((e:any)=>e.kind==='RESERVED'&&e.reservation_id===link?.id&&['tool','reasoning-result'].includes(e.payload.kind)&&e.payload.queueId===source.queue_id&&e.payload.fencingToken===Number(source.fencing_token)&&e.payload.goalId===source.goal_id);
   const finished=dispatched&&capture.events.find((e:any)=>e.kind==='FINISHED'&&e.reservation_id===dispatched.reservation_id&&e.payload.status==='success');
+  if(dispatched?.payload.kind==='reasoning-result'&&(source.evidence?.classification!=='MODEL_INFERENCE'||source.evidence?.specialist_session!==source.queue_id))throw Error('EVALUATION_REASONING_RECEIPT_INVALID');
   if(link?.trialId!==capture.trial.id||!finished||finished.payload.resultHash!==sha256Hex(source.result))throw Error('EVALUATION_EXECUTION_RESERVATION_REQUIRED');
   if(source.verification_id){
    const read=source.verification_evidence?.evaluationReservation;
@@ -29,6 +30,18 @@ export function scoreGoalFamilyCapture(capture:any){
  if(snapshot?.format!=='sam.goal-family.v1'||snapshot.root?.id!==capture.trial.root_goal_id||snapshot.root?.state!=='NEW'||ids.length!==3||
   sha256Hex(snapshot.goals?.map((g:any)=>g.id).sort())!==sha256Hex(ids))throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
  assertGoalFamilyOperationLinks(snapshot,capture);
+ if(snapshot.families){
+  const seen=new Set<string>();
+  for(const id of ids){const family=snapshot.families[id];if(!family||family.rootGoalId!==id||family.goalIds.length>32||!family.goalIds.includes(id))throw Error('EVALUATION_DELEGATION_INVALID');
+   if(sha256Hex({rootGoalId:id,policyHash:sha256Hex(snapshot.delegationPolicy),links:family.links})!==family.hash)throw Error('EVALUATION_DELEGATION_INVALID');
+   for(const member of family.goalIds){if(seen.has(member))throw Error('EVALUATION_DELEGATION_OVERLAP');seen.add(member);if(member===id)continue;
+    const child=snapshot.descendants.find((g:any)=>g.id===member),link=family.links.find((l:any)=>l.goalId===member);
+    if(!child||!link||child.companyScope!==spec.companyId||child.parentGoalId!==link.parentGoalId||child.currentPlanId!==link.planId||!family.goalIds.includes(link.parentGoalId))throw Error('EVALUATION_DELEGATION_INVALID');
+    for(const source of snapshot.sources.filter((s:any)=>s.goal_id===member))if(source.plan_id!==link.planId||source.capability_id!==link.capabilityId||sha256Hex(source.params)!==link.paramsHash)throw Error('EVALUATION_DELEGATION_INVALID');
+   }
+  }
+  if(snapshot.sources.some((s:any)=>!seen.has(s.goal_id)))throw Error('EVALUATION_DELEGATION_INVALID');
+ }
  for(const goal of snapshot.goals){
   const report=snapshot.reports.find((r:any)=>r.goal_id===goal.id&&r.plan_id===goal.currentPlanId);
   const bound=snapshot.obligations?.[goal.id];if(bound){const contract=validateGoalObligations(bound.contract,goal.objective);if(sha256Hex(contract)!==bound.hash)throw Error('EVALUATION_OBLIGATION_HASH_INVALID');if(report)assertObligationReview(contract,report.decision);}
@@ -36,7 +49,7 @@ export function scoreGoalFamilyCapture(capture:any){
   if(!['COMPLETED','WAITING_EXTERNAL','FAILED','CANCELLED','BLOCKED'].includes(goal.state))throw Error('EVALUATION_GOAL_CAPTURE_INVALID');
   const references=new Set([...(report?.decision.findings??[]).map((f:any)=>f.executionId),...(report?.decision.requirements??[]).flatMap((r:any)=>r.evidenceIds)]);
   for(const reference of references){
-   const source=snapshot.sources.find((s:any)=>s.id===reference&&s.goal_id===goal.id);
+   const source=snapshot.sources.find((s:any)=>s.id===reference&&(snapshot.families?.[goal.id]?.goalIds??[goal.id]).includes(s.goal_id));
    if(!source||source.verification_result!=='VERIFIED'||source.execution_hash!==source.verified_hash)throw Error('EVALUATION_EVIDENCE_REVOKED');assertExecutionIntegrity(source);
   }
  }

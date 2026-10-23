@@ -10,9 +10,9 @@ export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:De
  SELECT id,parent_goal_id,company_scope,current_plan_id,state,0 depth FROM goals WHERE id=$1
  UNION ALL SELECT g.id,g.parent_goal_id,g.company_scope,g.current_plan_id,g.state,l.depth+1
  FROM goals g JOIN lineage l ON g.id=l.parent_goal_id WHERE l.depth<4)
- SELECT * FROM lineage ORDER BY depth`,[goalId])).rows;
+ SELECT l.*,p.goal_assumptions authorization FROM lineage l LEFT JOIN plans p ON p.id=l.current_plan_id AND p.goal_id=l.id ORDER BY depth`,[goalId])).rows;
  if(!goals.length||goals[0].company_scope!==tenant)bad();
- for(const g of goals)g.authorization=(await c.query('SELECT goal_assumptions FROM plans WHERE id=$1 AND goal_id=$2',[g.current_plan_id,g.id])).rows[0]?.goal_assumptions;
+
  let root=goals[0];
  for(const child of goals){
   const link=(await c.query(`SELECT d.*,w.goal_id parent_goal_id,w.plan_id parent_plan_id,w.capability_id parent_capability,w.params parent_params,p.plan_hash parent_plan_hash
@@ -25,9 +25,9 @@ export async function evidenceFamily(c:any,goalId:string,tenant:string,policy:De
  SELECT id,parent_goal_id,company_scope,current_plan_id,state,0 depth FROM goals WHERE id=$1
  UNION ALL SELECT g.id,g.parent_goal_id,g.company_scope,g.current_plan_id,g.state,f.depth+1
  FROM goals g JOIN family f ON g.parent_goal_id=f.id JOIN specialist_delegations d ON d.goal_id=g.id WHERE f.depth<3)
- SELECT * FROM family ORDER BY depth,id`,[root.id])).rows;
+ SELECT f.*,p.goal_assumptions authorization FROM family f LEFT JOIN plans p ON p.id=f.current_plan_id AND p.goal_id=f.id ORDER BY depth,f.id`,[root.id])).rows;
  if(!members.length||members.length>32||members.some((g:any)=>g.company_scope!==tenant))bad();
- for(const g of members)g.authorization=(await c.query('SELECT goal_assumptions FROM plans WHERE id=$1 AND goal_id=$2',[g.current_plan_id,g.id])).rows[0]?.goal_assumptions;
+
  const accepted:any[]=[];
  for(const child of members.filter((g:any)=>g.id!==root.id)){
   const link=(await c.query(`SELECT d.*,w.goal_id parent_goal_id,w.plan_id parent_plan_id,w.capability_id parent_capability,w.params parent_params,p.plan_hash parent_plan_hash
@@ -50,4 +50,12 @@ export async function assertAssignedExecution(c:any,row:any,family:EvidenceFamil
  if(!link||link.planId!==row.plan_id||link.capabilityId!==row.capability_id||link.paramsHash!==sha256Hex(row.params??{}))bad();
  const work=(await c.query('SELECT goal_id,plan_id,capability_id,params FROM work_queue WHERE id=$1',[row.queue_id])).rows[0];
  if(!work||work.goal_id!==row.goal_id||work.plan_id!==row.plan_id||work.capability_id!==row.capability_id||sha256Hex(work.params??{})!==link.paramsHash)bad();
+}
+
+/** Immutable authorization of one source chain. New sibling assignments must
+ * not invalidate previously verified data, unlike a revoked ancestor. */
+export function sourceDelegationHash(family:EvidenceFamily,goalId:string,policy:DelegationPolicy){
+ const links:any[]=[];let next=goalId;
+ while(next!==family.rootGoalId){const link=family.links.find(l=>l.goalId===next);if(!link||links.length>=3)bad();links.push(link);next=link.parentGoalId;}
+ return sha256Hex({rootGoalId:family.rootGoalId,policyHash:sha256Hex(policy),links});
 }

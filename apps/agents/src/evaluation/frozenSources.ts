@@ -1,3 +1,4 @@
+import {sharedCorpus,sharedCollectionPage} from './sharedCorpus';
 import type {ToolAdapter} from '../../../../packages/tool-gateway/src/types';
 import type {VerificationAdapter} from '../../../production/src/types';
 import {sha256Hex} from '../../../../packages/shared/src/stableJson';
@@ -27,4 +28,14 @@ export function frozenEvaluationSources(caseId:string,aliases:Record<string,stri
 }
 export function assertFrozenEvaluationSources(adapter:ToolAdapter,verifier:VerificationAdapter|undefined,caseId:string){
  if(readers.get(adapter)!==caseId||!verifier||verifiers.get(verifier)!==caseId)throw Error('EVALUATION_FROZEN_ADAPTER_REQUIRED');
+}
+
+/** Search returns metadata and a bounded first page, not a guessed goal plan. */
+export function frozenSharedDiscovery(){
+ const adapter:ToolAdapter={capabilityId:'records.search',async execute({params}){return {result:sharedCollectionPage(params),evidence:{readback:true,source:'checked-in-shared-corpus'}};}};
+ const verifier:VerificationAdapter={capabilityId:'records.search',async verify({execution}){
+  const valid=sha256Hex(execution.result)===sha256Hex(sharedCollectionPage(execution.params));
+  return {result:valid?'VERIFIED':'FAILED',evidence:{readback:true},verifier:'frozen-shared-collection-readback-v1'};
+ }};
+ readers.set(adapter,sharedCorpus.id);verifiers.set(verifier,sharedCorpus.id);return {adapter,verifier};
 }

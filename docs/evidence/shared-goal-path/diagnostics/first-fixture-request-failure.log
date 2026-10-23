@@ -1,0 +1,34 @@
+FAIL tests/evaluation/sharedPath.ts
+{"tick":0,"goals":[{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"NEW"},{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"NEW"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"PLANNING"}],"calls":1}
+{"tick":20,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":40,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":60,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":80,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":100,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":120,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+{"tick":140,"goals":[{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}],"calls":3}
+AssertionError [ERR_ASSERTION]: [{"id":"4d3ee952-eb4a-42c3-bd7b-a87f9387cb03","state":"FAILED"},{"id":"4bc09700-c72c-4d5f-8cfa-cfba76e267ce","state":"FAILED"},{"id":"6c3d6745-9a8e-4761-852c-253822fac115","state":"FAILED"}]
+    at worker (/tmp/sam-shared-path/tests/evaluation/sharedPath.ts:44:106)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at parent (/tmp/sam-shared-path/tests/evaluation/sharedPath.ts:59:325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/evaluation/sharedPath.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-23T17:26:57.528Z","completedAt":"2026-10-23T17:27:51.261Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T17:26:57.531Z","completedAt":"2026-10-23T17:26:57.738Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/evaluation/sharedPath.ts"],"startedAt":"2026-10-23T17:26:57.738Z","completedAt":"2026-10-23T17:27:51.261Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}
