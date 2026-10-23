@@ -78,7 +78,7 @@ export async function openEvaluationTrial(trialId:string,approval?:{payload:Reco
    if(!r||r.kind!==metadata.kind||metadata.agentId&&r.agentId!==metadata.agentId||metadata.tokens!==undefined&&r.reserved.tokens!==metadata.tokens||
     metadata.costUsd!==undefined&&r.reserved.costUsd!==metadata.costUsd)throw Error('EVALUATION_RESERVATION_MISMATCH');
    await live(c,r.agentId); // Recheck the reserved agent at execution admission.
-   if(['providerId','model','capabilityId','workGoalId'].some(k=>metadata[k]!==undefined&&r[k]!==metadata[k]))throw Error('EVALUATION_RESERVATION_MISMATCH');
+   if(['providerId','model','capabilityId','workGoalId','queueId','executionId','fencingToken'].some(k=>metadata[k]!==undefined&&r[k]!==metadata[k]))throw Error('EVALUATION_RESERVATION_MISMATCH');
    if((await c.query("SELECT 1 FROM evaluation_events WHERE trial_id=$1 AND reservation_id=$2 AND kind='FINISHED'",[trialId,id])).rowCount)throw Error('EVALUATION_ATTEMPT_ALREADY_FINISHED');
    await appendTrialEvent(c,trialId,'INVOKING',metadata,id);
   });

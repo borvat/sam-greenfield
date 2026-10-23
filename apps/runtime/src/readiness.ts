@@ -11,6 +11,7 @@ export interface RuntimeReadiness{
 }
 
 export class ReadinessGate{
+  constructor(private readonly recover:()=>Promise<unknown>=recoverKernelAfterRestart){}
   private state:RuntimeReadiness={
     started:false,
     recovering:false,
@@ -33,7 +34,7 @@ export class ReadinessGate{
 
     try{
       await pool.query("SELECT 1");
-      await recoverKernelAfterRestart();
+      await this.recover();
       this.state.recovering=false;
       this.state.ready=true;
       this.state.recoveredAt=new Date().toISOString();
@@ -50,7 +51,7 @@ export class ReadinessGate{
     if(this.state.shuttingDown)return false;
     try{
       await probe();
-      if(!this.state.ready)await recoverKernelAfterRestart();
+      if(!this.state.ready)await this.recover();
       this.state.ready=true;
       this.state.startupError=null;
       return true;

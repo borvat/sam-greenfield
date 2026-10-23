@@ -5,6 +5,8 @@ import { runOperationalSupervisorTick } from "../../supervisor/src/runtime";
 
 export interface RuntimeComposition {
   runWorkTick():Promise<unknown>;
+  recover?():Promise<unknown>;
+  supervise?():Promise<unknown>;
   supervisorOptions?:{monitorSideEffects?:boolean};
 }
 
@@ -22,7 +24,7 @@ export async function startRuntimeService(input:{
   supervisorActor?:string;
   dependencyProbe?:()=>Promise<unknown>;
 }):Promise<RuntimeService>{
-  const gate=new ReadinessGate();
+  const gate=new ReadinessGate(input.composition.recover);
   const counters={startedAt:new Date().toISOString(),ticks:0,errors:0,dependencyFailures:0,lastStartedAt:null as string|null,lastFinishedAt:null as string|null};
   const server=createHealthServer(gate,()=>({...counters,inFlight:tickInFlight}));
 
@@ -37,7 +39,8 @@ export async function startRuntimeService(input:{
     try{
       if(!await gate.refresh(input.dependencyProbe)){counters.dependencyFailures++;return;}
       await input.composition.runWorkTick();
-      await runOperationalSupervisorTick({
+      if(input.composition.supervise)await input.composition.supervise();
+      else await runOperationalSupervisorTick({
         actor:input.supervisorActor ?? "operational-supervisor",
         ...input.composition.supervisorOptions
       });

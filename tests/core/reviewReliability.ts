@@ -41,6 +41,30 @@ async function main(){
  (SELECT count(*)::int FROM work_queue WHERE goal_id=$1) work,(SELECT count(*)::int FROM executions WHERE goal_id=$1) executions`,[id])).rows[0];
  const final=(input:any)=>({status:'complete',summary:'Evidence-linked report',requirements:[{requirement:'Read verified source',fulfilled:true,evidenceIds:[input.verifiedObservations[0].id]}],
   findings:[{text:'Source confirms recorded facts',executionId:input.verifiedObservations[0].id,quoteLine:1}],limitations:[],steps:[]});
+ // Raw-only final commit must protect receipts even when knowledge is disabled.
+ process.env.SAM_KNOWLEDGE_ENABLED='false';
+ for(const mutation of ['insert','update'])for(const timing of ['before-lock','after-lock']){
+  const raw=await fixture();let fired=false,blocked=false;
+  const revoke=async()=>{const writer=await pool.connect();try{
+   await writer.query('BEGIN');await writer.query("SET LOCAL lock_timeout='100ms'");
+   if(mutation==='update')await writer.query("UPDATE verifications SET result='FAILED' WHERE execution_id=$1",[raw.executionId]);
+   else await writer.query(`INSERT INTO verifications(execution_id,verifier,method,contract_id,independent_evidence,result,plan_hash,execution_hash,checked_at) SELECT execution_id,'raw-race','db_query',contract_id,'{}','FAILED',plan_hash,execution_hash,now()+interval '1 second' FROM verifications WHERE execution_id=$1`,[raw.executionId]);
+   await writer.query('COMMIT');
+  }catch(e:any){await writer.query('ROLLBACK');if(e.code!=='55P03')throw e;blocked=true;}finally{writer.release();}};
+  const db={async connect(){const c=await pool.connect();return {release:()=>c.release(),async query(sql:string,args?:any[]){
+   const result=await c.query(sql,args);
+   if(timing==='after-lock'&&!fired&&sql.includes('WHERE e.goal_id=$1 AND e.id=ANY')){fired=true;await revoke();}
+   return result;
+  }};}};
+  await reviewNextReadGoal(f.bundle,db,async input=>{
+   if(input.proposedReport){if(timing==='before-lock'&&!fired){fired=true;await revoke();}return {accepted:true,missing:[]};}
+   return final(input);
+  },{goalId:raw.id});
+  assert(fired);assert.equal(blocked,timing==='after-lock');
+  assert.equal((await row(raw.id)).state,timing==='after-lock'?'COMPLETED':'WAITING_EXTERNAL');
+  assert.equal((await pool.query("SELECT count(*)::int n FROM goal_read_reviews WHERE goal_id=$1 AND decision->>'status'='complete'",[raw.id])).rows[0].n,timing==='after-lock'?1:0);
+ }
+ console.log('PASS raw-only report insertion/update revocation races with knowledge disabled');
  let calls=0,active=0,aborted=0;
  const pending=async(_input:any,signal:AbortSignal)=>{calls++;active++;return new Promise((_,reject)=>signal.addEventListener('abort',()=>{active--;aborted++;reject(Error('synthetic aborted'));},{once:true}));};
  const timeout=await fixture();const before=await counts(timeout.id);

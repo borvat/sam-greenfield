@@ -1,3 +1,4 @@
+import {scoreGoalFamilyCapture} from './goalFamilyScore';
 import {commercialScenario} from './scenarios';
 import {scoreCommercialCapture} from './scenarioScore';
 import {createHash,createPublicKey,verify,type KeyObject} from 'node:crypto';
@@ -50,7 +51,7 @@ export function verifyEvaluationTrace(input:unknown,trustedKey:string|KeyObject)
    if(!Number.isFinite(Date.parse(t.agent_deadlines[p.agentId]))||Date.parse(e.created_at)>Date.parse(t.agent_deadlines[p.agentId]))throw Error('EVALUATION_LATE_AGENT_RESERVATION');
   }
   if(e.kind==='INVOKING'){const r=reservations.get(e.reservation_id)?.payload;
-   if(!r||invoked.has(e.reservation_id)||finished.has(e.reservation_id)||!['model','tool','readback'].includes(r.kind)||e.payload.kind!==r.kind||e.payload.agentId!==undefined&&e.payload.agentId!==r.agentId||['providerId','model','capabilityId','workGoalId','maxInputTokens','maxOutputTokens'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r[k])||['tokens','costUsd'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r.reserved[k])||Date.parse(e.created_at)>Math.min(Date.parse(t.deadline),Date.parse(t.agent_deadlines[r.agentId])))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
+   if(!r||invoked.has(e.reservation_id)||finished.has(e.reservation_id)||!['model','tool','readback'].includes(r.kind)||e.payload.kind!==r.kind||e.payload.agentId!==undefined&&e.payload.agentId!==r.agentId||['providerId','model','capabilityId','workGoalId','queueId','executionId','fencingToken','maxInputTokens','maxOutputTokens'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r[k])||['tokens','costUsd'].some(k=>e.payload[k]!==undefined&&e.payload[k]!==r.reserved[k])||Date.parse(e.created_at)>Math.min(Date.parse(t.deadline),Date.parse(t.agent_deadlines[r.agentId])))throw Error('EVALUATION_INVOCATION_INVALID');invoked.add(e.reservation_id);}
   if(e.kind==='FINISHED'){if(!reservations.has(e.reservation_id)||finished.has(e.reservation_id)||!['success','failure'].includes(e.payload.status)||e.payload.status==='success'&&!['iteration','delegation'].includes(reservations.get(e.reservation_id).payload.kind)&&!invoked.has(e.reservation_id))throw Error('EVALUATION_COMPLETION_INVALID');const r=reservations.get(e.reservation_id).payload;
    if(r.kind==='model'&&e.payload.status==='success'){
     const result=e.payload.result,u=result?.usage;
@@ -72,6 +73,7 @@ export function scoreAuthenticatedEvaluation(input:unknown,trustedKey:string|Key
  if(spec.commit!==commit)throw Error('EVALUATION_COMMIT_MISMATCH');
  if(!capture.complete)return {schemaVersion:1,commit,status:'FAIL',classification:'AUTHENTICATED_INCOMPLETE_CAPTURE',traceAuthenticated:true,headHash:capture.headHash,wholeTrialUsed:t.used,
   liveReasoningValidated:false,independentHumanReview:'PENDING',pendingReservations:capture.pending,checks:[{name:'complete-trial',status:'FAIL',detail:'Incomplete snapshot; reservations remain charged, outcomes and final report are not certified'}]};
+ if(events.at(-1)?.payload?.format==='sam.goal-family.v1')return scoreGoalFamilyCapture(capture);
  if(commercialScenario(spec.caseId))return scoreCommercialCapture(capture);
  const snapshot=events.at(-1).payload,report=snapshot.report;
  const sources=snapshot.sources.filter((s:any)=>s.verification_result==='VERIFIED'&&s.result.sourceId);

@@ -2,19 +2,19 @@ import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import {leaseAttemptLimit,stopExhaustedLease} from "./leaseBudget";
 
-export async function reconcileExpiredLeases(limit = 100): Promise<string[]> {
+export async function reconcileExpiredLeases(limit = 100, goalIds?:readonly string[]): Promise<string[]> {
   const attemptLimit=leaseAttemptLimit();
   return withTransaction(async (client) => {
     const res = await client.query(
       `SELECT id, goal_id, attempt, fencing_token
          FROM work_queue
-        WHERE status IN ('LEASED','EXECUTING')
+        WHERE status IN ('LEASED','EXECUTING') AND ($2::uuid[] IS NULL OR goal_id=ANY($2::uuid[]))
           AND lease_expiry IS NOT NULL
           AND lease_expiry < now()
         ORDER BY lease_expiry, id
         FOR UPDATE SKIP LOCKED
         LIMIT $1`,
-      [limit]
+      [limit,goalIds??null]
     );
 
     const recovered: string[] = [];

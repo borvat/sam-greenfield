@@ -21,6 +21,7 @@ export function createProductionComposition(input:{
   ordinaryFailurePolicy?:"retry"|"record";
   readReportReview?:boolean;
   reviewGoalId?:string;
+  maintenanceGoalIds?:readonly string[];
   verificationGoalId?:string;
   specialistConcurrency?:number;
   specialistScopeGoalId?:string;
@@ -61,10 +62,10 @@ export function createProductionComposition(input:{
   };
   return {
     async runWorkTick(){
-      const recovery=await recoverKernelAfterRestart();
-      const dependencyRecovery=await reconcileBlockedDependencies();
-      const events={relayed:await relayOutboxUntilEmpty(100),consumed:0};
-      while(events.consumed<100&&(await processNextKernelEventAtomic()).processed)events.consumed++;
+      const recovery=await recoverKernelAfterRestart(input.maintenanceGoalIds);
+      const dependencyRecovery=await reconcileBlockedDependencies(input.maintenanceGoalIds);
+      const events={relayed:await relayOutboxUntilEmpty(100,input.maintenanceGoalIds),consumed:0};
+      while(events.consumed<100&&(await processNextKernelEventAtomic(input.maintenanceGoalIds)).processed)events.consumed++;
       const reconciliation=hasSideEffects?await attempt("reconciliation",()=>reconcilePendingSideEffects({
         tools:input.bundle.tools,
         limit:25

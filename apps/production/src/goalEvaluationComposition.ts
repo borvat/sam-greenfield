@@ -1,3 +1,5 @@
+import {sha256Hex} from '../../../packages/shared/src/stableJson';
+import {recoverKernelAfterRestart} from '../../kernel/src/recovery';
 import {assertLocalDerivedAdapter} from './verifiedEvidenceBundle';
 import {DERIVE_CAPABILITY} from '../../brain/src/evidence/artifacts';
 import {withCommitAdmission} from '../../../packages/db/src/commitAdmission';
@@ -22,13 +24,22 @@ export function createGoalEvaluationComposition(input:{bundle:ProductionBundle;t
  validateProductionBundle(raw);
  const goals=Object.keys(input.trial.spec.agents).filter(k=>k.startsWith('goal.')).map(k=>k.slice(5));
  const compositions=goals.map(goalId=>{
-  const bundle=validateProductionBundle({...raw,toolAdapters:raw.toolAdapters.map(adapter=>({...adapter,execute:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.execute(request),'tool',adapter.capabilityId)})),verificationAdapters:raw.verificationAdapters?.map(adapter=>({...adapter,verify:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.verify(request),'readback',adapter.capabilityId)}))});
+  const bundle=validateProductionBundle({...raw,toolAdapters:raw.toolAdapters.map(adapter=>({...adapter,execute:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.execute(request),'tool',adapter.capabilityId,request.executionContext)})),verificationAdapters:raw.verificationAdapters?.map(adapter=>({...adapter,verify:request=>admitEvaluationSource(input.trial,goalId,()=>adapter.verify(request),'readback',adapter.capabilityId,{executionId:request.execution.id})}))});
   return createProductionComposition({bundle,workerId:input.workerId,
   ordinaryFailurePolicy:'record',readReportReview:true,planning:{goalId},specialistScopeGoalId:goalId,
-  reviewGoalId:goalId,verificationGoalId:goalId,
+  reviewGoalId:goalId,verificationGoalId:goalId,maintenanceGoalIds:[goalId],
   authorizeWork:async work=>{if(work.goalId!==goalId)throw Error('EVALUATION_GOAL_NOT_ENROLLED');}});});
  let cursor=0;
- return {async runWorkTick(){
+ return {
+  async recover(){
+   return withCommitAdmission(async c=>{await input.trial.live(c);for(const id of goals){await input.trial.scope(c,id);await input.trial.live(c,'goal.'+id);}},()=>recoverKernelAfterRestart(goals));
+  },
+  async supervise(){
+   // Trial admission health only; never reconcile tenant-wide operational incidents
+   // from a synthetic service composition. Ordinary service supervision is unchanged.
+   return withTransaction(async c=>{await input.trial.live(c);return {coverage:'TRIAL_ONLY',trialId:input.trial.id};});
+  },
+  async runWorkTick(){
   await withTransaction(async c=>{
    await input.trial.live(c);
    for(const id of goals)await input.trial.scope(c,id);
@@ -39,15 +50,18 @@ export function createGoalEvaluationComposition(input:{bundle:ProductionBundle;t
 }
 
 /** Hold trial admission through the frozen source call; cancellation serializes after dispatch. */
-export async function admitEvaluationSource<T>(trial:EvaluationTrial,goalId:string,execute:()=>Promise<T>,kind:'tool'|'readback'='tool',capabilityId='source.read'):Promise<T>{
+export async function admitEvaluationSource<T>(trial:EvaluationTrial,goalId:string,execute:()=>Promise<T>,kind:'tool'|'readback'='tool',capabilityId='source.read',identity:{queueId?:string;fencingToken?:number;executionId?:string}={}):Promise<T>{
  assertEvaluationTrial(trial);if(!Object.hasOwn(trial.spec.agents,'goal.'+goalId))throw Error('EVALUATION_GOAL_NOT_ENROLLED');
  const agentId='goal.'+goalId;
  // Commit reservation before dispatch: failures/crashes never refund consumed work.
- const ticket=await withTransaction(c=>trial.reserve(c,{goalId,agentId,kind,delta:{tools:1},metadata:{capabilityId,workGoalId:goalId}}));
- await trial.begin(ticket,{agentId,kind,capabilityId,workGoalId:goalId});
+ const ticket=await withTransaction(c=>trial.reserve(c,{goalId,agentId,kind,delta:{tools:1},metadata:{capabilityId,workGoalId:goalId,...identity}}));
+ await trial.begin(ticket,{agentId,kind,capabilityId,workGoalId:goalId,...identity});
  try{
   const result=await withTransaction(async c=>{await trial.scope(c,goalId);await trial.live(c,agentId);return execute();});
-  await trial.finish(ticket,{status:'success'});return result;
+  const outcome=result as any;
+  const evidence={...outcome.evidence,evaluationReservation:{trialId:trial.id,id:ticket,kind,goalId}};
+  await trial.finish(ticket,{status:'success',...(kind==='tool'?{resultHash:sha256Hex(outcome.result)}:{verificationResult:outcome.result,verificationEvidenceHash:sha256Hex(evidence)})});
+  return {...outcome,evidence} as T;
  }catch(error){await trial.finish(ticket,{status:'failure'});throw error;}
 
 }

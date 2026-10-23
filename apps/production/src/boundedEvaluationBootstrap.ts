@@ -1,3 +1,4 @@
+import {assertIntegrationAccess} from '../../../packages/db/src/integrationProfile';
 import {pool,withTransaction} from '../../../packages/db/src/client';
 import {loadProviderRegistry} from '../../../packages/model-gateway/src/registry';
 import {assertRegisteredEvaluationAdapter} from '../../../packages/model-gateway/src/evaluationAdapter';
@@ -30,6 +31,9 @@ export async function prepareBoundedEvaluationComposition(input:{trial:Evaluatio
  assertEvaluationTrial(input.trial);assertEvaluationPermit(input.trial.permit);
  if(input.trial.spec.commit!==input.expectedCommit)throw Error('EVALUATION_COMMIT_MISMATCH');
  const configs=await withTransaction(async client=>{
+  await assertIntegrationAccess(client);
+  const privileges=(await client.query("SELECT (has_table_privilege(current_user,'goal_read_reviews','SELECT') AND has_table_privilege(current_user,'goal_read_reviews','INSERT')) allowed")).rows[0];
+  if(!privileges?.allowed)throw Error('EVALUATION_REPORT_ACCESS_REQUIRED');
   await input.trial.scope(client,input.trial.rootGoalId);await input.trial.live(client);
   const registry=await loadProviderRegistry(client);
   const configs=registry.filter(c=>input.trial.spec.prices.some(p=>p.providerId===c.providerId));

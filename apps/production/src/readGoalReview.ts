@@ -1,3 +1,4 @@
+import {assertExecutionIntegrity} from '../../brain/src/evidence/verifiedSources';
 import {assertCommitAdmission} from '../../../packages/db/src/commitAdmission';
 import {derivedCellQuote,derivedReviewText} from './derivedReviewEvidence';
 import {DERIVE_CAPABILITY,replayStoredArtifact,type DerivedArtifact} from '../../brain/src/evidence/artifacts';
@@ -265,17 +266,27 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const savedDecision={...decision,runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
   await client.query("BEGIN");
   try{
-   if(derived.size){
+   if(all.rows.length){
     // Follow the verifier's execution-before-goal order. Execution FOR UPDATE
     // conflicts with verification FK inserts; receipt SHARE locks prevent an
     // existing receipt from changing after replay. Hold both through COMMIT.
     const ids=[...new Set([...all.rows.map((e:any)=>e.id),...Array.from(derived.values()).flatMap(a=>Object.values(a.output.bindings).map((b:any)=>b.executionId))])].sort();
     const locked=await client.query('SELECT id FROM executions WHERE goal_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR UPDATE',[goal.id,ids]);
-    if(locked.rowCount!==ids.length)throw Error('REVIEW_DERIVED_EVIDENCE_INVALID');
+    if(locked.rowCount!==ids.length)throw Error('REVIEW_SOURCE_EVIDENCE_INVALID');
     await client.query('SELECT id FROM verifications WHERE execution_id=ANY($1::uuid[]) ORDER BY execution_id,id FOR SHARE',[ids]);
    }
    const current=await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",[goal.id]);
    if(current.rows[0]?.state!=="VERIFYING"||current.rows[0]?.current_plan_id!==goal.current_plan_id)throw new Error("REVIEW_STALE_PLAN");
+   // Raw and derived source receipts are both admission evidence, regardless of
+   // knowledge capture. Locks above serialize receipt inserts/updates through commit.
+   const rawIds=all.rows.filter((e:any)=>e.capability_id!==DERIVE_CAPABILITY).map((e:any)=>e.id);
+   if(rawIds.length){
+    const receipts=(await client.query(`SELECT e.*,v.result verification_result,v.execution_hash verified_hash,v.plan_hash verified_plan_hash
+     FROM executions e JOIN LATERAL(SELECT result,execution_hash,plan_hash FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)v ON true
+     WHERE e.goal_id=$1 AND e.id=ANY($2::uuid[])`,[goal.id,rawIds])).rows;
+    if(receipts.length!==rawIds.length||receipts.some((e:any)=>e.verification_result!=='VERIFIED'||e.verified_hash!==e.execution_hash||e.execution_hash!==all.rows.find((old:any)=>old.id===e.id)?.execution_hash))throw Error('REVIEW_SOURCE_EVIDENCE_INVALID');
+    for(const receipt of receipts)assertExecutionIntegrity(receipt);
+   }
    // Recheck lineage after model calls and before report/knowledge commit.
    for(const executionId of derived.keys())await replayStoredArtifact(client,{goalId:goal.id,legalEntityId:goal.company_scope},executionId,bundle.raw.verifiedEvidenceContracts!);
    await recordReadReviewBudget(client,goal.id,goal.current_plan_id,savedDecision.runtimeReview);

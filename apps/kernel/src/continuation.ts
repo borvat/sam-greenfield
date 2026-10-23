@@ -22,18 +22,18 @@ export async function scheduleContinuationAtomic(
   });
 }
 
-export async function wakeDueGoals(limit = 100): Promise<string[]> {
+export async function wakeDueGoals(limit = 100, goalIds?:readonly string[]): Promise<string[]> {
   return withTransaction(async (client) => {
     const res = await client.query(
       `SELECT id, state, completion_definition, current_plan_id
          FROM goals
-        WHERE next_wake_at IS NOT NULL
+        WHERE next_wake_at IS NOT NULL AND ($2::uuid[] IS NULL OR id=ANY($2::uuid[]))
           AND next_wake_at <= now()
           AND state IN ('WAITING_EXTERNAL','WAITING_OWNER','BLOCKED')
         ORDER BY next_wake_at, id
         FOR UPDATE SKIP LOCKED
         LIMIT $1`,
-      [limit]
+      [limit,goalIds??null]
     );
 
     const ids: string[] = [];

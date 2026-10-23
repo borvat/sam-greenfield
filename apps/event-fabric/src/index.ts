@@ -46,18 +46,21 @@ export async function ingestEvent(
   return { inserted: false, event: existing.rows[0] };
 }
 
-export async function nextEventForConsumer(client: any, consumerId: string) {
+export async function nextEventForConsumer(client: any, consumerId: string, goalIds?:readonly string[]) {
   const res = await client.query(
     `SELECT e.*
        FROM event_fabric_events e
-      WHERE NOT EXISTS (
+      WHERE ($2::text[] IS NULL OR e.payload->>'goal_id'=ANY($2::text[]) OR
+       (NOT (e.payload ? 'goal_id') AND e.payload->>'aggregate_type'='goal' AND e.payload->>'aggregate_id'=ANY($2::text[])) OR
+       (NOT (e.payload ? 'goal_id') AND e.payload->>'aggregate_type'='work_queue' AND EXISTS(SELECT 1 FROM work_queue w WHERE w.id::text=e.payload->>'aggregate_id' AND w.goal_id::text=ANY($2::text[]))))
+      AND NOT EXISTS (
         SELECT 1 FROM inbox_events i
          WHERE i.consumer_id=$1 AND i.dedup_key=e.dedup_key
       )
       ORDER BY e.event_seq
       LIMIT 1
       FOR UPDATE OF e SKIP LOCKED`,
-    [consumerId]
+    [consumerId,goalIds??null]
   );
   if (res.rowCount === 0) return null;
 

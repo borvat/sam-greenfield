@@ -56,12 +56,12 @@ export async function resolveWorkParameters(client:any,queueId:string,params:Rec
   return resolved;
 }
 
-export async function reconcileBlockedDependencies(){
+export async function reconcileBlockedDependencies(goalIds?:readonly string[]){
   return withTransaction(async client=>{
     const rows=await client.query(`UPDATE work_queue w SET status='FAILED',wake_reason='DEPENDENCY_OR_GOAL_STOPPED'
-      FROM goals g WHERE g.id=w.goal_id AND w.status IN ('QUEUED','HANDBACK') AND
+      FROM goals g WHERE g.id=w.goal_id AND ($1::uuid[] IS NULL OR g.id=ANY($1::uuid[])) AND w.status IN ('QUEUED','HANDBACK') AND
       (g.state IN ('FAILED','CANCELLED','REPLANNING') OR g.current_plan_id<>w.plan_id OR EXISTS
-       (SELECT 1 FROM work_queue p WHERE p.id=ANY(w.depends_on) AND p.status='FAILED')) RETURNING w.id,w.goal_id`);
+       (SELECT 1 FROM work_queue p WHERE p.id=ANY(w.depends_on) AND p.status='FAILED')) RETURNING w.id,w.goal_id`,[goalIds??null]);
     for(const row of rows.rows)await insertOutboxEvent(client,{aggregateType:'work_queue',aggregateId:row.id,
       eventType:'DEPENDENCY_BLOCKED',payload:{goal_id:row.goal_id,reason:'DEPENDENCY_OR_GOAL_STOPPED'}});
     return rows.rowCount;

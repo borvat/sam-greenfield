@@ -3,12 +3,12 @@ import { transitionGoal } from "./stateMachine";
 import { reconcileExpiredLeases } from "./reconciliation";
 import { wakeDueGoals } from "./continuation";
 
-export async function reconcileFinishedPlansAfterRestart(limit = 100): Promise<string[]> {
+export async function reconcileFinishedPlansAfterRestart(limit = 100, goalIds?:readonly string[]): Promise<string[]> {
   return withTransaction(async (client) => {
     const rows = await client.query(
       `SELECT g.id
          FROM goals g
-        WHERE g.state='EXECUTING'
+        WHERE g.state='EXECUTING' AND ($2::uuid[] IS NULL OR g.id=ANY($2::uuid[]))
           AND g.current_plan_id IS NOT NULL
           AND EXISTS (
             SELECT 1 FROM work_queue w
@@ -23,7 +23,7 @@ export async function reconcileFinishedPlansAfterRestart(limit = 100): Promise<s
         ORDER BY g.updated_at,g.id
         FOR UPDATE OF g SKIP LOCKED
         LIMIT $1`,
-      [limit]
+      [limit,goalIds??null]
     );
 
     const ids: string[] = [];
@@ -41,13 +41,13 @@ export async function reconcileFinishedPlansAfterRestart(limit = 100): Promise<s
   });
 }
 
-export async function recoverKernelAfterRestart(): Promise<{
+export async function recoverKernelAfterRestart(goalIds?:readonly string[]): Promise<{
   expiredLeases: string[];
   dueGoals: string[];
   finishedPlans: string[];
 }> {
-  const expiredLeases = await reconcileExpiredLeases();
-  const dueGoals = await wakeDueGoals();
-  const finishedPlans = await reconcileFinishedPlansAfterRestart();
+  const expiredLeases = await reconcileExpiredLeases(100,goalIds);
+  const dueGoals = await wakeDueGoals(100,goalIds);
+  const finishedPlans = await reconcileFinishedPlansAfterRestart(100,goalIds);
   return { expiredLeases, dueGoals, finishedPlans };
 }

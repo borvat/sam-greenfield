@@ -11,21 +11,21 @@ const WAKE_EVENTS = new Set([
   "GOAL_CONTINUATION_DUE"
 ]);
 
-export async function processNextKernelEventAtomic(): Promise<{
+export async function processNextKernelEventAtomic(goalIds?:readonly string[]): Promise<{
   processed: boolean;
   eventSeq?: number;
   goalId?: string;
   wokeGoal?: boolean;
 }> {
   return withTransaction(async (client) => {
-    const event = await nextEventForConsumer(client, CONSUMER_ID);
+    const event = await nextEventForConsumer(client, CONSUMER_ID,goalIds);
     if (!event) return { processed: false };
 
     const payload = event.payload ?? {};
     const goalId = typeof payload.goal_id === "string" ? payload.goal_id : undefined;
     let wokeGoal = false;
 
-    if (goalId && WAKE_EVENTS.has(event.event_type)) {
+    if (goalId && (!goalIds||goalIds.includes(goalId)) && WAKE_EVENTS.has(event.event_type)) {
       const goal = await client.query(
         "SELECT id,state,completion_definition,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
         [goalId]
