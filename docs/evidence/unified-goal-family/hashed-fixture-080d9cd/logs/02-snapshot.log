@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-C40ots/source.tar 080d9cd4104f7b149bfeab9b885eb1139a828aa3
+$ tar -xf /tmp/sam-verify-C40ots/source.tar -C /tmp/sam-verify-C40ots/source

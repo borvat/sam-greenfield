@@ -61,3 +61,13 @@ those real fields and integrity. Diagnosis: update this fixture to valid hashed
 execution/verification records and preserve its rollback/continuation assertions;
 do not bypass or weaken the raw-receipt gate. This correction is still pending.
 No verifier process remains running, and no replacement full run was started.
+
+## Hashed-fixture correction: 080d9cd
+
+[Exact-head report](hashed-fixture-080d9cd/report.md) and
+[artifact manifest](hashed-fixture-080d9cd/SHA256SUMS): **59/59 PASS** on
+`080d9cd4104f7b149bfeab9b885eb1139a828aa3`. All report artifact hashes were
+recomputed before publication. The earlier failed 9dea66 evidence above remains
+unchanged. Only the isolated fixture hashes changed in this application commit;
+no validation was relaxed. Same external TCP-readiness harness adjustment.
+Subsequent obligation/collection/lifecycle work is not covered by this result.
