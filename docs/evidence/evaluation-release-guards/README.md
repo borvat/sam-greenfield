@@ -1,8 +1,9 @@
 # Scoped evaluation runtime and artifact provenance corrections
 
 Application commit: f9c74cc7d76c5b0888259a09343ca064ddc4a68f.
-Application code pushed to PR55. This evidence branch remains LOCAL ONLY pending
-specific metadata/evidence publication approval; no alternative publication.
+Application code and acceptance evidence are published for Draft PR55.
+The immutable acceptance checkpoint is 8a083bc89db8ef560d37fe37f941cf12d54db004;
+this subsequent documentation commit corrects publication status only.
 
 Full acceptance command from the clean application worktree:
 
@@ -55,4 +56,18 @@ PASS **59/59 stages**, including **49/49 regressions and 13/13 core tests**.
 Started 2026-10-23T09:05:30.132Z; completed 2026-10-23T09:18:17.212Z.
 Tree `805c37d2f666c9bcfa70556f39b21f95530f0015`. Independently recomputed and matched all
 81 report artifact hashes. Source-integrity and cleanup passed.
-No application changes followed this tested commit. Evidence remains local.
+No application changes are included in this evidence branch. Evidence is published.
+
+## Independent audit reported by parent
+
+The parent independently confirmed the f9c74cc application / 8a083bc evidence
+checkpoint: all 91 manifest entries (including 81 report artifacts), 59 PASS stages,
+49 regression and 13 core executions, 733 source-manifest paths and exact source
+tree; 524 non-documentation UTF-8 source hashes, five fixture signatures and 497
+hash-chain events. No blocking discrepancy was reported. The binary rollback
+archive could not be content-rehashed through the UTF-8 connector; its pinned blob
+and path were verified. This is fixture validation, not live autonomy.
+
+The original evidence commit remains immutable. This follow-up changes this README
+and its checksum entry only; acceptance logs, artifacts and application tree are
+unchanged.
