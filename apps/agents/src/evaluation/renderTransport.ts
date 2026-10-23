@@ -83,13 +83,27 @@ export async function createRenderLaunchAdministration(options:RenderTransportOp
   return direct;
  }
  async function groups(signal:AbortSignal){
-  const result:unknown[]=[];let cursor='';for(let page=0;page<20;page++){
+  // Endpoint OpenAPI specifies bare envGroupMeta[]. Generic Render pagination
+  // documents resource/cursor envelopes. Validate either homogeneous form; a
+  // bare full page supplies no documented continuation token and is incomplete.
+  const result:unknown[]=[],ids=new Set<string>(),cursors=new Set<string>();let cursor='';
+  for(let page=0;page<20;page++){
    const rows=await api('GET','?ownerId='+encodeURIComponent(o.workspaceId)+'&limit=100'+(cursor?'&cursor='+encodeURIComponent(cursor):''),signal,undefined,false,true);
-   if(!Array.isArray(rows))fail('RENDER_GROUP_SHAPE_INVALID');
-   for(const row of rows){const g=row?.envGroup;if(!g||typeof row.cursor!=='string'||typeof g.id!=='string'||g.ownerId!==o.workspaceId||!Array.isArray(g.serviceLinks)||typeof g.updatedAt!=='string')fail('RENDER_GROUP_SHAPE_INVALID');
+   if(!Array.isArray(rows)||rows.length>100)fail('RENDER_GROUP_SHAPE_INVALID');
+   const wrapped=rows.length>0&&Object.hasOwn(rows[0]??{},'envGroup');
+   for(const row of rows){
+    if(!row||typeof row!=='object'||Array.isArray(row)||Object.hasOwn(row,'envGroup')!==wrapped)fail('RENDER_GROUP_SHAPE_INVALID');
+    const g=wrapped?row.envGroup:row;
+    if(wrapped&&(typeof row.cursor!=='string'||!row.cursor))fail('RENDER_GROUP_SHAPE_INVALID');
+    if(!g||typeof g.id!=='string'||!g.id||typeof g.name!=='string'||g.ownerId!==o.workspaceId||
+     typeof g.createdAt!=='string'||!Number.isFinite(Date.parse(g.createdAt))||typeof g.updatedAt!=='string'||!Number.isFinite(Date.parse(g.updatedAt))||
+     !Array.isArray(g.serviceLinks)||g.serviceLinks.some((link:any)=>!link||typeof link.id!=='string'||typeof link.name!=='string'||!['cron','pserv','static','web','worker'].includes(link.type)))fail('RENDER_GROUP_SHAPE_INVALID');
+    if(ids.has(g.id))fail('RENDER_GROUP_DUPLICATE');ids.add(g.id);
     if(g.serviceLinks.some((link:any)=>link.id===o.serviceId))result.push({id:g.id,updatedAt:g.updatedAt,serviceIds:g.serviceLinks.map((link:any)=>link.id).sort()});
    }
-   if(rows.length<100)return result.sort((a:any,b:any)=>a.id.localeCompare(b.id));const next=rows.at(-1).cursor;if(next===cursor)fail('RENDER_PAGINATION_INVALID');cursor=next;
+   if(rows.length<100)return result.sort((a:any,b:any)=>a.id.localeCompare(b.id));
+   if(!wrapped)fail('RENDER_GROUP_COMPLETENESS_UNPROVEN');
+   const next=rows.at(-1).cursor;if(cursors.has(next))fail('RENDER_PAGINATION_INVALID');cursors.add(next);cursor=next;
   }return fail('RENDER_PAGINATION_LIMIT');
  }
  async function config(signal:AbortSignal):Promise<Config>{const service=await api('GET','',signal);if(service.id!==o.serviceId||service.ownerId!==o.workspaceId)fail('RENDER_SCOPE_DENIED');return {service:serviceConfig(service),groups:await groups(signal),env:await directCells('env-vars',signal),files:await directCells('secret-files',signal)};}
