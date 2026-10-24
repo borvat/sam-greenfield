@@ -1,4 +1,5 @@
 import {scoreGoalFamilyCapture} from '../../apps/agents/src/evaluation/goalFamilyScore';
+import {fixtureDiagnostics} from './fixtureDiagnostics';
 import {sealGoalFamilyEvaluation} from '../../apps/agents/src/evaluation/goalFamilyCapture';
 import {startRuntimeService} from '../../apps/runtime/src/service';
 import {ingestEvent} from '../../apps/event-fabric/src/index';
@@ -37,6 +38,7 @@ function runtimeFixtureBundle(adapter:any):ProductionBundle{
  toolAdapters:[frozen.adapter],verificationAdapters:[frozen.verifier],modelAdapters:adapter?[adapter]:[],
  modelProviderConfigs:adapter?[{providerId:adapter.providerId,models:['fixture'],capabilities:['planning'],privacyClasses:['INTERNAL'],health:'HEALTHY',costPer1kInput:0.001,costPer1kOutput:0.001}]:[]};}
 async function worker(){
+ fixtureDiagnostics('SOURCE');
  const trials=JSON.parse(process.env.FIXTURE_TRIALS!);let calls=0;
  const good=fixtureEvaluationAdapter('eval-a',async()=>{calls++;return reply();});
  const gateway=new ModelGateway({'eval-a':good});

@@ -1,4 +1,5 @@
 import {evidenceFamily} from '../../apps/brain/src/evidence/delegationScope';
+import {fixtureDiagnostics} from './fixtureDiagnostics';
 import {writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {sealGoalFamilyEvaluation} from '../../apps/agents/src/evaluation/goalFamilyCapture';
@@ -23,6 +24,7 @@ import {fixtureBundle} from './sharedFixture';
 const objectives=['Compare January and February supplied ledger amounts in net EUR, with citations and limits.','Compare supplier promises against delivery dates for the supplied delivery records.','Inventory duplicate supplied documents by content hash without deleting anything.'];
 const info=(objective:string)=>objective===objectives[0]?{query:'ledger',field:'total',units:'EUR',vat:'net'}:objective===objectives[1]?{query:'delivery',field:'delay',units:'calendar_day',vat:'UNKNOWN'}:{query:'document',field:'count',units:'count',vat:'UNKNOWN'};
 async function worker(){
+ fixtureDiagnostics('SHARED');
  const t=await openEvaluationTrial(process.env.FIXTURE_TRIAL!);let calls=0;
  console.log('SHARED_WORKER_TRIAL_OPEN');
  const adapter=fixtureEvaluationAdapter('eval-shared',async(task:any)=>{
