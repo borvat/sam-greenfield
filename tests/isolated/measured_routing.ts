@@ -46,3 +46,13 @@ test('context and native tool requirements fail closed when metadata is absent o
  assert.equal(routeModel(task,[p],{outputTokens:2049}).length,0);
  assert.throws(()=>routeModel(task,[p],{inputTokens:-1}));
 });
+
+test('unconfigured registry pricing is excluded instead of becoming a free model',async()=>{
+ const {loadProviderRegistry}=await import('../../packages/model-gateway/src/registry');
+ const row={provider_id:'missing-price',models:['m'],capabilities:['planning'],privacy_class_allowed:['INTERNAL'],health:'HEALTHY',cost_per_1k_input:null,cost_per_1k_output:null};
+ const providers=await loadProviderRegistry({query:async()=>({rows:[row]})});
+ assert(Number.isNaN(providers[0].costPer1kInput));
+ assert.deepEqual(routeModel({task:'plan',capability:'planning',dataClassification:'INTERNAL',input:{}},providers),[]);
+ const free=await loadProviderRegistry({query:async()=>({rows:[{...row,cost_per_1k_input:0,cost_per_1k_output:0}]})});
+ assert.equal(routeModel({task:'plan',capability:'planning',dataClassification:'INTERNAL',input:{}},free)[0].estimatedCostUsd,0);
+});

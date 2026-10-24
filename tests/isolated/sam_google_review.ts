@@ -97,7 +97,7 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
    return ++calls===1?final:{accepted:true,missing:[]};
   })).status,"complete");
   assert.equal((await db.query<any>("SELECT state FROM goals")).rows[0].state,"COMPLETED");
-  const reports=await db.query<any>("SELECT * FROM goal_read_reviews ORDER BY round");assert.equal(reports.rows.length,2);assert.equal((reports.rows[1] as any).decision.status,"complete");
+  const reports=await db.query<any>("SELECT * FROM goal_read_reviews ORDER BY round");assert.equal(reports.rows.length,2);assert.equal((reports.rows[1] as any).decision.status,"complete");assert.equal((reports.rows[1] as any).decision.resolution.outcome,"complete");
   assert.equal((await reviewNextReadGoal(bundle,sql,async()=>{throw new Error("must not rerun")})).processed,false);
   await db.query<any>("DELETE FROM goal_read_reviews WHERE plan_id=$1",[g.current_plan_id]);
   // Reset only this synthetic scenario's budget alongside its deleted report.

@@ -83,7 +83,7 @@ export async function commandCenterGoalTimeline(legalEntityId:string,goalId:stri
       approvalsDisabled:restrictedReadScope(),
       audit:audit.rows,
       reports:reports.rows,budget,
-      progress:goalProgress({goal:goal.rows[0],work:work.rows,executions:executions.rows,verifications:verifications.rows,reports:reports.rows})
+      progress:goalProgress({goal:goal.rows[0],work:work.rows,executions:executions.rows,verifications:verifications.rows,reports:reports.rows,audit:audit.rows})
     };
   });
 }

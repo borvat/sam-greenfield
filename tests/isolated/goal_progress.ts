@@ -19,9 +19,24 @@ test('a newer failed verification or a previous-plan report cannot be hidden by 
 });
 test('blocked reports preserve reasons; zero source work does not become verified',()=>{
  const p=goalProgress({goal:{...goal,state:'WAITING_EXTERNAL'},work,executions:[],verifications:[],reports:[{plan_id:'plan',decision:{status:'blocked',limitations:['Authorization expired']}}]});
- assert.equal(p.displayState,'WAITING_EXTERNAL');assert.deepEqual(p.blockedReason,['Authorization expired']);assert.equal(p.verifiedCount,0);
+ assert.equal(p.displayState,'BLOCKED');assert.equal(p.executionState,'WAITING_EXTERNAL');assert.equal(p.resolution?.automaticResume,false);assert.deepEqual(p.blockedReason,['Authorization expired']);assert.equal(p.verifiedCount,0);
 });
 test('duplicate execution cannot inflate a successful verification display',()=>{
  const duplicate={...execution,id:'duplicate'};
  assert.equal(goalProgress({goal,work,executions:[execution,duplicate],verifications:[verification,{...verification,id:'v2',execution_id:'duplicate'}],reports}).reportVerified,false);
+});
+
+test('review retry requires a scheduled wake, remaining budget and current-plan receipt',()=>{
+ const audit=[{action:'READ_REVIEW_BUDGET',after_ref:{planId:'plan',runtimeReview:{retryable:true,attempts:1,callsUsed:1,errorCode:'REVIEW_MODEL_DEADLINE'}}}];
+ const waiting={...goal,state:'WAITING_EXTERNAL',next_wake_at:'2026-10-24'};
+ const input={goal:waiting,work,executions:[execution],verifications:[verification],reports:[],audit};
+ assert.equal(goalProgress(input).resolution?.disposition,'BOUNDED_RETRY_SCHEDULED');
+ assert.equal(goalProgress({...input,goal:{...waiting,next_wake_at:null}}).resolution?.disposition,'STOPPED');
+ const exhausted=structuredClone(audit);exhausted[0].after_ref.runtimeReview.attempts=2;
+ assert.equal(goalProgress({...input,audit:exhausted}).resolution?.automaticResume,false);
+ const stale=structuredClone(audit);stale[0].after_ref.planId='old';assert.equal(goalProgress({...input,audit:stale}).resolution,null);
+});
+test('revoked verification cannot present a report as a completed outcome',()=>{
+ const result=goalProgress({goal,work,executions:[execution],verifications:[],reports});
+ assert.equal(result.resolution?.outcome,'blocked');assert.equal(result.reportVerified,false);
 });
