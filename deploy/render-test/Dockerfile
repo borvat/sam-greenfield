@@ -13,4 +13,4 @@ COPY deploy/render-test ./deploy/render-test
 ARG RENDER_GIT_COMMIT
 RUN node deploy/render-test/build-verify.cjs
 ENV NODE_ENV=development SAM_DEVELOPMENT_SAFE_MODE=1
-CMD ["node", "deploy/render-test/start.cjs"]
+CMD ["node", "--import", "tsx", "deploy/render-test/entry.ts"]

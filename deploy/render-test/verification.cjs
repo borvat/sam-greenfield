@@ -3,7 +3,7 @@
 const {spawn}=require('node:child_process');
 const fs=require('node:fs');
 const {Client}=require('pg');
-const SUITES=['tests/core/reliability.ts','tests/core/tenantWorkload.ts','tests/evaluation/sharedPath.ts','tests/evaluation/budgets.ts'];
+const SUITES=['tests/core/reliability.ts','tests/core/tenantWorkload.ts','tests/evaluation/sharedPath.ts','tests/evaluation/budgets.ts','tests/core/persistentStorage.ts'];
 async function runVerification({databaseUrl,sourceCommit,probe,startApplication}){
  const u=new URL(databaseUrl);
  if(u.hostname!=='127.0.0.1'||u.pathname!=='/sam_core_test'||!/^[a-f0-9]{40}$/.test(sourceCommit||''))throw Error('LOCAL_VERIFICATION_SCOPE_REQUIRED');
