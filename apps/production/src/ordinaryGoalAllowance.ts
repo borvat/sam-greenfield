@@ -1,3 +1,4 @@
+import {hasAdmittedGoalTransition} from '../../../packages/db/src/commitAdmission';
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import {withTransaction} from '../../../packages/db/src/client';
@@ -104,6 +105,16 @@ export async function openOrdinaryGoalAllowance(input:{rootGoalId:string;tenant:
   });
  }
  return Object.freeze({rootGoalId:input.rootGoalId,live,reserve,charge,begin,finish,
-  commit:async(c:PoolClient)=>{const s=await locked(c);if(!s.first||['CANCELLED','FAILED','BLOCKED','WAITING_OWNER'].includes(s.root.state))throw Error('ORDINARY_ALLOWANCE_GOAL_CLOSED');if(Date.parse(String(s.first.deadline))<=new Date(s.root.observed_at).getTime())throw Error('ORDINARY_ALLOWANCE_TIME_EXHAUSTED');},
+  waiting:async(c:PoolClient)=>{const s=await locked(c);if(!s.first||s.root.state!=='WAITING_EXTERNAL')throw Error('ORDINARY_ALLOWANCE_GOAL_CLOSED');if(Date.parse(String(s.first.deadline))<=new Date(s.root.observed_at).getTime())throw Error('ORDINARY_ALLOWANCE_TIME_EXHAUSTED');},
+  commit:async(c:PoolClient)=>{
+   const s=await locked(c);if(!s.first||s.root.state==='CANCELLED')throw Error('ORDINARY_ALLOWANCE_GOAL_CLOSED');
+   if(closed.has(s.root.state)){
+    // Certify the state-machine transition made by THIS PostgreSQL transaction,
+    // not a terminal event from an earlier commit. The root lock prevents a
+    // concurrent cancellation from interleaving. No late callback can reuse it.
+    if(!await hasAdmittedGoalTransition(c,input.rootGoalId,s.root.state,['NEW','MODELING','PLANNING','EXECUTING','VERIFYING','REPLANNING']))throw Error('ORDINARY_ALLOWANCE_GOAL_CLOSED');
+   }
+   if(Date.parse(String(s.first.deadline))<=new Date(s.root.observed_at).getTime())throw Error('ORDINARY_ALLOWANCE_TIME_EXHAUSTED');
+  },
   snapshot:()=>withTransaction(async c=>{const s=await locked(c);return {deadline:String(s.first?.deadline),used:used(s.events),uncertain:s.events.filter(e=>e.type==='RESERVED'&&!s.events.some(f=>f.ticket===e.ticket&&f.type==='FINISHED')).map(e=>e.ticket)};})});
 }

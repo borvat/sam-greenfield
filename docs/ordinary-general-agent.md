@@ -117,3 +117,29 @@ metadata and hashes do not establish supplier promises or semantic equivalence.
 These gaps must produce incomplete reports, not invented aggregates. Verified
 derived provenance stays in reports/executions; separate knowledge capture remains
 limited to permitted raw source facts.
+
+## Root lifecycle correction after independent review
+
+The `172a990` acceptance remains a historical component checkpoint; independent
+review found terminal-transition, waiting-review, schema-compaction and local-read
+limit defects. It is not the corrected release candidate.
+
+| Transition or operation | Admission and final outcome |
+| --- | --- |
+| Active root to FAILED/BLOCKED/COMPLETED/waiting | The state machine records its inserted outbox receipt in the private admission scope, tied to the exact PostgreSQL transaction. Commit checks that the receipt still exists and the root deadline remains valid. |
+| Late write to an already closed root | Rejected, including reuse of a pooled connection, publication of an old terminal outbox event, or a rolled-back savepoint receipt. Cancellation never grants a terminal-commit exception. |
+| Retryable review waiting | Only an authenticated, previously admitted root with its original allowance, remaining persisted review budget, and due database timestamp may return directly to VERIFYING. No replanning or repeated source reads. |
+| Waiting without supported continuation, or expired allowance | Persist an incomplete per-obligation outcome when a plan exists, fence remaining authorized read work, and close the root. No allowance reset. |
+| Already terminal root with unfinished work | Historical assignment validation permits cleanup only, never fresh dispatch; failed/cancelled descendants are reconciled without overwriting completed evidence. |
+| Existing waiting goal without an allowance | Never enrolled, even if an old submission marker exists. WAITING_OWNER remains an explicit owner boundary. |
+
+Root reservations charge every tool and readback. Startup refuses any specialist
+whose tool-count, tool-call-time or elapsed-time ceiling is narrower than the root
+ceiling. This makes the enforced shared limit dominate those local read limits;
+it does not claim separate readback entries in each specialist's local ledger.
+Reasoning/model limits remain separately enforced by the specialist engine.
+
+Schema compaction traverses JSON Schema node positions only. Object-valued consts,
+annotations and property-name maps remain literal data; existing reference scopes
+remain unchanged. AJV equivalence tests cover constants, maps, references, patterns
+and negation, in addition to the derive grammar.

@@ -8,7 +8,7 @@ export const objectives=['Compare January and February supplied ledger amounts i
 const info=(objective:string)=>objective===objectives[0]?{query:'ledger',field:'total',units:'EUR',vat:'net'}:objective===objectives[1]?{query:'delivery',field:'delay',units:'calendar_day',vat:'UNKNOWN'}:{query:'document',field:'count',units:'count',vat:'UNKNOWN'};
 // Scripted decisions test wiring only, never model autonomy. Fixture transport
 // replaces network and uses invented sources; no evaluation authority is opened.
-export default function build(){let calls=0;
+export default function build(){let calls=0;const lifecycle=process.env.FIXTURE_LIFECYCLE;
  const adapter=new OpenAICompatibleChatAdapter('deepseek',{apiKey:'isolated-fixture-not-a-credential',baseUrl:'https://api.deepseek.com',transport:async(_url,request)=>{
   const task=JSON.parse(String(request.body));assert.equal(task.max_tokens,4000);assert.equal(request.redirect,'error');assert(!('max_completion_tokens'in task));
   assert(Buffer.byteLength(String(request.body))<=24000,'wire input must fit fixed input ceiling');
@@ -35,10 +35,15 @@ export default function build(){let calls=0;
    output={accepted:true,missing:[]};
   }
   else if(input.verifiedObservations){
+   if(lifecycle?.startsWith('review-')){
+    const finished=await pool.query("SELECT 1 FROM audit_log WHERE action='READ_REVIEW_BUDGET' AND after_ref->'runtimeReview'->>'phase'='finished' LIMIT 1");
+    if(!finished.rowCount)throw Error('ISOLATED_RETRYABLE_REVIEW_FAILURE');
+   }
    const source=input.verifiedObservations.find((s:any)=>s.derivedEvidence);assert(source,'shared review must see descendant derivation');
    const quoteLines=source.citableLines.filter((i:number)=>{try{return JSON.parse(source.lines[i]).field===field;}catch{return false;}});assert(quoteLines.length>0);
    const findings=quoteLines.map((quoteLine:number)=>{const cell=JSON.parse(source.lines[quoteLine]);return {text:'Derived '+field+' = '+cell.value,executionId:source.id,quoteLine,derivedClaim:{row:cell.row,field,value:cell.value}};});const raw=input.verifiedObservations.find((s:any)=>s.capabilityId==='records.search');const rawLine=raw.citableLines.find((i:number)=>raw.lines[i].includes('\"id\"'));assert.notEqual(rawLine,undefined);findings.push({text:'Verified source identity',executionId:raw.id,quoteLine:rawLine} as any);output={status:'complete',summary:'Requested bounded fixture analysis',requirements:[{obligationId:'analysis',requirement:objective,fulfilled:true,evidenceIds:[source.id]}],findings,limitations:['Synthetic fixtures, not live evidence'],steps:[]};
   }else output={assumptions:{goalObligations:{version:1,deliverables:[{id:'analysis',description:objective,fields:[field],scope:{kind:'population',filter:query,query:{capabilityId:'records.search',params:{query}}},units,vat,period:'UNKNOWN',timeZone:'UTC'}],unresolved:[]}},steps:[{capabilityId:'reason.research',params:{objective}}]};
+  if(!input.agent&&!input.proposedReport&&!input.verifiedObservations){if(lifecycle==='planner-failure')output.steps=[{capabilityId:'unavailable.fixture.tool',params:{}}];if(lifecycle==='source-failure')output.steps=[{capabilityId:'records.search',params:{query}}];}
   if(process.env.FIXTURE_CANCEL_ON_RETURN==='1')await pool.query("UPDATE goals SET state='CANCELLED' WHERE objective=$1 AND parent_goal_id IS NULL",[objective]);
   return {model:'deepseek-flash',usage:{prompt_tokens:5,completion_tokens:20},choices:[{message:{content:JSON.stringify(output)}}]};
  }});
@@ -47,8 +52,8 @@ export default function build(){let calls=0;
  const keep=(id:string)=>id!=='derive_verified_evidence'&&id!=='reason.records';
  const base={...original,descendantEvidencePolicy:undefined,requireGoalObligations:undefined,verifiedEvidenceContracts:undefined,
   capabilities:original.capabilities.filter(c=>keep(c.capabilityId)),toolDefinitions:original.toolDefinitions.filter(c=>keep(c.capabilityId)),
-  toolAdapters:original.toolAdapters.filter(c=>keep(c.capabilityId)),verificationAdapters:original.verificationAdapters?.filter(c=>keep(c.capabilityId)),
+  toolAdapters:original.toolAdapters.filter(c=>keep(c.capabilityId)).map(a=>lifecycle==='source-failure'?{...a,async execute(){throw Error('ISOLATED_SOURCE_UNAVAILABLE');}}:a),verificationAdapters:original.verificationAdapters?.filter(c=>keep(c.capabilityId)),
   modelAdapters:[adapter],modelProviderConfigs:[{providerId:'deepseek',models:['deepseek-flash'],capabilities:['planning','specialist_reasoning'],privacyClasses:['INTERNAL' as const],health:'HEALTHY' as const,costPer1kInput:0.001,costPer1kOutput:0.001}]};
  const contracts=structuredClone(original.verifiedEvidenceContracts!);if(process.env.FIXTURE_UNKNOWN_UNIT==='1')contracts[0].extraction.columns.amount.unit='UNKNOWN';
- return ordinaryGoalBundle(base,contracts,{limits:{...ceiling,models:12,maxOutputTokens:4000,...(process.env.FIXTURE_ZERO_TOOLS==='1'?{tools:0}:{})},specialists:[{capabilityId:'reason.research',agentId:'research-coordinator',purpose:'Delegate evidence investigation and independently substantiate the requested findings.',allowedCapabilities:['reason.records'],limits:{...ceiling,models:12,maxOutputTokens:4000}},{capabilityId:'reason.records',agentId:'records-analyst',purpose:'Discover authorized records, request missing pages, derive bounded comparisons and cite exact verified fields.',allowedCapabilities:['records.search','derive_verified_evidence'],limits:{...ceiling,models:10,maxOutputTokens:4000}}]},process.env.FIXTURE_ENTITY!);
+ return ordinaryGoalBundle(base,contracts,{limits:{...ceiling,models:12,maxOutputTokens:4000,...(lifecycle==='review-expiry'?{elapsedMs:60000}:{}),...(process.env.FIXTURE_ZERO_TOOLS==='1'?{tools:0}:{})},specialists:[{capabilityId:'reason.research',agentId:'research-coordinator',purpose:'Delegate evidence investigation and independently substantiate the requested findings.',allowedCapabilities:['reason.records'],limits:{...ceiling,models:12,maxOutputTokens:4000}},{capabilityId:'reason.records',agentId:'records-analyst',purpose:'Discover authorized records, request missing pages, derive bounded comparisons and cite exact verified fields.',allowedCapabilities:['records.search','derive_verified_evidence'],limits:{...ceiling,models:10,maxOutputTokens:4000,...(lifecycle?.startsWith('limit-')?{[lifecycle.slice(6)]:lifecycle==='limit-tools'?0:10}: {})}}]},process.env.FIXTURE_ENTITY!);
 }

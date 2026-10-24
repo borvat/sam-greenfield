@@ -1,3 +1,4 @@
+import {recordAdmittedGoalTransition} from '../../../packages/db/src/commitAdmission';
 import type { GoalState } from "../../../packages/shared/src/types";
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
@@ -48,7 +49,7 @@ export async function transitionGoal(
     [goalId, nextState]
   );
 
-  await insertOutboxEvent(client, {
+  const eventId=await insertOutboxEvent(client, {
     aggregateType: "goal",
     aggregateId: goalId,
     eventType: "GOAL_STATE_CHANGED",
@@ -59,6 +60,7 @@ export async function transitionGoal(
       ...extraPayload
     }
   });
+  await recordAdmittedGoalTransition(client,{eventId,goalId,from:expectedState,to:nextState});
 }
 
 export async function transitionGoalAtomic(
