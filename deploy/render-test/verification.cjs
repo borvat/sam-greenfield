@@ -24,6 +24,7 @@ async function runVerification({databaseUrl,sourceCommit}){
    const text=fs.readFileSync(log,'utf8');
    const passed=status.exitCode===0&&text.includes('"failed":0');
    report.results.push({suite,status:passed?'PASS':'FAIL',...status,durationMs:Date.now()-started,privateLogRetained:true});
+   console.log(JSON.stringify({service:'sam-isolated-verification-suite',sourceCommit,...report.results.at(-1),liveReasoningValidated:false,modelPaidCalls:0}));
    persist();
   }finally{fs.closeSync(output);}
  }
