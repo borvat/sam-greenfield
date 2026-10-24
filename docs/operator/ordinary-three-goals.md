@@ -9,7 +9,7 @@ Use the same two existing Render service IDs already verified by the parent, and
 
 After the bundled approval arrives, record both existing deploy IDs/commit IDs and the names/current settings of variables changed below in the operator's protected record. Do not export secret values into chat or evidence. Preserve the old application release (`8ebbe5ab5caf53a870cd252441e6199a08b3b5af`, unless operator readback establishes a newer live release) for rollback.
 
-Pause ordinary work and goal intake on these same services. Read current fixed tenant identity using the existing runtime connection:
+Pause ordinary work and goal intake using the [same-service health-only executor sequence](bootstrap/README.md#keep-the-executor-shell-available-during-the-pause). Do not suspend runtime: setup requires its replacement maintenance instance Shell. Suspend MCP intake only; verify the old runtime worker has terminated before setup. Read current fixed tenant identity using the existing runtime connection:
 
 ```sql
 SELECT current_user, current_schema(), current_org_id(), current_legal_entity_id();

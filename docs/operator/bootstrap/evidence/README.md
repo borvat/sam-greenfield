@@ -10,3 +10,7 @@ The application remains frozen at bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0. No h
 - `postgres.log`: initial fixture directory was unwritable, so receipt creation failed **before migrations**. Retried the isolated container with writable /app as fixture root; no change to hosted privileges or code was required.
 
 The fixture image lacks git: only its git command was substituted to return the independently verified frozen SHA and a clean profile diff. Thus database setup/readback were exercised, but this rehearsal does not independently validate the Git command's source-authentication result or hosted Render execution. The PTY used a fake child, not production authentication. No live provider calls. Application full acceptance was not repeated for these operator-only artifacts.
+
+## Maintenance command correction
+
+`python3 docs/operator/bootstrap/test_maintenance.py` passed locally: `/readyz` and `/livez` GET return explicit maintenance JSON; other routes/methods return 503; bogus inherited NODE_OPTIONS/NODE_PATH cannot preload application code; SIGTERM closes cleanly. The exact command imports only `node:http`. No Render mutation or hosted Shell test was performed. The corrected procedure keeps runtime unsuspended, suspends MCP intake, and requires old-instance termination plus queue/callback reconciliation before setup. This is prepared for review, not an executed pause.

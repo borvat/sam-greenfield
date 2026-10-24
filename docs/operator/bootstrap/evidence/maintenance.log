@@ -1,0 +1,1 @@
+PASS: health-only readiness, other routes 503, inherited preloads removed, SIGTERM exits cleanly; no SAM/database/provider imports
