@@ -1,0 +1,66 @@
+{
+  "limits": {
+    "models": 10,
+    "tools": 20,
+    "iterations": 20,
+    "tokens": 260000,
+    "costUsd": 0.1,
+    "elapsedMs": 300000,
+    "delegations": 12,
+    "maxInputTokens": 24000,
+    "maxOutputTokens": 2000,
+    "modelCallMs": 40000,
+    "toolCallMs": 20000
+  },
+  "specialists": [
+    {
+      "capabilityId": "reason.research",
+      "agentId": "research-coordinator",
+      "purpose": "Independently understand the assigned objective, delegate evidence investigation and substantiate the requested findings.",
+      "allowedCapabilities": [
+        "reason.records"
+      ],
+      "limits": {
+        "models": 10,
+        "tools": 20,
+        "iterations": 20,
+        "tokens": 260000,
+        "costUsd": 0.1,
+        "elapsedMs": 300000,
+        "delegations": 12,
+        "maxInputTokens": 24000,
+        "maxOutputTokens": 2000,
+        "modelCallMs": 20000,
+        "toolCallMs": 20000
+      }
+    },
+    {
+      "capabilityId": "reason.records",
+      "agentId": "records-analyst",
+      "purpose": "Discover authorized records, read missing evidence, derive bounded comparisons and cite exact verified fields; report unsupported semantics and scope honestly.",
+      "allowedCapabilities": [
+        "bol_list_orders",
+        "bol_get_order",
+        "google_mcp_search_gmail_messages",
+        "google_mcp_get_gmail_message_content",
+        "google_mcp_search_drive_files",
+        "google_mcp_get_drive_file_content",
+        "google_mcp_get_drive_file_download_url",
+        "derive_verified_evidence"
+      ],
+      "limits": {
+        "models": 10,
+        "tools": 20,
+        "iterations": 20,
+        "tokens": 260000,
+        "costUsd": 0.1,
+        "elapsedMs": 300000,
+        "delegations": 12,
+        "maxInputTokens": 24000,
+        "maxOutputTokens": 2000,
+        "modelCallMs": 20000,
+        "toolCallMs": 20000
+      }
+    }
+  ]
+}
