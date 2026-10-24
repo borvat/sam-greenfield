@@ -5,7 +5,6 @@ const {randomBytes}=require('node:crypto');
 const {Client}=require('pg');
 const http=require('node:http');
 const {timingSafeEqual}=require('node:crypto');
-const {runVerification}=require('./verification.cjs');
 const {runApiSmoke}=require('./api-smoke.cjs');
 const children=[];
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
@@ -17,9 +16,6 @@ async function main(){
   command('runuser',['-u','postgres','--',pg+'pg_ctl','-D',data,'-l','/tmp/sam-test-postgres.log','-o',"-c listen_addresses=127.0.0.1 -c shared_buffers=32MB -c max_connections=25",'-w','start']);
   const password=randomBytes(32).toString('hex');
   const admin=new Client({host:'/var/run/postgresql',user:'postgres',database:'postgres'});await admin.connect();
-  const verificationPassword=randomBytes(32).toString('hex');
-  await admin.query(`ALTER ROLE postgres PASSWORD '${verificationPassword}'`);
-  await admin.query('CREATE DATABASE sam_core_test');
   await admin.query(`CREATE ROLE sam_synthetic LOGIN PASSWORD '${password}'`);
   await admin.query('CREATE DATABASE sam_synthetic OWNER sam_synthetic');await admin.end();
   const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:`postgres://sam_synthetic:${password}@127.0.0.1:5432/sam_synthetic`};
@@ -57,9 +53,15 @@ async function main(){
     upstream.on('error',()=>{if(!res.headersSent)res.writeHead(503);res.end('service starting');});
     req.pipe(upstream);
   }).listen(Number(process.env.PORT||10000),'0.0.0.0');
-  console.log('SAM disposable front proxy started. Engineering verification precedes application startup; no external adapters.');
-  void runVerification({databaseUrl:`postgres://postgres:${verificationPassword}@127.0.0.1:5432/sam_core_test`,sourceCommit:process.env.RENDER_GIT_COMMIT,
-    startApplication,probe:()=>runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL})}).catch(()=>console.error('Sandbox verification failed; inspect authenticated status.'));
+  const report=JSON.parse(fs.readFileSync('/app/test-results/build-verification.json','utf8'));
+  if(report.sourceCommit!==process.env.RENDER_GIT_COMMIT||report.status!=='FIXTURE_SUITES_PASSED_API_PENDING'||report.results.length!==4||report.results.some(r=>r.status!=='PASS'))throw Error('BUILD_EVIDENCE_MISMATCH');
+  console.log('SAM disposable front proxy started. Native fixture suites passed during this exact image build; live reasoning remains disabled.');
+  await startApplication();
+  report.api=await runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL});
+  report.apiCheckedAt=new Date().toISOString();report.status=report.api.status==='PASS'?'PASSED':'FAILED';
+  fs.writeFileSync('/tmp/sam-test-verification.json',JSON.stringify(report),{mode:0o600});
+  console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit:report.sourceCommit,...report.api}));
+  console.log(JSON.stringify({service:'sam-isolated-verification',sourceCommit:report.sourceCommit,status:report.status,passed:report.results.filter(r=>r.status==='PASS').length,failed:report.results.filter(r=>r.status==='FAIL').length,executionEnvironment:'DOCKER_BUILD',liveReasoningValidated:false,modelPaidCalls:0}));
 }
 let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
 process.on('SIGTERM',()=>shutdown(0));process.on('SIGINT',()=>shutdown(0));

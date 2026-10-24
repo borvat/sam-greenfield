@@ -54,7 +54,8 @@ async function runVerification({databaseUrl,sourceCommit,probe,startApplication}
  await startApplication?.();
  try{report.api=typeof probe==='function'?await probe():{status:'NOT_RUN'};}catch{report.api={status:'FAIL',reason:'API_OR_DATABASE_ASSERTION_FAILED'};}
  console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit,...report.api}));persist();
- report.status=report.api.status==='PASS'&&report.results.every(r=>r.status==='PASS')?'PASSED':'FAILED';report.completedAt=new Date().toISOString();persist();
+ const suitesPassed=report.results.every(r=>r.status==='PASS');
+ report.status=suitesPassed?(report.api.status==='PASS'?'PASSED':report.api.status==='NOT_RUN'?'FIXTURE_SUITES_PASSED_API_PENDING':'FAILED'):'FAILED';report.completedAt=new Date().toISOString();persist();
  console.log(JSON.stringify({service:'sam-isolated-verification',sourceCommit,status:report.status,passed:report.results.filter(r=>r.status==='PASS').length,failed:report.results.filter(r=>r.status==='FAIL').length,liveReasoningValidated:false,modelPaidCalls:0}));
  return report;
 }
