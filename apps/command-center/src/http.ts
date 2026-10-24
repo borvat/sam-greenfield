@@ -61,7 +61,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
         }
         if(process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){
-          scopedHtml=scopedHtml.replace('<body>','<body data-read-only-stage="true">')
+          scopedHtml=scopedHtml.replace('<body','<body data-read-only-stage="true"')
             .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>')
             .replace('Owner view of goals, execution, verification and finance.','Read-only test environment. Reports require independent verification; external writes are disabled.')
             .replace('Example: Review current bol sales and accounting differences and produce a verified owner brief.','Describe a read-only objective and the result you need.');

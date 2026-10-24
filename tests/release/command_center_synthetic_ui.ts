@@ -53,6 +53,12 @@ async function main(){
         assert(html.includes("SYNTHETIC PILOT · CONNECTED"));
       }else assert(html.includes("<option>YELLOW</option>"));
     }
+    process.env.SAM_RELEASE_SYNTHETIC_PLANNER='0';
+    process.env.SAM_DEVELOPMENT_SAFE_MODE='1';
+    process.env.SAM_COMMAND_CENTER_READ_ONLY='1';
+    const readOnlyHtml=await(await fetch(root)).text();
+    assert(readOnlyHtml.includes('data-read-only-stage="true" data-development-safe="true"'));
+    assert(!readOnlyHtml.includes('<option>YELLOW</option>'));
     const before=queries.length;
     assert.equal((await fetch(root+"/api/finance/latest")).status,401);
     const finance=await (await fetch(root+"/api/finance/latest",{headers:{Authorization:`Bearer ${fakeToken}`}})).json();
