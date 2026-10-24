@@ -6,9 +6,13 @@ const {Client}=require('pg');
 const http=require('node:http');
 const {timingSafeEqual}=require('node:crypto');
 const {runApiSmoke}=require('./api-smoke.cjs');
+const {createStorageLease}=require('./storageLease.cjs');
 const children=[];
+let proxy,storageLease;
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
 async function main(binding,storageReport){
+  const existingGoalId=binding?process.env.SAM_TEST_PERSISTENT_SMOKE_GOAL_ID:undefined;
+  if(binding&&!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(existingGoalId||''))throw Error('PERSISTENT_SMOKE_GOAL_REQUIRED');
   for(const key of Object.keys(process.env))if(/API_KEY|CLIENT_SECRET|REFRESH_TOKEN|DATABASE_URL|SAM_PRODUCTION|GOOGLE_|BOL_|EBOEK/i.test(key))delete process.env[key];
   let databaseUrl,entity;
   if(binding){databaseUrl=binding.connectionString;entity=binding.entity;}else{
@@ -31,13 +35,14 @@ async function main(binding,storageReport){
   const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:databaseUrl};
   const token=process.env.SAM_TEST_BEARER_TOKEN;if(!token)throw new Error('SAM_TEST_BEARER_TOKEN required');
   const host=process.env.RENDER_EXTERNAL_HOSTNAME||'localhost';
-  const launch=(entry,extra)=>{const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
+  const launch=(entry,extra)=>{if(stopping||storageLease?.expired())throw Error('STORAGE_WINDOW_ENDED');const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
   const startApplication=async()=>{
   launch('apps/runtime/src/main.ts',{PORT:'8080',SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'render-test',SAM_COMPOSITION_MODULE:'/app/apps/runtime/src/developmentCompositionModule.ts',SAM_RUNTIME_STATUS_BEARER_TOKEN:token});
   launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_REQUIRE_GOAL_ACCEPTANCE:'1',SAM_COMMAND_CENTER_PORT:'5000',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`});
   launch('apps/mcp/src/main.ts',{SAM_MCP_PORT:'3001',SAM_MCP_HOST:'127.0.0.1',SAM_MCP_BEARER_TOKEN:token,SAM_MCP_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_MCP_ALLOWED_ORIGINS:`https://${host}`,SAM_DEV_LEGAL_ENTITY_ID:entity});
   };
-  http.createServer(async(req,res)=>{
+  proxy=http.createServer(async(req,res)=>{
+    if(storageLease?.expired()){res.writeHead(503,{'content-type':'text/plain','cache-control':'no-store'});res.end('Test storage window expired');return;}
     if(req.url==='/test/viewport'){
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
       res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>SAM 390px layout review</title><p>Actual isolated application in a 390px viewport. Synthetic database; execution disabled.</p><iframe title="SAM mobile viewport" src="/" width="390" height="1600" style="border:1px solid #ddd"></iframe>');return;
@@ -62,14 +67,14 @@ async function main(binding,storageReport){
   if(report.sourceCommit!==process.env.RENDER_GIT_COMMIT||report.status!=='FIXTURE_SUITES_PASSED_API_PENDING'||report.results.length!==5||report.results.some(r=>r.status!=='PASS'))throw Error('BUILD_EVIDENCE_MISMATCH');
   console.log(JSON.stringify({service:'sam-test-storage',...(storageReport??{storage:'DISPOSABLE',containerReplacementValidated:false}),liveReasoningEnabled:false}));
   await startApplication();
-  report.api=await runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL,expectedScope:binding?{schema:binding.schema,role:binding.role}:undefined});
+  report.api=await runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL,expectedScope:binding?{schema:binding.schema,role:binding.role}:undefined,existingGoalId});
   report.apiCheckedAt=new Date().toISOString();report.status=report.api.status==='PASS'?'PASSED':'FAILED';
   fs.writeFileSync('/tmp/sam-test-verification.json',JSON.stringify(report),{mode:0o600});
   console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit:report.sourceCommit,...report.api}));
   console.log(JSON.stringify({service:'sam-isolated-verification',sourceCommit:report.sourceCommit,status:report.status,passed:report.results.filter(r=>r.status==='PASS').length,failed:report.results.filter(r=>r.status==='FAIL').length,executionEnvironment:'DOCKER_BUILD',liveReasoningValidated:false,modelPaidCalls:0}));
 }
-let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
+let stopping=false;function shutdown(code){if(stopping)return;stopping=true;proxy?.close();storageLease?.close();for(const p of children)p.kill('SIGTERM');setTimeout(()=>{for(const p of children)p.kill('SIGKILL');process.exit(code);},1500);}
 process.on('SIGTERM',()=>shutdown(0));process.on('SIGINT',()=>shutdown(0));
-async function runSandbox(binding,report){try{await main(binding,report);}catch{console.error('SAM sandbox initialization failed; details withheld');shutdown(1);}}
+async function runSandbox(binding,report,leaseRemainingMs){try{if(binding)storageLease=createStorageLease(leaseRemainingMs,()=>shutdown(0));await main(binding,report);}catch{console.error('SAM sandbox initialization failed; details withheld');shutdown(1);}}
 module.exports={runSandbox};
 if(require.main===module)void runSandbox();

@@ -10,7 +10,7 @@ function binding(){const u=new URL('postgres://sam_eval_runtime_probe:unused-syn
  return {schema:'sam_eval_probe',role:'sam_eval_runtime_probe',org,entity,connectionString:u.href};}
 function fixture(patch:any={}){const b=binding(),calls:string[]=[];
  return {calls,async query(sql:string){calls.push(sql);assert.match(sql,/^(SELECT |BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY|ROLLBACK)/);
-  if(sql.includes('FROM pg_roles'))return {rows:[{...b,read_only:'on',valid:true,rolsuper:false,rolcreatedb:false,rolcreaterole:false,rolbypassrls:false,rolinherit:false,can_create_schema:false,...patch}]};
+  if(sql.includes('FROM pg_roles'))return {rows:[{...b,read_only:'on',valid:true,remaining_ms:3500000,rolsuper:false,rolcreatedb:false,rolcreaterole:false,rolbypassrls:false,rolinherit:false,rolreplication:false,can_create_schema:false,...patch}]};
   if(sql.includes('FROM legal_entities'))return {rows:[{id:entity,org_id:org}]};
   if(sql.includes('FROM pg_class'))return {rows:[{n:0}]};return {rows:[]};}};
 }
@@ -28,7 +28,7 @@ test('private binding file rejects symlink and public permissions without exposi
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 test('startup admission is read-only and refuses admin flags, wrong tenant, expiry and role inheritance',async()=>{
- for(const p of [{rolsuper:true},{rolcreatedb:true},{rolcreaterole:true},{rolbypassrls:true},{rolinherit:true},{can_create_schema:true},{valid:false},{entity:org}]){
+ for(const p of [{rolsuper:true},{rolcreatedb:true},{rolcreaterole:true},{rolbypassrls:true},{rolinherit:true},{rolreplication:true},{can_create_schema:true},{valid:false},{remaining_ms:3600001},{remaining_ms:NaN},{remaining_ms:0},{entity:org}]){
   const f=fixture(p);await assert.rejects(inspectPersistentBinding(f,binding(),checks),/PRINCIPAL_DENIED/);assert.equal(f.calls.at(-1),'ROLLBACK');
  }
  const f=fixture();const r=await inspectPersistentBinding(f,binding(),checks);assert.equal(r.liveReasoningEnabled,false);assert.equal(r.containerReplacementValidated,false);assert(!JSON.stringify(r).includes('unused-synthetic'));

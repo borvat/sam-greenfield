@@ -10,6 +10,14 @@ The provisioned role must be non-owner and non-administrative, NOINHERIT, fixed 
 
 The admitted connection replaces only test storage. The maintenance-only worker, disabled external adapters and disabled live-evaluation interlock remain unchanged. Persistent storage is a prerequisite, not live reasoning activation. Runtime bootstrap and the operator's privileged one-time setup remain distinct.
 
+## Pending restart-safety candidate
+
+Provisioned startup additionally requires `SAM_TEST_PERSISTENT_SMOKE_GOAL_ID` naming an existing migrated synthetic goal. Runtime smoke performs GET-only checks and independent database readback of its ID, state and plan; it never creates a replacement goal or denial audit at persistent startup. The disposable fixture path still exercises intake and elevated-authority denial separately.
+
+Provisioned role admission rejects replication authority and a password window longer than 60 minutes. A conservative monotonic lease is anchored before connection preflight using the database's remaining lifetime, so import/validation delays cannot restart its clock. The test proxy refuses work when the lease ends and its bounded child shutdown starts two seconds early. No new children start after shutdown. This does not renew credentials. Data persists externally after expiry, while a subsequent bootstrap refuses the expired login. Continuous operation requires its own approved restricted-identity lifecycle.
+
+These changes are prepared only: 116 isolated tests and TypeScript pass. The HTTP lease and startup tests use an injected database client/clock and are not proof of actual PostgreSQL expiry or hosted replacement. No deployment, full source backup, restoration or migration has occurred on this candidate. See the canonical SAM-2026-10-24.md checkpoint for the source-container backup blocker and remaining acceptance.
+
 ## Verification plan
 
 `tests/isolated/persistent_binding.ts` tests invalid identities/context, exposed files, symlinks, expired/admin/inherited principals, profile failure and rollback-only behavior. The complete isolated suite currently passes 109 tests. TypeScript covers the new deployment entry and binding.

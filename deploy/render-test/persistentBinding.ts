@@ -38,12 +38,14 @@ export async function inspectPersistentBinding(c:any,b:PersistentBinding,
   await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');begun=true;
   const x=(await c.query(`SELECT current_schema() schema,current_user role,
    current_setting('app.current_org_id',true) org,current_setting('app.current_legal_entity_id',true) entity,
-   current_setting('transaction_read_only') read_only,r.rolsuper,r.rolcreatedb,r.rolcreaterole,r.rolbypassrls,r.rolinherit,
-   r.rolvaliduntil IS NOT NULL AND r.rolvaliduntil>now()+interval '5 minutes' valid,
+   current_setting('transaction_read_only') read_only,r.rolsuper,r.rolcreatedb,r.rolcreaterole,r.rolbypassrls,r.rolinherit,r.rolreplication,
+   r.rolvaliduntil IS NOT NULL AND r.rolvaliduntil>now()+interval '5 minutes' AND r.rolvaliduntil<=clock_timestamp()+interval '60 minutes' valid,
+   (extract(epoch FROM (r.rolvaliduntil-clock_timestamp()))*1000)::float8 remaining_ms,
    has_database_privilege(current_user,current_database(),'CREATE') can_create_schema
    FROM pg_roles r WHERE r.rolname=current_user`)).rows[0];
   if(!x||x.schema!==b.schema||x.role!==b.role||x.org!==b.org||x.entity!==b.entity||x.read_only!=='on'||
-   x.rolsuper||x.rolcreatedb||x.rolcreaterole||x.rolbypassrls||x.rolinherit||x.can_create_schema||!x.valid)throw Error('PERSISTENT_PRINCIPAL_DENIED');
+   x.rolsuper||x.rolcreatedb||x.rolcreaterole||x.rolbypassrls||x.rolinherit||x.rolreplication||x.can_create_schema||!x.valid||
+   !Number.isFinite(x.remaining_ms)||x.remaining_ms<=300000||x.remaining_ms>3600000)throw Error('PERSISTENT_PRINCIPAL_DENIED');
   await assertions.integration(c);await assertions.evaluation(c);await assertions.shared(c);
   const scope=(await c.query('SELECT id,org_id FROM legal_entities ORDER BY id')).rows;
   if(scope.length!==1||scope[0].id!==b.entity||scope[0].org_id!==b.org)throw Error('PERSISTENT_TENANT_DENIED');
@@ -52,12 +54,13 @@ export async function inspectPersistentBinding(c:any,b:PersistentBinding,
    (has_table_privilege(current_user,t.oid,'SELECT') OR has_table_privilege(current_user,t.oid,'INSERT') OR has_table_privilege(current_user,t.oid,'UPDATE') OR has_table_privilege(current_user,t.oid,'DELETE'))`)).rows[0];
   if(access?.n!==0)throw Error('PERSISTENT_PUBLIC_ACCESS_DENIED');
   return {status:'PROVISIONED_STORAGE_VERIFIED',checks:{restrictedRole:true,fixedTenant:true,profiles:true,noPublicTables:true},
-   storage:'OPERATOR_BOUND_POSTGRES',containerReplacementValidated:false,liveReasoningEnabled:false,modelCalls:0};
+   storage:'OPERATOR_BOUND_POSTGRES',leaseRemainingMs:x.remaining_ms,containerReplacementValidated:false,liveReasoningEnabled:false,modelCalls:0};
  }finally{if(begun)await c.query('ROLLBACK');}
 }
 export async function openPersistentBinding(path:string){
+ const started=performance.now();
  try{const b=await readPersistentBinding(path);const c=new Client({connectionString:b.connectionString,connectionTimeoutMillis:5000,statement_timeout:10000});
-  try{await c.connect();const report=await inspectPersistentBinding(c,b);return {binding:b,report};}finally{await c.end();}
+  try{await c.connect();const report=await inspectPersistentBinding(c,b);return {binding:b,report,leaseDeadline:started+report.leaseRemainingMs};}finally{await c.end();}
  }catch(e){const s=e instanceof Error?e.message:'';
   throw Error(/^PERSISTENT_[A-Z_]+$|^PRIVATE_BINDING_FILE_REQUIRED$/.test(s)?s:'PERSISTENT_STORAGE_PREFLIGHT_FAILED');}
 }
