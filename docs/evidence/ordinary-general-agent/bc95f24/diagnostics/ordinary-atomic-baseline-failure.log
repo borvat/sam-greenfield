@@ -1,0 +1,9 @@
+FAIL tests/core/ordinaryLifecycleBaseline.ts
+Error: ORDINARY_ALLOWANCE_GOAL_CLOSED
+    at Object.commit (/tmp/sam-ordinary-agent/apps/production/src/.baselineGoalAllowance.ts:107:147)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assertCommitAdmission (/tmp/sam-ordinary-agent/packages/db/src/commitAdmission.ts:10:64)
+    at async withTransaction (/tmp/sam-ordinary-agent/packages/db/src/client.ts:20:5)
+    at async main (/tmp/sam-ordinary-agent/tests/core/ordinaryLifecycleBaseline.ts:15:3)
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/ordinaryLifecycleBaseline.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-24T00:17:36.805Z","completedAt":"2026-10-24T00:17:37.258Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:17:36.808Z","completedAt":"2026-10-24T00:17:36.979Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryLifecycleBaseline.ts"],"startedAt":"2026-10-24T00:17:36.979Z","completedAt":"2026-10-24T00:17:37.258Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

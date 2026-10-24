@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-4E5XCk/source.tar bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0
+$ tar -xf /tmp/sam-verify-4E5XCk/source.tar -C /tmp/sam-verify-4E5XCk/source

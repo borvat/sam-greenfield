@@ -1,0 +1,364 @@
+{
+  "cancel": {
+    "enrolledRootStates": {
+      "CANCELLED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {
+      "2f154abc-60c2-4a1a-809f-3b7183e5ce71": {
+        "deadline": "2026-10-24T00:36:11.708Z",
+        "used": {
+          "tools": 0,
+          "models": 1,
+          "tokens": 28000,
+          "costNanos": 28000000,
+          "iterations": 1,
+          "delegations": 0
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 1
+      }
+    }
+  },
+  "limit-elapsedMs": {
+    "enrolledRootStates": {
+      "NEW": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {}
+  },
+  "limit-toolCallMs": {
+    "enrolledRootStates": {
+      "NEW": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {}
+  },
+  "limit-tools": {
+    "enrolledRootStates": {
+      "NEW": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {}
+  },
+  "missing-registration": {
+    "enrolledRootStates": {
+      "NEW": 3
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {}
+  },
+  "nominal": {
+    "enrolledRootStates": {
+      "COMPLETED": 3
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 13,
+    "distinctExecutionQueueIds": 13,
+    "reports": 3,
+    "ledgers": {
+      "fb3c6b74-eec0-4f9e-a22f-bfc232886ca2": {
+        "deadline": "2026-10-24T00:34:28.717Z",
+        "used": {
+          "tools": 6,
+          "models": 8,
+          "tokens": 224000,
+          "costNanos": 224000000,
+          "iterations": 8,
+          "delegations": 3
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      },
+      "9f1f81c1-8da7-49f5-a83e-d211721ee14f": {
+        "deadline": "2026-10-24T00:34:28.488Z",
+        "used": {
+          "tools": 7,
+          "models": 9,
+          "tokens": 252000,
+          "costNanos": 252000000,
+          "iterations": 9,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      },
+      "1bbdede8-3c13-47e1-b9a4-91515bec69f9": {
+        "deadline": "2026-10-24T00:34:28.877Z",
+        "used": {
+          "tools": 8,
+          "models": 9,
+          "tokens": 252000,
+          "costNanos": 252000000,
+          "iterations": 9,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "planner-failure": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "ledgers": {
+      "4f19014e-4ea9-42f1-a407-f17a74a9848f": {
+        "deadline": "2026-10-24T00:39:13.531Z",
+        "used": {
+          "tools": 0,
+          "models": 3,
+          "tokens": 84000,
+          "costNanos": 84000000,
+          "iterations": 3,
+          "delegations": 0
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "restart-concurrent": {
+    "enrolledRootStates": {
+      "COMPLETED": 3
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 13,
+    "distinctExecutionQueueIds": 13,
+    "reports": 3,
+    "ledgers": {
+      "2ada5368-e990-4320-837a-8b0f20b6351f": {
+        "deadline": "2026-10-24T00:36:14.795Z",
+        "used": {
+          "tools": 8,
+          "models": 9,
+          "tokens": 252000,
+          "costNanos": 252000000,
+          "iterations": 9,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      },
+      "77deb8bc-73ef-46c9-a062-133870ba7e1e": {
+        "deadline": "2026-10-24T00:36:14.368Z",
+        "used": {
+          "tools": 7,
+          "models": 10,
+          "tokens": 280000,
+          "costNanos": 280000000,
+          "iterations": 10,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 1
+      },
+      "e801f175-b64e-4779-9bf6-a246aa6cc2d8": {
+        "deadline": "2026-10-24T00:36:14.619Z",
+        "used": {
+          "tools": 6,
+          "models": 8,
+          "tokens": 224000,
+          "costNanos": 224000000,
+          "iterations": 8,
+          "delegations": 3
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "review-cancel-waiting": {
+    "enrolledRootStates": {
+      "CANCELLED": 1
+    },
+    "unadmittedFixtureStates": {
+      "WAITING_EXTERNAL": 2
+    },
+    "executions": 4,
+    "distinctExecutionQueueIds": 4,
+    "reports": 0,
+    "ledgers": {
+      "50dc2081-5fbf-4d82-85c7-8f8d24fa1f39": {
+        "deadline": "2026-10-24T00:41:33.257Z",
+        "used": {
+          "tools": 7,
+          "models": 8,
+          "tokens": 224000,
+          "costNanos": 224000000,
+          "iterations": 8,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "review-expiry": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {
+      "WAITING_EXTERNAL": 2
+    },
+    "executions": 4,
+    "distinctExecutionQueueIds": 4,
+    "reports": 1,
+    "ledgers": {
+      "d29eb7bc-915d-4b97-978b-0eeb290c5a04": {
+        "deadline": "2026-10-24T00:36:31.065Z",
+        "used": {
+          "tools": 7,
+          "models": 10,
+          "tokens": 280000,
+          "costNanos": 280000000,
+          "iterations": 10,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "review-wake": {
+    "enrolledRootStates": {
+      "COMPLETED": 1
+    },
+    "unadmittedFixtureStates": {
+      "WAITING_EXTERNAL": 2
+    },
+    "executions": 4,
+    "distinctExecutionQueueIds": 4,
+    "reports": 1,
+    "ledgers": {
+      "64a28874-feef-4e6e-a882-8a2c68e39354": {
+        "deadline": "2026-10-24T00:39:22.700Z",
+        "used": {
+          "tools": 7,
+          "models": 10,
+          "tokens": 280000,
+          "costNanos": 280000000,
+          "iterations": 10,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "revocation": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 4,
+    "distinctExecutionQueueIds": 4,
+    "reports": 1,
+    "ledgers": {
+      "3b5a68bb-605f-4d68-ab5f-09c2e4b3b326": {
+        "deadline": "2026-10-24T00:38:38.902Z",
+        "used": {
+          "tools": 7,
+          "models": 9,
+          "tokens": 252000,
+          "costNanos": 252000000,
+          "iterations": 9,
+          "delegations": 4
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "source-failure": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 1,
+    "ledgers": {
+      "e2c0ee9b-672f-4ac9-9027-e6eec1c52802": {
+        "deadline": "2026-10-24T00:39:19.741Z",
+        "used": {
+          "tools": 1,
+          "models": 1,
+          "tokens": 28000,
+          "costNanos": 28000000,
+          "iterations": 1,
+          "delegations": 0
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "unknown": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 2,
+    "distinctExecutionQueueIds": 2,
+    "reports": 1,
+    "ledgers": {
+      "965368b1-7fdc-46f8-8e52-114401452b90": {
+        "deadline": "2026-10-24T00:37:31.524Z",
+        "used": {
+          "tools": 12,
+          "models": 12,
+          "tokens": 336000,
+          "costNanos": 336000000,
+          "iterations": 13,
+          "delegations": 11
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  },
+  "zero-tools": {
+    "enrolledRootStates": {
+      "FAILED": 1
+    },
+    "unadmittedFixtureStates": {},
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 1,
+    "ledgers": {
+      "deca0e12-aabd-49f8-855d-3c98ac742d6d": {
+        "deadline": "2026-10-24T00:36:01.663Z",
+        "used": {
+          "tools": 0,
+          "models": 3,
+          "tokens": 84000,
+          "costNanos": 84000000,
+          "iterations": 3,
+          "delegations": 2
+        },
+        "withinPinnedLimits": true,
+        "uncertainReservations": 0
+      }
+    }
+  }
+}

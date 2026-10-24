@@ -1,0 +1,1 @@
+$ /tmp/sam-verify-4E5XCk/actionlint -no-color -shellcheck= -pyflakes= .github/workflows/phase0-postgres-verification.yml

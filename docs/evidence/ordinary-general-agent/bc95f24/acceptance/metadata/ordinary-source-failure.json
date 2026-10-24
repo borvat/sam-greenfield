@@ -1,0 +1,511 @@
+{
+  "classification": "ISOLATED_SYNTHETIC_TRANSPORTS_NOT_MODEL_AUTONOMY",
+  "sourceCommit": "bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0",
+  "variant": "source-failure",
+  "tables": {
+    "goals": [
+      {
+        "id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "business_id": "G-a87f6d54-c8a7-4a70-99ab-56e98b1ec75c-000001",
+        "owner_id": null,
+        "company_scope": "ec466ab5-3c84-4620-bbb9-f83a13d27119",
+        "domain": "chatgpt_goal_submission",
+        "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+        "state": "FAILED",
+        "priority": 0,
+        "created_at": "2026-10-24T00:34:19.613Z",
+        "updated_at": "2026-10-24T00:34:20.688Z",
+        "next_wake_at": null,
+        "current_plan_id": "46ef733d-884e-4a2d-b508-b2b302662219",
+        "world_model_version": null,
+        "authority_ceiling": "GREEN",
+        "parent_goal_id": null,
+        "completion_definition": "sam.read_report.v1",
+        "replan_attempts": 0,
+        "replan_reason": null,
+        "planning_attempts": 0,
+        "last_planning_at": "2026-10-24T00:34:20.441Z",
+        "planning_retry_at": null,
+        "planning_failure": null
+      }
+    ],
+    "plans": [
+      {
+        "id": "46ef733d-884e-4a2d-b508-b2b302662219",
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "version": 1,
+        "goal_assumptions": {
+          "goalObligations": {
+            "version": 1,
+            "unresolved": [],
+            "deliverables": [
+              {
+                "id": "analysis",
+                "vat": "net",
+                "scope": {
+                  "kind": "population",
+                  "query": {
+                    "params": {
+                      "query": "ledger"
+                    },
+                    "capabilityId": "records.search"
+                  },
+                  "filter": "ledger"
+                },
+                "units": "EUR",
+                "fields": [
+                  "total"
+                ],
+                "period": "UNKNOWN",
+                "timeZone": "UTC",
+                "description": "Compare January and February supplied ledger amounts in net EUR, with citations and limits."
+              }
+            ],
+            "objectiveHash": "175f5bebd00febc7076154a06e82b8fcf60c36ef7c96fdf1440fa002b4456e24"
+          }
+        },
+        "constraints": {},
+        "dependencies": {},
+        "steps": [
+          {
+            "index": 0,
+            "due_at": null,
+            "params": {
+              "query": "ledger"
+            },
+            "priority": 0,
+            "step_key": "0",
+            "depends_on": [],
+            "result_refs": {},
+            "capability_id": "records.search",
+            "idempotency_key": null,
+            "operation_key_ref": null
+          }
+        ],
+        "plan_hash": "ff800018afb09629b6701ee3b1c801e8351d815f7347eeca211ca520f247f061",
+        "created_at": "2026-10-24T00:34:20.431Z"
+      }
+    ],
+    "work_queue": [
+      {
+        "id": "70867e28-1ea7-4e04-bc61-862aea6764cd",
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "plan_id": "46ef733d-884e-4a2d-b508-b2b302662219",
+        "step_id": null,
+        "capability_id": "records.search",
+        "params": {
+          "query": "ledger"
+        },
+        "priority": 0,
+        "due_at": null,
+        "queued_at": "2026-10-24T00:34:20.431Z",
+        "status": "FAILED",
+        "lease_owner": null,
+        "lease_timestamp": null,
+        "lease_expiry": null,
+        "fencing_token": "3",
+        "attempt": 1,
+        "worker_version": "1",
+        "idempotency_key": null,
+        "operation_key_ref": null,
+        "handoff": {
+          "agent_id": "records",
+          "claimed_at": "2026-10-24T00:34:20.450Z",
+          "agent_version": "1",
+          "worker_instance_id": "ordinary-fixture"
+        },
+        "wake_reason": "WORK_EXECUTION_FAILED",
+        "created_at": "2026-10-24T00:34:20.431Z",
+        "step_key": "0",
+        "depends_on": [],
+        "result_refs": {}
+      }
+    ],
+    "executions": [],
+    "verifications": [],
+    "goal_read_reviews": [
+      {
+        "id": "2abdffd3-1236-4472-874f-dd094849b7da",
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "plan_id": "46ef733d-884e-4a2d-b508-b2b302662219",
+        "round": 1,
+        "decision": {
+          "steps": [],
+          "status": "blocked",
+          "summary": "Execution stopped without establishing the objective. No completion is claimed.",
+          "findings": [],
+          "limitations": [
+            "ORDINARY_ROOT_TERMINATED",
+            "Delegated evidence or the remaining allowance is insufficient; inspect the recorded task outcomes before any authorized continuation."
+          ],
+          "requirements": [
+            {
+              "fulfilled": false,
+              "evidenceIds": [],
+              "requirement": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+              "obligationId": "analysis"
+            }
+          ],
+          "runtimeTermination": {
+            "code": "ORDINARY_ROOT_TERMINATED"
+          }
+        },
+        "report_hash": "a0cdba81ca95629ee93cd06bf430e238146712da44f783ec4490ab62c2cc9e06",
+        "created_at": "2026-10-24T00:34:20.706Z"
+      }
+    ],
+    "audit_log": [
+      {
+        "id": "97a15b37-6307-4479-8a02-6662f6dad8fc",
+        "actor": "ordinary-fixture-owner",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "SAM_GOAL_SUBMITTED",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "domain": "chatgpt_goal_submission",
+          "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+          "business_id": "G-a87f6d54-c8a7-4a70-99ab-56e98b1ec75c-000001",
+          "ordinaryGeneralAgentV1": true
+        },
+        "source": "sam_mcp",
+        "timestamp": "2026-10-24T00:34:19.613Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "CREATED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "2054a539-05c9-4f18-a4c8-b7c2c8cb4ef7",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "OPEN",
+          "policy": {
+            "limits": {
+              "tools": 20,
+              "models": 12,
+              "tokens": 1000000,
+              "costUsd": 1,
+              "elapsedMs": 300000,
+              "iterations": 40,
+              "toolCallMs": 20000,
+              "delegations": 16,
+              "modelCallMs": 20000,
+              "maxInputTokens": 24000,
+              "maxOutputTokens": 4000
+            },
+            "prices": [
+              {
+                "model": "deepseek-flash",
+                "inputPer1k": 0.001,
+                "providerId": "deepseek",
+                "outputPer1k": 0.001
+              }
+            ],
+            "version": 1,
+            "capabilityHash": "c1ac1901e4fc0f55a4caef60650957cbdc499de8fa318b98bec4548fec44bfc4"
+          },
+          "tenant": "ec466ab5-3c84-4620-bbb9-f83a13d27119",
+          "deadline": "2026-10-24T00:39:19.741Z",
+          "sequence": 0,
+          "policyHash": "ba34c155bf50842e1c46ecff62b73d444c6b9aab7fc2038e264a5d40212481cf",
+          "objectiveHash": "175f5bebd00febc7076154a06e82b8fcf60c36ef7c96fdf1440fa002b4456e24"
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:19.741Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "776883fb-88d3-44b5-a729-652ca7a1e0cc",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "kind": "iteration",
+          "type": "RESERVED",
+          "delta": {
+            "tools": 0,
+            "models": 0,
+            "tokens": 0,
+            "costNanos": 0,
+            "iterations": 1,
+            "delegations": 0
+          },
+          "ticket": "b90ad045-21e0-47dd-9172-e5139579d3af",
+          "sequence": 1
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.364Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "21b5fdf0-b9ef-4fd1-a5d6-b170560a8d7b",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "INVOKING",
+          "ticket": "b90ad045-21e0-47dd-9172-e5139579d3af",
+          "sequence": 2
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.364Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "bd9114fe-74d8-45dd-befb-07455493f604",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "FINISHED",
+          "status": "success",
+          "ticket": "b90ad045-21e0-47dd-9172-e5139579d3af",
+          "sequence": 3
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.364Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "65350ced-738d-43fe-a66f-6b5cfd8084db",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "kind": "model",
+          "type": "RESERVED",
+          "delta": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 28000,
+            "costNanos": 28000000,
+            "iterations": 0,
+            "delegations": 0
+          },
+          "model": "deepseek-flash",
+          "ticket": "6b7e8c8d-867d-41a3-824b-f9346a20def4",
+          "sequence": 4,
+          "providerId": "deepseek"
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.378Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "d23de1dd-52ec-4440-8eb4-ac1bcf5054f1",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "INVOKING",
+          "ticket": "6b7e8c8d-867d-41a3-824b-f9346a20def4",
+          "sequence": 5
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.382Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "b25d3556-a587-4f73-b4dc-9bc3621623aa",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "FINISHED",
+          "status": "success",
+          "ticket": "6b7e8c8d-867d-41a3-824b-f9346a20def4",
+          "sequence": 6,
+          "resultHash": "2eb55bfaa93efab93fb6bb3035e438fe1a60748b553e738bd09fdf25a7f19cd7"
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.388Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "713ebd9a-4767-4045-9e15-7352c05db866",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "kind": "tool",
+          "type": "RESERVED",
+          "delta": {
+            "tools": 1,
+            "models": 0,
+            "tokens": 0,
+            "costNanos": 0,
+            "iterations": 0,
+            "delegations": 0
+          },
+          "ticket": "030637ab-25ae-4a72-bb72-c310a05c5ef5",
+          "sequence": 7
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.671Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "590d0309-e48b-487d-b5fa-bfc069af27fa",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "INVOKING",
+          "ticket": "030637ab-25ae-4a72-bb72-c310a05c5ef5",
+          "sequence": 8
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.675Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "6243c9f0-6ad5-424a-bcd2-8a6536486915",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "type": "FINISHED",
+          "status": "failure",
+          "ticket": "030637ab-25ae-4a72-bb72-c310a05c5ef5",
+          "sequence": 9
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.684Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "095ab889-0763-43ea-86b8-4e9bad4c7e15",
+        "actor": "sam-runtime",
+        "agent_id": null,
+        "goal_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "action": "RUNTIME_FAILURE",
+        "entity_type": "goal",
+        "entity_id": "e2c0ee9b-672f-4ac9-9027-e6eec1c52802",
+        "before_ref": null,
+        "after_ref": {
+          "actor": "ordinary-fixture",
+          "error": "ISOLATED_SOURCE_UNAVAILABLE",
+          "reason": "WORK_EXECUTION_FAILED",
+          "queue_id": "70867e28-1ea7-4e04-bc61-862aea6764cd",
+          "capability_id": "records.search",
+          "operation_key_ref": null
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-24T00:34:20.688Z",
+        "authority_class": null,
+        "approval_id": null,
+        "result": "FAILED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      }
+    ],
+    "model_calls": [
+      {
+        "id": "27deac4c-bf8d-4e50-9ad6-6790d53cccc9",
+        "task": "executive_planning",
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "model_version": "deepseek-flash",
+        "reason_selected": "health=HEALTHY;preferred_rank=9007199254740991;estimated_cost=0.028000",
+        "tokens": 25,
+        "cost": 0.000025,
+        "latency_ms": 9,
+        "retry_count": 0,
+        "success": true,
+        "verification_result": "GATEWAY_ACCEPTED",
+        "data_classification": "INTERNAL",
+        "created_at": "2026-10-24T00:34:20.396Z",
+        "legal_entity_id": "ec466ab5-3c84-4620-bbb9-f83a13d27119"
+      }
+    ],
+    "specialist_sessions": [],
+    "specialist_delegations": [],
+    "specialist_budgets": []
+  }
+}

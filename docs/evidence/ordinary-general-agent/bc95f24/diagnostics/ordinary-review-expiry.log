@@ -1,0 +1,4 @@
+PASS tests/core/ordinaryReviewExpiry.ts
+PASS ordinary lifecycle failure commits, fences work and persists honest outcome review-expiry
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryReviewExpiry.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-24T00:21:57.663Z","completedAt":"2026-10-24T00:22:59.781Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:21:57.665Z","completedAt":"2026-10-24T00:21:57.829Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryReviewExpiry.ts"],"startedAt":"2026-10-24T00:21:57.829Z","completedAt":"2026-10-24T00:22:59.781Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

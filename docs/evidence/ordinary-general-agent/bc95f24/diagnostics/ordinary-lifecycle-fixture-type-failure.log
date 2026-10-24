@@ -1,0 +1,25 @@
+FAIL tests/core/ordinaryReviewCancel.ts
+error: inconsistent types deduced for parameter $1
+    at /workspace/sam-greenfield/node_modules/pg/lib/client.js:535:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async parent (/tmp/sam-ordinary-agent/tests/core/ordinaryPath.ts:94:4) {
+  length: 142,
+  severity: 'ERROR',
+  code: '42P08',
+  detail: 'uuid versus text',
+  hint: undefined,
+  position: '135',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_param.c',
+  line: '223',
+  routine: 'variable_coerce_param_hook'
+}
+
+{"passed":0,"failed":1,"results":[{"test":"tests/core/ordinaryReviewCancel.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-24T00:23:26.165Z","completedAt":"2026-10-24T00:23:27.164Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:23:26.168Z","completedAt":"2026-10-24T00:23:26.331Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryReviewCancel.ts"],"startedAt":"2026-10-24T00:23:26.331Z","completedAt":"2026-10-24T00:23:27.164Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,4 @@
+PASS tests/core/ordinaryLocalToolLimit.ts
+PASS incompatible specialist read limits rejected before dispatch
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryLocalToolLimit.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-24T00:21:52.088Z","completedAt":"2026-10-24T00:21:53.888Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:21:52.090Z","completedAt":"2026-10-24T00:21:52.243Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryLocalToolLimit.ts"],"startedAt":"2026-10-24T00:21:52.243Z","completedAt":"2026-10-24T00:21:53.888Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

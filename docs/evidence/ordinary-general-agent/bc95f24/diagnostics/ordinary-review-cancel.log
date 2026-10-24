@@ -1,0 +1,7 @@
+PASS tests/core/ordinaryReviewCancel.ts
+ORDINARY_WAITING_REVIEW_CRASH_BARRIER
+PASS cancellation while waiting prevents wake and report
+PASS restart while review is waiting retains original deadline and allowance
+PASS no automatic adoption of old waiting goals or waiting goals without an existing allowance
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryReviewCancel.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-24T00:24:22.069Z","completedAt":"2026-10-24T00:24:59.047Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:24:22.071Z","completedAt":"2026-10-24T00:24:22.243Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryReviewCancel.ts"],"startedAt":"2026-10-24T00:24:22.243Z","completedAt":"2026-10-24T00:24:59.047Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

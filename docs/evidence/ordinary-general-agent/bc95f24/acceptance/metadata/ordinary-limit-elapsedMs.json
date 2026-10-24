@@ -1,0 +1,67 @@
+{
+  "classification": "ISOLATED_SYNTHETIC_TRANSPORTS_NOT_MODEL_AUTONOMY",
+  "sourceCommit": "bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0",
+  "variant": "limit-elapsedMs",
+  "tables": {
+    "goals": [
+      {
+        "id": "42044b14-b761-4ca7-9d5e-4142990048aa",
+        "business_id": "G-3e1ac4cf-613b-4745-a935-0b6493ee8a02-000001",
+        "owner_id": null,
+        "company_scope": "d99a6219-8f3e-4f4e-bcf9-1b58828fe576",
+        "domain": "chatgpt_goal_submission",
+        "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+        "state": "NEW",
+        "priority": 0,
+        "created_at": "2026-10-24T00:37:13.917Z",
+        "updated_at": "2026-10-24T00:37:13.917Z",
+        "next_wake_at": null,
+        "current_plan_id": null,
+        "world_model_version": null,
+        "authority_ceiling": "GREEN",
+        "parent_goal_id": null,
+        "completion_definition": "sam.read_report.v1",
+        "replan_attempts": 0,
+        "replan_reason": null,
+        "planning_attempts": 0,
+        "last_planning_at": null,
+        "planning_retry_at": null,
+        "planning_failure": null
+      }
+    ],
+    "plans": [],
+    "work_queue": [],
+    "executions": [],
+    "verifications": [],
+    "goal_read_reviews": [],
+    "audit_log": [
+      {
+        "id": "1f2e39f7-4085-4edc-8c65-a588d34dc5b2",
+        "actor": "ordinary-fixture-owner",
+        "agent_id": null,
+        "goal_id": "42044b14-b761-4ca7-9d5e-4142990048aa",
+        "action": "SAM_GOAL_SUBMITTED",
+        "entity_type": "goal",
+        "entity_id": "42044b14-b761-4ca7-9d5e-4142990048aa",
+        "before_ref": null,
+        "after_ref": {
+          "domain": "chatgpt_goal_submission",
+          "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+          "business_id": "G-3e1ac4cf-613b-4745-a935-0b6493ee8a02-000001",
+          "ordinaryGeneralAgentV1": true
+        },
+        "source": "sam_mcp",
+        "timestamp": "2026-10-24T00:37:13.917Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "CREATED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      }
+    ],
+    "model_calls": [],
+    "specialist_sessions": [],
+    "specialist_delegations": [],
+    "specialist_budgets": []
+  }
+}

@@ -1,0 +1,9 @@
+PASS tests/core/ordinaryLifecycleAtomic.ts
+PASS own terminal transition and rejection of later transaction PLANNING FAILED
+PASS own terminal transition and rejection of later transaction EXECUTING FAILED
+PASS own terminal transition and rejection of later transaction MODELING BLOCKED
+PASS own terminal transition and rejection of later transaction VERIFYING COMPLETED
+PASS own terminal transition and rejection of later transaction VERIFYING WAITING_EXTERNAL
+PASS own terminal transition and rejection of later transaction PLANNING WAITING_OWNER
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryLifecycleAtomic.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-24T00:21:51.522Z","completedAt":"2026-10-24T00:21:52.012Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:21:51.525Z","completedAt":"2026-10-24T00:21:51.692Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryLifecycleAtomic.ts"],"startedAt":"2026-10-24T00:21:51.692Z","completedAt":"2026-10-24T00:21:52.012Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,4 @@
+PASS tests/core/ordinaryPlannerFailure.ts
+PASS ordinary lifecycle failure commits, fences work and persists honest outcome planner-failure
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryPlannerFailure.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-24T00:18:30.539Z","completedAt":"2026-10-24T00:18:37.387Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-24T00:18:30.541Z","completedAt":"2026-10-24T00:18:30.753Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryPlannerFailure.ts"],"startedAt":"2026-10-24T00:18:30.753Z","completedAt":"2026-10-24T00:18:37.387Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}

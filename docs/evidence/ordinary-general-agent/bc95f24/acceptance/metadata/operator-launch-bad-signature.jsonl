@@ -1,0 +1,8 @@
+{"phase":"SNAPSHOT","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.016Z","detail":{"reference":"local-fixture-original"}}
+{"phase":"PAUSE_REQUESTED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.017Z"}
+{"phase":"CREATE_REQUESTED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.018Z"}
+{"phase":"CREATED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.022Z","detail":{"trialId":"eb29a6bf-5f75-43ee-9e4b-c3211b246d19","createdAt":"2026-10-24T00:44:08.020Z","deadline":"2026-10-24T00:49:08.020Z","observedAt":"2026-10-24T00:44:08.021Z"}}
+{"phase":"SIGN_REQUESTED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.022Z"}
+{"phase":"FAILED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.024Z","detail":{"code":"LAUNCH_SIGNATURE_INVALID"}}
+{"phase":"TRIAL_CAPTURED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.027Z","detail":{"trialId":"eb29a6bf-5f75-43ee-9e4b-c3211b246d19","elapsedFromInsertMs":5}}
+{"phase":"RESTORED","requestHash":"c40f42c3adbbc964614eb5c9ad9f997b5a10fb51a94b4ad2851b38e4f0a9cea1","at":"2026-10-24T00:44:08.277Z"}
