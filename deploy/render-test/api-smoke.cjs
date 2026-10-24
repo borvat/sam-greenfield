@@ -1,8 +1,10 @@
 const assert=require('node:assert/strict');
 const {Client}=require('pg');
-async function runApiSmoke({port,token,databaseUrl}){
+async function runApiSmoke({port,token,databaseUrl,expectedScope}){
  const u=new URL(databaseUrl);
- if(u.hostname!=='127.0.0.1'||u.pathname!=='/sam_synthetic')throw Error('LOCAL_SANDBOX_REQUIRED');
+ if(expectedScope){
+  if(!/^sam_eval_[a-z0-9_]+$/.test(expectedScope.schema)||!/^sam_eval_runtime_[a-z0-9_]+$/.test(expectedScope.role)||decodeURIComponent(u.username)!==expectedScope.role)throw Error('PROVISIONED_SANDBOX_REQUIRED');
+ }else if(u.hostname!=='127.0.0.1'||u.pathname!=='/sam_synthetic')throw Error('LOCAL_SANDBOX_REQUIRED');
  const root='http://127.0.0.1:'+port,headers={Authorization:'Bearer '+token,'Content-Type':'application/json'};
  let phase='READINESS',lastHttpStatus=null;
  try{
@@ -28,7 +30,8 @@ async function runApiSmoke({port,token,databaseUrl}){
  phase='MISSING_GOAL';assert.equal((await request('/api/goals/00000000-0000-4000-8000-000000000000/timeline',{headers})).status,404);
  phase='DATABASE_READBACK';
  const c=new Client({connectionString:u.href});
- try{await c.connect();assert.equal((await c.query('SELECT state FROM goals WHERE id=$1',[id])).rows[0]?.state,'NEW');
+ try{await c.connect();if(expectedScope){const actual=(await c.query('SELECT current_schema() schema,current_user role')).rows[0];assert.deepEqual(actual,expectedScope);}
+  assert.equal((await c.query('SELECT state FROM goals WHERE id=$1',[id])).rows[0]?.state,'NEW');
   assert((await c.query("SELECT 1 FROM audit_log WHERE action='OWNER_GOAL_DENIED' AND result='DENIED' AND after_ref->>'reason'='READ_ONLY_STAGE_AUTHORITY_REQUIRED'")).rowCount>0);
  }finally{await c.end();}
  return {status:'PASS',checks:['unauthenticated_denied','read_only_ui','elevated_authority_denied','natural_intake_persisted','timeline_matches_database','no_invented_verification','unknown_budget_not_zero','missing_goal_404','independent_connection_readback'],liveReasoningValidated:false,modelPaidCalls:0};

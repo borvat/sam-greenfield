@@ -1,4 +1,4 @@
-// Disposable Render sandbox. Never loads production credentials or adapters.
+// Isolated Render sandbox. Only explicitly provisioned synthetic storage is admitted.
 const {spawn,spawnSync}=require('node:child_process');
 const fs=require('node:fs');
 const {randomBytes}=require('node:crypto');
@@ -8,8 +8,10 @@ const {timingSafeEqual}=require('node:crypto');
 const {runApiSmoke}=require('./api-smoke.cjs');
 const children=[];
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
-async function main(){
+async function main(binding,storageReport){
   for(const key of Object.keys(process.env))if(/API_KEY|CLIENT_SECRET|REFRESH_TOKEN|DATABASE_URL|SAM_PRODUCTION|GOOGLE_|BOL_|EBOEK/i.test(key))delete process.env[key];
+  let databaseUrl,entity;
+  if(binding){databaseUrl=binding.connectionString;entity=binding.entity;}else{
   const pg='/usr/lib/postgresql/15/bin/';
   const data=fs.mkdtempSync('/tmp/sam-test-');command('chown',['postgres:postgres',data]);
   command('runuser',['-u','postgres','--',pg+'initdb','-D',data,'--encoding=UTF8','--auth-local=trust','--auth-host=scram-sha-256']);
@@ -18,12 +20,15 @@ async function main(){
   const admin=new Client({host:'/var/run/postgresql',user:'postgres',database:'postgres'});await admin.connect();
   await admin.query(`CREATE ROLE sam_synthetic LOGIN PASSWORD '${password}'`);
   await admin.query('CREATE DATABASE sam_synthetic OWNER sam_synthetic');await admin.end();
-  const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:`postgres://sam_synthetic:${password}@127.0.0.1:5432/sam_synthetic`};
+  databaseUrl=`postgres://sam_synthetic:${password}@127.0.0.1:5432/sam_synthetic`;
+  const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:databaseUrl};
   command(process.execPath,['packages/db/src/migrate.js','--apply'],{env});
   command(process.execPath,['--import','tsx','deploy/render-test/prepare.ts'],{env});
   const client=new Client({connectionString:env.DATABASE_URL});await client.connect();
   const org=(await client.query("INSERT INTO organizations(name) VALUES('TEST-SAM') RETURNING id")).rows[0].id;
-  const entity=(await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,'TEST-SAM') RETURNING id",[org])).rows[0].id;await client.end();
+  entity=(await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,'TEST-SAM') RETURNING id",[org])).rows[0].id;await client.end();
+  }
+  const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:databaseUrl};
   const token=process.env.SAM_TEST_BEARER_TOKEN;if(!token)throw new Error('SAM_TEST_BEARER_TOKEN required');
   const host=process.env.RENDER_EXTERNAL_HOSTNAME||'localhost';
   const launch=(entry,extra)=>{const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
@@ -54,10 +59,10 @@ async function main(){
     req.pipe(upstream);
   }).listen(Number(process.env.PORT||10000),'0.0.0.0');
   const report=JSON.parse(fs.readFileSync('/app/test-results/build-verification.json','utf8'));
-  if(report.sourceCommit!==process.env.RENDER_GIT_COMMIT||report.status!=='FIXTURE_SUITES_PASSED_API_PENDING'||report.results.length!==4||report.results.some(r=>r.status!=='PASS'))throw Error('BUILD_EVIDENCE_MISMATCH');
-  console.log('SAM disposable front proxy started. Native fixture suites passed during this exact image build; live reasoning remains disabled.');
+  if(report.sourceCommit!==process.env.RENDER_GIT_COMMIT||report.status!=='FIXTURE_SUITES_PASSED_API_PENDING'||report.results.length!==5||report.results.some(r=>r.status!=='PASS'))throw Error('BUILD_EVIDENCE_MISMATCH');
+  console.log(JSON.stringify({service:'sam-test-storage',...(storageReport??{storage:'DISPOSABLE',containerReplacementValidated:false}),liveReasoningEnabled:false}));
   await startApplication();
-  report.api=await runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL});
+  report.api=await runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL,expectedScope:binding?{schema:binding.schema,role:binding.role}:undefined});
   report.apiCheckedAt=new Date().toISOString();report.status=report.api.status==='PASS'?'PASSED':'FAILED';
   fs.writeFileSync('/tmp/sam-test-verification.json',JSON.stringify(report),{mode:0o600});
   console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit:report.sourceCommit,...report.api}));
@@ -65,4 +70,6 @@ async function main(){
 }
 let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
 process.on('SIGTERM',()=>shutdown(0));process.on('SIGINT',()=>shutdown(0));
-main().catch(()=>{console.error('SAM sandbox initialization failed; details withheld');shutdown(1);});
+async function runSandbox(binding,report){try{await main(binding,report);}catch{console.error('SAM sandbox initialization failed; details withheld');shutdown(1);}}
+module.exports={runSandbox};
+if(require.main===module)void runSandbox();
