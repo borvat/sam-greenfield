@@ -12,7 +12,7 @@ The **owner**, not an agent, enters their existing database administrator **inte
 2. Suspend **MCP only**, to close authenticated goal intake; verify suspension and no ongoing submission. Its Free-plan Shell is not needed. Parent coordinates all submissions and confirms no alternate writer is active.
 3. In runtime Settings → Build & Deploy → Start Command, save the **exact one-line command in [maintenance-start-command.txt](maintenance-start-command.txt)**. Retain build command, health path `/readyz`, environment and automatic-deploy setting. Never replace it with `npm start` or an application import. This command uses only Node's HTTP module and PORT, clears Node preload settings, serves explicit maintenance readiness, and rejects application routes. Keep runtime **not suspended**.
 4. Apply the configuration using a Dashboard deploy of the recorded current application commit (currently `8ebbe5ab5caf53a870cd252441e6199a08b3b5af`). If saving the start command already initiated that deploy, observe its outcome instead of triggering a duplicate. Do not use a restart that preserves stale configuration. Confirm the resulting deploy's effective command is the health-only command, its log contains `SAM_OPERATOR_MAINTENANCE_READY worker=false intake=false`, and `/readyz` returns the matching JSON. A 200 response alone is insufficient.
-5. Render's rolling replacement may overlap the old worker. **Do not run setup merely because the maintenance deployment is live.** Verify the old instance has terminated using deployment/instance events and shutdown logs; inspect the replacement Shell process names/arguments without environment output to confirm no `apps/runtime/src/main.ts` worker or manually launched SAM process remains. If old-instance termination cannot be established, stop here. Read the existing runtime-scoped queue to confirm zero `QUEUED`, `LEASED`, `EXECUTING`, `HANDBACK` work and no remaining callback/lease requiring reconciliation. Do not erase rows or equate expired leases with completed operations. The bootstrap repeats a pending-work check, but that is not a substitute for stopping all writers.
+5. Render's rolling replacement may keep the old instance running for 60 seconds after traffic switches, then send SIGTERM and allow the configured shutdown delay before SIGKILL. The old `8ebbe5ab` release uses the exec-node signal path. **Do not run setup merely because the maintenance deployment is live.** Verify the old instance has terminated using deployment/instance events and shutdown logs; inspect the replacement Shell process names/arguments without environment output to confirm no `apps/runtime/src/main.ts` worker or manually launched SAM process remains. If old-instance termination cannot be established, stop here. Read the existing runtime-scoped queue to confirm zero `QUEUED`, `LEASED`, `EXECUTING`, `HANDBACK` work and no remaining callback/lease requiring reconciliation. Do not erase rows or equate expired leases with completed operations. The bootstrap repeats a pending-work check, but that is not a substitute for stopping all writers.
 6. Open the **new maintenance instance's runtime Shell**. It retains the existing restricted DATABASE_URL and has no SAM worker running. Follow the staging/hidden-owner-input procedure below. Do not restore the normal start command while setup or rollback reconciliation is pending.
 
 After successful setup: keep the maintenance command while configuring and staging frozen `bc95f24`; only restore `sh deploy/render/start.sh runtime` as the parent deliberately opens the bounded run. Restore MCP's normal pinned configuration and resume it only for the controlled submissions. Any intermediate maintenance deployment remains a pause, not proof of SAM readiness. Record effective commands and instance transitions each time. If setup fails, leave runtime health-only and MCP suspended until reconciliation.
@@ -51,9 +51,40 @@ The script reuses `applySpecialistProfile` for only 00106/00107, then `provision
 
 `ordinary-setup-before.json` is created exclusively with mode 0600 in the staging directory **before mutations**. It contains nonsecret tenant/provider/registration rollback metadata, no connection URL/password. Preserve it in the operator's controlled record along with terminal phase markers. Do not include Shell environment dumps.
 
-Expected phase markers: `MIGRATIONS`, `PROFILE_COMMITTED`, `COMMIT_PENDING`, `SETUP_COMMITTED`, then `RUNTIME_PROFILE_READBACK_PASS`. The migration function commits independently. A later failure can leave the profile installed but grants/registrations/prices absent; do not rerun blindly. Failure at `COMMIT_PENDING` is an uncertain transaction outcome and requires readback. Failure after `SETUP_COMMITTED` requires runtime admission diagnosis, not an automatic downgrade. This script intentionally refuses preexisting/partial setup.
+Expected phase markers: `MIGRATIONS`, `PROFILE_COMMITTED`, `COMMIT_PENDING`, `SETUP_COMMITTED`, then `RUNTIME_PROFILE_READBACK_PASS`. The migration function commits independently. A later failure can leave the profile installed but grants/registrations/prices absent; do not rerun blindly. A lost acknowledgement in **`MIGRATIONS` is also uncertain**, because `applySpecialistProfile` performs its own COMMIT before returning; absence of `PROFILE_COMMITTED` does not prove rollback. A lost acknowledgement at `COMMIT_PENDING` likewise requires fresh readback. A subsequent ROLLBACK or closed connection does not prove that either COMMIT failed. Failure after `SETUP_COMMITTED` requires runtime admission diagnosis, not an automatic downgrade. This script intentionally refuses preexisting/partial setup.
 
 On stop, keep intake/worker paused and report the sanitized phase/code to the parent. Retain receipts; do not drop schema, erase historical goals, reset allowances or restore the old worker over unresolved work. After successful setup the parent performs the configuration/deployment and exclusive three-goal procedure in `../ordinary-three-goals.md`. No live test is started by this script.
+
+## Mandatory independent readback before activation
+
+`RUNTIME_PROFILE_READBACK_PASS` verifies receipts and runtime tenant/RLS policy admission only. It is **not** proof of every grant, verification registration, or provider row. While runtime remains health-only and MCP intake remains closed, run [readback.sql](readback.sql) through the existing restricted runtime connection. This is read-only. Require:
+
+- The same runtime role/database/schema/tenant as recorded before setup.
+- Exactly the two pinned receipt names and SHA-256 values from `sha256sum packages/db/specialist-migrations/*.sql` in the frozen checkout.
+- Exactly three registration rows, each `expected_ok=true`, with no missing registration.
+- Exactly one `deepseek` row, `expected_ok=true`. Compare models/privacy/health with `ordinary-setup-before.json`; they must remain unchanged. Capabilities must equal the original list with only `specialist_reasoning` appended if absent, and runtime environment capabilities/prices must match this row.
+- All five table-grant rows and every column-grant row `expected_ok=true`. No extra UPDATE columns or table-level UPDATE/DELETE/TRUNCATE/TRIGGER/REFERENCES privileges are permitted. Re-run the existing read-only runtime/profile admission after configuration changes.
+
+Missing rows, SQL errors, mismatches or uncertain commits block activation. Preserve readback and phase receipts; do not repeat the write bootstrap to discover what happened. Reconcile actual migration receipts, tables/policies, grants, registrations and pricing first, including if interruption happened during `MIGRATIONS`. The old phase message mentioning only `COMMIT_PENDING` is incomplete; this procedure governs recovery for both commit boundaries.
+
+Use the restricted connection already in the maintenance Shell; never substitute the owner URL for this readback:
+
+```sh
+node --input-type=module <<'JS'
+import pg from 'pg';
+import {readFileSync} from 'node:fs';
+if(!process.env.DATABASE_URL)throw Error('RUNTIME_CONNECTION_REQUIRED');
+const c=new pg.Client({connectionString:process.env.DATABASE_URL,connectionTimeoutMillis:10000});
+try {
+ await c.connect();
+ const who=(await c.query('SELECT current_user role')).rows[0];
+ if(who.role!=='sam_runtime_app')throw Error('RESTRICTED_RUNTIME_REQUIRED');
+ const results=await c.query(readFileSync('docs/operator/bootstrap/readback.sql','utf8'));
+ for(const result of (Array.isArray(results)?results:[results]))if(result.rows.length)console.log(JSON.stringify(result.rows));
+} catch {console.error('READBACK_FAILED: keep services in maintenance; do not activate');process.exitCode=1;}
+finally {await c.end().catch(()=>{});}
+JS
+```
 
 ## Unavoidable owner step and limitations
 

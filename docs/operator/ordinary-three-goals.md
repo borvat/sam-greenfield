@@ -1,13 +1,13 @@
 # Frozen ordinary SAM release and three-goal procedure
 
-**Prepared only. Owner approval is pending. No setup, deployment, grant or live call is authorized by this document.**
+**Prepared procedure. Owner approval for the stated setup/release and three-goal cap was received; execution remains gated on final review, owner availability and verified prerequisites. This document does not authorize extra access or spending.**
 
 Application: `bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0`; authenticated evidence: `bfe4e240616bce36e510b2b65c034f586b5c5cdb`.
 Use the same two existing Render service IDs already verified by the parent, and the existing `sam-trial-postgres` database. Match IDs against their current runtime/MCP start commands; do not provision the extra service advertised in the repository Blueprint or apply the Blueprint. Retain existing connection strings, tokens, tenant, model account and connector settings. No new signer, account, principal or host.
 
 ## 1. Record and pause
 
-After the bundled approval arrives, record both existing deploy IDs/commit IDs and the names/current settings of variables changed below in the operator's protected record. Do not export secret values into chat or evidence. Preserve the old application release (`8ebbe5ab5caf53a870cd252441e6199a08b3b5af`, unless operator readback establishes a newer live release) for rollback.
+Before executing the approved procedure, record both existing deploy IDs/commit IDs and the names/current settings of variables changed below in the operator's protected record. Do not export secret values into chat or evidence. Preserve the old application release (`8ebbe5ab5caf53a870cd252441e6199a08b3b5af`, unless operator readback establishes a newer live release) for rollback.
 
 Pause ordinary work and goal intake using the [same-service health-only executor sequence](bootstrap/README.md#keep-the-executor-shell-available-during-the-pause). Do not suspend runtime: setup requires its replacement maintenance instance Shell. Suspend MCP intake only; verify the old runtime worker has terminated before setup. Read current fixed tenant identity using the existing runtime connection:
 
@@ -89,7 +89,7 @@ RETURNING provider_id,models,capabilities,privacy_class_allowed,health,
 
 Require exactly one matching existing row and preserve its pre-change metadata for rollback. This is prepared SQL, not an executed change.
 
-Retain the existing source verification contracts and integration/report permissions. Ordinary startup checks them rather than provisioning or bypassing them.
+Require the [independent registrations/pricing/grants readback](bootstrap/README.md#mandatory-independent-readback-before-activation) before activation; the profile-readback marker alone is insufficient. Retain the existing source verification contracts and integration/report permissions. Ordinary startup checks them rather than provisioning or bypassing them.
 
 ## 3. Exact nonsecret configuration and cost
 

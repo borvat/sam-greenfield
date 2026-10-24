@@ -14,3 +14,7 @@ The fixture image lacks git: only its git command was substituted to return the 
 ## Maintenance command correction
 
 `python3 docs/operator/bootstrap/test_maintenance.py` passed locally: `/readyz` and `/livez` GET return explicit maintenance JSON; other routes/methods return 503; bogus inherited NODE_OPTIONS/NODE_PATH cannot preload application code; SIGTERM closes cleanly. The exact command imports only `node:http`. No Render mutation or hosted Shell test was performed. The corrected procedure keeps runtime unsuspended, suspends MCP intake, and requires old-instance termination plus queue/callback reconciliation before setup. This is prepared for review, not an executed pause.
+
+## Explicit post-setup readback
+
+`readback.sql` was executed using the actual isolated restricted LOGIN: three registrations, one provider, five table-grant rows and 38 column-grant rows passed. In the disposable database only, removing a registration, zeroing the input price, revoking a table INSERT and revoking one UPDATE column produced exactly four false results (`negative-readback.log`). These are diagnostic assertions for the operator to evaluate, not an automatic activation command. Both migration-COMMIT and provisioning-COMMIT acknowledgement loss require reconciliation; no new claim of simulated commit-response loss is made.

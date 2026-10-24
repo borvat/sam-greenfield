@@ -1,0 +1,77 @@
+BEGIN
+SET
+      role       |      database      | schema |                 org                  |                entity                
+-----------------+--------------------+--------+--------------------------------------+--------------------------------------
+ sam_runtime_app | sam_trial_postgres | public | 11111111-1111-4111-8111-111111111111 | 22222222-2222-4222-8222-222222222222
+(1 row)
+
+             filename              |                              sha256                              
+-----------------------------------+------------------------------------------------------------------
+ 00106_specialist_intelligence.sql | c6c054c2edfbd3860251496d1ec4c356b36874848b40cdd13f97d1c267cb1951
+ 00107_learning_provenance.sql     | a0175f47c6188be789ab0595cbbbc03418be12161ba36a6500761f2f60c000d4
+(2 rows)
+
+            id            | expected_ok 
+--------------------------+-------------
+ derive_verified_evidence | t
+ reason.records           | t
+ reason.research          | t
+(3 rows)
+
+ provider_id |       models       |             capabilities             | privacy_class_allowed | health  | cost_per_1k_input | cost_per_1k_output | expected_ok 
+-------------+--------------------+--------------------------------------+-----------------------+---------+-------------------+--------------------+-------------
+ deepseek    | ["deepseek-flash"] | ["planning", "specialist_reasoning"] | ["INTERNAL"]          | HEALTHY |            0.0003 |             0.0012 | t
+(1 row)
+
+           name            | expected_ok 
+---------------------------+-------------
+ sam_specialist_migrations | t
+ specialist_budgets        | t
+ specialist_delegations    | t
+ specialist_learning       | t
+ specialist_sessions       | t
+(5 rows)
+
+          relname          |     attname     | expected_ok 
+---------------------------+-----------------+-------------
+ sam_specialist_migrations | filename        | t
+ sam_specialist_migrations | sha256          | t
+ specialist_budgets        | root_queue_id   | t
+ specialist_budgets        | legal_entity_id | t
+ specialist_budgets        | limits          | t
+ specialist_budgets        | used            | t
+ specialist_budgets        | deadline        | t
+ specialist_budgets        | cancelled       | t
+ specialist_budgets        | created_at      | t
+ specialist_delegations    | goal_id         | t
+ specialist_delegations    | parent_queue_id | t
+ specialist_delegations    | capability_id   | t
+ specialist_delegations    | params_hash     | t
+ specialist_delegations    | root_queue_id   | t
+ specialist_delegations    | legal_entity_id | t
+ specialist_delegations    | depth           | t
+ specialist_delegations    | created_at      | t
+ specialist_learning       | id              | t
+ specialist_learning       | legal_entity_id | t
+ specialist_learning       | goal_id         | t
+ specialist_learning       | kind            | t
+ specialist_learning       | statement       | t
+ specialist_learning       | parent_id       | t
+ specialist_learning       | execution_id    | t
+ specialist_learning       | verification_id | t
+ specialist_learning       | detail          | t
+ specialist_learning       | expires_at      | t
+ specialist_learning       | created_at      | t
+ specialist_sessions       | queue_id        | t
+ specialist_sessions       | root_queue_id   | t
+ specialist_sessions       | legal_entity_id | t
+ specialist_sessions       | agent_id        | t
+ specialist_sessions       | config_hash     | t
+ specialist_sessions       | depth           | t
+ specialist_sessions       | used            | t
+ specialist_sessions       | deadline        | t
+ specialist_sessions       | state           | t
+ specialist_sessions       | updated_at      | t
+(38 rows)
+
+COMMIT
