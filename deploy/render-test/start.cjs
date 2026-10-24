@@ -3,6 +3,7 @@ const {spawn,spawnSync}=require('node:child_process');
 const fs=require('node:fs');
 const {randomBytes}=require('node:crypto');
 const {Client}=require('pg');
+const http=require('node:http');
 const children=[];
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
 async function main(){
@@ -24,7 +25,19 @@ async function main(){
   const host=process.env.RENDER_EXTERNAL_HOSTNAME||'localhost';
   const launch=(entry,extra)=>{const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
   launch('apps/runtime/src/main.ts',{PORT:'8080',SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'render-test',SAM_COMPOSITION_MODULE:'/app/apps/runtime/src/developmentCompositionModule.ts',SAM_RUNTIME_STATUS_BEARER_TOKEN:token});
-  launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_PORT:process.env.PORT||'10000',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`});
+  launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_PORT:'8082',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`});
+  launch('apps/mcp/src/main.ts',{SAM_MCP_PORT:'8081',SAM_MCP_HOST:'127.0.0.1',SAM_MCP_BEARER_TOKEN:token,SAM_MCP_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_MCP_ALLOWED_ORIGINS:`https://${host}`,SAM_DEV_LEGAL_ENTITY_ID:entity});
+  http.createServer(async(req,res)=>{
+    if(req.url==='/readyz'){
+      try{
+        const checks=await Promise.all([8080,8081,8082].map(port=>fetch(`http://127.0.0.1:${port}/${port===8081?'livez':'readyz'}`,{signal:AbortSignal.timeout(3000)})));
+        const ready=checks.every(r=>r.status===200);res.writeHead(ready?200:503,{'content-type':'application/json'});res.end(JSON.stringify({ready,services:checks.map(r=>r.status)}));
+      }catch{res.writeHead(503);res.end('not ready');}return;
+    }
+    const upstream=http.request({hostname:'127.0.0.1',port:req.url?.startsWith('/mcp')?8081:8082,path:req.url,method:req.method,headers:req.headers},response=>{res.writeHead(response.statusCode,response.headers);response.pipe(res);});
+    upstream.on('error',()=>{if(!res.headersSent)res.writeHead(503);res.end('service starting');});
+    req.pipe(upstream);
+  }).listen(Number(process.env.PORT||10000),'0.0.0.0');
   console.log('SAM disposable sandbox started: local PostgreSQL; maintenance-only; no external adapters. Data resets on redeploy.');
 }
 let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
