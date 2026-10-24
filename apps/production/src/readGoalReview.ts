@@ -1,3 +1,4 @@
+import {readReportResolution} from './readReportResolution';
 import {derivedMonetaryEvidence} from '../../brain/src/evidence/monetaryEvidence';
 import {assessBoundObligation} from '../../brain/src/evidence/fulfillment';
 import {evidenceFamily,assertAssignedExecution} from '../../brain/src/evidence/delegationScope';
@@ -304,7 +305,7 @@ export async function reviewNextReadGoal(bundle:ValidatedProductionBundle,db:any
   const retryable=!derivedReplayBlocked&&!projectionBlocked&&error!=='REVIEW_INPUT_BUDGET_EXCEEDED'&&!decision&&reviewAttempt<2&&callsUsed<4&&!options.signal?.aborted;
   if(!decision)decision={status:"blocked",summary:"Objective review could not establish completion",requirements:obligations?obligations.deliverables.map(d=>({obligationId:d.id,requirement:d.description,fulfilled:false,evidenceIds:[]})):[{requirement:"Validated objective completion",fulfilled:false,evidenceIds:[]}],findings:[],limitations:[error??"REVIEW_FAILED"],steps:[]};
   decision.limitations=[...new Set([...decision.limitations,...evidenceLimitations,...monetaryGaps,...invoiceNotice])];
-  const savedDecision={...decision,runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
+  const savedDecision={...decision,resolution:readReportResolution({...decision,runtimeReview:{errorCode:error??null}},retryable),runtimeReview:{...runtimeReview,callsUsed,retryable,phase:'finished',errorCode:error??null,elapsedMs:Math.round(performance.now()-attemptStarted)}};
   runtimePhase='report_commit';
   await client.query("BEGIN");
   try{

@@ -17,7 +17,9 @@ export async function loadProviderRegistry(client: any): Promise<ProviderConfig[
     capabilities: toArray<string>(row.capabilities),
     privacyClasses: toArray<DataClassification>(row.privacy_class_allowed),
     health: row.health,
-    costPer1kInput: Number(row.cost_per_1k_input ?? 0),
-    costPer1kOutput: Number(row.cost_per_1k_output ?? 0)
+    // SQL NULL means unconfigured pricing, never a free model. The router
+    // excludes nonfinite estimates before admission; explicit zero is retained.
+    costPer1kInput: row.cost_per_1k_input==null?NaN:Number(row.cost_per_1k_input),
+    costPer1kOutput: row.cost_per_1k_output==null?NaN:Number(row.cost_per_1k_output)
   }));
 }
