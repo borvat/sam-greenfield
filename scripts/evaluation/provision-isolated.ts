@@ -92,6 +92,7 @@ export async function provision(connectionString:string,schema:string,role:strin
   await provisionIntegrationAccess(c as any,p);
   phase='SPECIALIST_GRANTS';await provisionSpecialistAccess(c as any,p);
   phase='EVALUATION_GRANTS';await provisionEvaluationAccess(c as any,p);
+  phase='ROLE_DEFAULTS';
   await c.query(`ALTER ROLE "${role}" SET search_path TO "${schema}",pg_catalog,public`);
   await c.query(`ALTER ROLE "${role}" SET app.current_org_id TO ${literal(org)}`);
   await c.query(`ALTER ROLE "${role}" SET app.current_legal_entity_id TO ${literal(entity)}`);
@@ -142,7 +143,8 @@ export async function provision(connectionString:string,schema:string,role:strin
   const message=e instanceof Error?e.message:'';
   const reason=/row.level security/i.test(message)?'ROW_SECURITY':/permission denied/i.test(message)?'PRIVILEGE':/owner/i.test(message)?'OWNERSHIP':'UNCLASSIFIED';
   const deniedObject=/^(?:permission denied for|query would be affected by row-level security policy for) (?:table|sequence|schema|function) "?([a-z_][a-z0-9_]*)"?$/.exec(message)?.[1]??null;
-  throw Object.assign(Error('ISOLATED_SETUP_FAILED'),{phase,committed,sqlCode:(e as {code?:string}).code??null,reason,deniedObject});
+  const operatorDetail=['INTEGRATION_GRANTS','SPECIALIST_GRANTS','EVALUATION_GRANTS','ROLE_DEFAULTS'].includes(phase)&&/^permission denied\b/i.test(message)&&!/password|postgres(?:ql)?:\/\//i.test(message)?message.slice(0,200):null;
+  throw Object.assign(Error('ISOLATED_SETUP_FAILED'),{phase,committed,sqlCode:(e as {code?:string}).code??null,reason,deniedObject,operatorDetail});
  }finally{if(connected)await c.end();}
 }
 async function main(){
@@ -153,4 +155,4 @@ async function main(){
  console.log(JSON.stringify(await provision(connection,schema,role,resolve(directory))));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)
- main().catch(e=>{console.error(JSON.stringify({status:'ISOLATED_SETUP_FAILED',phase:e.phase??'LOCAL_VALIDATION',committed:e.committed??false,sqlCode:e.sqlCode??null,reason:e.reason??null,deniedObject:e.deniedObject??null}));process.exitCode=1;});
+ main().catch(e=>{console.error(JSON.stringify({status:'ISOLATED_SETUP_FAILED',phase:e.phase??'LOCAL_VALIDATION',committed:e.committed??false,sqlCode:e.sqlCode??null,reason:e.reason??null,deniedObject:e.deniedObject??null,operatorDetail:e.operatorDetail??null}));process.exitCode=1;});
