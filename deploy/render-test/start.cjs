@@ -8,9 +8,9 @@ function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit
 async function main(){
   for(const key of Object.keys(process.env))if(/API_KEY|CLIENT_SECRET|REFRESH_TOKEN|DATABASE_URL|SAM_PRODUCTION|GOOGLE_|BOL_|EBOEK/i.test(key))delete process.env[key];
   const pg='/usr/lib/postgresql/15/bin/';
-  fs.mkdirSync('/tmp/sam-test-db',{recursive:true});command('chown',['postgres:postgres','/tmp/sam-test-db']);
-  command('runuser',['-u','postgres','--',pg+'initdb','-D','/tmp/sam-test-db','--auth-local=trust','--auth-host=scram-sha-256']);
-  command('runuser',['-u','postgres','--',pg+'pg_ctl','-D','/tmp/sam-test-db','-l','/tmp/sam-test-postgres.log','-o',"-c listen_addresses=127.0.0.1 -c shared_buffers=32MB -c max_connections=25",'-w','start']);
+  const data=fs.mkdtempSync('/tmp/sam-test-');command('chown',['postgres:postgres',data]);
+  command('runuser',['-u','postgres','--',pg+'initdb','-D',data,'--encoding=UTF8','--auth-local=trust','--auth-host=scram-sha-256']);
+  command('runuser',['-u','postgres','--',pg+'pg_ctl','-D',data,'-l','/tmp/sam-test-postgres.log','-o',"-c listen_addresses=127.0.0.1 -c shared_buffers=32MB -c max_connections=25",'-w','start']);
   const password=randomBytes(32).toString('hex');
   const admin=new Client({host:'/var/run/postgresql',user:'postgres',database:'postgres'});await admin.connect();
   await admin.query(`CREATE ROLE sam_synthetic LOGIN PASSWORD '${password}'`);
