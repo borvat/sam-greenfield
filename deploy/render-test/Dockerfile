@@ -8,8 +8,8 @@ COPY scripts ./scripts
 COPY tsconfig.json ./
 COPY tests ./tests
 COPY vendor ./vendor
-RUN npm ci && npm run typecheck
 COPY deploy/render-test ./deploy/render-test
+RUN npm ci && npm run typecheck
 ARG RENDER_GIT_COMMIT
 RUN node deploy/render-test/build-verify.cjs
 ENV NODE_ENV=development SAM_DEVELOPMENT_SAFE_MODE=1
