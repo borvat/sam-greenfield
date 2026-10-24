@@ -27,12 +27,12 @@ async function run(){
  const recovered=await proposePlan({...base,gateway:recover.gateway as any});
  assert.equal(recover.counts(),2);
  assert.equal(recovered.steps[0].capabilityId,"drive_search");
- assert.match(recover.feedbacks[1],/Previously failed read/);
+ assert.equal(recover.feedbacks[1],'PLAN_FAILED_READ_REPLAY');
  // Simulated 429/503/network: a tool call that failed before cannot be replayed
  // with identical parameters by the replanner regardless of provider error.
  for(const errorLabel of ["429","503","ECONNRESET"]){
    const repeated=model([[read("drive_get_metadata",{fileId:"synthetic-missing"})],[read("drive_get_metadata",{file_id:"synthetic-missing"})]]);
-   await assert.rejects(()=>proposePlan({...base,context:{fault:errorLabel},gateway:repeated.gateway as any}),/Planner validation failed after correction/);
+   await assert.rejects(()=>proposePlan({...base,context:{fault:errorLabel},gateway:repeated.gateway as any}),/^Error: PLAN_CONTRACT_INVALID$/);
    assert.equal(repeated.counts(),2);
  }
  console.log("ISOLATED_REPLAN_FAULT_INJECTION PASS cases=4 alias=1 no_external_io=true");
