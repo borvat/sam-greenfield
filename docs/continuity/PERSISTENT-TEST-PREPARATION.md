@@ -1,5 +1,7 @@
 # Provisioned test-storage preparation
 
+Current source-pinned state supersedes the historical preparation counts below: application `3e0efe72a2e54ba015c81d4d145b0771d4169fc6` is LIVE on the existing isolated service after the owner's approved USD 7/month base compute upgrade to `0.5c-512mb`. TypeScript, 119 isolated tests, all five native Docker-build PostgreSQL suites and the deployed nine-check API smoke pass. Storage is still DISPOSABLE. Hosted persistence/replacement acceptance is NOT_RUN; the approved one-time 60-minute role window remains unopened because authorized database-owner access is unavailable. No live-release signature or further cost approval is required for this storage-only window. See the final checkpoint in SAM-2026-10-24.md before resuming; do not create a new schema or role under this existing-scope authorization.
+
 This candidate adds a read-only bootstrap for an operator-provisioned synthetic PostgreSQL binding. It does not create a database, role, scope, trust root, signature, trial, model call or live permit at startup.
 
 ## Runtime contract
