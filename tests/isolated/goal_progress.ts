@@ -40,3 +40,8 @@ test('revoked verification cannot present a report as a completed outcome',()=>{
  const result=goalProgress({goal,work,executions:[execution],verifications:[],reports});
  assert.equal(result.resolution?.outcome,'blocked');assert.equal(result.reportVerified,false);
 });
+
+test('an active review receipt cannot be presented as a terminal blockage',()=>{
+ const p=goalProgress({goal:{...goal,state:'VERIFYING'},work,executions:[execution],verifications:[verification],reports:[],audit:[{action:'READ_REVIEW_BUDGET',after_ref:{planId:'plan',runtimeReview:{phase:'review',attempts:1,callsUsed:1,retryable:true}}}]});
+ assert.equal(p.resolution?.outcome,'pending');assert.equal(p.resolution?.disposition,'IN_PROGRESS');
+});

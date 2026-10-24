@@ -13,7 +13,7 @@ export function goalProgress(input:{goal:any;work:any[];executions:any[];verific
  const decision=report?.decision;
  const receipt=[...(input.audit??[])].reverse().find(a=>a.action==='READ_REVIEW_BUDGET'&&a.after_ref?.planId===goal.current_plan_id)?.after_ref?.runtimeReview;
  const pendingRetry=!report&&receipt?.retryable===true&&receipt.attempts<2&&receipt.callsUsed<4&&Boolean(goal.next_wake_at);
- const resolution=decision?readReportResolution(decision.status==='complete'&&!(goal.state==='COMPLETED'&&complete)?{status:'blocked',limitations:['REVIEW_CURRENT_VERIFICATION_UNPROVEN']}:decision,false):receipt?readReportResolution({status:'blocked',limitations:[receipt.errorCode??'REVIEW_PENDING'],runtimeReview:receipt},pendingRetry):null;
+ const resolution=decision?readReportResolution(decision.status==='complete'&&!(goal.state==='COMPLETED'&&complete)?{status:'blocked',limitations:['REVIEW_CURRENT_VERIFICATION_UNPROVEN']}:decision,false):receipt?(['WAITING_EXTERNAL','BLOCKED'].includes(goal.state)?readReportResolution({status:'blocked',limitations:[receipt.errorCode??'REVIEW_PENDING'],runtimeReview:receipt},pendingRetry):{...readReportResolution({status:'continue'}),nextAction:'Wait for the current bounded review; verified source work is retained.'}):null;
  const displayState=goal.state==='WAITING_EXTERNAL'&&resolution?.disposition==='STOPPED'?'BLOCKED':goal.state==='COMPLETED'?(complete&&decision?.status==='complete'?'VERIFIED':'EXECUTION_COMPLETE'):goal.state;
  return {displayState,executionState:goal.state,lastProgressAt:goal.updated_at,startedAt:goal.created_at,
   currentPlanId:goal.current_plan_id,workCount:work.length,executedCount:executions.length,verifiedCount:verified,
