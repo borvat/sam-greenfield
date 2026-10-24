@@ -28,12 +28,12 @@ Run these nonsecret commands from the existing runtime repository Shell, after o
 ```sh
 set -eu
 sam_source=bc95f24ca11ac104c575ab1aae3c6cf2b3f5ebc0
-sam_bootstrap=213c7c65f7bc6d77d92ce7ae8973dc7917c1ac40
+sam_bootstrap=a798f9a671c3a2a580968de1eb88b2ad8094edc0
 git fetch --no-tags origin "$sam_source" "$sam_bootstrap"
 sam_stage=$(mktemp -d /tmp/sam-owner-setup.XXXXXX)
 git worktree add --detach "$sam_stage/source" "$sam_source"
 mkdir -p "$sam_stage/source/docs/operator/bootstrap"
-for sam_file in owner-setup.py owner-setup.ts; do
+for sam_file in owner-setup.py owner-setup.ts readback.sql; do
   git show "$sam_bootstrap:docs/operator/bootstrap/$sam_file" > "$sam_stage/source/docs/operator/bootstrap/$sam_file"
 done
 cd "$sam_stage/source"
