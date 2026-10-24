@@ -86,8 +86,11 @@ export async function provision(connectionString:string,schema:string,role:strin
   await c.query("INSERT INTO organizations(id,name) VALUES($1,'Synthetic evaluation'),($2,'Synthetic isolation control')",[org,foreignOrg]);
   await c.query("INSERT INTO legal_entities(id,org_id,name) VALUES($1,$2,'Synthetic evaluation'),($3,$4,'Synthetic isolation control')",[entity,org,foreignEntity,foreignOrg]);
   await enrollEvaluationCompany(c as any,entity);
-  phase='SCOPED_GRANTS';const p={schema,role,orgId:org,legalEntityId:entity};
-  await provisionIntegrationAccess(c as any,p);await provisionSpecialistAccess(c as any,p);await provisionEvaluationAccess(c as any,p);
+  phase='INTEGRATION_GRANTS';const p={schema,role,orgId:org,legalEntityId:entity};
+  await c.query("SELECT set_config('app.current_org_id',$1,true),set_config('app.current_legal_entity_id',$2,true)",[org,entity]);
+  await provisionIntegrationAccess(c as any,p);
+  phase='SPECIALIST_GRANTS';await provisionSpecialistAccess(c as any,p);
+  phase='EVALUATION_GRANTS';await provisionEvaluationAccess(c as any,p);
   await c.query(`ALTER ROLE "${role}" SET search_path TO "${schema}",pg_catalog,public`);
   await c.query(`ALTER ROLE "${role}" SET app.current_org_id TO ${literal(org)}`);
   await c.query(`ALTER ROLE "${role}" SET app.current_legal_entity_id TO ${literal(entity)}`);
