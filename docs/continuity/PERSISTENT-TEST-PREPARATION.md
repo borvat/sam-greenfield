@@ -18,6 +18,8 @@ Provisioned role admission rejects replication authority and a password window l
 
 These changes are prepared only: 116 isolated tests and TypeScript pass. The HTTP lease and startup tests use an injected database client/clock and are not proof of actual PostgreSQL expiry or hosted replacement. No deployment, full source backup, restoration or migration has occurred on this candidate. See the canonical SAM-2026-10-24.md checkpoint for the source-container backup blocker and remaining acceptance.
 
+The later owner scope permits loss of the two disposable source goals after retaining partial evidence, so the old full-backup blocker is superseded. Paid upgrade approval remains pending. The extended `tests/core/persistentStorage.ts` now prepares a NEW fixture plan/audit and reserves USD 0.03 through the existing restricted trial path without invocation. The shared operator helper performs read-only complete-row comparison of goal/plan/audit/trial/events. Native execution is pending; the latest isolated suite has 119 passing tests and TypeScript passes. A new fixture is not a migration, a reservation is not an invoice, and a process restart is not a hosted container replacement.
+
 ## Verification plan
 
 `tests/isolated/persistent_binding.ts` tests invalid identities/context, exposed files, symlinks, expired/admin/inherited principals, profile failure and rollback-only behavior. The complete isolated suite currently passes 109 tests. TypeScript covers the new deployment entry and binding.
