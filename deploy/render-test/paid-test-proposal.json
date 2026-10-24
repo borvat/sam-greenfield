@@ -1,0 +1,64 @@
+{
+  "status": "PREPARATION_ONLY_COST_APPROVAL_PENDING",
+  "date": "2026-10-25",
+  "base_commit": "e8663a6701b1acb86146aaaffd66395422c1169e",
+  "workspace": "Sam's workspace",
+  "service": {
+    "name": "sam-isolated-test",
+    "region": "frankfurt",
+    "existing_plan": "free",
+    "proposed_plan": "0.5c-512mb",
+    "instances": 1,
+    "incremental_usd_month": 7,
+    "auto_deploy": "off"
+  },
+  "postgres": {
+    "name": "sam-trial-postgres",
+    "region": "frankfurt",
+    "existing_plan": "0.1c-256mb",
+    "storage_gb": 1,
+    "action": "reuse_without_plan_or_storage_change",
+    "incremental_usd_month": 0,
+    "capacity_verified": false
+  },
+  "new_resources": [],
+  "attached_service_disk": false,
+  "incremental_base_usd_month": 7,
+  "excluded": [
+    "tax",
+    "bandwidth overage",
+    "build-pipeline overage",
+    "existing database and other existing service charges"
+  ],
+  "sources": [
+    "https://render.com/pricing",
+    "https://render.com/docs/compute-plans",
+    "https://render.com/docs/private-network"
+  ],
+  "executed": {
+    "plan_change": false,
+    "deploy": false,
+    "role_renewal": false,
+    "data_reset": false,
+    "provider_calls": false
+  },
+  "owner_scope": {
+    "old_two_synthetic_goals_disposable": true,
+    "no_old_goal_migration_claim": true,
+    "existing_external_ledger_preserved": true,
+    "production_changes": false,
+    "live_activation": false
+  },
+  "storage_test": {
+    "window_minutes": 60,
+    "automatic_renewal": false,
+    "continuous_identity_lifecycle_authorized": false
+  },
+  "acceptance": {
+    "old_goals_migration": "WAIVED_NOT_PROVEN",
+    "fresh_hosted_goal_plan_audit_budget_retention": "NOT_RUN",
+    "native_checkpoint_runner": "NOT_RUN",
+    "restricted_internal_connection": "NOT_VERIFIED",
+    "full_candidate_build": "NOT_RUN"
+  }
+}
