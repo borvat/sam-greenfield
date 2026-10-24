@@ -14,6 +14,7 @@ const c:any={query:async(sql:string,params?:any[])=>{
 async function main(){try{
  await assert.rejects(createOwnerGoal(entity,{objective:'Read the supplied inventory.',authorityCeiling:'YELLOW'},{client:c,goalId:entity,actor:'fixture'}),/READ_ONLY_STAGE_AUTHORITY_REQUIRED/);
  await assert.rejects(createOwnerGoal(entity,{objective:'Read the supplied inventory.',acceptanceContract:{}},{client:c,goalId:entity,actor:'fixture'}),/READ_ONLY_STAGE_REPORT_CONTRACT_REQUIRED/);
+ assert.equal(calls.filter(x=>x.sql.includes('OWNER_GOAL_DENIED')).length,2);
  await createOwnerGoal(entity,{objective:'Read the supplied inventory.'},{client:c,goalId:entity,actor:'fixture'});
  const insert=calls.find(x=>x.sql.includes('INSERT INTO goals'));assert(insert);
  assert(insert.params?.includes('sam.read_report.v1'));assert(insert.params?.includes('GREEN'));

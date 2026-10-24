@@ -24,6 +24,7 @@ const objectives=['Compare January and February supplied ledger amounts in net E
 const info=(objective:string)=>objective===objectives[0]?{query:'ledger',field:'total',units:'EUR',vat:'net'}:objective===objectives[1]?{query:'delivery',field:'delay',units:'calendar_day',vat:'UNKNOWN'}:{query:'document',field:'count',units:'count',vat:'UNKNOWN'};
 async function worker(){
  const t=await openEvaluationTrial(process.env.FIXTURE_TRIAL!);let calls=0;
+ console.log('SHARED_WORKER_TRIAL_OPEN');
  const adapter=fixtureEvaluationAdapter('eval-shared',async(task:any)=>{
   calls++;const input=JSON.parse(task.messages[1].content),objective=input.objective,{query,field,units,vat}=info(objective);
   let output:any;
@@ -50,16 +51,19 @@ async function worker(){
   return {model:'fixture',usage:{inputTokens:5,outputTokens:20},output};
  });
  const composition=await prepareBoundedEvaluationComposition({sourceBundle:fixtureBundle(t.spec.companyId,adapter),trial:t,expectedCommit:t.spec.commit,workerId:'shared-fixture'});
+ console.log('SHARED_COMPOSITION_PREPARED');
  let ticks=0,done=false,failure:unknown;
  const service=await startRuntimeService({port:0,host:'127.0.0.1',tickIntervalMs:10,composition:{...composition,async runWorkTick(){
   if(done)return {processed:false};
   try{const outcome=await composition.runWorkTick();ticks++;
    const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;
+   if(ticks<=3||ticks%10===0)console.log('SHARED_WORKER_PROGRESS',JSON.stringify({ticks,states:rows.map(g=>g.state)}));
    done=rows.every(g=>['COMPLETED','FAILED','WAITING_EXTERNAL','BLOCKED'].includes(g.state));
    if(process.argv[2]==='crash'&&ticks===12){console.log('SHARED_RESTART_BARRIER');await new Promise(()=>{});}
    if(ticks>160)throw Error('FIXTURE_TICK_LIMIT');return outcome;
   }catch(error){failure=error;done=true;throw error;}
  }}});
+ console.log('SHARED_SERVICE_STARTED');
  try{const deadline=Date.now()+140000;while(!done&&Date.now()<deadline)await new Promise(r=>setTimeout(r,25));assert(done,'Shared service timed out');if(failure)throw failure;}
  finally{await service.stop();}
  const rows=(await pool.query('SELECT id,state FROM goals WHERE parent_goal_id=$1',[t.rootGoalId])).rows;if(!rows.every(g=>g.state==='COMPLETED'))console.error('FINAL_REPORT_DIAGNOSTIC',JSON.stringify((await pool.query("SELECT goal_id,decision->>'status' status,decision->'limitations' limitations FROM goal_read_reviews")).rows));assert(rows.every(g=>g.state==='COMPLETED'),JSON.stringify(rows));const usage=(await pool.query('SELECT used FROM evaluation_trials WHERE id=$1',[t.id])).rows[0].used;assert(usage.models<=24);assert.equal(usage.models,usage.iterations);assert.equal(usage.tools,18);assert.equal((await pool.query('SELECT count(*)::int n FROM executions')).rows[0].n,10);assert(calls<=24);console.log('PASS shared actual composition three fixture goals; model quality NOT evaluated');
@@ -79,8 +83,9 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity} -c jit=off`);
  const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1',SAM_KNOWLEDGE_ENABLED:'true'};
  const child=spawn(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);
- const started=Date.now();while(!log.includes('SHARED_RESTART_BARRIER')&&child.exitCode===null&&Date.now()-started<60000)await new Promise(r=>setTimeout(r,25));
- const ready=log.includes('SHARED_RESTART_BARRIER');const closed=new Promise(r=>child.once('close',r));child.kill('SIGKILL');await closed;assert(ready,log);
+ const closed=new Promise(r=>child.once('close',r));
+ const started=Date.now();while(!log.includes('SHARED_RESTART_BARRIER')&&child.exitCode===null&&child.signalCode===null&&Date.now()-started<60000)await new Promise(r=>setTimeout(r,25));
+ const ready=log.includes('SHARED_RESTART_BARRIER');if(child.exitCode===null&&child.signalCode===null)child.kill('SIGKILL');await closed;assert(ready,log||'SHARED_CHILD_EXIT:'+String(child.exitCode??child.signalCode??'timeout'));
  const before=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;
  const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env,encoding:'utf8',timeout:150000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
  const after=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;for(const key of ['models','tools','iterations','delegations'])assert(after[key]>=before[key]);
