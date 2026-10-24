@@ -18,6 +18,8 @@ The candidate uses the existing Command Center's read-only natural-language inta
 
 At startup, four bounded engineering suites run sequentially against a separate local `sam_core_test` database: core reliability, tenant workload, shared-goal fixture composition, and evaluation budgets. They use the canonical local-database harness; no production connection or provider credential enters the child environment. The existing database/cluster is disposable, not a durable deployment.
 
+The application worker, MCP server and Command Center start after these suites, to avoid competing with fixture child processes in the same small container. The public front proxy can report service-starting/503 during this period. The final HTTP/API probe runs after application startup, separately from suite acceptance; HTTP readiness alone never changes a failed suite to PASS.
+
 `GET /api/test-verification` requires the existing sandbox bearer token and returns sanitized per-suite status, source commit, timings, and the explicit `liveReasoningValidated:false` marker. Full logs remain private on that container. The shared-path suite contains actual PostgreSQL/runtime process restart, specialist evidence and signed fixture capture; its scripted model decisions do not establish live tool selection. A suite failure is retained and does not silently become a successful readiness result.
 
 `/test/viewport` embeds the actual application at 390px for CSS layout review. It does not simulate a physical phone or replace a separate review of database/API fidelity. No fixture response interceptor or private token is embedded in the page.

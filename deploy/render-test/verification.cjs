@@ -4,14 +4,13 @@ const {spawn}=require('node:child_process');
 const fs=require('node:fs');
 const {Client}=require('pg');
 const SUITES=['tests/core/reliability.ts','tests/core/tenantWorkload.ts','tests/evaluation/sharedPath.ts','tests/evaluation/budgets.ts'];
-async function runVerification({databaseUrl,sourceCommit,probe}){
+async function runVerification({databaseUrl,sourceCommit,probe,startApplication}){
  const u=new URL(databaseUrl);
  if(u.hostname!=='127.0.0.1'||u.pathname!=='/sam_core_test'||!/^[a-f0-9]{40}$/.test(sourceCommit||''))throw Error('LOCAL_VERIFICATION_SCOPE_REQUIRED');
  const report={version:1,sourceCommit,mode:'fixture',status:'RUNNING',startedAt:new Date().toISOString(),modelPaidCalls:0,liveReasoningValidated:false,results:[]};
  const persist=()=>{const path='/tmp/sam-test-verification.json';fs.writeFileSync(path+'.new',JSON.stringify(report),{mode:0o600});fs.renameSync(path+'.new',path);};
  persist();
- try{report.api=typeof probe==='function'?await probe():{status:'NOT_RUN'};}catch{report.api={status:'FAIL',reason:'API_OR_DATABASE_ASSERTION_FAILED'};}
- console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit,...report.api}));persist();
+ report.api={status:'PENDING'};persist();
  for(const suite of SUITES){
   const started=Date.now(),log='/tmp/sam-verification-'+report.results.length+'.log',output=fs.openSync(log,'w',0o600);
   try{
@@ -52,6 +51,9 @@ async function runVerification({databaseUrl,sourceCommit,probe}){
    persist();
   }finally{fs.closeSync(output);}
  }
+ await startApplication?.();
+ try{report.api=typeof probe==='function'?await probe():{status:'NOT_RUN'};}catch{report.api={status:'FAIL',reason:'API_OR_DATABASE_ASSERTION_FAILED'};}
+ console.log(JSON.stringify({service:'sam-isolated-api-smoke',sourceCommit,...report.api}));persist();
  report.status=report.api.status==='PASS'&&report.results.every(r=>r.status==='PASS')?'PASSED':'FAILED';report.completedAt=new Date().toISOString();persist();
  console.log(JSON.stringify({service:'sam-isolated-verification',sourceCommit,status:report.status,passed:report.results.filter(r=>r.status==='PASS').length,failed:report.results.filter(r=>r.status==='FAIL').length,liveReasoningValidated:false,modelPaidCalls:0}));
  return report;

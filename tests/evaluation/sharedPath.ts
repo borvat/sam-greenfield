@@ -85,8 +85,9 @@ async function parent(){const c=await pool.connect(),role='sam_shared_'+process.
  const target=new URL(process.env.DATABASE_URL!);target.username=role;target.password='shared-fixture-only';target.searchParams.set('options',`-c search_path=${schema},public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity} -c jit=off`);
  const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIAL:trial,SAM_SPECIALIST_INTELLIGENCE:'synthetic',SAM_INTEGRATION_ENABLED:'1',SAM_KNOWLEDGE_ENABLED:'true'};
  const child=spawn(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','crash'],{env,stdio:['ignore','pipe','pipe']});let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);
- const started=Date.now();while(!log.includes('SHARED_RESTART_BARRIER')&&child.exitCode===null&&Date.now()-started<60000)await new Promise(r=>setTimeout(r,25));
- const ready=log.includes('SHARED_RESTART_BARRIER');const closed=new Promise(r=>child.once('close',r));child.kill('SIGKILL');await closed;assert(ready,log);
+ const closed=new Promise(r=>child.once('close',r));
+ const started=Date.now();while(!log.includes('SHARED_RESTART_BARRIER')&&child.exitCode===null&&child.signalCode===null&&Date.now()-started<60000)await new Promise(r=>setTimeout(r,25));
+ const ready=log.includes('SHARED_RESTART_BARRIER');if(child.exitCode===null&&child.signalCode===null)child.kill('SIGKILL');await closed;assert(ready,log||'SHARED_CHILD_EXIT:'+String(child.exitCode??child.signalCode??'timeout'));
  const before=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;
  const run=spawnSync(process.execPath,['--import','tsx','tests/evaluation/sharedPath.ts','worker'],{env,encoding:'utf8',timeout:150000});process.stdout.write(run.stdout+run.stderr);assert.equal(run.status,0);
  const after=(await c.query('SELECT used FROM evaluation_trials WHERE id=$1',[trial])).rows[0].used;for(const key of ['models','tools','iterations','delegations'])assert(after[key]>=before[key]);

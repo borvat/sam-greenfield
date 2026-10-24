@@ -31,9 +31,11 @@ async function main(){
   const token=process.env.SAM_TEST_BEARER_TOKEN;if(!token)throw new Error('SAM_TEST_BEARER_TOKEN required');
   const host=process.env.RENDER_EXTERNAL_HOSTNAME||'localhost';
   const launch=(entry,extra)=>{const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
+  const startApplication=async()=>{
   launch('apps/runtime/src/main.ts',{PORT:'8080',SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'render-test',SAM_COMPOSITION_MODULE:'/app/apps/runtime/src/developmentCompositionModule.ts',SAM_RUNTIME_STATUS_BEARER_TOKEN:token});
   launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_REQUIRE_GOAL_ACCEPTANCE:'1',SAM_COMMAND_CENTER_PORT:'5000',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`});
   launch('apps/mcp/src/main.ts',{SAM_MCP_PORT:'3001',SAM_MCP_HOST:'127.0.0.1',SAM_MCP_BEARER_TOKEN:token,SAM_MCP_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_MCP_ALLOWED_ORIGINS:`https://${host}`,SAM_DEV_LEGAL_ENTITY_ID:entity});
+  };
   http.createServer(async(req,res)=>{
     if(req.url==='/test/viewport'){
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
@@ -55,9 +57,9 @@ async function main(){
     upstream.on('error',()=>{if(!res.headersSent)res.writeHead(503);res.end('service starting');});
     req.pipe(upstream);
   }).listen(Number(process.env.PORT||10000),'0.0.0.0');
-  console.log('SAM disposable sandbox started: local PostgreSQL; maintenance-only; no external adapters. Data resets on redeploy.');
+  console.log('SAM disposable front proxy started. Engineering verification precedes application startup; no external adapters.');
   void runVerification({databaseUrl:`postgres://postgres:${verificationPassword}@127.0.0.1:5432/sam_core_test`,sourceCommit:process.env.RENDER_GIT_COMMIT,
-    probe:()=>runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL})}).catch(()=>console.error('Sandbox verification failed; inspect authenticated status.'));
+    startApplication,probe:()=>runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL})}).catch(()=>console.error('Sandbox verification failed; inspect authenticated status.'));
 }
 let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
 process.on('SIGTERM',()=>shutdown(0));process.on('SIGINT',()=>shutdown(0));

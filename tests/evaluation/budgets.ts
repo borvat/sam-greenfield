@@ -274,7 +274,7 @@ async function parent(){
   const env={PATH:process.env.PATH,DATABASE_URL:target.href,FIXTURE_TRIALS:JSON.stringify(trials)};
   const run=(mode:string)=>{const r=spawnSync(process.execPath,['--import','tsx','tests/evaluation/budgets.ts',mode],{env,encoding:'utf8',timeout:75000});process.stdout.write(r.stdout+r.stderr);assert.equal(r.status,0,mode);};
   const sourceChild=spawn(process.execPath,['--import','tsx','tests/evaluation/budgets.ts','source-crash'],{env,stdio:['ignore','pipe','pipe']});let sourceOutput='';sourceChild.stdout.on('data',x=>sourceOutput+=x);sourceChild.stderr.on('data',x=>sourceOutput+=x);
-  const sourceStarted=Date.now();while(!sourceOutput.includes('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE')&&Date.now()-sourceStarted<8000)await new Promise(r=>setTimeout(r,25));
+  const sourceStarted=Date.now();while(!sourceOutput.includes('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE')&&sourceChild.exitCode===null&&sourceChild.signalCode===null&&Date.now()-sourceStarted<8000)await new Promise(r=>setTimeout(r,25));
   if(!sourceOutput.includes('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE')){sourceChild.kill('SIGKILL');throw Error('SOURCE_PERSISTENCE_BARRIER_NOT_REACHED:'+sourceOutput);}
   const sourceClosed=new Promise(r=>sourceChild.once('close',r));sourceChild.kill('SIGKILL');await sourceClosed;
   const sourceTrial=trials['goal-runtime-source-crash'];
