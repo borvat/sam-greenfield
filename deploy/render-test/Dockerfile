@@ -7,6 +7,7 @@ COPY packages ./packages
 COPY scripts ./scripts
 COPY tsconfig.json ./
 COPY tests ./tests
+COPY vendor ./vendor
 RUN npm ci && npm run typecheck
 COPY deploy/render-test ./deploy/render-test
 ENV NODE_ENV=development SAM_DEVELOPMENT_SAFE_MODE=1
