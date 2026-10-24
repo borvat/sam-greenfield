@@ -6,6 +6,7 @@ const {Client}=require('pg');
 const http=require('node:http');
 const {timingSafeEqual}=require('node:crypto');
 const {runVerification}=require('./verification.cjs');
+const {runApiSmoke}=require('./api-smoke.cjs');
 const children=[];
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
 async function main(){
@@ -23,6 +24,7 @@ async function main(){
   await admin.query('CREATE DATABASE sam_synthetic OWNER sam_synthetic');await admin.end();
   const env={PATH:process.env.PATH,TMPDIR:'/tmp',NODE_ENV:'development',SAM_DEVELOPMENT_SAFE_MODE:'1',DATABASE_URL:`postgres://sam_synthetic:${password}@127.0.0.1:5432/sam_synthetic`};
   command(process.execPath,['packages/db/src/migrate.js','--apply'],{env});
+  command(process.execPath,['--import','tsx','deploy/render-test/prepare.ts'],{env});
   const client=new Client({connectionString:env.DATABASE_URL});await client.connect();
   const org=(await client.query("INSERT INTO organizations(name) VALUES('TEST-SAM') RETURNING id")).rows[0].id;
   const entity=(await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,'TEST-SAM') RETURNING id",[org])).rows[0].id;await client.end();
@@ -54,7 +56,8 @@ async function main(){
     req.pipe(upstream);
   }).listen(Number(process.env.PORT||10000),'0.0.0.0');
   console.log('SAM disposable sandbox started: local PostgreSQL; maintenance-only; no external adapters. Data resets on redeploy.');
-  void runVerification({databaseUrl:`postgres://postgres:${verificationPassword}@127.0.0.1:5432/sam_core_test`,sourceCommit:process.env.RENDER_GIT_COMMIT}).catch(()=>console.error('Sandbox verification failed; inspect authenticated status.'));
+  void runVerification({databaseUrl:`postgres://postgres:${verificationPassword}@127.0.0.1:5432/sam_core_test`,sourceCommit:process.env.RENDER_GIT_COMMIT,
+    probe:()=>runApiSmoke({port:Number(process.env.PORT||10000),token,databaseUrl:env.DATABASE_URL})}).catch(()=>console.error('Sandbox verification failed; inspect authenticated status.'));
 }
 let stopping=false;function shutdown(code){if(stopping)return;stopping=true;for(const p of children)p.kill('SIGTERM');setTimeout(()=>process.exit(code),1500);}
 process.on('SIGTERM',()=>shutdown(0));process.on('SIGINT',()=>shutdown(0));
