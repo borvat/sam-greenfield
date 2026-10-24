@@ -14,6 +14,7 @@ async function main(){
  const {pool}=await import('../../packages/db/src/client');
  const {startCommandCenterHttpServer}=await import('../../apps/command-center/src/http');
  let service:Awaited<ReturnType<typeof startCommandCenterHttpServer>>|undefined;
+ let poolClosed=false;
  try{
   const scope=(await pool.query('SELECT current_schema() s,current_user r')).rows[0];
   assert.equal(scope.s,c.schema);assert.equal(scope.r,c.role);
@@ -34,13 +35,13 @@ async function main(){
   assert.equal(timeline.data.budget,null);assert.equal(timeline.data.goal.completion_definition,'sam.read_report.v1');
   assert.equal((await fetch(root+'/api/overview',{headers})).status,200);
   const finance=await(await fetch(root+'/api/finance/latest',{headers})).json() as any;assert.equal(finance.data,null);
-  await service.close();service=undefined;await pool.end();
+  await service.close();service=undefined;await pool.end();poolClosed=true;
   const reconnect=new Client({connectionString:c.connectionString,connectionTimeoutMillis:5000});
   try{await reconnect.connect();assert.equal((await reconnect.query('SELECT state FROM goals WHERE id=$1',[id])).rows[0]?.state,'NEW');}
   finally{await reconnect.end();}
   console.log(JSON.stringify({status:'PASS_ISOLATED_COMMAND_CENTER',scopeChecked:true,unauthorizedDenied:true,elevatedAuthorityDenied:true,
    naturalIntakePersisted:true,timelineMatchesDatabase:true,verificationNotInvented:true,budgetUnknownNotZero:true,connectionRestartPersistence:true,
    models:0,externalTools:0,goalExecutionTested:false,browserLayoutTested:false}));
- }finally{await service?.close();await pool.end();}
+ }finally{await service?.close();if(!poolClosed)await pool.end();}
 }
 void main().catch(()=>{console.error(JSON.stringify({status:'FAIL_ISOLATED_COMMAND_CENTER',details:'withheld; inspect locally without exporting credentials'}));process.exitCode=1;});
