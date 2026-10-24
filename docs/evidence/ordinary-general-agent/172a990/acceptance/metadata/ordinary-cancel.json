@@ -1,0 +1,248 @@
+{
+  "classification": "ISOLATED_SYNTHETIC_TRANSPORTS_NOT_MODEL_AUTONOMY",
+  "sourceCommit": "172a990d6d84eaa917b6974316180d349c3c73ee",
+  "variant": "cancel",
+  "tables": {
+    "goals": [
+      {
+        "id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "business_id": "G-faed34be-887e-48e8-92e0-efc3ce7f1ab3-000001",
+        "owner_id": null,
+        "company_scope": "43b3b750-3bef-4ca5-b942-ef5de769c8e0",
+        "domain": "chatgpt_goal_submission",
+        "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+        "state": "CANCELLED",
+        "priority": 0,
+        "created_at": "2026-10-23T23:50:31.540Z",
+        "updated_at": "2026-10-23T23:50:32.080Z",
+        "next_wake_at": null,
+        "current_plan_id": null,
+        "world_model_version": null,
+        "authority_ceiling": "GREEN",
+        "parent_goal_id": null,
+        "completion_definition": "sam.read_report.v1",
+        "replan_attempts": 0,
+        "replan_reason": null,
+        "planning_attempts": 1,
+        "last_planning_at": "2026-10-23T23:50:32.015Z",
+        "planning_retry_at": "2026-10-23T23:51:02.015Z",
+        "planning_failure": null
+      }
+    ],
+    "plans": [],
+    "work_queue": [],
+    "executions": [],
+    "verifications": [],
+    "goal_read_reviews": [],
+    "audit_log": [
+      {
+        "id": "a8ff6e37-3b37-4a58-bc6e-bf6331e3892b",
+        "actor": "ordinary-fixture-owner",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "SAM_GOAL_SUBMITTED",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "domain": "chatgpt_goal_submission",
+          "objective": "Compare January and February supplied ledger amounts in net EUR, with citations and limits.",
+          "business_id": "G-faed34be-887e-48e8-92e0-efc3ce7f1ab3-000001",
+          "ordinaryGeneralAgentV1": true
+        },
+        "source": "sam_mcp",
+        "timestamp": "2026-10-23T23:50:31.540Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "CREATED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "a54a97af-8cae-4424-8454-5819fb6db2b6",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "type": "OPEN",
+          "policy": {
+            "limits": {
+              "tools": 20,
+              "models": 12,
+              "tokens": 1000000,
+              "costUsd": 1,
+              "elapsedMs": 300000,
+              "iterations": 40,
+              "toolCallMs": 20000,
+              "delegations": 16,
+              "modelCallMs": 20000,
+              "maxInputTokens": 24000,
+              "maxOutputTokens": 4000
+            },
+            "prices": [
+              {
+                "model": "deepseek-flash",
+                "inputPer1k": 0.001,
+                "providerId": "deepseek",
+                "outputPer1k": 0.001
+              }
+            ],
+            "version": 1,
+            "capabilityHash": "0a7bc8c417fa2165f351ff31818bbb00b5fb59cc6049569d6bbeeee5f7d5f56c"
+          },
+          "tenant": "43b3b750-3bef-4ca5-b942-ef5de769c8e0",
+          "deadline": "2026-10-23T23:55:31.597Z",
+          "sequence": 0,
+          "policyHash": "6c8e436c454cddaea45e09d2115eae95d01836f0fa6d8f99af8c4e78e77e99dd",
+          "objectiveHash": "175f5bebd00febc7076154a06e82b8fcf60c36ef7c96fdf1440fa002b4456e24"
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:31.596Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "67b1809c-b330-4ee4-9de2-8ce20490b3e8",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "kind": "iteration",
+          "type": "RESERVED",
+          "delta": {
+            "tools": 0,
+            "models": 0,
+            "tokens": 0,
+            "costNanos": 0,
+            "iterations": 1,
+            "delegations": 0
+          },
+          "ticket": "47507f05-5570-45a1-9fe0-0f2b046a82e5",
+          "sequence": 1
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:32.090Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "d63409b2-d345-48a8-950d-29b2111349b0",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "type": "INVOKING",
+          "ticket": "47507f05-5570-45a1-9fe0-0f2b046a82e5",
+          "sequence": 2
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:32.090Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "56c511c8-ef31-4b59-a229-ab83612cb575",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "type": "FINISHED",
+          "status": "success",
+          "ticket": "47507f05-5570-45a1-9fe0-0f2b046a82e5",
+          "sequence": 3
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:32.090Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "64b0087d-a10f-4e0a-9308-a190f19273df",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "kind": "model",
+          "type": "RESERVED",
+          "delta": {
+            "tools": 0,
+            "models": 1,
+            "tokens": 28000,
+            "costNanos": 28000000,
+            "iterations": 0,
+            "delegations": 0
+          },
+          "model": "deepseek-flash",
+          "ticket": "d52b0a86-3b3e-49de-9dae-814b6900fad4",
+          "sequence": 4,
+          "providerId": "deepseek"
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:32.102Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      },
+      {
+        "id": "55636c69-ade9-4e11-b196-7c03186635b8",
+        "actor": "ordinary_goal_allowance",
+        "agent_id": null,
+        "goal_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "action": "ORDINARY_GOAL_ALLOWANCE_V1",
+        "entity_type": "goal",
+        "entity_id": "208f5353-1fe0-40a3-9c7f-071b7bf4a0d5",
+        "before_ref": null,
+        "after_ref": {
+          "type": "INVOKING",
+          "ticket": "d52b0a86-3b3e-49de-9dae-814b6900fad4",
+          "sequence": 5
+        },
+        "source": "runtime",
+        "timestamp": "2026-10-23T23:50:32.107Z",
+        "authority_class": "GREEN",
+        "approval_id": null,
+        "result": "RECORDED",
+        "evidence_id": null,
+        "event_seq_ref": null
+      }
+    ],
+    "model_calls": [],
+    "specialist_sessions": [],
+    "specialist_delegations": [],
+    "specialist_budgets": []
+  }
+}

@@ -1,0 +1,2 @@
+$ git archive --format=tar --output /tmp/sam-verify-Y3stAS/source.tar 172a990d6d84eaa917b6974316180d349c3c73ee
+$ tar -xf /tmp/sam-verify-Y3stAS/source.tar -C /tmp/sam-verify-Y3stAS/source

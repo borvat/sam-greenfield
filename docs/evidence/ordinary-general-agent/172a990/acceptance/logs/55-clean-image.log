@@ -1,0 +1,65 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node scripts/development/build-image.cjs sam-verification:sam-verify-1792799161829-27bbf174 Dockerfile.verification
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.verification
+#1 transferring dockerfile: 1.14kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 104B done
+#3 DONE 0.0s
+
+#4 [stage-0 1/8] FROM docker.io/library/node:22-alpine@sha256:ce8d97f7cfc7c5386421eb932df20a29df99b1a7f469f6157d5c9956702ffadc
+#4 DONE 0.0s
+
+#5 [stage-0 2/8] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 1.29MB 0.0s done
+#6 DONE 0.0s
+
+#7 [stage-0 3/8] COPY --chown=node:node package.json package-lock.json ./
+#7 DONE 0.6s
+
+#8 [stage-0 4/8] COPY --chown=node:node apps ./apps
+#8 DONE 0.7s
+
+#9 [stage-0 5/8] COPY --chown=node:node packages ./packages
+#9 DONE 0.4s
+
+#10 [stage-0 6/8] COPY --chown=node:node scripts/release ./scripts/release
+#10 DONE 0.6s
+
+#11 [stage-0 7/8] COPY --chown=node:node deploy/render/start.sh ./deploy/render/start.sh
+#11 DONE 0.5s
+
+#12 [stage-0 8/8] RUN --mount=type=secret,id=registry_ca     if [ -s /run/secrets/registry_ca ]; then       NODE_EXTRA_CA_CERTS=/run/secrets/registry_ca npm ci --omit=dev --fetch-retries=1 --fetch-timeout=20000;     else npm ci --omit=dev --fetch-retries=1 --fetch-timeout=20000; fi
+#12 3.598 
+#12 3.598 added 115 packages, and audited 116 packages in 3s
+#12 3.598 
+#12 3.598 35 packages are looking for funding
+#12 3.598   run `npm fund` for details
+#12 3.604 
+#12 3.604 1 high severity vulnerability
+#12 3.604 
+#12 3.604 To address all issues, run:
+#12 3.604   npm audit fix --force
+#12 3.604 
+#12 3.604 Run `npm audit` for details.
+#12 3.604 npm notice
+#12 3.604 npm notice New major version of npm available! 10.9.9 -> 12.2.1
+#12 3.604 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+#12 3.604 npm notice To update run: npm install -g npm@12.2.1
+#12 3.604 npm notice
+#12 DONE 3.7s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 0.5s done
+#13 writing image sha256:919e3aed00e3451ecdc2c088f1150ec08ac3c7bd07725d7ca5584bf4e76d8d05 done
+#13 naming to docker.io/library/sam-verification:sam-verify-1792799161829-27bbf174 done
+#13 DONE 0.5s

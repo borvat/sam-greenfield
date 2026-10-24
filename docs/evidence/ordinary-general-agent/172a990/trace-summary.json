@@ -1,0 +1,103 @@
+{
+  "cancel": {
+    "rootStates": {
+      "CANCELLED": 1
+    },
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "reservations": {
+      "iteration": 1,
+      "model": 1
+    },
+    "uncertainReservations": 1
+  },
+  "missing-registration": {
+    "rootStates": {
+      "NEW": 3
+    },
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 0,
+    "reservations": {},
+    "uncertainReservations": 0
+  },
+  "nominal": {
+    "rootStates": {
+      "COMPLETED": 3
+    },
+    "executions": 13,
+    "distinctExecutionQueueIds": 13,
+    "reports": 3,
+    "reservations": {
+      "iteration": 26,
+      "model": 26,
+      "delegation": 11,
+      "tool": 8,
+      "readback": 13
+    },
+    "uncertainReservations": 0
+  },
+  "restart-concurrent": {
+    "rootStates": {
+      "COMPLETED": 3
+    },
+    "executions": 13,
+    "distinctExecutionQueueIds": 13,
+    "reports": 3,
+    "reservations": {
+      "iteration": 27,
+      "model": 27,
+      "delegation": 11,
+      "tool": 8,
+      "readback": 13
+    },
+    "uncertainReservations": 1
+  },
+  "revocation": {
+    "rootStates": {
+      "WAITING_EXTERNAL": 1
+    },
+    "executions": 4,
+    "distinctExecutionQueueIds": 4,
+    "reports": 0,
+    "reservations": {
+      "iteration": 9,
+      "model": 9,
+      "delegation": 4,
+      "tool": 3,
+      "readback": 4
+    },
+    "uncertainReservations": 0
+  },
+  "unknown": {
+    "rootStates": {
+      "FAILED": 1
+    },
+    "executions": 2,
+    "distinctExecutionQueueIds": 2,
+    "reports": 1,
+    "reservations": {
+      "iteration": 13,
+      "model": 12,
+      "delegation": 11,
+      "tool": 10,
+      "readback": 2
+    },
+    "uncertainReservations": 0
+  },
+  "zero-tools": {
+    "rootStates": {
+      "FAILED": 1
+    },
+    "executions": 0,
+    "distinctExecutionQueueIds": 0,
+    "reports": 1,
+    "reservations": {
+      "iteration": 3,
+      "model": 3,
+      "delegation": 2
+    },
+    "uncertainReservations": 0
+  }
+}

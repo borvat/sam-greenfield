@@ -1,0 +1,4 @@
+PASS tests/core/ordinaryPath.ts
+PASS actual ordinary startup / authenticated MCP submission / restricted role / three executing roots / delegation / derived report; fixtures do not prove autonomy
+
+{"passed":1,"failed":0,"results":[{"test":"tests/core/ordinaryPath.ts","passed":true,"status":"PASS","exit":0,"startedAt":"2026-10-23T23:44:20.688Z","completedAt":"2026-10-23T23:45:54.204Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-23T23:44:20.690Z","completedAt":"2026-10-23T23:44:20.847Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/core/ordinaryPath.ts"],"startedAt":"2026-10-23T23:44:20.847Z","completedAt":"2026-10-23T23:45:54.204Z","exitCode":0,"signal":null,"error":null}],"testExecuted":true}]}
