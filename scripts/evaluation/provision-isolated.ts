@@ -94,8 +94,6 @@ export async function provision(connectionString:string,schema:string,role:strin
   phase='EVALUATION_GRANTS';await provisionEvaluationAccess(c as any,p);
   phase='ROLE_DEFAULTS';
   await c.query(`ALTER ROLE "${role}" SET search_path TO "${schema}",pg_catalog,public`);
-  await c.query(`ALTER ROLE "${role}" SET app.current_org_id TO ${literal(org)}`);
-  await c.query(`ALTER ROLE "${role}" SET app.current_legal_entity_id TO ${literal(entity)}`);
   phase='PRODUCTION_ACCESS_DENIAL';
   const leaked=(await c.query(`SELECT count(*)::int n FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace
    WHERE n.nspname='public' AND t.relkind IN ('r','p') AND
@@ -113,9 +111,11 @@ export async function provision(connectionString:string,schema:string,role:strin
    END $private$`);
   const password=(await c.query("SELECT current_setting('sam.private_new_role_password') value")).rows[0].value;
   await c.query("SELECT set_config('sam.private_new_role_password','',true)");
-  const runtime=new URL(original);runtime.username=role;runtime.password=password;runtime.searchParams.delete('options');
-  // Role defaults carry the immutable nominated context; the runtime cannot
-  // acquire a second role or administrative privileges through this connection.
+  const runtime=new URL(original);runtime.username=role;runtime.password=password;
+  // Managed operators may not persist custom GUC role defaults. Use the same
+  // connection-scoped context as existing restricted-runtime integrations. Fixed
+  // role-specific policies, not these mutable settings, enforce tenant identity.
+  runtime.searchParams.set('options',`-c search_path=${schema},pg_catalog,public -c app.current_org_id=${org} -c app.current_legal_entity_id=${entity}`);
   await mkdir(directory,{mode:0o700});await chmod(directory,0o700);
   privatePath=join(directory,'restricted-connection.json');
   await writeFile(privatePath,JSON.stringify({schema,role,org,entity,connectionString:runtime.href}),{mode:0o600,flag:'wx'});
