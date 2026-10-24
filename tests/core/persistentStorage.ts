@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import {Client} from 'pg';
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync,execFileSync} from 'node:child_process';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {provision} from '../../scripts/evaluation/provision-isolated';
 import {openPersistentBinding} from '../../deploy/render-test/persistentBinding';
+import {seedStorageContinuityFixture,readStorageContinuityFixture,assertStorageContinuity} from '../../scripts/evaluation/storage-continuity-probe';
 async function main(){
  const u=new URL(process.env.DATABASE_URL??'');if(u.hostname!=='127.0.0.1'||u.pathname!=='/sam_core_test')throw Error('LOCAL_DISPOSABLE_ONLY');
  const root=await mkdtemp(join(tmpdir(),'sam-native-persistence-')),dir=join(root,'private');
@@ -28,15 +29,24 @@ async function main(){
   const headers={Authorization:'Bearer local-fixture-unused-externally','Content-Type':'application/json'};
   const first=await start();const response=await fetch('http://127.0.0.1:'+first.port+'/api/goals',{method:'POST',headers,body:JSON.stringify({objective:'Synthetic persistence probe only. Do not plan or execute.'})});
   assert.equal(response.status,201);const id=((await response.json()) as any).data.id;
+  const commit=process.env.SAM_VERIFICATION_SOURCE_SHA??execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+  const fixture=await seedStorageContinuityFixture(admin,config,commit);
+  const reserved=spawnSync(process.execPath,['--import','tsx','tests/core/persistentBindingChild.ts',join(dir,'restricted-connection.json'),'reserve-storage-fixture',fixture.trialId],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:15000});
+  assert.equal(reserved.status,0);assert.equal(JSON.parse(reserved.stdout.trim()).reserved,true);
+  const capture=async()=>{const c=new Client({connectionString:config.connectionString});await c.connect();try{return await readStorageContinuityFixture(c,config,fixture);}finally{await c.end();}};
+  const before=await capture();
   await stop();const second=await start();
   const timeline=await fetch('http://127.0.0.1:'+second.port+'/api/goals/'+id+'/timeline',{headers});assert.equal(timeline.status,200);
   const data=((await timeline.json()) as any).data;assert.equal(data.goal.id,id);assert.equal(data.goal.state,'NEW');assert.equal(data.progress.reportVerified,false);assert.equal(data.executions.length,0);
+  const after=await capture();assertStorageContinuity(before,after);
+  const planned=((await(await fetch('http://127.0.0.1:'+second.port+'/api/goals/'+fixture.goalId+'/timeline',{headers})).json()) as any).data;
+  assert.equal(planned.goal.current_plan_id,fixture.planId);assert.equal(planned.budget.mode,'fixture');assert.equal(planned.budget.costBasis,'SYNTHETIC_RESERVATION_NOT_INVOICE');assert.equal(planned.budget.reservedUsd,0.03);assert.equal(planned.budget.actualBilledUsd,null);assert.equal(planned.budget.reservedModelAttempts,0);
   const r=new Client({connectionString:config.connectionString});await r.connect();try{
    assert.equal((await r.query('SELECT count(*)::int n FROM goals WHERE id=$1',[id])).rows[0].n,1);
    await assert.rejects(r.query('SELECT * FROM public.goals LIMIT 0'));
    await assert.rejects(r.query('CREATE TABLE forbidden_probe(id int)'));
   }finally{await r.end();}
-  console.log(JSON.stringify({status:'PASS',nativePostgres:true,processReplacement:true,hostedContainerReplacement:false,sameGoal:true,duplicateGoals:0,executions:0,liveReasoning:false,modelCalls:0}));
+  console.log(JSON.stringify({status:'PASS',nativePostgres:true,processReplacement:true,hostedContainerReplacement:false,sameGoal:true,samePlan:true,sameAudit:true,sameReservation:true,syntheticReservationUsd:0.03,actualBilledUsd:null,duplicateGoals:0,executions:0,liveReasoning:false,modelCalls:0}));
  }finally{
   await stop();if(created){await admin.query('DROP SCHEMA "'+schema+'" CASCADE');await admin.query('DROP ROLE "'+role+'"');}
   if(publicControl)await admin.query('DROP TABLE public.goals');

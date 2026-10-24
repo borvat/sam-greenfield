@@ -67,9 +67,9 @@ export async function commandCenterGoalTimeline(legalEntityId:string,goalId:stri
       const trial=(await client.query(`WITH RECURSIVE ancestors(id,parent_goal_id,depth) AS (
         SELECT id,parent_goal_id,0 FROM goals WHERE id=$1 AND company_scope=$2
         UNION ALL SELECT g.id,g.parent_goal_id,a.depth+1 FROM goals g JOIN ancestors a ON g.id=a.parent_goal_id WHERE a.depth<4 AND g.company_scope=$2)
-        SELECT t.used,t.spec->'limits' limits,t.agent_used->('goal.'||$1::text) goal_used,t.deadline
+        SELECT t.used,t.spec->>'mode' mode,t.spec->'limits' limits,t.agent_used->('goal.'||$1::text) goal_used,t.deadline
         FROM evaluation_trials t JOIN ancestors a ON a.id=t.root_goal_id WHERE t.legal_entity_id=$2 LIMIT 1`,[goalId,legalEntityId])).rows[0];
-      if(trial)budget={scope:'TRIAL',costBasis:'RESERVED_UPPER_BOUND_NOT_INVOICE',reservedUsd:Number(trial.used.costUsd),
+      if(trial)budget={scope:'TRIAL',mode:trial.mode??null,costBasis:trial.mode==='fixture'?'SYNTHETIC_RESERVATION_NOT_INVOICE':'RESERVED_UPPER_BOUND_NOT_INVOICE',reservedUsd:Number(trial.used.costUsd),
         ceilingUsd:Number(trial.limits.costUsd),remainingReservedUsd:Math.max(0,Number(trial.limits.costUsd)-Number(trial.used.costUsd)),
         reservedModelAttempts:trial.used.models,goalUsage:trial.goal_used??null,deadline:trial.deadline,actualBilledUsd:null};
     }
