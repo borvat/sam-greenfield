@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps ./apps
 COPY packages ./packages
+COPY scripts ./scripts
+COPY tsconfig.json ./
 RUN npm ci --omit=dev
 COPY deploy/render-test ./deploy/render-test
 ENV NODE_ENV=development SAM_DEVELOPMENT_SAFE_MODE=1
