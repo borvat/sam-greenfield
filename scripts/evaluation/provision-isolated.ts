@@ -62,6 +62,7 @@ export async function provision(connectionString:string,schema:string,role:strin
   await c.connect();connected=true;
   await c.query('BEGIN');begun=true;
   await c.query("SET LOCAL lock_timeout='5s'");
+  await c.query('SET LOCAL row_security=on');
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['sam-isolated-setup:'+schema]);
   phase='ADMIN_PREFLIGHT';
   const op=(await c.query(`SELECT current_user=pg_get_userbyid(d.datdba) AS owns_database,r.rolcreaterole,
@@ -138,7 +139,10 @@ export async function provision(connectionString:string,schema:string,role:strin
   if(begun)await c.query('ROLLBACK').catch(()=>{});
   if(committed)await c.query(`ALTER ROLE "${role}" NOLOGIN`).catch(()=>{});
   if(privatePath)await unlink(privatePath).catch(()=>{});
-  throw Object.assign(Error('ISOLATED_SETUP_FAILED'),{phase,committed,sqlCode:(e as {code?:string}).code??null});
+  const message=e instanceof Error?e.message:'';
+  const reason=/row.level security/i.test(message)?'ROW_SECURITY':/permission denied/i.test(message)?'PRIVILEGE':/owner/i.test(message)?'OWNERSHIP':'UNCLASSIFIED';
+  const deniedObject=/^(?:permission denied for|query would be affected by row-level security policy for) (?:table|sequence|schema|function) "?([a-z_][a-z0-9_]*)"?$/.exec(message)?.[1]??null;
+  throw Object.assign(Error('ISOLATED_SETUP_FAILED'),{phase,committed,sqlCode:(e as {code?:string}).code??null,reason,deniedObject});
  }finally{if(connected)await c.end();}
 }
 async function main(){
@@ -149,4 +153,4 @@ async function main(){
  console.log(JSON.stringify(await provision(connection,schema,role,resolve(directory))));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)
- main().catch(e=>{console.error(JSON.stringify({status:'ISOLATED_SETUP_FAILED',phase:e.phase??'LOCAL_VALIDATION',committed:e.committed??false,sqlCode:e.sqlCode??null}));process.exitCode=1;});
+ main().catch(e=>{console.error(JSON.stringify({status:'ISOLATED_SETUP_FAILED',phase:e.phase??'LOCAL_VALIDATION',committed:e.committed??false,sqlCode:e.sqlCode??null,reason:e.reason??null,deniedObject:e.deniedObject??null}));process.exitCode=1;});
