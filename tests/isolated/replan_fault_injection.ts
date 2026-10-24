@@ -32,7 +32,7 @@ async function run(){
  // with identical parameters by the replanner regardless of provider error.
  for(const errorLabel of ["429","503","ECONNRESET"]){
    const repeated=model([[read("drive_get_metadata",{fileId:"synthetic-missing"})],[read("drive_get_metadata",{file_id:"synthetic-missing"})]]);
-   await assert.rejects(()=>proposePlan({...base,context:{fault:errorLabel},gateway:repeated.gateway as any}),/^Error: PLAN_CONTRACT_INVALID$/);
+   await assert.rejects(()=>proposePlan({...base,context:{fault:errorLabel},gateway:repeated.gateway as any}),/^Error: PLAN_FAILED_READ_REPLAY$/);
    assert.equal(repeated.counts(),2);
  }
  console.log("ISOLATED_REPLAN_FAULT_INJECTION PASS cases=4 alias=1 no_external_io=true");
