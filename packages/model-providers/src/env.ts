@@ -3,6 +3,8 @@ import { OpenAIResponsesAdapter } from "./openai";
 import { AnthropicMessagesAdapter } from "./anthropic";
 import { GoogleGeminiAdapter } from "./google";
 import { OpenAICompatibleChatAdapter } from "./openaiCompatible";
+import {readFileSync} from 'node:fs';
+import {openRouterModelConfig} from './openrouterCatalog';
 
 function list(value:string|undefined,fallback:string[]):string[]{
   const parsed=(value??"").split(",").map((v)=>v.trim()).filter(Boolean);
@@ -86,6 +88,20 @@ export function buildStandardModelProvidersFromEnv(
       apiKey:env.QWEN_API_KEY,
       baseUrl:env.QWEN_BASE_URL
     }),env.QWEN_MODEL,"QWEN");
+  }
+
+  if(env.OPENROUTER_API_KEY&&env.OPENROUTER_MODEL){
+    if(!env.OPENROUTER_CATALOG_PATH)throw Error('OPENROUTER_FRESH_CATALOG_REQUIRED');
+    const bytes=readFileSync(env.OPENROUTER_CATALOG_PATH);
+    if(bytes.length>10_000_000)throw Error('OPENROUTER_CATALOG_TOO_LARGE');
+    const catalog=JSON.parse(bytes.toString('utf8'));
+    const maxOutputTokens=Number(env.OPENROUTER_MAX_OUTPUT_TOKENS??2048);
+    const selected=catalog.data?.find((r:any)=>r.id===env.OPENROUTER_MODEL);
+    if(!Number.isSafeInteger(maxOutputTokens)||maxOutputTokens<1||maxOutputTokens>=selected?.context_length||
+      (selected?.top_provider?.max_completion_tokens!=null&&maxOutputTokens>selected.top_provider.max_completion_tokens))throw Error('OPENROUTER_OUTPUT_LIMIT_INVALID');
+    configs.push(openRouterModelConfig(catalog,env.OPENROUTER_MODEL,{retrievedAt:catalog.retrievedAt,
+      capabilities:list(env.OPENROUTER_CAPABILITIES,['planning']),privacyClasses:privacy(env.OPENROUTER_PRIVACY_CLASSES)}));
+    adapters.push(new OpenAICompatibleChatAdapter('openrouter',{apiKey:env.OPENROUTER_API_KEY,baseUrl:'https://openrouter.ai/api/v1',maxOutputTokens}));
   }
 
   return {adapters,configs};

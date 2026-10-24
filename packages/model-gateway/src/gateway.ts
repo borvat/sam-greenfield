@@ -10,12 +10,14 @@ import { cyclePlanningTask, consumeCycleTask, type DevelopmentCyclePermit } from
 import { isAutonomyPermit,type AutonomyPermit } from "../../../apps/development/src/autonomyPermit";
 import {assertEvaluationPermit,assertEvaluationPrice} from './evaluationPermit';
 import {assertRegisteredEvaluationAdapter} from './evaluationAdapter';
+import {measuredPolicyFromEnv,type MeasuredRoutingPolicy} from './measuredRouting';
 
 export class ModelGateway {
   constructor(
     private readonly adapters: Record<string, ModelProviderAdapter>,
     private readonly developmentPermit?: DevelopmentCyclePermit|AutonomyPermit,
-    private readonly developmentDiagnostic?: (phase: ProbePhase) => void
+    private readonly developmentDiagnostic?: (phase: ProbePhase) => void,
+    private readonly measuredRoutingPolicy:MeasuredRoutingPolicy|undefined=measuredPolicyFromEnv()
   ) {}
 
   developmentPlanningTask(input: { goalId: string; objective: string; context: any;availableCapabilities?:any[] }): ModelTask {
@@ -47,7 +49,8 @@ export class ModelGateway {
         bounded.maxInputTokens<1||bounded.maxOutputTokens<1||
         Buffer.byteLength(JSON.stringify(task.input),'utf8')>bounded.maxInputTokens)throw Error('MODEL_INPUT_BUDGET_INVALID');
     }
-    const candidates = routeModel(task, providers,bounded?{inputTokens:bounded.maxInputTokens,outputTokens:bounded.maxOutputTokens}:{})
+    if(this.measuredRoutingPolicy&&this.measuredRoutingPolicy.taskClass!==task.task)throw Error('MEASURED_ROUTING_TASK_CLASS_MISMATCH');
+    const candidates = routeModel(task, providers,bounded?{inputTokens:bounded.maxInputTokens,outputTokens:bounded.maxOutputTokens}:{},this.measuredRoutingPolicy)
       .filter(candidate => !restrictedDevelopment || candidate.providerId === "deepseek" && candidate.model === "deepseek-flash")
       .slice(0, restrictedDevelopment ? 1 : undefined);
     if (candidates.length === 0) {
