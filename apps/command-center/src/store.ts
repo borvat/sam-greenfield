@@ -104,6 +104,14 @@ export async function commandCenterLatestFinanceBrief(legalEntityId:string){
 export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput,
   intake?:{client:PoolClient;goalId:string;actor:string}){
   const readOnlyStage=process.env.SAM_COMMAND_CENTER_READ_ONLY==='1';
+  const denyReadOnly=async(reason:string):Promise<never>=>{
+    const log=(client:PoolClient)=>client.query(`INSERT INTO audit_log
+      (actor,action,entity_type,entity_id,after_ref,source,authority_class,result)
+      VALUES($1,'OWNER_GOAL_DENIED','legal_entity',$2,$3::jsonb,'command_center_read_only','GREEN','DENIED')`,
+      [intake?.actor??'command-center-owner',legalEntityId,JSON.stringify({reason})]);
+    if(intake)await log(intake.client);else await withTransaction(log);
+    throw Error(reason);
+  };
   const objective=String(input.objective??"").trim();
   if(autonomyEnabled()){
     assertSafeScalar(objective);
@@ -115,7 +123,7 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput,
   const domain=autonomyEnabled()?"development_probe":String(input.domain??"owner_command").trim();
   if(!/^[a-zA-Z0-9_-]{1,80}$/.test(domain)) throw new Error("invalid domain");
   const authority=autonomyEnabled()||readOnlyStage?"GREEN":input.authorityCeiling??"YELLOW";
-  if(readOnlyStage&&input.authorityCeiling!==undefined&&input.authorityCeiling!=='GREEN')throw Error('READ_ONLY_STAGE_AUTHORITY_REQUIRED');
+  if(readOnlyStage&&input.authorityCeiling!==undefined&&input.authorityCeiling!=='GREEN')return denyReadOnly('READ_ONLY_STAGE_AUTHORITY_REQUIRED');
   if(authority!=="GREEN"&&authority!=="YELLOW") throw new Error("authority ceiling must be GREEN or YELLOW");
   const priority=boundedPriority(input.priority);
   if(!readOnlyStage&&(process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==="1"||process.env.NODE_ENV==="production")&&input.acceptanceContract===undefined){
@@ -123,7 +131,7 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput,
   }
   // The isolated autonomy intake deliberately retains its existing field boundary.
   if(autonomyEnabled()&&input.acceptanceContract!==undefined)throw new Error("AUTONOMY_INTAKE_FIELDS");
-  if(readOnlyStage&&input.acceptanceContract!==undefined)throw Error('READ_ONLY_STAGE_REPORT_CONTRACT_REQUIRED');
+  if(readOnlyStage&&input.acceptanceContract!==undefined)return denyReadOnly('READ_ONLY_STAGE_REPORT_CONTRACT_REQUIRED');
   const completion=readOnlyStage?'sam.read_report.v1':input.acceptanceContract===undefined?
     "Owner goal must complete with independently verified evidence.":encodeGoalAcceptance(input.acceptanceContract);
 

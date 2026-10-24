@@ -2,6 +2,7 @@
 // models, production URLs, host control or real business data enter children.
 const {spawn}=require('node:child_process');
 const fs=require('node:fs');
+const {Client}=require('pg');
 const SUITES=['tests/core/reliability.ts','tests/core/tenantWorkload.ts','tests/evaluation/sharedPath.ts','tests/evaluation/budgets.ts'];
 async function runVerification({databaseUrl,sourceCommit,probe}){
  const u=new URL(databaseUrl);
@@ -15,6 +16,18 @@ async function runVerification({databaseUrl,sourceCommit,probe}){
   const started=Date.now(),log='/tmp/sam-verification-'+report.results.length+'.log',output=fs.openSync(log,'w',0o600);
   try{
    const env={PATH:process.env.PATH,TMPDIR:'/tmp',SAM_CORE_TEST_DATABASE_URL:u.href,SAM_VERIFICATION_SOURCE_SHA:sourceCommit};
+   let inspecting=false;
+   const inspector=setInterval(async()=>{
+    if(inspecting)return;inspecting=true;
+    const c=new Client({connectionString:u.href,connectionTimeoutMillis:2000,statement_timeout:2000});
+    try{await c.connect();const rows=(await c.query(`SELECT pid,state,wait_event_type,wait_event,pg_blocking_pids(pid) blockers,
+      extract(epoch FROM clock_timestamp()-query_start)::int age,query
+      FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND state<>'idle'
+      AND query_start<clock_timestamp()-interval '5 seconds' ORDER BY query_start LIMIT 8`)).rows;
+     const sessions=rows.map(({query,...r})=>({...r,statement:String(query).replace(/'(?:[^']|'')*'/g,'?').slice(0,180)}));
+     console.log(JSON.stringify({service:'sam-isolated-postgres-waits',sourceCommit,suite,sessions}));
+    }catch{}finally{await c.end().catch(()=>{});inspecting=false;}
+   },15000);
    const status=await new Promise(resolve=>{
     const child=spawn(process.execPath,['scripts/testing/core-reliability.cjs','--suite',suite],{env,detached:true,stdio:['ignore',output,output]});
     let timedOut=false,hardStop;
@@ -23,6 +36,7 @@ async function runVerification({databaseUrl,sourceCommit,probe}){
     child.on('error',()=>{clearTimeout(timer);resolve({exitCode:null,signal:null,reason:'SPAWN_FAILED'});});
     child.on('close',(exitCode,signal)=>{clearTimeout(timer);clearTimeout(hardStop);if(timedOut)stop('SIGKILL');resolve({exitCode,signal,reason:timedOut?'TIMEOUT':null});});
    });
+   clearInterval(inspector);
    const text=fs.readFileSync(log,'utf8');
    const passed=status.exitCode===0&&text.includes('"failed":0');
    if(!passed){
@@ -30,7 +44,7 @@ async function runVerification({databaseUrl,sourceCommit,probe}){
      .replaceAll(u.password,'[credential withheld]').replaceAll(decodeURIComponent(u.password),'[credential withheld]')
      .replace(/PASSWORD\s+'[^']*'/gi,'PASSWORD [withheld]')
      .replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,'[key withheld]')
-     .split('\n').filter(line=>/Error|Assertion|code:|actual:|expected:|operator:|^FAIL/.test(line)).join('\n').slice(-3000);
+     .split('\n').filter(line=>/Error|Assertion|code:|actual:|expected:|operator:|^FAIL|SHARED_|SOURCE_|^\s+at /.test(line)).join('\n').slice(-5000);
     console.log(JSON.stringify({service:'sam-isolated-verification-diagnostic',sourceCommit,suite,diagnostic}));
    }
    report.results.push({suite,status:passed?'PASS':'FAIL',...status,durationMs:Date.now()-started,privateLogRetained:true});

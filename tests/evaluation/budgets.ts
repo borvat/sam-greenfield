@@ -45,11 +45,13 @@ async function worker(){
  const generic=async(name:string)=>{const t=await openEvaluationTrial(trials[name].id);return withGoalEvaluation(genericBundle,t,t.spec.commit);};
  if(process.argv[2]==='source-crash'){
   const t=await openEvaluationTrial(trials['goal-runtime-source-crash'].id);
+  console.log('SOURCE_TRIAL_OPEN');
   const adapter=fixtureEvaluationAdapter('eval-a',async()=>({model:'fixture',usage:{inputTokens:5,outputTokens:10},output:{steps:[{capabilityId:'source.read',params:{channel:'record'}}]}}));
   const original=Client.prototype.query;
   (Client.prototype as any).query=async function(...args:any[]){if(/INSERT INTO executions\b/.test(String(args[0]))){console.log('SOURCE_CALLBACK_FINISHED_BEFORE_PERSISTENCE');return new Promise(()=>{});}return (original as any).apply(this,args);};
   const composition=createGoalEvaluationComposition({bundle:runtimeFixtureBundle(adapter),trial:t,expectedCommit:t.spec.commit,workerId:'source-crash'});
-  for(let i=0;i<12;i++)await composition.runWorkTick();return;
+  console.log('SOURCE_COMPOSITION_PREPARED');
+  for(let i=0;i<12;i++){await composition.runWorkTick();console.log('SOURCE_RUNTIME_TICK',i+1);}return;
  }
  if(process.argv[2]==='goal-crash'){
   const t=await openEvaluationTrial(trials['goal-crash'].id);
