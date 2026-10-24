@@ -8,6 +8,7 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
       apiKey:string;
       baseUrl:string;
       timeoutMs?:number;
+      maxOutputTokens?:number;
       extraHeaders?:Record<string,string>;
       // Optional transport injection; ordinary provider behavior is unchanged.
       transport?:typeof fetchJson;
@@ -15,6 +16,7 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
   ){}
 
   async invoke(task:ModelTask,model:string):Promise<ProviderResult>{
+    if(this.options.maxOutputTokens!==undefined&&(!Number.isSafeInteger(this.options.maxOutputTokens)||this.options.maxOutputTokens<1))throw Error('PROVIDER_OUTPUT_LIMIT_INVALID');
     const body=await (this.options.transport??fetchJson)(
       `${this.options.baseUrl.replace(/\/$/,"")}/chat/completions`,
       {
@@ -26,6 +28,7 @@ export class OpenAICompatibleChatAdapter implements ModelProviderAdapter{
         },
         body:JSON.stringify({
           model,
+          ...(this.options.maxOutputTokens===undefined?{}:{max_tokens:this.options.maxOutputTokens}),
           messages:[{
             role:"user",
             content:taskPrompt(task)

@@ -18,6 +18,8 @@ export interface ModelTask {
   maxCostUsd?: number;
   preferredProviders?: string[];
   requiredModels?: string[];
+  requiredContextTokens?:number;
+  requiresToolCalling?:boolean;
 }
 
 export interface ProviderConfig {
@@ -28,6 +30,9 @@ export interface ProviderConfig {
   health: "HEALTHY" | "DEGRADED" | "DOWN";
   costPer1kInput: number;
   costPer1kOutput: number;
+  contextWindowTokens?:number;
+  maxOutputTokens?:number;
+  supportsToolCalling?:boolean;
 }
 
 export interface ModelUsage {

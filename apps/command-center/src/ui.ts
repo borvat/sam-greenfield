@@ -10,6 +10,7 @@ export const commandCenterHtml=`<!doctype html>
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.metric .n{font-size:28px;font-weight:700}.metric .l{font-size:12px;color:#6b7280;margin-top:4px}
 .main{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:16px;margin:0}.goal{padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:9px;cursor:pointer}.goal:hover{border-color:#9ca3af}.row{display:flex;justify-content:space-between;gap:10px}.muted{color:#6b7280;font-size:12px}.state{font-size:11px;padding:4px 8px;border-radius:999px;background:#f3f4f6}.btn{border:0;background:#111827;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111827}.form input,.form textarea,.form select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;margin:6px 0 10px;background:white}.form textarea{min-height:105px;resize:vertical}.detail pre{white-space:pre-wrap;overflow:auto;background:#111827;color:#e5e7eb;padding:12px;border-radius:10px;font-size:11px;max-height:420px}.finance{line-height:1.55}.err{color:#b91c1c;font-size:12px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
+body[data-read-only-stage] #goalAdvanced{display:none}
 </style>
 </head>
 <body>
@@ -32,21 +33,24 @@ export const commandCenterHtml=`<!doctype html>
       <div class="card form">
         <div class="section-title"><h2>Create Executive Goal</h2></div>
         <textarea id="objective" placeholder="Example: Review current bol sales and accounting differences and produce a verified owner brief."></textarea>
+        <div id="goalAdvanced">
         <input id="domain" value="owner_command" placeholder="domain"/>
         <select id="authority"><option>YELLOW</option><option>GREEN</option></select>
         <input id="priority" type="number" min="0" max="100" value="70"/>
         <label for="acceptance">Optional owner acceptance contract (JSON; required by release profile)</label>
         <textarea id="acceptance" placeholder='{"version":1,"constraints":[{"capabilityId":"local.calculate","params":{"operation":"max"},"result":{"field":"value","equals":8}}]}'></textarea>
+        </div>
         <button class="btn" onclick="createGoal()">Create Goal</button>
         <div id="formError" class="err"></div>
       </div>
       <div class="card finance" style="margin-top:16px"><div class="section-title"><h2>Latest Finance Brief</h2></div><div id="finance">No brief yet.</div></div>
     </div>
   </div>
-  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><pre id="timeline">Select a goal.</pre></div>
+  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Goal progress and evidence</h2></div><div id="goalProgress" aria-live="polite">Select a goal.</div><h3>Final report</h3><pre id="finalReport">No goal selected.</pre><details><summary>Execution evidence</summary><pre id="timeline">Select a goal.</pre></details></div>
 </div>
 <script>
 let token=sessionStorage.getItem("sam_cc_token")||"";
+let selectedGoal=null,timelineRequest=0;
 async function connect(){
   const value=document.getElementById("bearerToken").value.trim();
   if(!value){document.getElementById("authError").textContent="Enter a bearer token.";return}
@@ -64,13 +68,13 @@ async function api(path,options={}){
   if(!r.ok) throw new Error(body.error||"Request failed");
   return body;
 }
-function metric(label,value){return '<div class="card metric"><div class="n">'+Number(value||0)+'</div><div class="l">'+label+'</div></div>'}
+function metric(label,value){return '<div class="card metric"><div class="n">'+(value==null?'Unknown':Number(value))+'</div><div class="l">'+label+'</div></div>'}
 async function refresh(){
   if(!token){document.getElementById("status").textContent="AUTH REQUIRED";document.getElementById("authPanel").hidden=false;return}
   try{
     const [overview,goals,finance]=await Promise.all([api("/api/overview"),api("/api/goals"),api("/api/finance/latest")]);
     document.getElementById("authPanel").hidden=true;
-    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";
+    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"CONNECTED";
     const o=overview.data;
     document.getElementById("metrics").innerHTML=[
       metric("Active goals",o.active_goals),metric("Active work",o.active_work),metric("Waiting owner",o.waiting_owner),
@@ -79,10 +83,22 @@ async function refresh(){
     document.getElementById("goals").innerHTML=goals.data.map(g=>'<div class="goal" data-goal-id="'+escapeHtml(g.id)+'"><div class="row"><strong>'+escapeHtml(g.business_id+" · "+g.domain)+'</strong><span class="state">'+escapeHtml(g.state)+'</span></div><div style="margin-top:6px">'+escapeHtml(g.objective)+'</div><div class="muted">Priority '+g.priority+' · '+escapeHtml(g.authority_ceiling||"")+'</div></div>').join("")||'<div class="muted">No goals.</div>';
     document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
+    if(selectedGoal)await timeline(selectedGoal);
   }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2)}catch(e){document.getElementById("timeline").textContent=e.message}}
+async function timeline(id){
+  selectedGoal=id;const request=++timelineRequest;
+  document.getElementById('goalProgress').textContent='Loading goal evidence…';
+  try{
+    const x=await api('/api/goals/'+encodeURIComponent(id)+'/timeline');if(request!==timelineRequest)return;
+    const p=x.data.progress,b=x.data.budget;
+    if(!p)throw new Error('Progress data unavailable.');
+    document.getElementById('goalProgress').innerHTML='<strong>'+escapeHtml(p.displayState)+'</strong><p>Started: '+escapeHtml(p.startedAt)+' · Last progress: '+escapeHtml(p.lastProgressAt)+'</p><p>Plan: '+escapeHtml(p.currentPlanId||'Not planned')+' · Attempts: '+escapeHtml(p.attempts)+'</p><p>Executed: '+escapeHtml(p.executedCount)+' · Independently verified: '+escapeHtml(p.verifiedCount)+'</p><p>Tools: '+escapeHtml(p.tools.join(', ')||'None recorded')+'</p><p>'+escapeHtml(b?'Reserved upper bound: USD '+b.reservedUsd+' / '+b.ceilingUsd+' · Remaining reserve: USD '+b.remainingReservedUsd+' · Actual invoice: unavailable':'Goal-linked budget unavailable; no zero cost inferred.')+'</p><p>'+escapeHtml(p.blockedReason.join('; '))+'</p>';
+    document.getElementById('finalReport').textContent=p.finalReport?JSON.stringify(p.finalReport,null,2):'No verified final report recorded.';
+    document.getElementById('timeline').textContent=JSON.stringify(x.data,null,2);
+  }catch(e){if(request!==timelineRequest)return;document.getElementById('goalProgress').textContent='Evidence unavailable: '+e.message;document.getElementById('finalReport').textContent='Unavailable';document.getElementById('timeline').textContent=e.message;}
+}
 async function createGoal(){
   const error=document.getElementById("formError");error.textContent="";
   try{

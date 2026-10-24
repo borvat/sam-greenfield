@@ -56,9 +56,15 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace("Optional owner acceptance contract (JSON; required by release profile)",
               "Required owner acceptance contract (JSON; verified independently)")
             .replace('id="acceptance" placeholder=', 'id="acceptance" required placeholder=')
-            .replace("Number(value||0)",'(value==null?"DISABLED":Number(value||0))')
-            .replace('"LIVE"','"SYNTHETIC PILOT · CONNECTED"')
+            .replace("value==null?'Unknown':Number(value)",'(value==null?"DISABLED":Number(value))')
+            .replace('"CONNECTED"','"SYNTHETIC PILOT · CONNECTED"')
             .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
+        }
+        if(process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){
+          scopedHtml=scopedHtml.replace('<body>','<body data-read-only-stage="true">')
+            .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>')
+            .replace('Owner view of goals, execution, verification and finance.','Read-only test environment. Reports require independent verification; external writes are disabled.')
+            .replace('Example: Review current bol sales and accounting differences and produce a verified owner brief.','Describe a read-only objective and the result you need.');
         }
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
