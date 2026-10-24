@@ -1,0 +1,4 @@
+PASS success: no credential echo; correct dispatch boundary
+PASS cancel: no credential echo; correct dispatch boundary
+PASS preflight_failure: no credential echo; correct dispatch boundary
+PASS noninteractive refusal
