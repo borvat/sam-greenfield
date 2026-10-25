@@ -41,7 +41,7 @@ test('client reconstruction after simulated crash reads stored run instead of cr
   const f=await fixture(t,{running:true}),s=store(),input=task();
   const saved=s.save;let polls=0;
   s.save=async r=>{await saved(r);if(r.runId&&++polls===1)throw Error('simulated SAM crash after receipt persistence');};
-  await assert.rejects(f.client.execute(input,s),/simulated SAM crash/);s.save=saved;
+  await assert.rejects(f.client.execute(input,s),/HERMES_WORK_NO_LONGER_AUTHORIZED/);assert.equal(f.stops(),1);s.save=saved;
   const receipt=await s.load();assert.equal(receipt?.runId,'run_fixture');
   const second=await fixture(t);await second.client.execute(input,s);
   assert.equal(second.requests.filter(r=>r.method==='POST').length,0);assert.equal(f.executions(),1);

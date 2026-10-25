@@ -92,7 +92,11 @@ export class HermesClient {
         try{accepted=runSchema.parse(await this.request('/v1/runs','POST',body,`sam-hermes:${task.task_id}`,deadline));break;}
         catch(e){if(!(e instanceof HermesError)||!['HERMES_TRANSPORT_UNCERTAIN','HERMES_HTTP_503','HERMES_HTTP_429'].includes(e.code)||attempt===1)throw e;}
       }
-      receipt={taskHash:hash,runId:accepted.run_id,status:accepted.status};await store.save(receipt);
+      receipt={taskHash:hash,runId:accepted.run_id,status:accepted.status};
+      try{await store.save(receipt);}catch{
+        await this.stop(receipt.runId!).catch(()=>{});
+        throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');
+      }
     }
     while(this.now()<deadline){
       try{await store.assertActive();}catch{await this.stop(receipt.runId!).catch(()=>{});throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');}
@@ -103,7 +107,10 @@ export class HermesClient {
       }
       if(polled.run_id!==receipt.runId)throw new HermesError('HERMES_RUN_ID_MISMATCH');
       receipt={taskHash:hash,runId:polled.run_id,status:polled.status,...(polled.output===undefined?{}:{output:polled.output}),runtime:polled.runtime};
-      await store.save(receipt);
+      try{await store.save(receipt);}catch{
+        await this.stop(receipt.runId!).catch(()=>{});
+        throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');
+      }
       if(terminal.has(receipt.status))return receipt;
       await new Promise(r=>setTimeout(r,this.config.pollMs??1000));
     }
