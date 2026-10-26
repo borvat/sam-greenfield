@@ -125,3 +125,19 @@ No application source was deployed, coding tool enabled, previous arithmetic tas
 Next action: user completes ONLY the pending provider SDK authorization in the secure browser. Then validate the stored credential without showing its contents, verify the cost gate is still effective, and resume the official integration/live isolation gate. The coding repair, independent verifier, wrong-result rejection, coding Draft PR and restart-persistence acceptance remain NOT RUN. The prior arithmetic acceptance is unchanged.
 
 New billable compute/model/resource usage initiated: none. Existing hosting continues. Financial approval is already granted for this one bounded campaign and must not be requested again unless the requested scope/cost changes. This handoff is authentication, not renewed financial authorization.
+
+
+## Live provider gate checkpoint
+
+User-completed SDK authentication was verified using a read-only API call without displaying credential contents. The accepted financial boundary was rechecked before provider compute; account-specific billing data remains private.
+
+Two REAL provider gate sandboxes were used sequentially, with no model request:
+- Attempt 1 correctly failed closed because the ordinary exec path did not meet the intended non-root/resource-observability checks. Tools stayed disabled. The failure evidence was retained. A cleanup-status handling issue was independently resolved by checking the provider terminal state; the sandbox was stopped.
+- After identifying the cause, the one corrected attempt passed the tested negative checks under a trusted privilege-dropping/limit-setting command launcher. Network/DNS restrictions, synthetic host-canary and credential absence, denied privilege escalation/limit increase, protected filesystem refusal, workspace access and CPU/memory/process-limit rejection were exercised inside the actual external sandbox. A separate wall-time test terminated a sleeping command at its deadline. Provider resource limits were explicitly requested; in-guest cgroup files were not visible, so tested process hard limits and overrun behavior are the direct measurement evidence.
+- The corrected sandbox was terminated and terminal cleanup confirmed. No credentials, host state, volumes or publisher authority were uploaded.
+
+This is acceptance of the bounded tested execution policy only. The unchanged Hermes backend is NOT accepted as safe by this test. The hardened launcher is not yet wired into Hermes/SAM tools, and no agent-generated coding task has run. Keep tools disabled until every exposed remote command/file path uses the accepted policy.
+
+Private before/after reports and trusted probe/controller source are to be retained on the existing evidence disk; public handoff omits account/resource identifiers and sensitive operational details. No new application deployment, production change, arithmetic replay or PostgreSQL window renewal occurred.
+
+Next: verify SAM's current readiness and coordinator authorization, preserve repeatable gate artifacts, then wire the bounded official integration and independent coding verifier only if that lifecycle is authorized. Do not renew the old arithmetic window. No cloud sandbox remains running from the completed gate tests.
