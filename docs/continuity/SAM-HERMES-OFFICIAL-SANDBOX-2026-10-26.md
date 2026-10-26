@@ -141,3 +141,30 @@ This is acceptance of the bounded tested execution policy only. The unchanged He
 Private before/after reports and trusted probe/controller source are to be retained on the existing evidence disk; public handoff omits account/resource identifiers and sensitive operational details. No new application deployment, production change, arithmetic replay or PostgreSQL window renewal occurred.
 
 Next: verify SAM's current readiness and coordinator authorization, preserve repeatable gate artifacts, then wire the bounded official integration and independent coding verifier only if that lifecycle is authorized. Do not renew the old arithmetic window. No cloud sandbox remains running from the completed gate tests.
+
+
+## Final bounded isolation delivery — coding blocked by coordinator lifecycle
+
+Real external isolation-gate result: **21 guest checks PASS plus a separate wall-clock deadline test PASS** on the corrected second attempt. Independent SDK readback confirmed both gate sandboxes terminal and no running provider sandbox. Native Hermes has no active run and its tools remain disabled; no new model execution occurred. Keep the first failed attempt as evidence; do not re-run these accepted probes routinely.
+
+Repeatable trusted controller, guest probe and launcher source, both attempt reports and final independent readback are retained privately on the existing evidence disk in the sam-modal-gate-*.json files. Source evidence has an independent content digest and owner-only permissions. No credential value is in those evidence files. Exact account/billing values stay private; the final private readback records the dashboard's displayed charge/usage, rounding precision and the fact that an exact sub-cent/final invoice amount is unverified. No payment method, upgrade, paid inference or ongoing cloud compute was activated.
+
+The provider substrate and the tested privilege-dropping/resource-bounded launcher are now empirically exercised. This does not certify every possible escape or authorize the unchanged Hermes remote backend. The hardened command/file routing and SAM independent coding verifier are still not wired or deployed. No agent-generated repair, coding-task Draft PR, wrong-code rejection or coding-record restart acceptance has run. The previous arithmetic acceptance remains preserved and was not repeated.
+
+### Current concrete blocker
+
+SAM readiness returned HTTP 502. Runtime logs show orderly child shutdown at the prior bounded deadline, followed by repeated SAM_TEST_STORAGE_START_FAILED messages. The deployed storage-lease source deliberately stops children before role-window expiry and its startup preflight refuses an expired/invalid restricted principal. This is consistent with the already documented fixed evaluation deadline having elapsed. The current PostgreSQL role catalog was NOT re-read with an administrative account, and no claim is made that its present flags were independently re-audited. An attempted read-only shell check could not attach to a live SAM terminal, and no command was sent by that failed attempt.
+
+Do not defeat the storage/probe lifecycle checks, use admin credentials as the application identity, silently reuse the arithmetic window, or assume the Modal spending approval authorizes a PostgreSQL renewal. The user's explicit independent-authorization condition still applies.
+
+A next operator needs independent authorization for ONE fresh, maximum-60-minute coding evaluation window on the existing restricted role/schema, with unchanged grants/password/network and no automatic renewal. Activation must wait until coding capability, accepted launcher routing and independent verifier preparation is complete. Do not start the clock while preparing. This is a separate lifecycle authorization; the USD 5 campaign approval is already granted and must not be requested again. If safe role-state verification fails or broader privileges would be needed, stop.
+
+### Resume / pending operations
+
+- GitHub work remains on existing Draft PR #66; no main push or PR merge.
+- SAM application source remains ad64a6a; Hermes image/model policy unchanged. No new rollout.
+- All gate sandboxes have been stopped; no cloud job is pending.
+- The operator SDK credential is short-lived; do not display its file or renew it automatically. It may expire before resumption.
+- No coding tool, general Terminal/GitHub access or unrelated connector was enabled.
+- No old goal, successful arithmetic task or accepted isolation probe should be replayed.
+- Before real projects: finish the restricted coding integration and independent immutable-test verifier, perform one synthetic repair including wrong-result refusal and test-only Draft PR publication, then prove persisted task/receipt identity across coordinator restart without a second execution. The current evidence is bounded isolation acceptance, not full coding readiness.
