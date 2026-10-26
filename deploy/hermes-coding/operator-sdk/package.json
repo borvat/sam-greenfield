@@ -1,0 +1,7 @@
+{
+  "name": "sam-trusted-operator-auth-only",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": { "modal": "0.11.1" },
+  "description": "Trusted-host authentication preflight only; never transferred to a candidate guest."
+}

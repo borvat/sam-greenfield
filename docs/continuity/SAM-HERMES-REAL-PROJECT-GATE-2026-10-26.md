@@ -1,3 +1,126 @@
+## Owner stored replacement; credential activation prepared but NOT granted — 2026-10-26 06:42 UTC
+
+The owner confirmed replacing the existing Modal fields (no duplicate fields,
+no deletion, no secret in chat). Fresh Render UI shows the four expected field
+names masked in sam-bounded-publisher-vault, still linked to NO service. No
+Show/Copy secret was used. Masked presence is not successful authentication.
+
+Modal workspace ceo-53153 now shows API tokens (1). A SHA-256 fingerprint of
+the visible token IDENTIFIER was computed without printing the identifier:
+b2f871d28fded6eafd141b82ee436d116cadc90db65af05cbdf46beff0c1dd47
+It binds the trusted-host Modal check to the independently observed account
+token. No actual token secret or GitHub PEM was read by the engineer.
+
+### New UNREGISTERED authentication-only components
+
+- trusted_auth_preflight.cjs: separate child environments for Modal and GitHub.
+  No model/DB/SAM bearer/preload variable is inherited by either child. They
+  never receive one another's credentials. Modal credentials must match the
+  observed account-token fingerprint before SDK/network use.
+- Modal JS SDK 0.11.1 is exact-pinned with a complete integrity lock in the
+  separate operator-sdk directory. This does NOT replace the accepted Python
+  1.6.2 fixture broker or add any dependency to the real UI/candidate guest.
+  The SDK makes environment lookup(createIfMissing:false) and Sandbox LIST
+  requests only. Any active guest fails the gate without touching it.
+- GitHub child uses the existing fixed App fingerprint/scope preflight. It
+  authenticates, mints a single-repository token, inspects protected main and
+  repo inventory, then revokes the token. There is no repository-write route.
+  Publication remains disabled; the group flag is not changed.
+- auth_only_launcher.cjs downloads six reviewed artifacts from ONE pinned
+  commit, verifies every exact hash/size, uses root-private temporary paths,
+  installs with ignore-scripts + omit-optional, and passes NO secrets/config
+  to npm. Temporary source/dependencies are removed on success and failure.
+  All vault credentials are removed from the host environment after capture.
+- The launcher deliberately hosts DIAGNOSTICS ONLY after checking, with no
+  SAM runtime, database client, Hermes/model task or guest. This avoids an
+  authentication replay loop caused by the existing storage startup failure.
+  /_operator/health reports operator availability and applicationReady:false;
+  /readyz and all application routes remain HTTP 503. No failure is hidden
+  as successful SAM readiness. Result file is private/exclusive-create and
+  output is sanitized; no authentication-evidence API is publicly exposed.
+  The at-most-15-minute operator admission deadline is NOT a runtime/PG window.
+  This is not durable real-job deduplication after container replacement.
+
+Twenty local tests pass (13 child/credential checks + 7 launcher checks).
+Synthetic credentials and API clients; no actual provider authentication.
+The installed SDK also loads/version-checks locally with a synthetic client
+without any network/authentication/compute call.
+
+Audit findings were not hidden: the initial assertion that every dependency
+was hook-free failed (protobufjs and optional cbor-extract declare hooks).
+Installation hooks were NEVER executed. Final control is fixed
+--ignore-scripts and --omit=optional, with integrity checks for every package;
+the native optional extractor is not installed. The separate candidate/guest
+policy is unchanged and still permits no dependency download.
+A local npm invocation initially rejected using /dev/null as BOTH user and
+global config; corrected to a separately reviewed empty global config file.
+The final clean installation succeeded and no credential was involved.
+
+### Newly verified recovery hazard: do NOT redeploy the configured branch
+
+SAM's latest deploy record is still dep-dbfcs1ss728c73euoid0, source
+93f37e535ceafe7b9053afe96b083a2a12d607ba, labelled Live by Render.
+That label does NOT prove current readiness. Two public /readyz probes return
+HTTP 502. Render events confirm repeated non-zero exit 1, including 06:23 and
+06:28 UTC. Application logs at 06:24/06:29 report:
+SAM_TEST_STORAGE_START_FAILED; no provisioning or live activation performed.
+The precise internal storage rejection/role deadline has NOT been established;
+do not automatically renew a role/window or infer it solely from this message.
+
+The CONFIGURED deploy/isolated-render-test-20261024 branch points to
+654a15a517e1339ff0e6f94cd9b3d5d3dd3bd11b, which is 32 commits BEHIND the
+published source. A configuration-triggered deploy of that tip would undo
+accepted hardening. No SAM setting or deploy was changed this resumption.
+
+Prepared review/hermes-auth-baseline-20261026 at
+d731a6ed47986c4a8d7ff03557c0985190068d98, a metadata-only [skip ci] commit
+whose parent is the published 93f37e5 and whose tree is IDENTICAL:
+89be8d56b685aeaafb6e14eb84a8a4fec2159f96.
+This pins a safe source/recovery baseline without modifying any code or main.
+The original SAM Docker Command is empty (image default); HTTP health path is
+empty (TCP check); autoDeploy=no. Do not deploy the lagging original branch.
+
+### Concrete next activation and restoration
+
+The SAM TEST Environment page is prepared with sam-bounded-publisher-vault
+selected and Link only NOT pressed. Linking grants this one service access to
+the new Modal pair AND existing GitHub App PEM. It must NEVER link to Hermes,
+a candidate/guest, another company service, or production.
+
+Before the final Link only action, obtain the explicit action-time
+confirmation required for granting this service new security-sensitive access.
+The owner has authorized storage and the USD 1 Modal round, but has not yet
+confirmed this service binding. Do not confuse it with spend authorization.
+
+After that confirmation: Link only (no automatic deploy), pin service source to
+the reviewed unchanged baseline above BEFORE any configuration-triggered
+deploy, and run ONLY the hash-pinned diagnostic launcher on the existing SAM
+TEST plan. Use a newly fixed operator deadline, no PG/model/runtime activation.
+Never use the old configured branch tip. Inspect actual sanitized auth result;
+fail instead of broad-token fallback or silently renewing any credential.
+
+On failure or end of the bounded round: unlink this group BEFORE restoring
+the image's original empty Docker Command, retain autoDeploy=no, and pin any
+restoration deploy to the exact reviewed baseline. Do not deploy the old
+lagging branch while restoring settings. Operator-only health is not SAM
+application health; the existing storage failure still needs diagnosis before
+a fresh runtime window. No production/service-secretary setting is involved.
+
+### Current proof boundary and cost
+
+No Render service setting, link or deployment was changed in this resumption.
+No new cloud App/image/Sandbox, model call or paid resource was initiated.
+Only local package preparation/download and synthetic tests occurred.
+The USD 1 approval persists within the existing account cap; no budget/card/
+plan change. Exact existing hosting invoice delta remains unaudited.
+
+Real UI source is untouched. No real Hermes fix, new independent live SAM
+acceptance, repair Draft PR, new PG restart proof or real-job deduplication
+result. Expanded live gates (frozen Node guest, death cleanup, real transfer,
+independent verification and trusted publication) remain pending.
+
+---
+
 ## OWNER HANDOFF: invalid Modal credential; all diagnostic startup changes restored — 2026-10-26 05:55 UTC
 
 Current status: financial approval recorded, live real-project admission BLOCKED.
