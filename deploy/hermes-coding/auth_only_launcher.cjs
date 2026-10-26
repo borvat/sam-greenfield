@@ -11,7 +11,7 @@ const {createHash}=require('node:crypto');
 const {spawnSync}=require('node:child_process');
 const http=require('node:http');
 const ARTIFACTS=Object.freeze({
-  "trusted_auth_preflight.cjs": "478ef72bccdf429105ef1704dfd0155d18be3cc5f5a80049cc21429ccce6e118",
+  "trusted_auth_preflight.cjs": "404b43f872b2f48e1faf96ee045a09abb3a393840e2d75c69bfcf6ddf6793118",
   "publisher_identity.cjs": "4f5cd958eaaa25efd92aef710526f7281f22ee3d8829f06b87c44a9c7288b57b",
   "publisher_auth_preflight.cjs": "3b3fe330cc1898ca63ddccb95fb4256f0fe6681047916c6eb0321d63ca8ba382",
   "operator-sdk/package.json": "d94930738ed232fc27f553c94447bbe233242ec38cb73cba8372176e5e84043e",
@@ -19,7 +19,7 @@ const ARTIFACTS=Object.freeze({
   "operator-sdk/global-empty.npmrc": "43064fc7d5b3d3c402e93ba9909579bff00a2aaaed2f91be5d57c4a37cba45ad"
 });
 const VAULT_KEYS=Object.freeze(['sam-github-publisher.pem','SAM_GITHUB_APP_PRIVATE_KEY',
- 'SAM_MODAL_OPERATOR_TOKEN_ID','SAM_MODAL_OPERATOR_TOKEN_SECRET']);
+ 'SAM_MODAL_OPERATOR_TOKEN_ID','SAM_MODAL_OPERATOR_TOKEN_SECRET','SAM_MODAL_EXPECTED_TOKEN_ID_SHA256']);
 function deny(code){throw new Error(code)}
 function scrubVault(env){for(const key of VAULT_KEYS)delete env[key];return env}
 function verifyArtifact(name,bytes){

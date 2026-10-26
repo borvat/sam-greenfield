@@ -96,3 +96,14 @@ test('all SDK artifacts are integrity pinned; install hooks and native optional 
   assert.ok(auth.NPM_ARGS.includes('--omit=optional'));
   assert.ok(Object.isFrozen(auth.NPM_ARGS));
 });
+test('private operator binding reaches only Modal and authenticates exact replacement identity',async()=>{
+  const bound={...env,SAM_MODAL_EXPECTED_TOKEN_ID_SHA256:digest};
+  const modal=auth.childEnvironment(bound,'modal');
+  assert.equal(modal.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256,digest);
+  assert.equal(auth.childEnvironment(bound,'github').SAM_MODAL_EXPECTED_TOKEN_ID_SHA256,undefined);
+  const f=fixture();assert.equal((await auth.inspectModal(modal,f.Client)).authenticated,true);
+  const wrong=fixture();await assert.rejects(auth.inspectModal({...modal,SAM_MODAL_EXPECTED_TOKEN_ID_SHA256:'0'.repeat(64)},wrong.Client),/ACCOUNT_BINDING_DENIED/);
+  assert.equal(wrong.calls.length,0);
+  const malformed=fixture();await assert.rejects(auth.inspectModal({...modal,SAM_MODAL_EXPECTED_TOKEN_ID_SHA256:''},malformed.Client),/ACCOUNT_BINDING_DENIED/);
+  assert.equal(malformed.calls.length,0);
+});

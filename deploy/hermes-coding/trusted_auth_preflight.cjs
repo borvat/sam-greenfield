@@ -17,12 +17,14 @@ function childEnvironment(env,kind){
   const clean={PATH:'/usr/local/bin:/usr/bin:/bin',TMPDIR:'/tmp',HOME:'/nonexistent'};
   if(kind==='modal'){
     for(const key of KEYS.slice(0,2))clean[key]=env[key]??'';
+    if(env.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256!==undefined)clean.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256=env.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256;
   }else if(kind==='github'){
     for(const key of KEYS.slice(2))if(env[key]!==undefined)clean[key]=env[key];
   }else deny('SAM_AUTH_CHILD_DENIED');
   return clean;
 }
-async function inspectModal(env,Client,expectedTokenHash=TOKEN_ID_SHA){
+async function inspectModal(env,Client,expectedTokenHash=env.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256??TOKEN_ID_SHA){
+  if(!/^[a-f0-9]{64}$/.test(expectedTokenHash))deny('SAM_AUTH_MODAL_ACCOUNT_BINDING_DENIED');
   const id=env.SAM_MODAL_OPERATOR_TOKEN_ID,secret=env.SAM_MODAL_OPERATOR_TOKEN_SECRET;
   if(typeof id!=='string'||!/^ak-[A-Za-z0-9_-]{5,256}$/.test(id)||
      typeof secret!=='string'||!/^as-[A-Za-z0-9_-]{5,512}$/.test(secret))deny('SAM_AUTH_MODAL_CREDENTIAL_FORMAT_DENIED');
@@ -77,7 +79,7 @@ function runChildren(env,spawn=spawnSync){
        kind==='github'&&parsed.tokenRevoked!==true)deny('SAM_AUTH_CHILD_RESULT_DENIED');
     if(kind==='modal'){
       if(parsed.authenticated!==true||parsed.sdk!=='0.11.1'||parsed.workspace!=='ceo-53153'||
-         parsed.tokenIdSha256!==TOKEN_ID_SHA||parsed.environment!=='main'||
+         parsed.tokenIdSha256!==(env.SAM_MODAL_EXPECTED_TOKEN_ID_SHA256??TOKEN_ID_SHA)||parsed.environment!=='main'||
          !/^en-[A-Za-z0-9]+$/.test(parsed.environmentId||'')||parsed.activeSandboxes!==0||
          parsed.guestCreations!==0||parsed.modelCalls!==0)deny('SAM_AUTH_CHILD_RESULT_DENIED');
     }else{
