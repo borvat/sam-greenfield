@@ -52,9 +52,11 @@ export class PostgresModelLedger {
     let broken: Error | undefined;
     const onClientError = (error: Error) => { broken = error; };
     // A server restart can leave a stale socket in the pool until its error is
-    // delivered. Replace it only before fn has run: never replay a transaction,
-    // a possibly committed reservation, or a provider dispatch.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // delivered. Drain at most the existing idle slots plus one fresh checkout,
+    // only before fn runs. Never replay a transaction, a possibly committed
+    // reservation, or a provider dispatch.
+    const checkoutLimit = this.pool.idleCount + 1;
+    for (let attempt = 0; attempt < checkoutLimit; attempt++) {
       const candidate = await this.pool.connect().catch(() => deny('AI_LEDGER_UNAVAILABLE'));
       candidate.on('error', onClientError);
       try { await candidate.query('BEGIN'); c = candidate; break; }
