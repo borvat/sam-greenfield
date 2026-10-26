@@ -1,0 +1,11 @@
+✔ exact money does not use floating point and rounds partial micro-USD conservatively (1.944715ms)
+✔ SAM verifier accepts signed scope and rejects forged, expired, wrong audience/project and read-only tokens (65.594791ms)
+✔ stable content fingerprint binds task, approval, project, environment and SAM queue IDs (1.02469ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 283.30458

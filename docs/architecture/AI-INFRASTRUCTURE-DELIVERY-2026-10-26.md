@@ -1,3 +1,5 @@
+> Historical initial delivery. For the next increment and PostgreSQL blocker, see [durable delivery](AI-INFRASTRUCTURE-DURABLE-DELIVERY-2026-10-26.md).
+
 # Surooh isolated secrets and AI infrastructure — delivery
 
 Scope: draft-only additive implementation on main b55da2761e8fd1de3833be55f03d4fdd268cd0a3.

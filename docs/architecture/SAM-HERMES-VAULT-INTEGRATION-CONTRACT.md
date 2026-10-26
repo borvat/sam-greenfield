@@ -1,70 +1,118 @@
-# Proposed SAM–Hermes–Vault contract (not activated)
+# SAM–Hermes–AI infrastructure contract, revision 2 (PROPOSED)
 
-Status: isolated extension passes local tests; the SAM–Hermes owner has not accepted this contract.
-No changed runtime, startup, environment variable, database, deployment, tool or Hermes message format.
+Date: 2026-10-26. PR83 owns this extension. No acceptance by the Hermes engineer is recorded.
+This document does not activate or authorize a shared schema/runtime change.
 
-## Ownership and API boundary
+## Responsibility map
 
-SAM remains the executive and the sole model-routing owner. Hermes submits a model task to SAM;
-it never receives provider keys, Vault tokens or an admin/read-secret tool. There is no second gateway.
-The isolated package implements SAM's existing `ModelProviderAdapter` interface. `scopedAiAdapter`
-returns `providerId` and `invoke(task, model)` only. The privileged constructors are server dependencies.
+| Operation | Responsible component | Evidence / boundary |
+|---|---|---|
+| Submit model task and own goal/plan | SAM executive/runtime | Existing goals, work_queue, execution IDs and fencing token |
+| Execute delegated work | Hermes under SAM | Existing protocol unchanged; no model-provider or Vault credential |
+| Authenticate caller | Existing SAM OAuth verifier | Signature, issuer, audience, subject, client, scope and expiry; opaque branded identity |
+| Resolve project/environment/service rights | SAM persisted authorization mapping | Verified actor + org/legal entity matched to enabled DB grant/project; body fields ignored |
+| Select provider/model | Existing SAM ModelGateway registry/router | Extension has no routing or fallback loop |
+| Admit/reserve/update cost | PostgresModelLedger extending model_calls | Atomic locks over global/project/goal/task budget periods; existing approvals consumed |
+| Read provider credential | Trusted server-side provider adapter | Project/environment Vault reader, no list/write rights; test adapter is loopback-only |
+| Persist result usage/accounting | SAM model_calls + existing audit_log | One canonical row; result digest, usage, requested/reported identity, exact costs |
+| Cancel invocation | SAM invocation owner | AbortSignal; possible sends retain reservation and cannot automatically fall back |
+| Rotate/revoke provider key | Separate Vault writer/operator | Existing Vault ACL/CAS/audit; no migration of real keys in this phase |
+| Set limits/reconcile evidence/revoke service | Approved SAM administrator | Existing approvals bound to exact operation, project scope and append-only audit |
 
-## Proposed flow
+## Authentication and authoritative scope
 
-1. **Task request:** the current Hermes owner maps its existing task/request ID into a SAM invocation.
-   No Hermes protocol changes are implemented here. Require task, capability, input, classification,
-   deadline/cancellation and stable idempotency identity. Caller cannot choose a project/secret path.
-2. **Identity:** independently verify a project/environment/service identity. The process-local test
-   identity registry is not production authentication. Production needs reviewed short-lived OIDC/mTLS,
-   audience binding, issuer validation, revocation and operational credential rotation.
-3. **Selection:** existing SAM registry/router remains authoritative. The optional eligibility extension
-   requires measured quality, success rate, latency, privacy permission and fresh reviewed tariffs
-   before cost ranking. Unmeasured quality, unknown pricing and stale profiles remain ineligible.
-4. **Credential use:** a trusted fixed mapping selects a separate Vault reader for exactly the verified
-   project/environment. Vault KV-v2 ACL grants `read` on explicit AI provider paths only. No list, write,
-   sys, auth, cross-project, GitHub, Render, financial, signing, accounting or DB privileges.
-5. **Usage:** provider prompt/completion/cache-hit tokens must be valid integers. Absent usage remains
-   an error, never zero. Cache discounts require an explicit reviewed hit tariff and measured hits.
-   Explicit cache-creation requests are unsupported because they can incur separate billing.
-6. **Budgets:** reserve conservative full context-input capacity plus capped output before dispatch;
-   check task and project budgets. Current ledger is single-process/test only. Production requires a
-   transactional shared ledger, durable idempotency and reservation recovery across restarts/replicas.
-   Do not open production using the local ledger. Current local ledger has a lifetime ceiling and fixed
-   rolling minute limits; it does not implement a monthly budget reset.
-7. **Failure:** network timeout, provider 429/5xx, malformed data, absent usage, ambiguous billing or
-   failed audit retain the full reservation. No automatic repeat or fallback under the same task ID.
-   Provider 429 imposes a cooldown. The existing gateway's fallback loop needs coordinated admission
-   and failure classification; this task does not modify it. Explicit proof of a pre-dispatch failure
-   could permit later manual reconciliation; no automatic refund is implemented.
-8. **Return:** pass only accepted model output, model identity and normalized usage through SAM's
-   existing result contract. Reject known credential echoes. Audit includes fixed scope, hashed request
-   identity, usage and costs; no prompt, response body, headers, arbitrary errors or raw keys.
-9. **Revocation/cancel:** revoked/expired identity or disabled/deleted key denies the next request.
-   Identity is rechecked before dispatch and before response delivery. A dispatched request cannot be
-   un-sent by revoking its key. Optional AbortSignal cancels local in-flight transport; ambiguous spend
-   remains reserved. Vault reader revocation and provider-side key revocation are separate controls.
-10. **Acceptance:** execute unchanged contract tests, isolated live free-quota checks, independent SAM
-    receipt verification, cancellation/duplicate/crash tests and explicit runtime coordination before
-    wiring. Mocked provider results are wire-contract evidence only, never live model-quality evidence.
+`authenticateSamModelToken` reuses `apps/mcp/src/oauthResource.ts`. It does not issue credentials or add a
+login/certificate authority. The accepted interface in this phase is SAM's signed synthetic-submit scope.
+The opaque identity cannot be made by passing project_id/service_id fields. It must be re-authenticated
+following a process restart; durable grants, revocations and project enablement live in PostgreSQL.
+Internal/live SAM OAuth wiring is not claimed implemented. Production identities remain an integration gate.
 
-## Compatibility gate
+The trusted SAM composition supplies goalId, queueId, optional executionId, fencing attemptId, approvalId
+and stable logical requestKey. Derive requestKey from the logical goal/queue/operation, not an HTTP retry
+UUID. A restarted attempt with altered content/fence must not silently receive a new logical request key.
+The ledger checks actual goal company_scope, work_queue goal/fence and optional execution linkage.
 
-| Gate | Current state |
+Request fingerprints bind task type, canonical JSON content, capability/privacy/model requirements,
+ceiling, verified actor/project/environment and SAM identifiers. Unsupported JSON objects/nonfinite numbers
+are rejected; prototype-named JSON keys remain part of the fingerprint. Duplicate IDs never send again;
+a different content hash is rejected explicitly. No automatic cached model output replay is implemented.
+
+## Storage and accounting
+
+`model_calls` remains the single call/spend record. Proposed additive SQL is in
+`packages/ai-infrastructure/sql/001_durable_model_calls.sql`, outside the shared migrator's discovery path.
+Auxiliary tables contain authorization, approved limits, call-to-budget membership and evidence only.
+They are not a second spending ledger. Existing `approvals`, `audit_log`, goals and work_queue are reused.
+
+| Value | Meaning |
 |---|---|
-| SAM–Hermes base integration accepted by its owner | Pending; PRs 65–67 still open at audit |
-| Stable task/result/cancellation interfaces | Local adapter compatibility only; owner review pending |
-| Shared DB/schema compatibility | No shared changes; durable ledger schema intentionally absent |
-| Identity/delegation policy accepted | Test identities only; production OIDC/mTLS pending |
-| Contract/security tests | Local tests with real Vault + synthetic provider HTTP |
-| Live provider/free account quota | Not established; all external calls default-denied |
-| Runtime coordination | Not granted for existing services; none changed |
+| ai_estimated_microusd | Planning estimate using actual text envelope and a small expected output allowance |
+| ai_reserved_microusd | Conservative UTF-8-plus-approved-framing input bound and capped maximum output |
+| ai_exposure_microusd | Amount counted against budget now; full reserve for unknown possible sends |
+| ai_input/output/cached_tokens | Provider-reported validated usage, NULL when unknown |
+| ai_computed_microusd | Calculated charge using the frozen reviewed tariff; not an invoice |
+| ai_invoiced_microusd | Only separately approved verified invoice evidence; otherwise NULL |
 
-## Deployment proposal, requiring a separate decision
+Amounts use BIGINT micro-USD + BigInt arithmetic, conservative ceiling of sub-micro amounts. Tariff rates
+are exact micro-USD per million tokens. No floating legacy cost is treated as authoritative for this path.
+Request input and provider raw output/headers/errors are not stored here. Requested and reported model
+identities are separate. Missing reported identity is an error; aliases require an explicit reviewed allowlist.
+Provider identity/usage are provider claims, not independent proof. The legacy chat adapter does not expose
+all receipt identifiers; absent request identity remains NULL, never invented.
 
-Use a dedicated trusted credential broker/worker isolated from agent execution. Keep Vault's
-encryption/seal lifecycle, persistent encrypted storage, TLS, backups and audit with a mature manager.
-Separate mount/policy/identity domains for financial and administrative secrets. Render stores only the
-minimum broker bootstrap credential; agents/projects receive scoped invocation authority.
-Do not attach the existing Hermes publisher vault group or its private key to this package.
-No paid resource, external account, secret migration or runtime publication was created here.
+Budget periods for GLOBAL/PROJECT/GOAL/TASK are locked in deterministic order, then exposure is summed
+from model_calls within the transaction. Missing/overlapping/expired/unapproved periods fail closed.
+Limit revisions use CAS + audit. Expiry/new periods do not delete or reassign historical calls/reservations.
+Unallocated legacy model_calls cause admission to close; allocating historical charges requires a separately
+reviewed migration/evidence decision, not an assumed zero or wiping history.
+
+## Lifecycle
+
+RESERVED commits before secret access. The real wire adapter obtains its scoped credential and then commits
+DISPATCHING immediately before a possible send. A proven failure while still RESERVED becomes NOT_SENT
+with zero exposure while retaining the original estimate/reserve. DISPATCHING/unknown response, missing
+usage, cancellation or storage trouble remains held as UNRESOLVED (or DISPATCHING until recovery marks it).
+No provider exactly-once guarantee is asserted. A timeout does not prove the provider did not execute.
+
+Validated usage becomes SUCCEEDED with calculated exposure. A revoked caller still has its accounting
+record retained, but must not receive the result. Optional approved receipt/invoice reconciliation appends
+evidence and updates exposure; it never deletes the request or authorizes a resend. The administrator can
+prove NOT_SENT only for an atomic RESERVED row, preventing a racing old worker from dispatching it later.
+
+## Actual Gateway integration change (not applied to shared files)
+
+The minimal proposed hook is `ModelGateway.withModelCallBoundary(boundary)`. Selection is unchanged.
+The existing Gateway calls reserve -> execute -> finish; any boundary-controlled error invokes fail(), which
+throws terminally before the legacy fallback/write path. Thus there is one model_calls row, not a new legacy
+row for the same cost. Missing adapter and mixed boundedEvaluation/boundedSynthetic contracts fail closed.
+
+Exact-source patches are in `packages/ai-infrastructure/integration/`. They were applied only to disposable
+copies of the actual PR83 base and Hermes 2a488c8 gateway. Hermes 3570e30 has the identical gateway blob
+769d2d3774aa3eac81e07d9e25ea9ce6a6093d8b; its intervening change was documentation only.
+Seven local Gateway cases per source passed using a storage test double, real Vault and synthetic HTTP.
+The PostgreSQL + actual Gateway + Vault acceptance case exists but is BLOCKED, not passed.
+
+## Disable / rollback
+
+Do not hot-swap a boundary during a running request. Drain/fence new admission, preserve unresolved rows,
+and stop attaching the hook in the next coordinated composition. Restore SAM's existing adapter map and
+existing secret source. Omission of the hook retains old behavior (locally regression-tested). Do not DROP
+columns/tables, clear exposure, reset counters or delete evidence when disabling. Existing spending records
+remain; the old path cannot be claimed governed by new limits. Re-enable only after legacy-history allocation.
+
+## Unmet compatibility/operation gates
+
+- Real PostgreSQL concurrency, process/server-crash and durable revocation acceptance: BLOCKED by local OS UID restrictions.
+- Shared schema, tenant RLS, least-privilege runtime/admin roles: proposed only; no role or shared table changed.
+- Existing circuit-breaker query counts success=false reservations; its handling of pending AI rows needs owner review
+  before concurrent pilot use. No shared health-query change was made here.
+- Internal/live identity bootstrap and any real-provider bounded wire profile: not activated. DeepSeek's existing
+  DEEPSEEK_API_KEY environment path remains untouched; no value was requested, read, copied or rotated.
+- Central hosted Vault, seal/recovery/backups and operator audit retention remain deployment decisions. Disposable
+  local Vault tests do not establish hosted availability. No publisher/GitHub secret group was linked.
+- Hermes protocol/owner acceptance: PROPOSED. A repository handoff/comment is not approval.
+
+No live inference, Modal run, paid fallback, TestSprite tunnel, Zvec deployment, shared migration, service
+configuration change, merge or production deployment is included in this revision.
+
+Final source recheck: Hermes e7a746aec41654c026337bb06c746bcb073e8fe7 has the same Gateway blob as 2a488c8 and 3570e30; intervening changes were continuity documents only. Reserved-path overlap remains empty.

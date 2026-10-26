@@ -19,7 +19,7 @@ function endpoint(profile: ModelProfile, allowLoopbackTest: boolean): string {
   if (url.protocol !== 'https:' || !allowed || !pathAllowed) deny('PROVIDER_ENDPOINT_DENIED');
   return url.href.replace(/\/$/, '');
 }
-async function boundedJson(response: Response): Promise<any> {
+export async function boundedJson(response: Response): Promise<any> {
   if (!response.body) deny('PROVIDER_RESPONSE_INVALID');
   const reader = response.body.getReader();
   const parts: Uint8Array[] = []; let size = 0;

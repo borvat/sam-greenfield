@@ -70,3 +70,6 @@ Selected implementation: Vault KV-v2 client and policy boundary; mature Vault su
 
 ## Publication recheck
 The concurrent Hermes head advanced during this work. Latest observed head: `59f00c320048f92f0f220641cd748370a3e7cf86`. The full main...head path union was rechecked; none of the new paths intersect the reserved paths. Main remains at b55da2761e8fd1de3833be55f03d4fdd268cd0a3. Runtime list was re-read: both known services remained not_suspended; SAM updatedAt changed under its owner. This task made no runtime writes.
+
+## PR83 durable increment
+The current audit is in parallel-development-audit-durable.json. PR83 remains at its own scope. Existing gateway/health/modelCalls/schema/identity/runtime files are reserved and were not edited; proposed narrow gateway patches were exercised only in disposable copies. New additive SQL is not in the shared migration-discovery directory and was not applied to shared services. Hermes-owner acceptance remains pending.
