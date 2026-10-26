@@ -1,3 +1,68 @@
+## Main protection verified; unlinked key vault prepared — 2026-10-26
+
+The owner saved main protection. Fresh authorized branch metadata now reports
+protected=true and protection.enabled=true. Read-only inspection of classic rule
+85351486 confirms:
+- branch pattern main, applying to exactly one branch;
+- Require a pull request before merging: checked;
+- Do not allow bypassing the above settings: checked (administrators included);
+- Require approvals: unchecked;
+- status checks, force pushes, deletions: unchecked.
+The engineer did not save/change that rule or test it with a main write.
+This supersedes all earlier UNPROTECTED snapshots below.
+
+App 5475103 / installation 175336519 remains the independently verified dedicated
+one-repository identity. GitHub's Key pairs page currently reports zero key pairs:
+https://github.com/settings/apps/sam-bounded-publisher-borvat/key_pairs
+Its New key action was NOT invoked. Client secrets are not required for the
+installation-token signing flow and were not created.
+
+Using the Render environment/secrets instructions and current official docs,
+the engineer identified that saving Secret Files directly on a service can
+trigger deployment. Instead, a new UNLINKED environment group was created in
+Sam's workspace, with no compute/database/service resource:
+- name: sam-bounded-publisher-vault
+- ID: evg-dbfdofe7bikc73d58lf0
+- URL: https://dashboard.render.com/env-group/evg-dbfdofe7bikc73d58lf0
+- one non-secret operator flag: SAM_GITHUB_PUBLISHER_ENABLED=0
+- Secret Files: zero (no key generated or saved yet)
+- Linked Services: none (explicit UI confirmation)
+The name/contents editor was inspected with a synthetic empty, unsaved entry,
+then cancelled; no placeholder secret file was persisted.
+
+Prepared owner action in their own browser:
+1. In the App's Key pairs page, use New key and complete GitHub's key-generation
+   flow. Keep the downloaded private PEM outside conversation/source control.
+2. In the unlinked group, Add file; filename sam-github-publisher.pem.
+   Open its Contents editor (View secret file), paste the complete PEM locally,
+   choose Done and Save only. Do not link the group to any service.
+3. Return only confirmation of saving, never the PEM/file/secret in chat.
+This is a personal credential-generation/storage handoff, not permission to
+activate a publisher or renew a test window. No signing material was viewed,
+printed, copied, generated, downloaded or handled by the engineer.
+
+After the owner saves it, inspect filename/count/linked-service metadata ONLY;
+do not reveal content or use model-visible tooling to read the key. Validate
+the key inside the reviewed trusted publisher at later authorized activation,
+with sanitized public-key fingerprint evidence. No credential may enter Hermes
+candidate code, Modal guests, logs, git, model prompts or customer services.
+
+Latest Render deploys were re-read after group creation and are unchanged:
+SAM dep-dbfcs1ss728c73euoid0 / 93f37e535ceafe7b9053afe96b083a2a12d607ba;
+Hermes dep-dbfcm40473hc73cllb6g / pinned image ending ed63fb.
+No new deploy/restart, model call, sandbox, paid operation, subscription, role
+change or window renewal. Existing hosting charges are not a zero invoice.
+Publisher remains disabled and unlinked; live UI repair and its Draft PR have
+not started. Existing broader lifecycle/Node-image/transfer/publisher integration
+gates and fresh fixed Modal financial approval remain required.
+
+Reference read: https://render.com/docs/configure-environment-variables
+Markdown fetch failed due unsupported content type; the official HTML reference
+was read successfully. It confirms service Secret Files can trigger deployment,
+and an environment group can exist independently of linked services.
+
+---
+
 ## Dedicated App verified — 2026-10-26
 
 The owner supplied App ID 5475103. Signed-in GitHub UI verification confirms:
