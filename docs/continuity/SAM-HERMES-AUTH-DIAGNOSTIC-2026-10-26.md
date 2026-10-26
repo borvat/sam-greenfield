@@ -1,3 +1,21 @@
+## Cleanup completed after explicit owner approval — 2026-10-26
+
+The owner explicitly approved temporarily suspending sam-isolated-test.
+Render UI confirmed Suspended by you; a read-only service API check independently
+confirmed suspended. No deletion occurred. The safe baseline branch is retained,
+automatic deployment is off, and the configured Docker Command is the original
+empty value. The vault was already unlinked before suspension. The previous
+automatic-review suspension block is resolved by this explicit approval.
+
+No new Modal sandbox, image, compute, or model request was started. The actual
+Hermes UI repair and independent live validation remain pending. Correct the
+existing Modal credential values privately in the vault before any new
+authentication diagnostic. Do not assume a repeated approval means credentials
+have been corrected. Do not resume service or renew database/runtime windows
+automatically; first diagnose the previously recorded storage startup guard.
+
+---
+
 # SAM × Hermes — authentication diagnostic result — 2026-10-26
 
 The owner explicitly approved the isolated SAM test branch and Docker Command
