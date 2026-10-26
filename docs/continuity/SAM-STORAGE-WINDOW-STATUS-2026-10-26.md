@@ -1,23 +1,22 @@
-# Storage window follow-up — 2026-10-26
+# Storage window status — 2026-10-26
 
-The owner approved one new bounded storage window. The window has NOT opened.
-An operator-only expiry change and private input path were prepared locally;
-eight synthetic tests and TypeScript checking passed. The old opener was not
-used because it has additional side effects outside this approval.
+The owner explicitly approved temporary maintenance deployment/resumption to
+prepare the existing-host private operator terminal. That deployment is live.
+The normal SAM application, models and guest execution are not running there.
+The publisher vault is not linked. No new resource was created.
 
-Automatic review rejected publishing the operator implementation/details to the
-public repository. It also rejected saving the proposed temporary maintenance
-Docker Command, stating that the exact service change lacked explicit approval.
-The unsaved edit was cancelled; no workaround or alternate mutation was used.
+The operator implementation was prepared privately on the existing host rather
+than published publicly after the earlier automatic-review rejection. Eight
+local tests and typecheck passed. The hidden owner-authentication prompt was
+prepared and verified. No owner secret was read, copied or printed by the agent.
+No database owner connection or mutation has started. The approved 60-minute
+window remains unopened pending owner authentication.
 
-The isolated service remains suspended, its configured Docker Command is empty,
-the vault remains unlinked, and no database mutation, deploy, guest or model call
-occurred. The connected database tool supports reads only; external network
-access remains blocked. No owner credentials were read or requested in chat.
-
-Next owner confirmation must explicitly cover saving a temporary maintenance
-Docker Command and resuming the existing test service to prepare its private
-operator terminal. No application/model/task runs in maintenance. If existing
-owner authentication is required, prepare the non-echoing prompt before a
-single secure handoff. Keep the new 60-minute window unopened until ready.
-Fresh financial approval for Modal is separate and has not been requested.
+Next: owner completes the private input once; inspect the sanitized result,
+never infer success from a closed prompt. If input times out, inspect the prompt
+state and re-arm it safely without opening or renewing a window automatically.
+After successful operator commit, verify restricted admission and historical
+records, restore the original command and perform the bounded storage checks.
+On failure, keep the test host in maintenance or suspend it safely. Reconcile
+any uncertain commit before a retry. Do not rotate passwords, widen grants,
+reprovision data, or start paid Modal/model operations.
