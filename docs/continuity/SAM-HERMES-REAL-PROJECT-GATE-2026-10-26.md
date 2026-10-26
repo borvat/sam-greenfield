@@ -1,3 +1,96 @@
+## OWNER HANDOFF: invalid Modal credential; all diagnostic startup changes restored — 2026-10-26 05:55 UTC
+
+Current status: financial approval recorded, live real-project admission BLOCKED.
+No generated UI patch has been executed, accepted or published.
+
+### Proven live in this resumption
+
+- Observer v3 ran in TEST Hermes deployment dep-dbfeisnavr4c73drp31g.
+  SDK 1.6.2 imports successfully. Its actual config resolves BOTH token ID and
+  token secret. ONE create_if_missing=False App lookup was refused with
+  AuthError, classified INVALID_CREDENTIAL. No token bytes, config contents,
+  raw exception text or credential refresh were logged.
+- Signed-in workspace ceo-53153 API tokens page reports API tokens (0).
+  This independently supports needing a replacement operator credential; do
+  not speculate about who revoked it or exactly when it expired.
+- Restored ORIGINAL Docker Command /bin/sh /opt/data/sam-hermes-start.sh.
+  Final restoration deployment dep-dbfekdom7kps738q88qg is LIVE, finished
+  05:52:05 UTC, on the same pinned Hermes image. Settings UI confirms the
+  original command. Diagnostic wrappers are no longer configured.
+- Fresh Modal main inventory: All 0, Functions 0, Sandboxes 0,
+  No containers found. No new App, image or guest was created by this round.
+- SAM remains Live at source 93f37e535ceafe7b9053afe96b083a2a12d607ba,
+  deployment dep-dbfcs1ss728c73euoid0; no SAM deployment was attempted.
+- Fresh main branch GET: protected=true, tip unchanged at
+  b55da2761e8fd1de3833be55f03d4fdd268cd0a3. No push/protection test or rule edit.
+- ui.ts at current review branch remains blob
+  21d6d90babdbc6921075c0a2f2a050c9f9e8cf49. The real repair is NOT authored.
+
+### Local evidence versus remaining live gates
+
+Three host-preflight tests and nine publisher-auth preflight tests passed
+locally (12 tests in this resumption). Synthetic inputs only; no actual keys,
+network, compute, candidate or model used in these tests. The earlier broker
+tests and identity tests were not represented as newly rerun live acceptance.
+The publisher network helper is UNREGISTERED, not a deployed publisher.
+No actual App-token authentication/mint/revocation has been performed yet.
+
+G01-G04 fixes remain reviewed/tested locally on PR #67, not deployed. Expanded
+gate still needs controller-death cleanup/reconciliation, frozen Node image,
+one-file transfer plus separate immutable Node verification, trusted publisher
+integration and actual bounded-round proof. Dependency additions remain denied.
+
+### Personal credential step prepared, NOT performed by the engineer
+
+A Modal New token form is prepared in the signed-in owner session:
+name sam-hermes-bounded-round-20261026; lifetime 1 Hour.
+Create token has NOT been clicked. No new credential exists from this work.
+Credential creation/entry is left to the owner; never ask for a key in chat.
+
+The existing Render group sam-bounded-publisher-vault remains UNLINKED.
+Added two NON-SECRET placeholders using Save only, without a service deploy:
+SAM_MODAL_OPERATOR_TOKEN_ID=OWNER_INPUT_REQUIRED
+SAM_MODAL_OPERATOR_TOKEN_SECRET=OWNER_INPUT_REQUIRED
+Existing GitHub key alias was not revealed or changed, publisher flag stays 0.
+The owner may replace those two placeholders with the new Modal token ID and
+secret directly in Render, then Save only. Do not change or expose the GitHub
+key, link the group, deploy, raise budgets or put token bytes in chat/GitHub.
+The prepared fields are storage only; no runtime consumes them yet.
+
+On resumption first verify only masked metadata/completion, then use a reviewed
+trusted-host adapter to validate replacement credentials and workspace scope,
+never transmit them to the Hermes model or a guest. If the 1-hour credential
+expires before admission, do not silently renew or widen its lifetime.
+Personal handoff is credential creation/storage, not a renewed spend approval.
+
+### Delivery status
+
+| Requirement | Current result |
+|---|---|
+| GitHub identity only SAM repo | App 5475103 / installation175336519 configured for only sam-greenfield; actual key/token authentication still unproven |
+| main protected | YES: read-only API plus previously reviewed owner rule; never tested by push |
+| broker fixes accepted for expanded live use | NO: local fixes/tests accepted; lifecycle/image/integration live gates pending |
+| real task ready | scoped bug + immutable tests ready, execution admission NO |
+| Hermes actually repaired real UI | NO |
+| independent live SAM acceptance | NO; baseline reproduction/local verifier evidence only |
+| repair Draft PR | NO; #67 is preparation/security review only |
+| new PG restart/no-replay proof | NO; accepted historical clamp evidence retained, not repeated |
+| temporary compute closed | YES: fresh Modal inventory zero; diagnostics restored and observers finite |
+| cost | zero new Modal compute/model operations; exact existing Render hosting invoice delta not audited |
+
+The owner-approved ceiling remains USD 1 within the existing account limit,
+maximum six sequential guests and one real UI task; no new spend has begun.
+No previous runtime window/PG deadline renewed, no PG permission/data change,
+no Actions, paid model, upgrade, payment method, production write or merge.
+
+Next after owner credential completion: finish reviewed trusted-host credential
+consumption and remaining expanded security gates, then open only the newly
+authorized bounded window. Do not substitute an engineer-written patch for
+Hermes output, reset prior accepted ledgers, or declare task success on a
+model claim alone.
+
+---
+
 ## Modal authentication gate and safe identity preparation — 2026-10-26 05:46 UTC
 
 The corrected observer ran on TEST Hermes in deployment
