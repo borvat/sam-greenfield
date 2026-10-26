@@ -18,7 +18,7 @@ export default (async():Promise<RuntimeComposition>=>{
       Date.parse(config.expiresAt)-Date.parse(config.activatedAt)>3600000)throw Error('HERMES_PROBE_OPERATOR_POLICY_INVALID');
   };
   await policy();
-  const client=new HermesClient({baseUrl:config.baseUrl,apiKey:config.apiKey,assertServerPolicy:policy});await client.preflight();
+  const client=new HermesClient({baseUrl:config.baseUrl,apiKey:config.apiKey,assertServerPolicy:policy,requireNativeModelLock:true});await client.preflight();
   const bundle=hermesProbeBundle(client),entity=process.env.SAM_HERMES_PROBE_ENTITY!;
   return {supervisorOptions:{monitorSideEffects:false},supervise:async()=>({probe:'scoped supervisor within composition'}),async runWorkTick(){
     await policy();

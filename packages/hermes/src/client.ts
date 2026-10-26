@@ -28,7 +28,7 @@ const terminal=new Set(['completed','failed','cancelled','interrupted','unknown'
  * This first admission supports a server-enforced EMPTY tool profile only. */
 export class HermesClient {
   private base:URL;
-  constructor(private config:{baseUrl:string;apiKey:string;assertServerPolicy:()=>Promise<void>;transport?:typeof fetch;pollMs?:number;clock?:()=>number}){
+  constructor(private config:{baseUrl:string;apiKey:string;assertServerPolicy:()=>Promise<void>;transport?:typeof fetch;pollMs?:number;clock?:()=>number;requireNativeModelLock?:boolean}){
     this.base=new URL(config.baseUrl);
     const local=['127.0.0.1','localhost','[::1]'].includes(this.base.hostname);
     if(this.base.username||this.base.password||this.base.search||this.base.hash||this.base.pathname!=='/'||
@@ -86,6 +86,18 @@ export class HermesClient {
     if(!receipt?.runId){
       // Save the claim BEFORE dispatch. Retries keep the identical key/body/identity.
       receipt={taskHash:hash,status:'SUBMITTING'};await store.save(receipt);
+      if(this.config.requireNativeModelLock){
+        // Native Hermes session lock makes the served pair part of the committed
+        // turn outcome. Stable empty-session identity is independent of retries.
+        const sessionId=`sam_${task.task_id}`,selection={model:FREE_MODEL,provider:'nous',require_model_lock:true};
+        await store.assertActive();
+        try{await this.request('/api/sessions','POST',{id:sessionId,...selection},undefined,deadline);}
+        catch(e){if(!(e instanceof HermesError)||e.code!=='HERMES_HTTP_409')throw e;}
+        const lock=await this.request(`/api/sessions/${sessionId}/model`,'POST',selection,undefined,deadline);
+        if(lock?.session_id!==sessionId||lock.runtime?.model!==FREE_MODEL||lock.runtime?.provider!=='nous'||lock.runtime?.model_lock!=='accepted')
+          throw new HermesError('HERMES_MODEL_LOCK_DENIED');
+        Object.assign(body,{session_id:sessionId});
+      }
       let accepted:any;
       for(let attempt=0;attempt<2;attempt++){
         await store.assertActive();

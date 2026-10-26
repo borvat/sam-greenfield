@@ -19,6 +19,8 @@ async function main(){
     const send=(x:any,status=200)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(x));};
     if(req.url==='/v1/capabilities')return send({auth:{type:'bearer',required:true},features:{run_submission:true,run_status:true,run_stop:true,runs_idempotency:{durable:true,retention_seconds:86400}}});
     if(req.url==='/v1/toolsets')return send({data:[]});
+    if(req.url==='/api/sessions')return send({id:JSON.parse(body).id},201);
+    if(req.url?.endsWith('/model'))return send({session_id:req.url.split('/')[3],runtime:{provider:'nous',model:'poolside/laguna-s-2.1:free',model_lock:'accepted'}});
     if(req.url==='/v1/runs'){
       const key=String(req.headers['idempotency-key']);let prior=ledger.get(key);
       if(prior&&prior.body!==body)return send({},409);
@@ -66,7 +68,7 @@ async function main(){
     hold=false;
     const {hermesProbeBundle,prepareHermesProbe,reviewHermesProbe}=await import('../../apps/production/src/hermesProbe');
     const {createProductionComposition}=await import('../../apps/production/src/composition');
-    const bundle=hermesProbeBundle(new HermesClient({baseUrl,apiKey:'native-fixture-key-not-a-live-secret',assertServerPolicy:async()=>{},pollMs:5}));
+    const bundle=hermesProbeBundle(new HermesClient({baseUrl,apiKey:'native-fixture-key-not-a-live-secret',assertServerPolicy:async()=>{},pollMs:5,requireNativeModelLock:true}));
     const probeId=randomUUID();
     await pool.query(`INSERT INTO goals(id,business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
       VALUES($1,$2,$3,'hermes_probe','SUM 17 25','NEW','GREEN','sam.read_report.v1')`,[probeId,'probe-'+probeId,binding.binding.entity]);
