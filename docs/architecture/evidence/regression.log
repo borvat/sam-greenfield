@@ -1,0 +1,16 @@
+PROVIDER_AUTH PASS: local HTTP 401/403/429/503 fixtures, one request per case, typed redacted errors; not a live-provider authentication test.
+BUILD_CONFIGURATION_PASS: explicit build dev dependencies; production launch pins NODE_ENV; executive disabled; no install/network.
+✔ one-shot child receives credentials only in private pipe, never env/argv (3.902251ms)
+✔ child crash or injected output never becomes PASS or exposes raw text (0.704859ms)
+✔ hidden prompt echoes no input and restores terminal mode on success/cancel (0.977731ms)
+✔ direct entry cannot fall back to shared secrets; no-apply remains inert (180.700304ms)
+✔ real private-fd child validates synthetic inputs without echo or network attempt (38.971835ms)
+✔ actual isolated launcher reports invalid private input without claiming remote recovery needed (42.844848ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 273.650095

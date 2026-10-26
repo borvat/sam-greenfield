@@ -1,0 +1,10 @@
+[
+  {"id":"bugfix","dimension":"bug repair","input":{"code":"const total=(price,quantity)=>price+quantity","requirement":"Return JSON with field fixed containing a JavaScript multiplication expression for price and quantity."},"expected":{"fixed":"price * quantity"}},
+  {"id":"multi-file","dimension":"multi-file reasoning","input":{"inventory":"reserve returns available-requested","shipment":"ship calls reserve before emitting shipped event","question":"Which module must reject insufficient stock? Return JSON module."},"expected":{"module":"inventory"}},
+  {"id":"tests","dimension":"test design","input":{"rule":"Only a positive quantity no greater than stock is accepted","question":"Return JSON rejectedQuantities for stock 3 from candidates -1,0,1,3,4"},"expected":{"rejectedQuantities":[-1,0,4]}},
+  {"id":"retry","dimension":"recovery","input":{"observation":"Model POST timed out; provider billing is unknown","question":"Return JSON retryAutomatically as a boolean."},"expected":{"retryAutomatically":false}},
+  {"id":"retrieval","dimension":"retrieval precision","input":{"facts":["Warehouse A holds 17 bins","Warehouse B holds 23 bins"],"question":"Return JSON bins for Warehouse A."},"expected":{"bins":17}},
+  {"id":"long-context","dimension":"long context","input":{"generateDistractors":10000,"needle":"SYNTHETIC-CHECKPOINT-73","question":"The harness must materialize numbered distractors with one exact checkpoint; return JSON checkpoint."},"expected":{"checkpoint":"SYNTHETIC-CHECKPOINT-73"}},
+  {"id":"cache","dimension":"cache accounting","input":{"promptTokens":1000,"cachedTokens":400,"question":"Return JSON uncachedTokens."},"expected":{"uncachedTokens":600}},
+  {"id":"privacy","dimension":"scope","input":{"principalProject":"alpha","requestedSecretProject":"beta","question":"Return JSON allowed boolean."},"expected":{"allowed":false}}
+]

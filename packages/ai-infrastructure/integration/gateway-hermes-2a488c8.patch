@@ -1,0 +1,61 @@
+--- a/packages/model-gateway/src/gateway.ts
++++ b/packages/model-gateway/src/gateway.ts
+@@ -12,7 +12,15 @@
+ import {assertRegisteredEvaluationAdapter} from './evaluationAdapter';
+ import {measuredPolicyFromEnv,type MeasuredRoutingPolicy} from './measuredRouting';
+ 
++import type { SamModelCallBoundary } from '../../ai-infrastructure/src/samBoundary';
++
+ export class ModelGateway {
++  private modelCallBoundary?: SamModelCallBoundary;
++  /** Trusted composition only. Omit this hook to retain the existing path. */
++  withModelCallBoundary(boundary: SamModelCallBoundary): this {
++    if (this.modelCallBoundary) throw new Error('AI_DURABLE_ALREADY_CONFIGURED');
++    this.modelCallBoundary = boundary; return this;
++  }
+   constructor(
+     private readonly adapters: Record<string, ModelProviderAdapter>,
+     private readonly developmentPermit?: DevelopmentCyclePermit|AutonomyPermit,
+@@ -77,6 +85,7 @@
+ 
+       const adapter = this.adapters[candidate.providerId];
+       if (!adapter) {
++        if (this.modelCallBoundary) throw new Error('AI_DURABLE_ADAPTER_REQUIRED');
+         lastError = new Error(`No adapter configured for provider ${candidate.providerId}`);
+         if(bounded?.note)await bounded.note({kind:'ADAPTER_MISSING',providerId:candidate.providerId,model:candidate.model});
+         await withTransaction((client) => recordModelCall(client, {
+@@ -104,10 +113,15 @@
+         ticket=await bounded.reserveAttempt({providerId:candidate.providerId,model:candidate.model,
+           tokens:bounded.maxInputTokens+bounded.maxOutputTokens,costUsd:candidate.estimatedCostUsd});
+       }
++      if (this.modelCallBoundary && ((task as any).boundedSynthetic || (task as any).boundedEvaluation))
++        throw new Error('AI_DURABLE_BOUNDARY_CONFLICT');
++      const durableTicket = this.modelCallBoundary ? await this.modelCallBoundary.reserve(task, candidate) : undefined;
+       const started = Date.now();
+       try {
+         task.signal?.throwIfAborted();
+-        const result = await adapter.invoke(task, candidate.model);
++        const result = this.modelCallBoundary
++          ? await this.modelCallBoundary.execute(durableTicket!, adapter, task, candidate.model)
++          : await adapter.invoke(task, candidate.model);
+         task.signal?.throwIfAborted();
+         if(bounded&&(!Number.isSafeInteger(result.usage.inputTokens)||!Number.isSafeInteger(result.usage.outputTokens)||
+           result.usage.inputTokens<0||result.usage.outputTokens<0||result.usage.inputTokens>bounded.maxInputTokens||
+@@ -124,7 +138,8 @@
+         }
+ 
+         if(bounded?.finishAttempt){finished=true;await bounded.finishAttempt(ticket,{status:'success',result});}
+-        await withTransaction((client) => recordModelCall(client, {
++        if (this.modelCallBoundary) await this.modelCallBoundary.finish(durableTicket!, result);
++        else await withTransaction((client) => recordModelCall(client, {
+           task: task.task,
+           provider: candidate.providerId,
+           model: result.model,
+@@ -141,6 +156,7 @@
+ 
+         return { providerId: candidate.providerId, result, attempts: i + 1 };
+       } catch (err) {
++        if (this.modelCallBoundary) await this.modelCallBoundary.fail(durableTicket!);
+         lastError = err;
+         if(bounded?.finishAttempt&&!finished){finished=true;await bounded.finishAttempt(ticket,{status:'failure'});}
+         await withTransaction((client) => recordModelCall(client, {

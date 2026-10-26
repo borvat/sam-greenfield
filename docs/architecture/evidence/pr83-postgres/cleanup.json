@@ -1,0 +1,19 @@
+{
+  "id": "sb-01M5X3T4F5VD1Z6XXQ2776D440",
+  "created_at": 1793052185.1789732,
+  "timeout_seconds": 3600,
+  "cpu_limit": 1,
+  "memory_limit_mib": 4096,
+  "poll_exit": 0,
+  "verified_at": 1793053132.5092576,
+  "dashboard_active_containers": 0,
+  "dashboard_active_sandboxes": 0,
+  "displayed_credit_before_usd": "1.00",
+  "displayed_credit_after_usd": "0.94",
+  "displayed_usage_delta_usd": "0.06",
+  "invoice_verified": false,
+  "second_sandbox_created": false,
+  "local_credential_file_removed": true,
+  "token_revoked": false,
+  "token_expiry": "one hour from original issuance"
+}

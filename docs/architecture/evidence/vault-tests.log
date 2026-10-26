@@ -1,0 +1,48 @@
+✔ benchmark independently rejects incorrect outputs and does not execute returned code (2.018596ms)
+✔ benchmark preserves unknown usage for failed calls and redacts errors (0.443284ms)
+✔ benchmark expands the long context corpus rather than merely claiming it (4.243835ms)
+✔ duplicate benchmark case IDs fail before any call (0.69217ms)
+✔ normal Vault file storage is encrypted and audit does not contain raw key (154.561064ms)
+✔ Vault reader cannot rotate an AI credential (17.925441ms)
+✔ Vault reader cannot read another project or production (11.337652ms)
+✔ production refuses plaintext Vault address (0.643739ms)
+✔ Vault policy denies path traversal and unknown domains (0.262967ms)
+✔ CAS rotation rejects stale writers and next call uses replacement key (21.16812ms)
+✔ Vault data survives server replacement and re-unseal (485.05978ms)
+✔ disabled secret fails closed without model dispatch (18.165289ms)
+✔ revoked Vault reader stops dispatch (13.243795ms)
+✔ Qwen/DeepSeek/Kimi/AMD reuse existing chat adapter with bounded output (39.574865ms)
+✔ no raw credential appears in adapter serializable state or audit (7.368461ms)
+✔ a service token used as correlation ID is hashed before audit (7.526213ms)
+✔ a prompt cannot request credential reads or change project (8.397046ms)
+✔ wrong project identity cannot select a different client (7.552832ms)
+✔ revoked service identity and forged tokens fail before dispatch (6.045951ms)
+✔ expired identities fail and grants are immutable (0.330477ms)
+✔ disabling a service invalidates all its credentials and records administrative operations (0.388242ms)
+✔ production binding remains disabled even with a valid identity (3.816415ms)
+✔ live networking requires explicit test gate (3.05289ms)
+✔ unknown/stale tariff and invalid model or classification cannot dispatch (9.820169ms)
+✔ AMD rejects internal data even if explicitly granted (4.540382ms)
+✔ endpoint allowlist and redirects prevent credential forwarding (6.267168ms)
+✔ strict budgets reserve before any provider call (5.801771ms)
+✔ concurrent same-ID dispatch produces exactly one provider call (65.970997ms)
+✔ concurrent different-ID dispatch shares project budget (68.951546ms)
+✔ rate limits are applied before dispatch and retry-after imposes cooldown (13.247947ms)
+✔ ambiguous failures retain reservation and forbid replay (6.018727ms)
+✔ unknown/invalid usage, model mismatch and secret echo fail closed (39.621866ms)
+✔ revoking identity while a model runs prevents response delivery (65.938971ms)
+✔ audit failure stops model calls (6.990234ms)
+✔ oversized input fails without provider dispatch (5.411717ms)
+✔ quality, privacy, latency and stability gates precede cost ranking (0.445757ms)
+✔ cache accounting discounts only reported cached input (0.132916ms)
+✔ health checks distinguish model availability from inference proof (9.790481ms)
+✔ external requests require verified free account quota before secret access (4.718535ms)
+✔ cancellation before admission performs zero calls; in-flight cancellation retains its reservation (30.91633ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1437.674606
