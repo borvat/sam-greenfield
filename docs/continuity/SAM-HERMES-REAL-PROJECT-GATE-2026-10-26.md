@@ -1,3 +1,71 @@
+## Publisher identity resumption — 2026-10-26
+
+This read-only resumption starts from PR #67 source `be43d404d6cefb24e44944705a15ec839d5c20c2`; the PR is still draft/unmerged. No newer implementation commit existed at handoff.
+
+### New authoritative finding: main is unprotected
+
+GitHub's authorized repository branch GET returned:
+- branch: main
+- commit: `b55da2761e8fd1de3833be55f03d4fdd268cd0a3`
+- protected: false
+- protection.enabled: false
+- required_status_checks.enforcement_level: off
+
+The repository rulesets GET returned an empty list. The signed-in browser's repository Settings > Branches page also showed no existing classic rule, only controls for adding rules. This replaces the earlier UNKNOWN protection status. No main push, rule change, settings mutation or protection bypass was attempted.
+
+A contents-write App/token by itself is not branch-restricted. Do not provision or accept an operational publisher that can write unprotected main and claim that repository scoping solves that problem. Before publishing, main-write prevention must be enforced and independently verified. The existing ChatGPT installation remains repository_selection=all and was not changed.
+
+### Interactive identity path and exact personal blocker
+
+The supported connector cannot create GitHub Apps or mint narrowly scoped credentials. The explicit user-authorized interactive fallback reached `https://github.com/settings/apps/new`, signed in as borvat. GitHub requires sudo-mode reauthentication before showing the new-App configuration. The only offered method was Verify via email.
+
+That button was selected once. GitHub now says that it sent a verification code to the masked address c**@suroohholdings.com. The empty field is sudo_email_otp (text), followed by Verify. No code, password, token, private key or secret was read or entered by the engineer. The owner must complete the secure browserAuth credential form; never paste the code into conversation. No App, installation, token, key or access grant has been created.
+
+Prepared minimum App scope: a separate dedicated App, only the owner's account, installation on borvat/sam-greenfield ONLY; Contents read/write and Pull requests read/write, implicit Metadata read, no Administration, Actions, Secrets, Deployments or workflow write. Disable unnecessary OAuth/webhook capabilities. Prefer short-lived installation credentials, private signing material in an approved existing secret vault, and a separate trusted publisher; neither Hermes code nor any Modal guest receives credentials. Final App creation/access grant must follow the browser's action-time confirmation requirement. Existing ChatGPT/GitHub connection must remain intact.
+
+### Paired-file review and independent local verification
+
+Remote blobs were fetched at the PR head and compared with the tested scratch files. Broker, worker, preflight, all tests and original ui.ts match exactly. Local installer/proxy differed only by one trailing newline; removing that newline in the hash comparison matches the remote blobs. Their remote source was reviewed, not changed.
+
+The broker imports a fixed root-owned worker sibling (repository modal_worker.py; deployed sam-modal-coding-worker.py); it never imports a candidate path. It and the worker must be updated/restored as a reviewed pair. The proxy still exposes only the fixed local route and forwards authentication; the installer still checks root-only control/credential files and gives the gateway only the fixed proxy. Do not deploy a partial pair or run the installer before supply-chain/lifecycle checks.
+
+Local results from the exact PR implementation:
+- controller: 5/5 PASS
+- independent broker/worker: 21/21 PASS
+- unregistered real-project/publisher preflight: 6/6 PASS
+- untouched UI reproduction: 1/1 FAIL, exposing the known stale-report bug
+- no skipped or expected-failure tests; failures were not hidden
+- no cloud SDK call, model call, candidate execution, dependency installation or live clamp rerun
+
+G01–G04 regressions pass within their documented local scope. Receipt checks reject incomplete, mismatched or duplicate-stage evidence and nonzero worker exits; they are not a cryptographic proof against a compromised trusted controller. Original fixture records remain history, not authorization for a new execution. Mocked cleanup proves finally behavior on a harness failure, not cleanup after controller death; the previously documented orphan/reconciliation, image/SDK provenance and Node-profile integration gaps remain blockers.
+
+Rollback preparation: retain the exact old broker/worker/proxy/installer bundle plus durable SQLite job state and original guest receipts; a code rollback must not reset job counts, overwrite receipts, renew a campaign, or rerun the accepted clamp. No rollback or deployment was performed.
+
+### Services and cost
+
+Render workspace was reconfirmed. SAM remains on live deploy `dep-dbfcs1ss728c73euoid0`, source `93f37e535ceafe7b9053afe96b083a2a12d607ba`, auto-deploy off. Hermes remains on live deploy `dep-dbfcm40473hc73cllb6g` and the same pinned image digest ending `ed63fb`. No service or environment variable was changed.
+
+No new Sandbox, model call, subscription, upgrade, billable operation, database/network/role change, window renewal, Actions dispatch, main push or merge was initiated. Existing hosting continues; no current invoice total is claimed. Modal inventory and current private runtime/role state were not read live, so zero currently active Sandboxes is NOT independently established.
+
+### Ten-item delivery snapshot
+
+| Item | Result |
+| --- | --- |
+| One-repository identity created | NO: GitHub requires owner email reauthentication before the App form |
+| main protection checked | YES: main is currently UNPROTECTED; publishing remains blocked |
+| Broker review | Local four-fix review and 32 tests PASS; broader live gate remains blocked |
+| Real task ready | Scope/reproduction ready; execution prerequisites incomplete |
+| Hermes performed repair | NO |
+| Independent live verification | NO |
+| Real-repair Draft PR | NO; PR #67 remains safety preparation |
+| New restart persistence proof | NO; local SQLite tests only, historical proof untouched |
+| Temporary cleanup | No new cloud resource created; existing Modal inventory unknown |
+| Cost/blockers | No new billable operation; owner reauthentication first, then main enforcement/scoped identity and existing live-gate prerequisites |
+
+Resume from the existing GitHub App tab if its authentication flow is still valid. If the code expires, inspect GitHub's actual page and request a fresh code once; do not collect it in chat. After secure reauthentication, inspect the App form and prepare the precise grants. Keep publication disabled until main enforcement and actual repository scoping are verified. No financial approval is requested at this personal-authentication boundary; a later billable Modal round needs a separate fixed approval after account/cap/inventory checks.
+
+---
+
 # SAM × Hermes: real-project expansion gate — 2026-10-26
 
 Status: BLOCKED BEFORE REAL-PROJECT MODIFICATION AND BILLABLE EXECUTION.
