@@ -1,15 +1,41 @@
-# SAM × Hermes live acceptance — verified before restart
+# SAM × Hermes — bounded live acceptance passed
 
-Application ad64a6a is live on the isolated SAM service and public readiness reports all three processes ready. Its five native PostgreSQL build suites and runtime authenticated API smoke passed. Local TypeScript and 139 isolated tests passed. HTTP-stub tests remain distinct from the real task below.
+Status: PASS for the requested single tool-free arithmetic task, independent verification, external PostgreSQL persistence and controlled SAM restart. This is not coding/sandbox/general-agent acceptance.
 
-The ONE authorized 60-minute window is already open and MUST NOT be renewed. Fixed timing is recorded in the isolated service's two non-secret window environment variables; unchanged credentials remain in their existing protected files. Restricted role flags/configuration/password and table grants were preserved. Production, network policies, other connectors, schedules and resource plans were not changed.
+## Deployed source and implementation
 
-A single NEW task SUM 28 15 was submitted through SAM's authenticated native intake. It completed with output 43. PostgreSQL readback confirms COMPLETED goal, exactly one queue row and execution, bound plan/execution hashes, VERIFIED independent PostgreSQL arithmetic checking of the original operands, matching candidate hash, and a saved completed receipt with the approved free Nous served model and confirmed native model lock. The queue was idle at the baseline check. This is a real model task, not the earlier saved result or a mock.
+SAM isolated application source: ad64a6a. The existing pinned Hermes image and its already-deployed native Runs model-lock correction were not changed. This work remains in Draft PR #66, continuing #65; no merge or main push occurred.
 
-A direct authenticated native Hermes run-status readback is being matched independently to the saved SAM receipt. Its baseline and the repeatable readback checker are retained privately on the existing Hermes persistent disk in a goal-keyed sam-live-acceptance-*.json evidence file. It contains synthetic acceptance evidence and no credentials. Do not delete/overwrite that baseline; inspect it before continuing if interrupted.
+Two explicitly supplied non-secret operator timestamps now define the isolated probe window. Both are required when either is set; malformed, future, reversed, expired, zero-length or over-hour windows are rejected. The fixed window cannot move on restart, and each dispatch policy check rejects an end beyond the current restricted PostgreSQL role deadline. The existing credential-bearing files, model pin, tool policy and verification requirements were preserved and never opened in the protected editor.
 
-Next: confirm native proof/baseline save succeeded, refresh idle checks, perform ONE controlled restart of SAM only (same ad64a6a source and fixed window), verify readiness, and compare all saved goal/plan/queue/execution/verification/run identifiers, result and receipt digests with the baseline. Do not submit a second goal or model request to prove persistence. Final post-restart acceptance remains pending at this checkpoint.
+The ONE authorized 60-minute role window was opened once. It is already consumed and MUST NOT be renewed automatically. Exact fixed start/end are recorded in the isolated service's two window environment variables. Password, role flags/configuration and grants remained unchanged; no database/schema/service was created and no network policy was changed. When this window expires, the bounded test service is expected to stop; this acceptance is not authorization for permanent operation.
 
-The existing Hermes model-lock patch was not changed/reapplied. Effective tools are empty, MCP/fallback absent and concurrency one. Coding isolation remains unproven; terminal/GitHub/programming tools remain prohibited. This bounded arithmetic probe does not establish general planning or coding capability.
+## Evidence matrix
 
-The environment-update connector unexpectedly triggered a build from the service's old configured branch. It was cancelled before adoption, then the reviewed ad64a6a source was explicitly deployed. Do not use latest-branch deploy. No new paid resource, plan upgrade or paid model/fallback was activated; invoices were not audited. No merge or main push occurred.
+| Check | Result and boundary |
+|---|---|
+| Local TypeScript | PASS |
+| Local isolated tests | 139 PASS; zero failures/skips; includes six new timing guard tests and existing HTTP-stub transport tests |
+| Native PostgreSQL build suites on deployed source | All five PASS; fixture arithmetic/replay/fence/reclaim/concurrency/cancellation checks are not live model tests |
+| Runtime API smoke | PASS before and after restart, including authentication denial and existing-goal database readback |
+| Real new task | One authenticated SAM intake for SUM 28 15; Hermes returned 43 |
+| Actual served model | Direct native durable run readback confirms approved free Nous model and model_lock confirmed; not inferred from requested fields |
+| SAM independent verification | VERIFIED by native PostgreSQL arithmetic over original goal operands; expected 43, matched true, candidate hash and plan/execution verification bindings match |
+| Stored execution | COMPLETED goal, one queue row, one execution, verification and completed receipt present in external PostgreSQL |
+| Pre-restart admission | Both SAM queue and native Hermes runs/turn leases idle; baseline saved |
+| Controlled restart | Render restart event recorded; application source unchanged; a different SAM container served afterward and the old temporary checker was absent |
+| Post-restart equality | Same goal/plan/queue/execution/verification/run identifiers, complete selected record digest and receipt digest; result still 43; one execution remains |
+| Fresh readiness | All three SAM processes report ready after restart |
+| Native duplicate check | Hermes run ledger increased from three to four only for the new task and remained four after restart; no replacement model request was made |
+
+The repeatable checker, baseline, native before/after receipts and post-restart comparison are retained privately on the existing Hermes persistent disk in a goal-keyed sam-live-acceptance-*.json file. The evidence contains only synthetic acceptance records and checker source, no credentials. On resumption, locate the new SUM 28 15 goal within the recorded window, then the evidence file keyed by its goal UUID. Preserve both snapshots. Routine baked engineering reports still label their own fixture liveReasoningValidated/containerReplacement flags false; those fixture fields were not rewritten to manufacture live acceptance. The separate real evidence above is the acceptance source.
+
+## Policy, remaining work and cost
+
+Fresh native/configuration readback confirms no enabled tools, no MCP servers/fallback, the approved free model and concurrency one. Terminal, GitHub and programming tools remain prohibited. Actual coding isolation is still unproven; the previously recorded Docker/namespace limitations were not bypassed. A broader live cancellation/lost-connection/recovery campaign and any future sandboxed coding/repository/UI acceptance remain separate work. The arithmetic probe uses SAM's existing deterministic bounded grammar and independent SQL verifier; it does not prove general planning.
+
+No production service, unrelated connector, schedule, resource plan, secret file or paid model/fallback was changed. One ordinary test rollout and one controlled restart were performed. The environment-update connector unexpectedly started a build from the old configured branch; that build was cancelled and the explicitly reviewed ad64a6a was then deployed. Do not use unpinned latest-branch deployment. No new paid resource or upgrade was activated; existing hosting continues, and actual invoices/build-quota charges were not audited.
+
+## Handoff / do not repeat
+
+The single acceptance task is completed and the comparison passed. Do not submit it again, reset earlier failures, overwrite the evidence, renew the consumed window, or reapply the native model-lock patch. No pending task remains in the checked queues. Recheck actual readiness and the fixed expiry on any later visit rather than assuming the service stays available past the authorized deadline. Keep this PR draft/unmerged until separately reviewed; coding tools must stay closed until real isolation is demonstrated.
