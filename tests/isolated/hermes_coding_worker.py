@@ -20,16 +20,19 @@ class Safety(unittest.TestCase):
   text=m.launch_code('print("synthetic")');ast.parse(text)
   self.assertIn('os.setuid(10001)',text);self.assertIn('os.environ.clear()',text);self.assertIn('RLIMIT_NPROC',text)
  def test_durable_broker_claim_prevents_repeat_conflict_and_second_job(self):
-  body={'jobId':'00000000-0000-4000-8000-000000000001','artifact':{'synthetic':True}}
+  body={'jobId':'00000000-0000-4000-8000-000000000001','artifact':{'files':{'clamp.py':m.BROKEN},'tests':'assert True','action':'run_tests'}}
   policy={'enabled':True,'maxJobs':1,'expiresAtEpoch':time.time()+100}
   with tempfile.TemporaryDirectory() as d,patch.object(broker,'DB',d+'/jobs.sqlite'),patch.object(broker,'Path') as path,patch('subprocess.run') as run:
    path.return_value.read_text.return_value=json.dumps(policy)
-   run.return_value=types.SimpleNamespace(stdout=json.dumps({'ok':True,'syntheticFixture':True}))
+   run.return_value=types.SimpleNamespace(returncode=0,stdout=json.dumps({'ok':False,'error':'SYNTHETIC_ONLY'}))
    a=broker.execute(body);self.assertEqual(a,broker.execute(body));self.assertEqual(run.call_count,1)
-   self.assertEqual(broker.execute({**body,'artifact':{'other':True}})['error'],'CODING_ID_CONFLICT')
+   self.assertEqual(broker.execute({**body,'artifact':{**body['artifact'],'tests':'assert False'}})['error'],'CODING_ID_CONFLICT')
    self.assertEqual(broker.execute({**body,'jobId':'00000000-0000-4000-8000-000000000002'})['error'],'CODING_TASK_CEILING')
  def test_closed_policy_never_starts_worker(self):
   with patch.object(broker,'Path') as path,patch('subprocess.run') as run:
    path.return_value.read_text.return_value=json.dumps({'enabled':True,'maxJobs':1,'expiresAtEpoch':0})
-   self.assertEqual(broker.execute({})['error'],'CODING_POLICY_CLOSED');run.assert_not_called()
+   # Structural rejection now precedes admission; the expanded suite separately
+   # checks a valid request against a closed campaign.
+   self.assertEqual(broker.execute({})['error'],'CODING_SCOPE_DENIED');run.assert_not_called()
 if __name__=='__main__':unittest.main()
+

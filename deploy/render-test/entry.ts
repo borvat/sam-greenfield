@@ -2,6 +2,7 @@ import {createRequire} from 'node:module';
 import {openPersistentBinding} from './persistentBinding';
 import {readFile,mkdtemp,writeFile,chmod} from 'node:fs/promises';
 const require=createRequire(import.meta.url);
+const {storageFailureCode}=require('./storageFailure.cjs');
 async function main(){
  const mode=process.env.SAM_TEST_STORAGE_PROFILE??'disposable';
  if(!['disposable','provisioned-postgres'].includes(mode))throw Error('TEST_STORAGE_PROFILE_INVALID');
@@ -18,4 +19,4 @@ async function main(){
  const {runSandbox}=require('./start.cjs');
  await runSandbox(storage?.binding,storage?.report,storage?storage.leaseDeadline-performance.now():undefined);
 }
-void main().catch(()=>{console.error('SAM_TEST_STORAGE_START_FAILED; no provisioning or live activation performed');process.exitCode=1;});
+void main().catch((error)=>{console.error(JSON.stringify({service:'sam-test-storage',status:'START_DENIED',code:storageFailureCode(error),provisioningPerformed:false,liveActivationPerformed:false}));process.exitCode=1;});

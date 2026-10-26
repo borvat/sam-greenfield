@@ -1,0 +1,20 @@
+{
+  "status": "PREPARATION_ONLY_NEW_APPROVAL_REQUIRED",
+  "financialApproval": false,
+  "newWindowAuthorized": false,
+  "dispatchEnabled": false,
+  "publisherEnabled": false,
+  "repository": "borvat/sam-greenfield",
+  "allowedCandidateFiles": [
+    "apps/command-center/src/ui.ts"
+  ],
+  "reusePreviousWindow": false,
+  "requireBeforeLiveExecution": [
+    "fresh explicit financial authorization",
+    "verified comprehensive enforceable cost cap",
+    "fresh bounded storage authorization",
+    "live isolation acceptance for immutable Node profile",
+    "durable controller-death reconciliation",
+    "registered bounded trusted publisher"
+  ]
+}

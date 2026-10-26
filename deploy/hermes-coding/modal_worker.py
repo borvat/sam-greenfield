@@ -66,30 +66,41 @@ os.environ.clear();os.environ.update({'PATH':'/usr/local/bin:/usr/bin:/bin','HOM
 os.execvp('python',['python','-c',""" + repr(program) + "] )"
 
 
-def run_job(payload, report_path):
-    import modal
-    warnings.filterwarnings('ignore', message='Your Modal token .*')
-    if set(payload) != {'jobId','artifact'} or set(payload['artifact']) != {'files','tests','action'} or set(payload['artifact']['files']) != {'clamp.py'} or payload['artifact']['action'] != 'run_tests':
+def validate_payload(payload):
+    if not isinstance(payload,dict) or set(payload) != {'jobId','artifact'} or not isinstance(payload['artifact'],dict) or set(payload['artifact']) != {'files','tests','action'} or not isinstance(payload['artifact']['files'],dict) or set(payload['artifact']['files']) != {'clamp.py'} or payload['artifact']['action'] != 'run_tests':
         raise ValueError('ARTIFACT_SCOPE')
     artifact = payload['artifact']
     source = validate_source(artifact['files']['clamp.py'])
     if not isinstance(artifact['tests'],str) or not 1 <= len(artifact['tests']) <= 4000:
         raise ValueError('TEST_SCOPE')
+    if len(json.dumps(payload).encode()) > 16384:
+        raise ValueError('BODY_TOO_LARGE')
+    return artifact,source
+
+
+def run_job(payload, report_path):
+    artifact,source = validate_payload(payload)
+    import modal
+    warnings.filterwarnings('ignore', message='Your Modal token .*')
     gate = json.loads(Path('/opt/data/sam-modal-gate-20261026-attempt2.json').read_text())
     if not gate['cleanup'] or not gate['guest']['allPassed'] or not gate['wallDeadline']['passed']:
         raise ValueError('LIVE_GATE_REQUIRED')
-    report = {'jobId':payload['jobId'],'sourceHash':hashlib.sha256(source.encode()).hexdigest(),'stages':[],'complete':False}
+    report = {'jobId':payload['jobId'],'sourceHash':hashlib.sha256(source.encode()).hexdigest(),
+        'requestedTestsHash':hashlib.sha256(artifact['tests'].encode()).hexdigest(),
+        'independentTestsHash':hashlib.sha256(INDEPENDENT.encode()).hexdigest(),'stages':[],'complete':False}
     def save():
         Path(report_path).write_text(json.dumps(report,sort_keys=True));Path(report_path).chmod(0o600)
     save()
     app=modal.App.lookup('sam-hermes-isolation-gate',create_if_missing=False)
     image=modal.Image.debian_slim(python_version='3.12').dockerfile_commands('RUN useradd -m -u 10001 runner && mkdir -p /workspace && chown 10001:10001 /workspace','USER 10001:10001')
     for name,code,tests in [('wrong_control',BROKEN,INDEPENDENT),('hermes_requested_tests',source,artifact['tests']),('sam_independent_tests',source,INDEPENDENT)]:
-        if time.time() >= payload_deadline():
+        remaining=int(payload_deadline()-time.time())
+        if remaining < 1:
             raise ValueError('CAMPAIGN_CLOSED')
-        sb=None;stage={'name':name,'cleanup':False};report['stages'].append(stage);save()
+        sb=None;stage={'name':name,'cleanup':False,'sourceHash':hashlib.sha256(code.encode()).hexdigest(),
+            'testsHash':hashlib.sha256(tests.encode()).hexdigest()};report['stages'].append(stage);save()
         try:
-            sb=modal.Sandbox.create('sleep','infinity',app=app,image=image,cpu=(0.5,0.5),memory=(1024,1024),timeout=90,block_network=True,env={},secrets=[],volumes={},network_file_systems={},include_oidc_identity_token=False,workdir='/workspace')
+            sb=modal.Sandbox.create('sleep','infinity',app=app,image=image,cpu=(0.5,0.5),memory=(1024,1024),timeout=min(90,remaining),block_network=True,env={},secrets=[],volumes={},network_file_systems={},include_oidc_identity_token=False,workdir='/workspace')
             stage['sandboxId']=sb.object_id;save()
             # The fixed runner imports the approved artifact in the guest. No eval/import on host.
             program="import pathlib,subprocess,json,hashlib\npathlib.Path('/workspace/clamp.py').write_text("+repr(code)+")\npathlib.Path('/workspace/test_case.py').write_text("+repr(tests)+")\nwith open('/workspace/output.log','wb') as f:\n p=subprocess.run(['python','/workspace/test_case.py'],stdout=f,stderr=f,timeout=10)\nb=pathlib.Path('/workspace/output.log').read_bytes()[:1048576]\nprint(json.dumps({'exitCode':p.returncode,'outputHash':hashlib.sha256(b).hexdigest(),'tail':b[-2048:].decode('utf8',errors='replace')}))"
@@ -100,6 +111,7 @@ def run_job(payload, report_path):
             stage['exitCode']=rc;stage['stdoutHash']=harness['outputHash'];stage['stderrHash']=hashlib.sha256(err.encode()).hexdigest()
             if name=='wrong_control':
                 if rc==0:raise ValueError('WRONG_CODE_ACCEPTED')
+                if rc!=1:raise ValueError('WRONG_CONTROL_UNEXPECTED_FAILURE')
                 stage['rejected']=True
             elif rc!=0:raise ValueError('CANDIDATE_TEST_FAILED')
             elif name=='sam_independent_tests':
@@ -132,3 +144,4 @@ if __name__=='__main__':
     except Exception as exc:
         print(json.dumps({'ok':False,'error':str(exc) if isinstance(exc,ValueError) and str(exc).isupper() else type(exc).__name__}))
         sys.exit(1)
+
