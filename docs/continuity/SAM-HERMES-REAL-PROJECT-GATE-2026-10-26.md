@@ -1,3 +1,48 @@
+## Dedicated App verified — 2026-10-26
+
+The owner supplied App ID 5475103. Signed-in GitHub UI verification confirms:
+- App: SAM-Bounded-Publisher-borvat, owned by borvat.
+- App ID: 5475103; installation ID: 175336519.
+- Installation settings: https://github.com/settings/installations/175336519
+- Only select repositories is selected, exactly ONE repository:
+  borvat/sam-greenfield (repository ID 1408209483).
+- All repositories is unselected; Save is disabled (configuration is already saved).
+- Effective installation permissions displayed: Metadata read; code/Contents
+  and Pull requests read/write. No other granted permission appears in the
+  installed-App summary.
+- User OAuth during installation, Device Flow and Active Webhook are unchecked
+  in the App general settings. No setting was edited.
+
+This supersedes the earlier claim that a dedicated App could not be created:
+the owner has created and installed it, and its identity/scope were independently
+verified in the browser. It does NOT prove that a signing key or installation
+token is stored, usable, or bound to a working trusted publisher.
+
+Main protection was rechecked through the authorized branch API and Settings >
+Branches. main remains protected=false, protection.enabled=false; no existing
+classic rule is listed. The classic new-rule form is accessible. No rule was
+saved, no main write attempted, and no bypass configured. A Contents-write
+credential must not be represented as main-safe while that enforcement is absent.
+
+No private key, client secret or installation token was generated, read, copied,
+stored or sent to a guest. Do not ask the owner to paste one in conversation.
+The private-key/vault step remains pending behind the main-protection gate.
+Existing broad ChatGPT connection and all deployed services remain unchanged.
+
+No new sandbox/model/dependency install/deploy/paid operation or clamp rerun.
+Last reviewed implementation remains be43d40 (32 local tests passed in the
+preceding resumption); this update records account state only.
+
+Next owner-side prerequisite: save/enforce a main-only rule requiring PRs with
+administrator bypass disabled, force pushes/deletion disabled and no dependency
+on Actions checks; if GitHub reports that enforcement requires a paid plan,
+stop before any upgrade/payment. Verify the effective rule by read-only API/UI.
+Then prepare the separate trusted publisher/vault and only after that generate
+signing material via a secure path. Scoped identity alone does not pass the
+complete publication or live Modal gates.
+
+---
+
 ## Publisher identity resumption — 2026-10-26
 
 This read-only resumption starts from PR #67 source `be43d404d6cefb24e44944705a15ec839d5c20c2`; the PR is still draft/unmerged. No newer implementation commit existed at handoff.
