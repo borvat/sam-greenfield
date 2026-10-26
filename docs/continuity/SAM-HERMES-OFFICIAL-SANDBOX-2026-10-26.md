@@ -181,3 +181,14 @@ The optional authenticated broker admits one durable job, rejects conflicting re
 Local validation: TypeScript PASS; 142 isolated Node tests PASS; five Python controller tests PASS (including durable SQLite replay/conflict/ceiling with a FAKE worker, not cloud execution). The accepted real provider gate was not repeated. No live coding task or new role window has run yet.
 
 Next: install/review the narrow optional HTTP route on the existing isolated Hermes service with a disabled campaign policy, verify authentication and tool-free policy; then safely inspect the existing restricted role and open the approved window ONCE immediately before the pinned SAM rollout. Preserve all previous evidence and failures. No production/main/merge/Actions or other connector changes.
+
+
+## Credential boundary and fixture checkpoint
+
+Coding source: 93f37e535ceafe7b9053afe96b083a2a12d607ba. SAM deployed source remains ad64a6a; the fresh approved PostgreSQL window is NOT activated. The first optional-route rollout failed because root-owned code could not be read by the limited gateway identity. Baseline startup was restored before correction. Automatic review rejected transferring the Modal credential to the gateway identity. That rejected operation was NOT executed.
+
+The corrected design keeps the credential, gate, policy, durable claim database and worker in a separate root-only trusted broker. The gateway can read only a fixed-path, bounded HTTP forwarding adapter. A real read check under the gateway identity confirmed credential read DENIED. The closed broker returned CODING_POLICY_CLOSED. No coding job or model call was submitted. A corrected isolated Hermes rollout is in progress; verify health before starting the approved window. Existing model policy and tools remain unchanged.
+
+Created a PRIVATE synthetic fixture repository borvat/sam-hermes-coding-fixture with initial branch synthetic-baseline, intentionally broken clamp.py and tests. No main branch write, Actions workflow, codespace, collaborator or production integration. Baseline commit 4f2f6840ae87de2eaeee6e44d26b47338a6b5f9f. Publication of a repaired artifact must occur outside the guest only after independent acceptance. No repair Draft PR yet.
+
+Five local Python safety/controller tests passed after broker separation. These use a fake worker and are not real coding execution. Real provider gate evidence is retained and must not be repeated. Next: verify corrected rollout, read restricted role/grants/queues through the existing internal network without changing allowlists, then activate the one approved bounded window when ready. Do not auto-renew credentials/window, repeat arithmetic acceptance, or expose secret files. No paid upgrade/payment method or ongoing sandbox was created.
