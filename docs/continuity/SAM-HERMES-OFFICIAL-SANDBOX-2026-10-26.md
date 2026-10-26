@@ -107,3 +107,21 @@ Additional official references:
 The user has now approved the previously proposed single bounded Modal Direct campaign. This changes the authorization status, not the technical acceptance status. The financial and isolation gates still apply. No sandbox or paid model has been started. No production deployment, tool enablement or arithmetic-window renewal has occurred.
 
 Provider-account inspection is in progress. Private account and billing details are excluded from this public checkpoint. Next: finish effective budget/secure SDK access verification, then the official backend isolation gate, before any generated code. Stop rather than expanding the approved scope. There is no pending cloud execution initiated by this work.
+
+
+## Secure SDK authorization handoff
+
+The approved campaign is paused at provider SDK authorization, before any sandbox or model request.
+
+- The provider dashboard was reached through secure browser authentication. Private account/billing values are intentionally not published here.
+- The initial SDK token command from the local work environment ended with a connection error before issuing credentials. No credential file was produced by that attempt. Do not repeat it blindly.
+- A trusted TLS connectivity probe from the existing Hermes service succeeded. The pinned official Modal SDK was installed in a separate TEMPORARY virtual environment, preserving Hermes's main environment and persistent-disk capacity. No generated code or cloud compute ran.
+- One official short-lived SDK authorization flow was started from the existing Hermes operator shell. It is owned by this acceptance campaign and is pending user completion; do not start a competing flow.
+- Automatic approval review blocked inspection of that authentication flow's terminal output because it could disclose authorization links or credential material. No bypass or filtered extraction was used. Complete the sensitive authorization step through manual secure browser handoff, never through chat.
+- The provider token-list view did not show a completed API-token creation during the checked handoff state. Recheck actual state after the user completes authorization; never infer successful authentication from a started command.
+
+No application source was deployed, coding tool enabled, previous arithmetic task repeated, test window renewed, payment method added, paid plan upgraded or temporary cloud resource created. There is no cloud workload requiring cleanup. The single operator authorization flow remains pending and may expire; inspect its state safely before resuming or cancelling it. The temporary SDK can be lost on a container replacement and is not an application deployment.
+
+Next action: user completes ONLY the pending provider SDK authorization in the secure browser. Then validate the stored credential without showing its contents, verify the cost gate is still effective, and resume the official integration/live isolation gate. The coding repair, independent verifier, wrong-result rejection, coding Draft PR and restart-persistence acceptance remain NOT RUN. The prior arithmetic acceptance is unchanged.
+
+New billable compute/model/resource usage initiated: none. Existing hosting continues. Financial approval is already granted for this one bounded campaign and must not be requested again unless the requested scope/cost changes. This handoff is authentication, not renewed financial authorization.
