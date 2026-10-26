@@ -27,6 +27,7 @@ export async function postgresHarness() {
     return r.stdout;
   };
   const data = join(root, 'data');
+  let cleanupPool: Pool | undefined;
   const stop = () => run('pg_ctl', ['-D', data, '-m', 'immediate', '-w', 'stop']);
   const start = () => run('pg_ctl', ['-D', data, '-l', join(root, 'postgres.log'), '-o',
     `-h 127.0.0.1 -p ${port} -k '' -c fsync=on -c synchronous_commit=on -c full_page_writes=on`, '-w', 'start']);
@@ -35,11 +36,16 @@ export async function postgresHarness() {
     start();
     const url = `postgresql://sam_test@127.0.0.1:${port}/postgres`;
     const pool = new Pool({ connectionString: url });
+    cleanupPool = pool;
+    // SAM's actual schema declares VECTOR columns. Use the real extension,
+    // never a substitute type or a rewritten schema in the acceptance fixture.
+    await pool.query('CREATE EXTENSION IF NOT EXISTS vector');
     await pool.query(await readFile(new URL('../../packages/db/src/schema.sql', import.meta.url), 'utf8'));
     return { pool, url, version: (await pool.query('SELECT version() AS v')).rows[0].v,
       async restart() { stop(); start(); },
       async close() { await pool.end(); stop(); await rm(root, { recursive: true, force: true }); } };
   } catch (error) {
+    await cleanupPool?.end().catch(() => {});
     try { stop(); } catch {}
     await rm(root, { recursive: true, force: true }); throw error;
   }
