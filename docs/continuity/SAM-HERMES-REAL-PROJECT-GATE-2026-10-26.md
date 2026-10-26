@@ -1,3 +1,38 @@
+## Operator startup diagnostics and restoration — 2026-10-26 05:42 UTC
+
+Financial authorization remains USD 1 for one bounded round; no Modal guest or
+model call has started and the runtime/PG window remains unchanged.
+
+Temporary Hermes TEST startup wrapper deployment dep-dbfeapcs728c73f4603g
+failed before the preflight ran (exit 127): nested single quotes were treated
+as command text. The exact original Docker Command was restored and deployment
+dep-dbfedle7bikc73d7ppsg reached Live at 05:37:39 UTC on the SAME pinned image.
+
+A quote-free Python argv wrapper, containing only the reviewed pinned driver
+encoded as numeric bytes, then ran the finite operator preflight successfully.
+Deployment dep-dbfeennb9u1s73ckoaug reached Live at 05:39:51 UTC.
+Read-only output establishes root-only credential and prior ledger path
+presence, zero guest creations/model calls, publisher still inactive.
+The first observer reported SDK UNAVAILABLE/ModuleNotFoundError because the
+venv executable existed before the normal launcher finished pip installation;
+SAM_CODING_ROUTE_READY followed 14 seconds later. This is NOT evidence of bad
+credentials or missing existing App.
+
+The observer now waits for the pinned modal==1.6.2 import before its SINGLE
+read-only lookup. Versioned private report preflight-v2.json preserves the
+earlier evidence instead of overwriting it. Two synthetic local tests passed:
+executable-before-import race, and completed-report replay after restart.
+No real credential/network/Modal call was used in those tests.
+Updated source SHA-256:
+9b67862b68337eb4f0ef585f1ac7ae5f7cab33a97e74979f566494189879089a
+
+Next: run the corrected finite observer, record actual authentication result,
+then restore the original /bin/sh /opt/data/sam-hermes-start.sh Docker Command.
+Do not leave a diagnostic wrapper configured. No existing gateway/policy/ledger
+file was edited or reset. A transient gateway restart is not new SAM PostgreSQL
+durability/no-replay acceptance. SAM source remains 93f37e5; no SAM deploy.
+
+---
 ## New bounded round authorized; operator access preflight — 2026-10-26
 
 The owner explicitly approved the proposed single round after the previous

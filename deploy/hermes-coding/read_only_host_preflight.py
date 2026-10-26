@@ -13,6 +13,8 @@ import time
 
 ROOT=Path('/opt/data/sam-real-ui-round-20261026')
 SDK=Path('/tmp/sam-modal-sdk/bin/python')
+REPORT='preflight-v2.json'
+READY_CHECK="import modal,importlib.metadata;assert importlib.metadata.version('modal')=='1.6.2'"
 SDK_CHECK='''import json,importlib.metadata
 try:
  import modal
@@ -34,12 +36,23 @@ def inspect():
     # Normal existing startup installs its previously pinned SDK into /tmp.
     # Wait only for that known executable; this observer installs nothing.
     deadline=time.monotonic()+55
-    while not SDK.is_file() and time.monotonic()<deadline:time.sleep(1)
+    sdk_ready=False
+    while time.monotonic()<deadline:
+        if SDK.is_file():
+            try:
+                check=subprocess.run([str(SDK),'-c',READY_CHECK],
+                    env={'PATH':'/usr/bin:/bin'},stdin=subprocess.DEVNULL,
+                    capture_output=True,timeout=3)
+                if check.returncode==0:
+                    sdk_ready=True;break
+            except (OSError,subprocess.TimeoutExpired):pass
+        time.sleep(1)
     report['sdkExecutablePresent']=SDK.is_file()
+    report['sdkImportReady']=sdk_ready
     for name,path in [('modalCredentialPresent','/opt/data/sam-modal-acceptance.toml'),
                       ('priorBrokerStatePresent','/opt/data/sam-modal-coding-jobs.sqlite')]:
         p=Path(path);report[name]=p.is_file() and not p.is_symlink()
-    if SDK.is_file() and report['modalCredentialPresent']:
+    if sdk_ready and report['modalCredentialPresent']:
         try:
             result=subprocess.run([str(SDK),'-c',SDK_CHECK],
                 env={'PATH':'/usr/bin:/bin','MODAL_CONFIG_PATH':'/opt/data/sam-modal-acceptance.toml'},
@@ -48,8 +61,8 @@ def inspect():
             if set(data)-{'sdk','readOnlyLookup','appId'}:raise ValueError('UNEXPECTED_OUTPUT')
             report['modalReadOnly']=data
         except Exception as e:report['modalReadOnly']={'readOnlyLookup':type(e).__name__}
-    (ROOT/'preflight.json').write_text(json.dumps(report,sort_keys=True))
-    (ROOT/'preflight.json').chmod(0o600)
+    (ROOT/REPORT).write_text(json.dumps(report,sort_keys=True))
+    (ROOT/REPORT).chmod(0o600)
     print(json.dumps(report,sort_keys=True),flush=True)
 
 def main():
@@ -60,10 +73,10 @@ def main():
     if ROOT.stat().st_uid!=0 or ROOT.stat().st_mode&0o077:raise RuntimeError('OPERATOR_PATH_DENIED')
     if len(sys.argv)>1 and sys.argv[1]=='inspect':
         inspect();return
-    if (ROOT/'preflight.json').exists():
+    if (ROOT/REPORT).exists():
         # Read-only inspection is not re-dispatched after another container start.
         print('APPROVED_ROUND_PREFLIGHT_ALREADY_RECORDED',flush=True);return
-    path=ROOT/'read-only-preflight.py'
+    path=ROOT/'read-only-preflight-v2.py'
     if path.is_symlink():raise RuntimeError('OPERATOR_PATH_DENIED')
     source=Path(__file__).read_bytes()
     if path.exists() and path.read_bytes()!=source:raise RuntimeError('OPERATOR_SOURCE_CONFLICT')
