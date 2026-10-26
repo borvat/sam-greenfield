@@ -100,3 +100,10 @@ Additional official references:
 - https://www.daytona.io/pricing
 - https://vercel.com/docs/sandbox/pricing
 - https://hermes-agent.nousresearch.com/docs/user-guide/features/tool-gateway
+
+
+## Campaign resumption
+
+The user has now approved the previously proposed single bounded Modal Direct campaign. This changes the authorization status, not the technical acceptance status. The financial and isolation gates still apply. No sandbox or paid model has been started. No production deployment, tool enablement or arithmetic-window renewal has occurred.
+
+Provider-account inspection is in progress. Private account and billing details are excluded from this public checkpoint. Next: finish effective budget/secure SDK access verification, then the official backend isolation gate, before any generated code. Stop rather than expanding the approved scope. There is no pending cloud execution initiated by this work.
