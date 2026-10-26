@@ -115,6 +115,7 @@ test('PostgreSQL: database server crash/restart preserves request, reservation a
 test('PostgreSQL: service revocation and project disable survive fresh ledger and identity objects',check,async()=>{
   const bound=await binding(),admin=new PostgresModelAdministration(pg.pool);
   await admin.revokeService(grantId,await adminApproval({action:'revokeService',grantId}));
+  await pg.restart();
   await assert.rejects(new PostgresModelLedger(pg.pool).reserve({...bound,identity:authenticateSamModelToken(s.token(),s.config)},task,candidate),/AI_SERVICE_DENIED/);
   await admin.setProjectEnabled('qnan','test',false,await adminApproval({action:'setProjectEnabled',projectId:'qnan',environment:'test',enabled:false}));
   assert.equal((await pg.pool.query("SELECT enabled FROM sam_ai_project_state WHERE project_id='qnan'")).rows[0].enabled,false);
@@ -135,7 +136,9 @@ test('PostgreSQL: project revocation remains denied after database restart even 
 });
 test('PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero',check,async()=>{
   const l=new PostgresModelLedger(pg.pool),t=await l.reserve(await binding(),task,candidate);await l.dispatch(t);
-  await assert.rejects(l.finish(t,{model:'reported-version',output:4,usage:undefined} as any),/AI_USAGE_UNKNOWN/);await l.fail(t);
+  for(const usage of [undefined,{inputTokens:NaN,outputTokens:20},{inputTokens:100,outputTokens:-1},{inputTokens:'100',outputTokens:20}])
+    await assert.rejects(l.finish(t,{model:'reported-version',output:4,usage} as any),/AI_USAGE_UNKNOWN/);
+  await l.fail(t);
   const row=await l.inspect(s.identity,t.id);assert.equal(row.ai_state,'UNRESOLVED');assert.equal(row.ai_input_tokens,null);
   assert.equal(row.ai_computed_microusd,null);assert.equal(row.ai_reserved_microusd,row.ai_exposure_microusd);
 });
@@ -147,6 +150,14 @@ test('PostgreSQL: reported usage, calculated cost and verified invoice are separ
   await new PostgresModelAdministration(pg.pool).reconcile(t.id,evidence,await adminApproval({action:'reconcile',id:t.id,evidence}));
   row=await l.inspect(s.identity,t.id);assert.equal(row.ai_computed_microusd,'104');assert.equal(row.ai_invoiced_microusd,'105');
   assert.equal(row.ai_requested_model,'requested-model');assert.equal(row.ai_reported_model,'reported-version');
+  assert.ok(BigInt(row.ai_estimated_microusd)<BigInt(row.ai_reserved_microusd));
+  assert.notEqual(row.ai_reserved_microusd,row.ai_computed_microusd);
+  const history={estimated:row.ai_estimated_microusd,reserved:row.ai_reserved_microusd,computed:row.ai_computed_microusd,
+    invoiced:row.ai_invoiced_microusd,input:row.ai_input_tokens,output:row.ai_output_tokens};
+  await pg.restart();
+  row=await new PostgresModelLedger(pg.pool).inspect(authenticateSamModelToken(s.token(),s.config),t.id);
+  assert.deepEqual({estimated:row.ai_estimated_microusd,reserved:row.ai_reserved_microusd,computed:row.ai_computed_microusd,
+    invoiced:row.ai_invoiced_microusd,input:row.ai_input_tokens,output:row.ai_output_tokens},history);
 });
 test('PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history',check,async()=>{
   const l=new PostgresModelLedger(pg.pool),t=await l.reserve(await binding(),task,candidate);await l.fail(t);
