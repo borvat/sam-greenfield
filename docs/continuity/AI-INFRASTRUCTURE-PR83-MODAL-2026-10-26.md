@@ -25,3 +25,16 @@ Do not create a second sandbox. Reattach only to the ID above; if absent/expired
 All 15 engine cases remain pending; 0 engine cases have passed at this checkpoint. Previous mocked-storage Gateway evidence is unchanged. Hermes acceptance remains unrecorded/proposed.
 
 On completion or failure: export evidence, terminate this sandbox and verify termination. The provider-enforced lifetime is the cleanup backstop. No shared database/service/role/secret/default model is in scope.
+
+## PostgreSQL acceptance completed — 2026-10-26T22:15Z
+
+**LOCAL_VERIFIED in an isolated remote sandbox:** source `a644ba6158c1fdd7e49c7332ff74782726c79ff2`; all 15 acceptance cases PASS, fail 0, skipped 0, cancelled 0, test and remote exit 0. This is real PostgreSQL + real Vault + synthetic provider HTTP, not live SAM/Hermes/provider activation.
+
+Environment: Linux 4.19.0-gvisor x86_64, Node 22.23.4, PostgreSQL 15.19 (Debian 15.19-0+deb12u1), pgvector 0.8.1 from upstream commit 778dacf20c07caf904557a88705142631818d8cb, Vault 1.21.0. SQL settings actually queried: fsync=on, synchronous_commit=on, full_page_writes=on. UID/GID 65534, supplementary groups empty.
+
+Original run at 55eef92: 0 PASS / 15 hook failures / 0 skipped / exit 1; actual schema needs real vector extension. Harness now creates the installed real extension and cleans up its pool on failed setup; shared schema untouched.
+After bootstrap at 69eb9ca: 12 PASS / 3 failures / 0 skipped / exit 1. Actual server crashes exposed stale idle clients and unhandled checked-out client errors.
+Intermediate connection fix dd80f4b: 14 PASS / 1 failure / 0 skipped / exit 1. Two stale idle sockets required draining the bounded initial idle slots, rather than a fixed two-checkout assumption.
+Final ledger fix bounds pre-BEGIN admission attempts by initial idleCount+1, discards broken clients and observes checked-out error events. It never retries fn, COMMIT, a reservation mutation or a provider request. Strengthened existing assertions additionally restart PostgreSQL after service revocation and reconciled consumption, and reject malformed usage. No assertions removed or weakened; 15 case identities retained.
+
+Evidence: docs/architecture/evidence/pr83-postgres/. Regression runs and cleanup still pending at this checkpoint. Reattach only to the existing sandbox; do not create another. No shared operation authorized.
