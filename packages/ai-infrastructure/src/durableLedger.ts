@@ -48,12 +48,29 @@ export class PostgresModelLedger {
   #owned = new WeakMap<object, OwnedTicket>();
   constructor(private readonly pool: Pool) {}
   async #tx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
-    const c = await this.pool.connect().catch(() => deny('AI_LEDGER_UNAVAILABLE'));
-    try { await c.query('BEGIN'); await c.query("SET LOCAL lock_timeout='5s'");
+    let c: PoolClient | undefined;
+    let broken: Error | undefined;
+    const onClientError = (error: Error) => { broken = error; };
+    // A server restart can leave a stale socket in the pool until its error is
+    // delivered. Replace it only before fn has run: never replay a transaction,
+    // a possibly committed reservation, or a provider dispatch.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const candidate = await this.pool.connect().catch(() => deny('AI_LEDGER_UNAVAILABLE'));
+      candidate.on('error', onClientError);
+      try { await candidate.query('BEGIN'); c = candidate; break; }
+      catch {
+        candidate.release(new Error('AI_LEDGER_CONNECTION_BROKEN'));
+        candidate.removeListener('error', onClientError);
+        broken = undefined;
+      }
+    }
+    if (!c) deny('AI_LEDGER_UNAVAILABLE');
+    try { await c.query("SET LOCAL lock_timeout='5s'");
       const value = await fn(c); await c.query('COMMIT'); return value;
-    } catch (e) { try { await c.query('ROLLBACK'); } catch {}
+    } catch (e) { try { await c.query('ROLLBACK'); } catch { broken = new Error('AI_LEDGER_CONNECTION_BROKEN'); }
+      if (!(e instanceof InfrastructureError)) broken ??= new Error('AI_LEDGER_CONNECTION_BROKEN');
       if (e instanceof InfrastructureError) throw e; deny('AI_LEDGER_UNAVAILABLE');
-    } finally { c.release(); }
+    } finally { c.release(broken); c.removeListener('error', onClientError); }
   }
   async #grant(c: PoolClient, binding: DurableBinding) {
     const identity = samIdentityClaims(binding.identity);
