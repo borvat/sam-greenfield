@@ -1,11 +1,13 @@
 {
-  "status": "PROPOSED_NOT_AUTHORIZED_NOT_LIVE",
-  "financialApproval": false,
+  "status": "FINANCIAL_APPROVAL_RECEIVED_LIVE_GATES_PENDING",
+  "financialApproval": true,
   "publisherEnabled": false,
   "repository": "borvat/sam-greenfield",
   "repositoryId": 1408209483,
   "baseCommit": "91da88a224eabb2e0a9701dd1ed462c7a0e69f2d",
-  "allowedCandidateFiles": ["apps/command-center/src/ui.ts"],
+  "allowedCandidateFiles": [
+    "apps/command-center/src/ui.ts"
+  ],
   "independentSuite": "tests/isolated/hermes_real_ui_acceptance.cjs",
   "appId": 5475103,
   "installationId": 175336519,
@@ -28,7 +30,7 @@
   "sandboxLifetimeHardSeconds": 90,
   "proposedFreshTestWindowMinutes": 60,
   "reusePreviousWindow": false,
-  "newWindowAuthorized": false,
+  "newWindowAuthorized": true,
   "databasePrivilegeExpansion": false,
   "guestNetworkBlocked": true,
   "guestSecrets": [],

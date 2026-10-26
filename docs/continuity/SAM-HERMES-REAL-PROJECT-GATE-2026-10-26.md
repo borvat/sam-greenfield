@@ -1,3 +1,44 @@
+## New bounded round authorized; operator access preflight — 2026-10-26
+
+The owner explicitly approved the proposed single round after the previous
+checkpoint: maximum USD 1 usage within the existing account credit/cap, no cap
+increase/payment method/subscription/paid model, at most six sequential guests,
+one real UI task after gates, and a fresh window at most 60 minutes. Financial
+authorization is recorded; it is NOT live isolation acceptance. The runtime
+window and database deadline have not been opened or changed.
+
+Fresh Modal usage-limit UI reconfirmed provider-set USD 1 account cap and
+USD 1 credits. No cloud resource, model run or sandbox has been started.
+
+The Render Web Shell for sam-isolated-test does not provide a working session:
+it stays blank and shows Reconnecting. AX/type and a minimal pwd input did not
+produce an executed command or output. No database read/write or secret output
+occurred through that route. Do not repeat blind input attempts.
+
+A reviewed finite operator-only alternative is prepared in
+deploy/hermes-coding/read_only_host_preflight.py. Its SHA-256 is
+1400e224d02e9d85b6cfe28341309a53e8a16e4e20450ebbf21cd3c053b2d53c.
+It checks known root-only paths and the existing Modal SDK's read-only named-App
+lookup, printing only sanitized metadata. It never creates an App/Sandbox,
+runs a model/candidate, changes tools, refreshes a credential, touches PostgreSQL
+or links the publisher vault. It waits for the normal existing launcher to
+provide its previously pinned SDK, then terminates.
+
+Planned temporary Hermes TEST service Docker Command wrapper downloads this
+exact public source from a pinned reviewed commit, verifies its hash before
+running it, then execs the ORIGINAL /bin/sh /opt/data/sam-hermes-start.sh.
+Current pinned image stays unchanged. Original gateway launcher and policy
+files are not edited. Restore the exact original Docker Command after this
+operator preflight unless a separately reviewed round controller replaces it.
+The source and restoration path are reviewable BEFORE changing service config.
+This is trusted operator access, never a model-facing Terminal/GitHub tool.
+
+At this checkpoint no service setting or deployment has yet changed. Actual
+preflight output and any resulting deployment ID must be recorded separately.
+No success, SDK authorization or persistent storage access is inferred yet.
+
+---
+
 ## Stored credential metadata, identity adapter and financial boundary — 2026-10-26
 
 The owner's short reply was interpreted as completion of saving the credential.
