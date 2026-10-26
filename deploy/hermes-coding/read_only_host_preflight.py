@@ -13,17 +13,26 @@ import time
 
 ROOT=Path('/opt/data/sam-real-ui-round-20261026')
 SDK=Path('/tmp/sam-modal-sdk/bin/python')
-REPORT='preflight-v2.json'
+REPORT='preflight-v3.json'
 READY_CHECK="import modal,importlib.metadata;assert importlib.metadata.version('modal')=='1.6.2'"
 SDK_CHECK='''import json,importlib.metadata
 try:
  import modal
  assert importlib.metadata.version('modal')=='1.6.2'
+ from modal.config import config
+ present={'tokenIdConfigured':bool(config.get('token_id')),
+          'tokenSecretConfigured':bool(config.get('token_secret'))}
  try:
   app=modal.App.lookup('sam-hermes-isolation-gate',create_if_missing=False)
-  result={'sdk':'1.6.2','readOnlyLookup':'OK','appId':app.app_id}
+  result={'sdk':'1.6.2','readOnlyLookup':'OK','appId':app.app_id,**present}
  except Exception as e:
-  result={'sdk':'1.6.2','readOnlyLookup':type(e).__name__}
+  result={'sdk':'1.6.2','readOnlyLookup':type(e).__name__,**present}
+  if type(e).__name__=='AuthError':
+   message=str(e).lower()
+   result['authFailure']=('MISSING_CREDENTIAL' if 'token missing' in message or 'no token' in message
+      else 'INVALID_CREDENTIAL' if 'invalid' in message or 'expired' in message or 'revoked' in message
+      else 'ACCESS_DENIED' if 'permission' in message or 'not authorized' in message
+      else 'AUTH_UNCLASSIFIED')
 except Exception as e:
  result={'sdk':'UNAVAILABLE','readOnlyLookup':type(e).__name__}
 print(json.dumps(result))
@@ -58,7 +67,7 @@ def inspect():
                 env={'PATH':'/usr/bin:/bin','MODAL_CONFIG_PATH':'/opt/data/sam-modal-acceptance.toml'},
                 stdin=subprocess.DEVNULL,text=True,capture_output=True,timeout=20)
             data=json.loads(result.stdout)
-            if set(data)-{'sdk','readOnlyLookup','appId'}:raise ValueError('UNEXPECTED_OUTPUT')
+            if set(data)-{'sdk','readOnlyLookup','appId','tokenIdConfigured','tokenSecretConfigured','authFailure'}:raise ValueError('UNEXPECTED_OUTPUT')
             report['modalReadOnly']=data
         except Exception as e:report['modalReadOnly']={'readOnlyLookup':type(e).__name__}
     (ROOT/REPORT).write_text(json.dumps(report,sort_keys=True))
@@ -76,7 +85,7 @@ def main():
     if (ROOT/REPORT).exists():
         # Read-only inspection is not re-dispatched after another container start.
         print('APPROVED_ROUND_PREFLIGHT_ALREADY_RECORDED',flush=True);return
-    path=ROOT/'read-only-preflight-v2.py'
+    path=ROOT/'read-only-preflight-v3.py'
     if path.is_symlink():raise RuntimeError('OPERATOR_PATH_DENIED')
     source=Path(__file__).read_bytes()
     if path.exists() and path.read_bytes()!=source:raise RuntimeError('OPERATOR_SOURCE_CONFLICT')

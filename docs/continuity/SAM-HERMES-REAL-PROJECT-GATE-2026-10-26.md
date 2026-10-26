@@ -1,3 +1,42 @@
+## Modal authentication gate and safe identity preparation — 2026-10-26 05:46 UTC
+
+The corrected observer ran on TEST Hermes in deployment
+dep-dbfegcqvcj2c73frjge0, Live at 05:43:24 UTC. SDK 1.6.2 import is ready.
+Existing credential and ledger paths are present, but the SINGLE read-only
+named-App lookup returned AuthError. No Sandbox/App/image creation/model call
+occurred. Do not infer revocation, expiry or a needed new key from this class
+alone: missing profile/credentials and provider refusal must be distinguished.
+
+Original startup command restored; dep-dbfehci9lscs739re09g is Live as of
+05:45:37 UTC, same pinned image. No SAM deployment or PG deadline/write occurred.
+
+Observer v3 records ONLY booleans for SDK-resolved token presence and a fixed
+failure category. It never prints token bytes, profile config or exception
+text. It will perform one read-only lookup, no retry of denied API calls.
+Three local tests pass, including synthetic secret-redaction checks for four
+AuthError messages. V3 source SHA-256:
+7bab1ca51648e80a576163095b8de61a5ff93550e27c32394b401925db005cdc
+Next operator step: distinguish local config absence from actual credential
+refusal using this finite observer; restore original command afterward.
+
+New publisher_auth_preflight.cjs is UNREGISTERED and has not used the real key.
+It uses only fixed api.github.com routes to inspect the installation, mint a
+one-repository short-lived token, independently inspect its repo inventory and
+read main.protected, then revoke the token even on downstream rejection.
+No repository write route exists; bounded responses/timeouts, no redirects or
+provider-error logging. It returns sanitized identity metadata only.
+Nine local tests passed using synthetic RSA/token/API transport, including
+overscoped installation/token/inventory rejection, unprotected main, secret
+redaction and mandatory token revocation. Disabled operator identity fails
+before network. Real App authentication is still NOT established.
+
+Financial approval remains valid within its original USD 1 campaign/account
+cap; none consumed by a new Modal compute/model operation. Existing Render
+hosting continues and its exact invoice delta is not established. No real
+UI candidate, independent live verification, repair Draft PR or new SAM
+PostgreSQL replacement/no-replay result exists. The real UI source is untouched.
+
+---
 ## Operator startup diagnostics and restoration — 2026-10-26 05:42 UTC
 
 Financial authorization remains USD 1 for one bounded round; no Modal guest or
