@@ -1,0 +1,107 @@
+Previous HEAD position was dd80f4b fix(ai-infra): discard stale PostgreSQL clients before transaction admission [skip ci]
+HEAD is now at a644ba6 test(ai-infra): strengthen revocation and consumption persistence assertions [skip ci]
+TESTED_SOURCE_COMMIT a644ba6158c1fdd7e49c7332ff74782726c79ff2
+REAL_POSTGRES_SETTINGS {"fsync":"on","synchronous_commit":"on","full_page_writes":"on","vector_version":"0.8.1"}
+TAP version 13
+# Subtest: PostgreSQL: concurrent workers cannot reserve a budget that only covers one request
+ok 1 - PostgreSQL: concurrent workers cannot reserve a budget that only covers one request
+  ---
+  duration_ms: 1239.166497
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: same request reuses saved identity after process restart; different content is rejected
+ok 2 - PostgreSQL: same request reuses saved identity after process restart; different content is rejected
+  ---
+  duration_ms: 57.720093
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: SIGKILL after reservation preserves held budget with no resend after restart
+ok 3 - PostgreSQL: SIGKILL after reservation preserves held budget with no resend after restart
+  ---
+  duration_ms: 294.869825
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: SIGKILL after actual synthetic HTTP send persists unresolved spend and blocks resending
+ok 4 - PostgreSQL: SIGKILL after actual synthetic HTTP send persists unresolved spend and blocks resending
+  ---
+  duration_ms: 585.093589
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: database server crash/restart preserves request, reservation and approval usage
+ok 5 - PostgreSQL: database server crash/restart preserves request, reservation and approval usage
+  ---
+  duration_ms: 504.04491
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: service revocation and project disable survive fresh ledger and identity objects
+ok 6 - PostgreSQL: service revocation and project disable survive fresh ledger and identity objects
+  ---
+  duration_ms: 428.232585
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: forged identity, mismatched SAM goal, expired grant and revoked approval are denied before send
+ok 7 - PostgreSQL: forged identity, mismatched SAM goal, expired grant and revoked approval are denied before send
+  ---
+  duration_ms: 57.20548
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: project revocation remains denied after database restart even with a valid service grant
+ok 8 - PostgreSQL: project revocation remains denied after database restart even with a valid service grant
+  ---
+  duration_ms: 406.603689
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero
+ok 9 - PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero
+  ---
+  duration_ms: 119.358847
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: reported usage, calculated cost and verified invoice are separate values
+ok 10 - PostgreSQL: reported usage, calculated cost and verified invoice are separate values
+  ---
+  duration_ms: 457.052839
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history
+ok 11 - PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history
+  ---
+  duration_ms: 123.27445
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: changed limits use revision CAS; expired periods do not erase held reservations
+ok 12 - PostgreSQL: changed limits use revision CAS; expired periods do not erase held reservations
+  ---
+  duration_ms: 130.478255
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: ledger database unavailable rejects admission without a secret/provider operation
+ok 13 - PostgreSQL: ledger database unavailable rejects admission without a secret/provider operation
+  ---
+  duration_ms: 46.070422
+  type: 'test'
+  ...
+# Subtest: PostgreSQL: unallocated legacy model_calls history is never silently treated as free
+ok 14 - PostgreSQL: unallocated legacy model_calls history is never silently treated as free
+  ---
+  duration_ms: 85.587546
+  type: 'test'
+  ...
+# Subtest: PostgreSQL + actual SAM Gateway + real Vault: one canonical model_calls reservation/usage record
+ok 15 - PostgreSQL + actual SAM Gateway + real Vault: one canonical model_calls reservation/usage record
+  ---
+  duration_ms: 1065.54591
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6317.690322
+POSTGRES_SUITE_EXIT_CODE 0
+
+REMOTE_EXIT_CODE=0
