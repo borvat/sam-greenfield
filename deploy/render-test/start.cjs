@@ -12,6 +12,10 @@ let proxy,storageLease;
 function command(bin,args,options={}){const r=spawnSync(bin,args,{stdio:'inherit',...options});if(r.status!==0)throw new Error('Sandbox initialization failed');}
 async function main(binding,storageReport){
   const existingGoalId=binding?process.env.SAM_TEST_PERSISTENT_SMOKE_GOAL_ID:undefined;
+  const hermesProbe=process.env.SAM_HERMES_PROBE_ENABLED==='1';
+  const codingProbe=process.env.SAM_HERMES_CODING_PROBE_ENABLED==='1';
+  if(codingProbe&&!hermesProbe)throw Error('CODING_PROBE_PARENT_REQUIRED');
+  if(hermesProbe&&!binding)throw Error('HERMES_PROBE_PERSISTENT_STORAGE_REQUIRED');
   if(binding&&!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(existingGoalId||''))throw Error('PERSISTENT_SMOKE_GOAL_REQUIRED');
   for(const key of Object.keys(process.env))if(/API_KEY|CLIENT_SECRET|REFRESH_TOKEN|DATABASE_URL|SAM_PRODUCTION|GOOGLE_|BOL_|EBOEK/i.test(key))delete process.env[key];
   let databaseUrl,entity;
@@ -37,8 +41,11 @@ async function main(binding,storageReport){
   const host=process.env.RENDER_EXTERNAL_HOSTNAME||'localhost';
   const launch=(entry,extra)=>{if(stopping||storageLease?.expired())throw Error('STORAGE_WINDOW_ENDED');const p=spawn(process.execPath,['--import','tsx',entry],{env:{...env,...extra},stdio:'inherit'});children.push(p);p.on('exit',()=>shutdown(1));};
   const startApplication=async()=>{
-  launch('apps/runtime/src/main.ts',{PORT:'8080',SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'render-test',SAM_COMPOSITION_MODULE:'/app/apps/runtime/src/developmentCompositionModule.ts',SAM_RUNTIME_STATUS_BEARER_TOKEN:token});
-  launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_REQUIRE_GOAL_ACCEPTANCE:'1',SAM_COMMAND_CENTER_PORT:'5000',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`});
+  launch('apps/runtime/src/main.ts',{PORT:'8080',SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'render-test',SAM_COMPOSITION_MODULE:codingProbe?'/app/apps/runtime/src/hermesCodingCompositionModule.ts':hermesProbe?'/app/apps/runtime/src/hermesProbeCompositionModule.ts':'/app/apps/runtime/src/developmentCompositionModule.ts',SAM_RUNTIME_STATUS_BEARER_TOKEN:token,
+    ...(hermesProbe?{SAM_HERMES_PROBE_ENABLED:'1',SAM_HERMES_CODING_PROBE_ENABLED:codingProbe?'1':undefined,SAM_HERMES_TEST_CONFIG_PATH:process.env.SAM_HERMES_TEST_CONFIG_PATH,SAM_HERMES_PROBE_ENTITY:entity,
+      SAM_HERMES_PROBE_ACTIVATED_AT:process.env.SAM_HERMES_PROBE_ACTIVATED_AT,SAM_HERMES_PROBE_EXPIRES_AT:process.env.SAM_HERMES_PROBE_EXPIRES_AT}:{})});
+  launch('apps/command-center/src/main.ts',{SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_REQUIRE_GOAL_ACCEPTANCE:'1',SAM_COMMAND_CENTER_PORT:'5000',SAM_COMMAND_CENTER_HOST:'0.0.0.0',SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:entity,SAM_DEV_LEGAL_ENTITY_ID:entity,SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_COMMAND_CENTER_ALLOWED_ORIGINS:`https://${host}`,
+    ...(hermesProbe?{SAM_HERMES_PROBE_ENABLED:'1',SAM_HERMES_CODING_PROBE_ENABLED:codingProbe?'1':undefined}:{})});
   launch('apps/mcp/src/main.ts',{SAM_MCP_PORT:'3001',SAM_MCP_HOST:'127.0.0.1',SAM_MCP_BEARER_TOKEN:token,SAM_MCP_ALLOWED_HOSTS:`${host},localhost,127.0.0.1`,SAM_MCP_ALLOWED_ORIGINS:`https://${host}`,SAM_DEV_LEGAL_ENTITY_ID:entity});
   };
   proxy=http.createServer(async(req,res)=>{

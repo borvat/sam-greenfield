@@ -8,7 +8,13 @@ const task=():HermesTask=>({task_id:randomUUID(),goal_id:randomUUID(),agent_role
   allowed_tools:[],repository_scope:[],execution_budget:{max_cost_usd:0,max_concurrency:1},timeout:3000,created_at:new Date().toISOString()});
 const store=()=>{let receipt:Receipt|undefined;return {load:async()=>receipt,save:async(r:Receipt)=>{receipt=structuredClone(r);},assertActive:async()=>{}} satisfies ReceiptStore;};
 const caps={auth:{type:'bearer',required:true},features:{run_submission:true,run_status:true,run_stop:true,runs_idempotency:{durable:true,retention_seconds:86400}}};
-async function fixture(t:any,overrides?:{tools?:any[];lost?:boolean;running?:boolean;wrongId?:boolean;reject?:number}){
+test('native durable readback after restart preserves committed usage.runtime metadata',async()=>{
+  const runtime={provider:'nous',model:'poolside/laguna-s-2.1:free',model_lock:'confirmed'};
+  const client=new HermesClient({baseUrl:'https://hermes.invalid',apiKey:'x'.repeat(32),assertServerPolicy:async()=>{},
+    transport:async()=>new Response(JSON.stringify({run_id:'run_durable',status:'completed',output:'42',usage:{runtime}}))});
+  assert.deepEqual((await client.status('run_durable')).runtime,runtime);
+});
+async function fixture(t:any,overrides?:{tools?:any[];lost?:boolean;running?:boolean;wrongId?:boolean;reject?:number;modelLock?:boolean;wrongLock?:boolean}){
   const requests:{path:string;method:string;key?:string;body:any}[]=[],keys=new Map<string,string>();let executions=0,stops=0;
   const send=(r:ServerResponse,status:number,body:any)=>{r.writeHead(status,{'content-type':'application/json'});r.end(JSON.stringify(body));};
   const server=createServer(async(req:IncomingMessage,res:ServerResponse)=>{
@@ -16,6 +22,8 @@ async function fixture(t:any,overrides?:{tools?:any[];lost?:boolean;running?:boo
     const record={path:req.url!,method:req.method!,key:req.headers['idempotency-key'] as string|undefined,body:text?JSON.parse(text):undefined};requests.push(record);
     if(req.url==='/v1/capabilities')return send(res,200,caps);
     if(req.url==='/v1/toolsets')return send(res,200,{data:overrides?.tools??[]});
+    if(req.url==='/api/sessions')return send(res,409,{});
+    if(req.url?.endsWith('/model'))return send(res,200,{session_id:req.url.split('/')[3],runtime:{provider:overrides?.wrongLock?'paid':'nous',model:'poolside/laguna-s-2.1:free',model_lock:'accepted'}});
     if(req.url==='/v1/runs'&&req.method==='POST'){
       if(overrides?.reject)return send(res,overrides.reject,{error:'REDACTED secret must not propagate'});
       const prior=keys.get(record.key!);if(prior&&prior!==text)return send(res,409,{});
@@ -28,7 +36,7 @@ async function fixture(t:any,overrides?:{tools?:any[];lost?:boolean;running?:boo
   });
   await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise<void>(r=>{server.closeAllConnections();server.close(()=>r());}));
   const address=server.address() as any;
-  return {requests,executions:()=>executions,stops:()=>stops,client:new HermesClient({baseUrl:`http://127.0.0.1:${address.port}`,apiKey:'x'.repeat(32),pollMs:1,assertServerPolicy:async()=>{}})};
+  return {requests,executions:()=>executions,stops:()=>stops,client:new HermesClient({baseUrl:`http://127.0.0.1:${address.port}`,apiKey:'x'.repeat(32),pollMs:1,assertServerPolicy:async()=>{},requireNativeModelLock:overrides?.modelLock})};
 }
 test('real HTTP stub: lost acceptance response retries exactly one durable remote execution',async t=>{
   const f=await fixture(t,{lost:true}),s=store(),input=task();const result=await f.client.execute(input,s);
@@ -41,7 +49,7 @@ test('client reconstruction after simulated crash reads stored run instead of cr
   const f=await fixture(t,{running:true}),s=store(),input=task();
   const saved=s.save;let polls=0;
   s.save=async r=>{await saved(r);if(r.runId&&++polls===1)throw Error('simulated SAM crash after receipt persistence');};
-  await assert.rejects(f.client.execute(input,s),/simulated SAM crash/);s.save=saved;
+  await assert.rejects(f.client.execute(input,s),/HERMES_WORK_NO_LONGER_AUTHORIZED/);assert.equal(f.stops(),1);s.save=saved;
   const receipt=await s.load();assert.equal(receipt?.runId,'run_fixture');
   const second=await fixture(t);await second.client.execute(input,s);
   assert.equal(second.requests.filter(r=>r.method==='POST').length,0);assert.equal(f.executions(),1);
@@ -86,4 +94,15 @@ test('completed receipt remains readable after replay window without resubmissio
   const future=new HermesClient({baseUrl:'https://unused.invalid',apiKey:'x'.repeat(32),clock:()=>Date.now()+48*3600000,
     assertServerPolicy:async()=>{throw Error('network must not be used');}});
   assert.deepEqual(await future.execute(input,s),receipt);assert.equal(f.executions(),1);
+});
+
+test('native model lock is acknowledged before dispatch with stable session identity',async t=>{
+  const f=await fixture(t,{modelLock:true}),input=task();await f.client.execute(input,store());
+  const post=f.requests.find(r=>r.path==='/v1/runs')!;
+  assert.equal(post.body.session_id,'sam_'+input.task_id);
+  assert.equal(f.requests.filter(r=>r.path.endsWith('/model')).length,1);
+  assert(f.requests.findIndex(r=>r.path.endsWith('/model'))<f.requests.indexOf(post));
+});
+test('native model lock mismatch refuses dispatch',async t=>{
+  const f=await fixture(t,{modelLock:true,wrongLock:true});await assert.rejects(f.client.execute(task(),store()),/HERMES_MODEL_LOCK_DENIED/);assert.equal(f.executions(),0);
 });

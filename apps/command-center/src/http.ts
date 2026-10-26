@@ -66,6 +66,11 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('Owner view of goals, execution, verification and finance.','Read-only test environment. Reports require independent verification; external writes are disabled.')
             .replace('Example: Review current bol sales and accounting differences and produce a verified owner brief.','Describe a read-only objective and the result you need.');
         }
+        if(process.env.NODE_ENV==='development'&&process.env.SAM_DEVELOPMENT_SAFE_MODE==='1'&&process.env.SAM_HERMES_PROBE_ENABLED==='1'){
+          scopedHtml=scopedHtml.replace('Isolated development: external, financial and legal execution disabled. Goals remain unplanned.',
+            'اختبار ربط Hermes بلا أدوات: اكتب SUM 17 25. يتحقق SAM من الإجابة مستقلاً؛ بقية الأهداف تبقى دون تنفيذ.')
+            .replace('Describe a read-only objective and the result you need.','SUM 17 25');
+        }
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }

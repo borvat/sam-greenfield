@@ -28,7 +28,7 @@ const terminal=new Set(['completed','failed','cancelled','interrupted','unknown'
  * This first admission supports a server-enforced EMPTY tool profile only. */
 export class HermesClient {
   private base:URL;
-  constructor(private config:{baseUrl:string;apiKey:string;assertServerPolicy:()=>Promise<void>;transport?:typeof fetch;pollMs?:number;clock?:()=>number}){
+  constructor(private config:{baseUrl:string;apiKey:string;assertServerPolicy:()=>Promise<void>;transport?:typeof fetch;pollMs?:number;clock?:()=>number;requireNativeModelLock?:boolean}){
     this.base=new URL(config.baseUrl);
     const local=['127.0.0.1','localhost','[::1]'].includes(this.base.hostname);
     if(this.base.username||this.base.password||this.base.search||this.base.hash||this.base.pathname!=='/'||
@@ -66,7 +66,14 @@ export class HermesClient {
       throw new HermesError('HERMES_SERVER_TOOL_SCOPE_EXCESSIVE');
     return {durableIdempotency:true,serverTools:[]};
   }
-  async status(id:string){return runSchema.parse(await this.request(`/v1/runs/${runId.parse(id)}`));}
+  async status(id:string){
+    const run=runSchema.parse(await this.request(`/v1/runs/${runId.parse(id)}`));
+    // Hermes' durable readback after gateway replacement nests the committed
+    // served metadata under usage.runtime instead of the live top-level field.
+    if(run.runtime===undefined&&typeof run.usage==='object'&&run.usage!==null&&'runtime' in run.usage)
+      return {...run,runtime:run.usage.runtime};
+    return run;
+  }
   async stop(id:string){await this.request(`/v1/runs/${runId.parse(id)}/stop`,'POST',{});}
   async execute(raw:HermesTask,store:ReceiptStore):Promise<Receipt>{
     const parsed=taskSchema.safeParse(raw);if(!parsed.success)throw new HermesError('HERMES_TASK_SCOPE_DENIED');
@@ -86,13 +93,29 @@ export class HermesClient {
     if(!receipt?.runId){
       // Save the claim BEFORE dispatch. Retries keep the identical key/body/identity.
       receipt={taskHash:hash,status:'SUBMITTING'};await store.save(receipt);
+      if(this.config.requireNativeModelLock){
+        // Native Hermes session lock makes the served pair part of the committed
+        // turn outcome. Stable empty-session identity is independent of retries.
+        const sessionId=`sam_${task.task_id}`,selection={model:FREE_MODEL,provider:'nous',require_model_lock:true};
+        await store.assertActive();
+        try{await this.request('/api/sessions','POST',{id:sessionId,...selection},undefined,deadline);}
+        catch(e){if(!(e instanceof HermesError)||e.code!=='HERMES_HTTP_409')throw e;}
+        const lock=await this.request(`/api/sessions/${sessionId}/model`,'POST',selection,undefined,deadline);
+        if(lock?.session_id!==sessionId||lock.runtime?.model!==FREE_MODEL||lock.runtime?.provider!=='nous'||lock.runtime?.model_lock!=='accepted')
+          throw new HermesError('HERMES_MODEL_LOCK_DENIED');
+        Object.assign(body,{session_id:sessionId});
+      }
       let accepted:any;
       for(let attempt=0;attempt<2;attempt++){
         await store.assertActive();
         try{accepted=runSchema.parse(await this.request('/v1/runs','POST',body,`sam-hermes:${task.task_id}`,deadline));break;}
         catch(e){if(!(e instanceof HermesError)||!['HERMES_TRANSPORT_UNCERTAIN','HERMES_HTTP_503','HERMES_HTTP_429'].includes(e.code)||attempt===1)throw e;}
       }
-      receipt={taskHash:hash,runId:accepted.run_id,status:accepted.status};await store.save(receipt);
+      receipt={taskHash:hash,runId:accepted.run_id,status:accepted.status};
+      try{await store.save(receipt);}catch{
+        await this.stop(receipt.runId!).catch(()=>{});
+        throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');
+      }
     }
     while(this.now()<deadline){
       try{await store.assertActive();}catch{await this.stop(receipt.runId!).catch(()=>{});throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');}
@@ -103,7 +126,10 @@ export class HermesClient {
       }
       if(polled.run_id!==receipt.runId)throw new HermesError('HERMES_RUN_ID_MISMATCH');
       receipt={taskHash:hash,runId:polled.run_id,status:polled.status,...(polled.output===undefined?{}:{output:polled.output}),runtime:polled.runtime};
-      await store.save(receipt);
+      try{await store.save(receipt);}catch{
+        await this.stop(receipt.runId!).catch(()=>{});
+        throw new HermesError('HERMES_WORK_NO_LONGER_AUTHORIZED');
+      }
       if(terminal.has(receipt.status))return receipt;
       await new Promise(r=>setTimeout(r,this.config.pollMs??1000));
     }

@@ -46,7 +46,7 @@ export async function claimNextWorkForSpecialistAtomic(
     const updated = await client.query(
       `UPDATE work_queue
           SET worker_version=$2,
-              handoff=$3::jsonb
+              handoff=COALESCE(handoff,'{}'::jsonb)||$3::jsonb
         WHERE id=$1
           AND fencing_token=$4
           AND lease_owner=$5

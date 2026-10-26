@@ -25,6 +25,15 @@ async function main(){
   if(!(await admin.query("SELECT to_regclass('public.goals') p")).rows[0].p){await admin.query('CREATE TABLE public.goals(id uuid)');publicControl=true;}
   const setup=await provision(u.href,schema,role,dir);created=true;assert.equal(setup.status,'ISOLATED_SETUP_VERIFIED');
   const config=JSON.parse(await readFile(join(dir,'restricted-connection.json'),'utf8'));
+  await admin.query('BEGIN');
+  await admin.query("SELECT set_config('app.current_org_id',$1,true),set_config('app.current_legal_entity_id',$2,true)",[config.org,config.entity]);
+  await admin.query(`INSERT INTO "${schema}".verification_contracts(capability_id,description,verification_method,required_evidence_fields,independent_query_template)
+    VALUES('hermes.generate_candidate','Native arithmetic check','external_event','{"candidateHash":"string","independentCheck":"string"}','{}')`);
+  await admin.query('COMMIT');
+  const hermes=spawnSync(process.execPath,['--import','tsx','tests/core/hermesNativeChild.ts',join(dir,'restricted-connection.json')],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:30000});
+  assert.equal(hermes.status,0,'native Hermes SQL child must pass');
+  const hermesReceipt=JSON.parse(hermes.stdout.trim().split('\n').at(-1)!);
+  assert.equal(hermesReceipt.status,'PASS');console.log(JSON.stringify(hermesReceipt));
   const verified=await openPersistentBinding(join(dir,'restricted-connection.json'));assert.equal(verified.report.status,'PROVISIONED_STORAGE_VERIFIED');
   const headers={Authorization:'Bearer local-fixture-unused-externally','Content-Type':'application/json'};
   const first=await start();const response=await fetch('http://127.0.0.1:'+first.port+'/api/goals',{method:'POST',headers,body:JSON.stringify({objective:'Synthetic persistence probe only. Do not plan or execute.'})});
