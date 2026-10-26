@@ -11,7 +11,11 @@ test('switching goals must immediately replace the previous final report and evi
   const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const elements=new Map();
   const element=id=>{
-    if(!elements.has(id))elements.set(id,{textContent:'',innerHTML:'',hidden:false,disabled:true});
+    if(!elements.has(id)){
+      let text='',markup='';
+      elements.set(id,{get textContent(){return text},set textContent(value){text=String(value);markup=text},
+        get innerHTML(){return markup},set innerHTML(value){markup=String(value)},hidden:false,disabled:true});
+    }
     return elements.get(id);
   };
   element('finalReport').textContent='Report from goal A';

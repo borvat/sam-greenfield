@@ -4,6 +4,8 @@ No candidate program is executed. Modal and worker subprocesses are synthetic.
 Run from any directory: python3 tests/isolated/hermes_broker_expansion_audit.py -v
 """
 import importlib.util
+import hashlib
+import copy
 import json
 from pathlib import Path
 import sqlite3
@@ -26,6 +28,21 @@ worker = module('audit_worker', 'deploy/hermes-coding/modal_worker.py')
 JOB = '00000000-0000-4000-8000-000000000001'
 SOURCE = worker.BROKEN.replace('min(lower, max(upper, value))', 'min(upper, max(lower, value))')
 BODY = {'jobId': JOB, 'artifact': {'files': {'clamp.py': SOURCE}, 'tests': 'assert True', 'action': 'run_tests'}}
+
+def receipt():
+    digest=lambda text:hashlib.sha256(text.encode()).hexdigest()
+    stages=[]
+    for index,name in enumerate(['wrong_control','hermes_requested_tests','sam_independent_tests']):
+        stages.append({'name':name,'sandboxId':'SYNTHETIC-'+str(index),'cleanup':True,
+            'exitCode':1 if index==0 else 0,'rejected':index==0,
+            'sourceHash':digest(worker.BROKEN if index==0 else SOURCE),
+            'testsHash':digest(BODY['artifact']['tests'] if index==1 else worker.INDEPENDENT),
+            'stdoutHash':'0'*64,'stderrHash':'1'*64})
+    stages[2]['result']={'passed':True,'assertions':46}
+    return {'ok':True,'receipt':{'jobId':JOB,'sourceHash':digest(SOURCE),
+        'requestedTestsHash':digest(BODY['artifact']['tests']),
+        'independentTestsHash':digest(worker.INDEPENDENT),'independentAssertions':46,
+        'complete':True,'wrongCodeRejected':True,'stages':stages}}
 
 class BrokerAudit(unittest.TestCase):
     def setUp(self):
@@ -83,8 +100,7 @@ class BrokerAudit(unittest.TestCase):
     def test_GATE_invalid_artifact_must_not_consume_job_or_launch_worker(self):
         broker.execute({'jobId': JOB, 'artifact': {'files': {'../.env': 'CANARY_ONLY'}}})
         self.run.assert_not_called()
-        with sqlite3.connect(broker.DB) as db:
-            self.assertEqual(db.execute('SELECT count(*) FROM jobs').fetchone()[0], 0)
+        self.assertFalse(Path(broker.DB).exists())
 
     def test_GATE_incomplete_success_receipt_must_be_rejected(self):
         self.run.return_value.stdout = json.dumps({'ok': True, 'receipt': {'complete': False}})
@@ -96,11 +112,50 @@ class BrokerAudit(unittest.TestCase):
         self.assertIsNot(broker.execute(BODY).get('ok'), True)
 
     def test_GATE_completed_receipt_remains_readable_after_policy_closes(self):
-        self.run.return_value.stdout = json.dumps({'ok': True, 'receipt': {'complete': True, 'syntheticOnly': True}})
+        self.run.return_value.stdout = json.dumps(receipt())
         first = broker.execute(BODY)
+        self.assertTrue(first['ok'])
         self.policy['enabled'] = False
         self.assertEqual(broker.execute(BODY), first)
         self.assertEqual(self.run.call_count, 1)
+
+    def test_complete_bound_receipt_is_accepted(self):
+        self.run.return_value.stdout=json.dumps(receipt())
+        self.assertEqual(broker.execute(BODY),receipt())
+
+    def test_changed_hash_cleanup_stage_or_identity_is_rejected(self):
+        changes=[lambda r:r.update(jobId='other'),lambda r:r.update(sourceHash='0'*64),
+            lambda r:r.update(requestedTestsHash='0'*64),lambda r:r.update(independentTestsHash='0'*64),
+            lambda r:r['stages'][1].update(cleanup=False),lambda r:r['stages'][1].update(exitCode=1),
+            lambda r:r['stages'][2].update(sandboxId='SYNTHETIC-1'),
+            lambda r:r['stages'][2].update(result={'passed':True,'assertions':45}),
+            lambda r:r['stages'][2].update(result={'passed':1,'assertions':46}),
+            lambda r:r['stages'][0].update(exitCode=127),
+            lambda r:r['stages'][1].update(sourceHash='0'*64),
+            lambda r:r['stages'][1].update(testsHash='0'*64)]
+        for change in changes:
+            value=copy.deepcopy(receipt());change(value['receipt'])
+            self.assertFalse(broker.checked_result(value,BODY)['ok'])
+
+    def test_invalid_syntax_is_denied_before_claim(self):
+        bad={**BODY,'artifact':{**BODY['artifact'],'files':{'clamp.py':'def clamp('}}}
+        self.assertEqual(broker.execute(bad)['error'],'CODING_SCOPE_DENIED')
+        self.run.assert_not_called()
+        self.assertFalse(Path(broker.DB).exists())
+
+    def test_legacy_stored_receipt_remains_exact_readonly_history(self):
+        value=receipt();r=value['receipt']
+        del r['requestedTestsHash'];del r['independentTestsHash']
+        for stage in r['stages']:
+            del stage['sourceHash'];del stage['testsHash']
+        self.assertFalse(broker.checked_result(value,BODY)['ok'])
+        digest=hashlib.sha256(json.dumps(BODY,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        with sqlite3.connect(broker.DB) as db:
+            db.execute('CREATE TABLE jobs(id TEXT PRIMARY KEY,digest TEXT,state TEXT,result TEXT)')
+            db.execute('INSERT INTO jobs VALUES(?,?,?,?)',(JOB,digest,'DONE',json.dumps(value)))
+        self.policy['enabled']=False
+        self.assertEqual(broker.execute(BODY),value)
+        self.run.assert_not_called()
 
 class WorkerAudit(unittest.TestCase):
     def fake_modal(self, bad_harness=False):
@@ -124,7 +179,7 @@ class WorkerAudit(unittest.TestCase):
             Image=types.SimpleNamespace(debian_slim=lambda **kwargs: image), Sandbox=types.SimpleNamespace(create=create))
         return fake, stages
 
-    def invoke(self, payload, bad_harness=False):
+    def invoke(self, payload, bad_harness=False, remaining=100):
         fake, stages = self.fake_modal(bad_harness)
         real_path = Path
         class Paths:
@@ -134,7 +189,7 @@ class WorkerAudit(unittest.TestCase):
                         'guest': {'allPassed': True}, 'wallDeadline': {'passed': True}}))
                 return real_path(name)
         with tempfile.TemporaryDirectory() as tmp, patch.dict(sys.modules, {'modal': fake}), \
-             patch.object(worker, 'Path', Paths), patch.object(worker, 'payload_deadline', return_value=time.time()+90):
+             patch.object(worker, 'Path', Paths), patch.object(worker, 'payload_deadline', return_value=time.time()+remaining):
             try:
                 value = worker.run_job(payload, tmp+'/report.json')
             except Exception:
@@ -176,5 +231,14 @@ class WorkerAudit(unittest.TestCase):
     def test_harness_failure_terminates_guest(self):
         with self.assertRaisesRegex(ValueError, 'SANDBOX_HARNESS_FAILED'):
             self.invoke(BODY, bad_harness=True)
+
+    def test_guest_lifetime_never_exceeds_remaining_campaign(self):
+        result,stages=self.invoke(BODY,remaining=3)
+        self.assertTrue(result['complete'])
+        self.assertTrue(all(1<=kwargs['timeout']<=3 for kwargs,_ in stages))
+
+    def test_expired_campaign_creates_no_guest(self):
+        with self.assertRaisesRegex(ValueError,'CAMPAIGN_CLOSED'):
+            self.invoke(BODY,remaining=0)
 
 if __name__ == '__main__': unittest.main()

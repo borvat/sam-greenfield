@@ -1,9 +1,11 @@
 # SAM × Hermes: real-project expansion gate — 2026-10-26
 
 Status: BLOCKED BEFORE REAL-PROJECT MODIFICATION AND BILLABLE EXECUTION.
-This checkpoint adds independent audit tests and a task specification only. No
-runtime implementation, deployed configuration, accepted records, or production
-files were changed. This is not a Hermes-authored repair or a completed rollout.
+This checkpoint includes isolated broker hardening, independent audit tests and
+an UNREGISTERED real-task/publisher preflight. No deployed configuration,
+accepted records, production files, or selected UI source were changed. This is
+engineer-authored safety preparation, not a Hermes-authored repair or rollout.
+Baseline audit checkpoint: `80f61a62b19e322064e6b0b0ac302541a5a787de`.
 
 ## Verified read-only handoff
 
@@ -37,11 +39,17 @@ Commands, from the repository root:
 python3 tests/isolated/hermes_coding_worker.py -v
 python3 tests/isolated/hermes_broker_expansion_audit.py -v
 node --test tests/isolated/hermes_real_ui_repro.cjs
+python3 tests/isolated/hermes_real_project_policy.py -v
 ```
 
-Existing controller tests: 5 passed. New independent broker/worker audit: 15
-tests, 11 passed and 4 FAILED. The four failures are preserved intentionally;
-they are acceptance blockers, not skipped tests or an approved gate.
+Baseline controller tests: 5 passed. At checkpoint `80f61a6`, the independent
+broker/worker audit had 15 tests: 11 passed and 4 FAILED. Those failures were
+the evidence for G01–G04 below, and remain reproducible at that checkpoint.
+After isolated hardening: 5 controller tests + 21 independent broker/worker
+tests + 6 offline real-task/publisher policy tests passed (32 total). The old
+broker test's invalid payload was replaced with a valid constrained artifact;
+closed admission remains separately tested with a valid request. No failure
+was skipped, masked with expectedFailure, or relabeled as cloud acceptance.
 UI task reproduction: 1 test, FAILED as expected on the untouched original UI.
 
 The new audit mocks the Modal API and worker subprocess. Candidate code never
@@ -57,12 +65,18 @@ worker denial of unapproved paths/imports/host effects/empty or oversized source
 three fresh fake guests with explicit network/secrets/mount/resource controls;
 and guest termination after a harness failure.
 
-| Finding | Reproduction and consequence | Required remediation before expansion |
+| Baseline finding | Reproduction and consequence | Isolated remediation, not deployed |
 | --- | --- | --- |
-| G01: validation after durable claim | `test_GATE_invalid_artifact_must_not_consume_job_or_launch_worker`: broker dispatches a malformed `../.env` artifact to the worker and consumes its only slot. Worker separately rejects it; no path traversal or secret read is claimed. | Validate complete JSON schema, source/size/path/action policy before claiming or dispatching; rejected requests must leave no job or cloud call. |
-| G02: incomplete receipt accepted by broker | `test_GATE_incomplete_success_receipt_must_be_rejected`: `{ok:true,receipt:{complete:false}}` is returned unchanged. | Strict receipt schema and binding to job/base/source/test/policy hashes; all required stages and cleanup must be complete. SAM's existing clamp verifier performs additional checks, so this does not prove end-to-end false verification. |
-| G03: child exit status ignored | `test_GATE_nonzero_worker_exit_must_not_be_success`: nonzero subprocess exit with success-shaped stdout is accepted. | Require successful exit plus a valid bounded receipt; preserve uncertainty and reconcile without replay. |
-| G04: stored result hidden by closed policy | `test_GATE_completed_receipt_remains_readable_after_policy_closes`: identical completed-result replay returns POLICY_CLOSED. It does not reexecute, but loses recovery/readback availability. | Separate authenticated read-only receipt lookup from admission; closed admission must remain closed while identical stored results remain readable. |
+| G01: validation after durable claim | Broker dispatched a malformed `../.env` artifact to the worker and consumed its only slot. Worker separately rejected it; no path traversal or secret read is claimed. | Full artifact/source/size validation now precedes database creation and worker dispatch. Invalid syntax is also rejected. Regression passed. |
+| G02: incomplete receipt accepted by broker | `{ok:true,receipt:{complete:false}}` was returned unchanged. Existing SAM checks were additional protection; no end-to-end false verification is claimed. | New worker receipts bind job/source/requested-test/immutable-test hashes, stage identity/source/test/output hashes, expected exit statuses, 46 assertions and cleanup. Altered hashes/stages, duplicate IDs and booleans masquerading as numeric counts are denied. A future real-task contract must additionally bind base and policy identity. |
+| G03: child exit status ignored | Nonzero subprocess exit with success-shaped stdout was accepted. | Successful process exit plus a valid bounded receipt are required; failures remain durable and are not automatically replayed. Regression passed. |
+| G04: stored result hidden by closed policy | Identical completed-result replay returned POLICY_CLOSED, without reexecution. | Existing-result lookup now precedes admission policy, retaining closed admission. Legacy complete receipts remain byte-equivalent JSON history without being accepted for a NEW job. Regression passed. |
+
+The trusted broker imports validation from its fixed operator-owned worker sibling;
+it never imports a payload path. Loading that module performs no Modal import or
+candidate execution. No new library is installed. The original installer still
+needs paired-file artifact/hash verification before any future rollout; current
+deployed files were not replaced. Root-only ownership remains required.
 
 Additional source-review concerns, not independently exploited:
 
@@ -71,9 +85,11 @@ Additional source-review concerns, not independently exploited:
   duration; current code has no durable external reaper/reconciliation proof for
   this failure path. Preserve sandbox IDs before work, mark uncertain cleanup,
   reconcile externally, and prove no orphan before admitting another job.
-- Per-stage timeout is fixed at 90 seconds and only stage admission checks expiry.
-  New policy must bound each guest by remaining approved campaign time and stop
-  at revocation; no previous campaign/time window can fund a new stage.
+- The isolated worker now caps the requested lifetime by the integer remaining
+  campaign seconds (and 90 seconds), and rejects an expired campaign before guest
+  creation. Fake-SDK tests pass. This does not prove wall-clock expiry through
+  provider provisioning delays, prompt revocation or controller death; live
+  lifecycle/reconciliation proof is still required. No old window is renewed.
 - Current image builder uses a Python version selector rather than a recorded
   immutable image identity. The installer pins Modal 1.6.2 but performs runtime
   pip resolution without a dependency hash lock. No dependency provenance or
@@ -145,13 +161,26 @@ Prepared verification contract for a future immutable guest suite:
 5. No API call/path/auth changes; no new file, import, network, install or external
    executable; existing escaping and report rendering remain intact.
 
-Proposed transfer profile, not implemented/approved: exactly the pinned UI source
+The unregistered `deploy/hermes-coding/real_project_policy.py` now implements an
+offline candidate/destination preflight. Six test groups check other repos,
+main/merge/non-draft operations, extra authority, extra files, traversal, secret
+and workflow paths, dependency/command/environment fields, altered baseline,
+oversized or invalid encoding, unrelated source edits and executable insertion.
+It only admits two static textContent loading assignments at the unique reviewed
+location while preserving the exact original source. Its synthetic positive
+control is never saved as a repaired source or attributed to Hermes. The
+publisher preflight explicitly returns published=false and
+credentialScopeVerified=false; it has no token, network or publishing code.
+Baseline Git blob and SHA-256 were independently matched locally.
+
+Remaining proposed transfer/runtime profile, NOT wired or live-approved:
+exactly the pinned UI source
 and immutable controller-owned tests; full source byte/hash checking; UTF-8 only;
 32 KiB source, 16 KiB test and 64 KiB total caps. No repository checkout, git
 metadata, environment files, lockfiles, package manifests, credentials, binary,
 symlink or dependency sync. No runtime package download or install/lifecycle
 script. A prebuilt immutable Node image with verified identity is required.
-The patch guard must preserve the entire baseline except explicitly bounded
+The offline patch guard preserves the entire baseline except explicitly bounded
 loading-panel assignments at the reviewed selection point; do not admit general
 JavaScript execution based only on filenames or VM confinement. Node VM is a
 test harness, not an isolation boundary. Exercise adversarial changes before
@@ -162,8 +191,8 @@ patch may be relabeled as Hermes output.
 
 | Acceptance item | This phase |
 | --- | --- |
-| Broker security audit passed for expansion | NO: four reproduced failures plus lifecycle/provenance gaps |
-| Real-project file/dependency policy accepted | NO: bounded specification prepared; implementation/live proof pending |
+| Broker security audit passed for expansion | NO: G01–G04 fixed locally; lifecycle/provenance/integration live proof pending |
+| Real-project file/dependency policy accepted | Offline bounded preflight and negative tests pass; no Node runtime/transfer/live admission accepted |
 | Publisher credential restricted to one repo | NO: connected identity covers all; separate identity unavailable |
 | Real defect selected/reproduced | YES: stale report/evidence while switching goals |
 | Hermes performed the real repair | NO: not dispatched |
@@ -178,13 +207,15 @@ subscription, upgrade, window renewal, deployment, service change, database
 change, Actions invocation, main push or merge was performed. No sub-agent or
 parallel programmer was used.
 
-Next permitted work: address G01–G04 and controller-death/deadline/provenance
-requirements in an isolated broker-hardening review; keep the real UI untouched.
-Implement the proposed bounded profile and negative publisher tests locally.
-Provision the separate one-repository publisher via a supported secure account
+Resume with the local G01–G04 hardening and offline profile already present; do
+not redo them or represent them as deployed. Keep the real UI untouched.
+The immediate external blocker is a separate one-repository publisher identity;
+current tools cannot provision it or verify classic branch protection. Provision
+it via a supported secure account
 path and verify existing protection without changing it. Read current private
 campaign/role/queue state via an authorized internal path. Only after those gates
-pass, request ONE new fixed financial approval with verified current account
+and controller-death/image-provenance/real-profile integration gates pass,
+request ONE new fixed financial approval with verified current account
 caps and all-inclusive cost bounds; do not request payment merely to continue
 this free preparation. Live gate -> SAM task -> free Nous candidate -> separate
 immutable verification -> scoped publisher Draft PR -> persistence/readback ->
