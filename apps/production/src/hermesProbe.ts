@@ -30,7 +30,7 @@ export async function prepareHermesProbe(bundle:ReturnType<typeof hermesProbeBun
       AND authority_ceiling='GREEN' AND completion_definition='sam.read_report.v1' AND created_at>=$3 AND state='NEW' FOR UPDATE`,[goalId,entity,activatedAt])).rows[0];
     if(!g)return false;
     const used=Number((await c.query('SELECT count(*)::int n FROM work_queue WHERE capability_id=$1',[HERMES_CAPABILITY])).rows[0].n);
-    if(used>=3)throw Error('HERMES_PROBE_TASK_CEILING');
+    if(used>=4)throw Error('HERMES_PROBE_TASK_CEILING');
     const p=sumProbe(g.objective),params={agent_role:'tester',instructions:p.instructions};
     const authority=await evaluatePlanAuthority(c,{goalId,legalEntityId:entity,steps:[{capabilityId:HERMES_CAPABILITY,params}],capabilityPolicies:bundle.catalog.authorityPolicies()});
     if(!authority.authorized)throw Error('HERMES_PROBE_AUTHORITY_DENIED');
