@@ -51,3 +51,9 @@ async def handle(request):
         body=json.loads(raw)
         return web.json_response(await asyncio.to_thread(execute,body))
     except Exception:return web.json_response({'ok':False,'error':'CODING_REQUEST_DENIED'},status=400)
+
+
+if __name__=='__main__':
+    app=web.Application(client_max_size=16384)
+    app.router.add_post('/sam/coding/verify',handle)
+    web.run_app(app,host='127.0.0.1',port=8877,access_log=None,print=None)
