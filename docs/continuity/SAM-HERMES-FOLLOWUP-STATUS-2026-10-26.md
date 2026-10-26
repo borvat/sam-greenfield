@@ -1,40 +1,20 @@
-# SAM × Hermes — successful identity verification checkpoint — 2026-10-26
+# Current follow-up status — updated 2026-10-27
 
-Live read-only authentication verification PASSED for both Modal and the
-dedicated GitHub App. The GitHub installation/token was verified to cover only
-borvat/sam-greenfield, with contents:write, pull_requests:write, metadata:read.
-The main branch was reported protected. The temporary installation access token
-was revoked successfully. No repository writes were performed by this check.
-Publication remains disabled.
+Storage startup and one container replacement have passed on the unchanged
+isolated test source. See SAM-STORAGE-RESTART-ACCEPTANCE-2026-10-27.md for actual
+readback, API checks, preserved records, expected event relay and safe suspension.
+The latest normal source is d731a6ed47986c4a8d7ff03557c0985190068d98, with the
+same tree as the previously deployed version. PR 67 infrastructure is not deployed.
 
-The corrected credentials passed format checks. The replacement token's account
-membership was independently observed in the authorized Modal account UI before
-updating identity binding. Automatic review rejected publishing the replacement
-token-derived fingerprint to this public repository. The safer implementation
-keeps that fingerprint in private trusted-host configuration, outside GitHub and
-outside guests/models. An incorrect or malformed binding still fails closed.
-Fourteen auth tests and seven launcher tests passed locally (21 total).
+See SAM-REAL-UI-OFFLINE-PROFILE-2026-10-27.md and
+SAM-BOUNDED-PUBLISHER-OFFLINE-2026-10-27.md for 23 new local boundary/journal/
+publisher cases and their explicit limitations. Real UI source and verifier are
+unchanged. No real Hermes repair or repair Draft PR has started.
 
-The live Modal check authenticated, enumerated the existing environment without
-creating it, and found zero active sandboxes. A separate provider UI check
-showed zero functions/sandboxes. No guest, image build, model call, or runtime/PG
-window was started by this round. No new Modal compute or paid-model usage
-was initiated. Existing hosting invoice delta is not audited.
-
-Cleanup: temporary vault binding removed, isolated SAM test service suspended,
-original empty Docker Command restored, automatic deployment remains off.
-The private operator identity-binding configuration is intentionally retained.
-No production, database privileges/data, main branch, or Actions changes.
-
-This proves identity/authentication only. The real Hermes UI repair, full live
-expanded sandbox acceptance, independent SAM verification, repair Draft PR and
-new durable restart/no-replay proof are still outstanding. The prior SAM storage
-startup failure remains unresolved; do not resume the normal runtime blindly
-or renew the previous test window automatically.
-
-The reviewed implementation is on this review branch; nothing is merged.
-Next: complete the real-task runtime/controller and live isolation gates,
-diagnose storage readiness within authorized read-only scope, and only then
-open the separately bounded runtime window and attempt the one-file UI repair.
-This public checkpoint omits credential-derived identifiers and infrastructure
-payloads; it must not be read as proof of a completed real repair.
+SAM test is suspended, Hermes existing service is unchanged, PostgreSQL retained.
+Both Hermes probe flags are zero. No new guest, image build, model call or paid
+resource was created. Do not reuse earlier financial authorizations, renew the
+storage window, register unfinished routes or equate local tests with live proof.
+Next: finish controller/image/key/journal registration and independent native
+acceptance preparation. A fresh specific financial approval is needed for paid
+Modal work, with a verified comprehensive cap. Cost is not yet the sole blocker.
