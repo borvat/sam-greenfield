@@ -1,3 +1,121 @@
+## Stored credential metadata, identity adapter and financial boundary — 2026-10-26
+
+The owner's short reply was interpreted as completion of saving the credential.
+Read-only Render metadata confirms that the unlinked group now contains an
+ENVIRONMENT VARIABLE named sam-github-publisher.pem, NOT a Secret File.
+The value stays masked. Secret Files is still empty, and Linked Services still
+explicitly says none. The engineer did not reveal/copy/export the value, rename
+it, move it, delete it, or ask the owner to paste it again. Its contents and
+validity are NOT yet established.
+
+GitHub's Key pairs page now shows exactly one key pair, identifier 5033380,
+added by borvat. The PUBLIC fingerprint shown there is:
+SHA256:gKgrlZaOgk8D7goI6VIoF2gjAHQnazPU9tQChUIwOSA=
+This is public identity evidence, not the private PEM. No key was downloaded,
+read or printed by the engineer.
+
+### New local implementation, unregistered and disabled
+
+deploy/hermes-coding/publisher_identity.cjs:
+- Reads the exact saved environment alias directly, without shell expansion;
+  alternatively recognizes SAM_GITHUB_APP_PRIVATE_KEY and rejects conflicts.
+- Does not inspect process.env at module load and refuses activation unless
+  SAM_GITHUB_PUBLISHER_ENABLED is exactly 1. The saved operator flag remains 0.
+- Parses only bounded RSA private PEM and compares its public DER/SPKI SHA-256
+  fingerprint to the independently observed GitHub fingerprint.
+- Creates short RS256 App JWTs with fixed App client identity and clock skew.
+- Defines an installation-token request explicitly restricted to repository ID
+  1408209483 and Contents/Pull requests write plus Metadata read.
+- Rejects other App/installation/owner/slug identities, all-repository selection,
+  suspension, extra permissions, extra repositories and invalid/expired lifetime.
+- Does not expose installation tokens in public validation evidence.
+- Contains NO network client, token minting, publisher dispatch, model runner,
+  key transfer, general GITHUB_TOKEN fallback or production registration.
+
+Ten new tests passed using freshly generated synthetic RSA material only:
+node --test tests/isolated/hermes_publisher_identity.cjs
+No real environment secret, file, Render API or GitHub credential is used by
+those tests. This is additional local preparation, not successful live App
+authentication. The preceding 32 local security tests were already accepted;
+they were not all rerun in this resumption.
+
+### Independent UI acceptance suite prepared
+
+tests/isolated/hermes_real_ui_acceptance.cjs now tests five real-task behaviors:
+immediate report loading, immediate evidence loading, selected-goal success,
+failure display, and late success/failure rejection across A -> B selection.
+It uses fake DOM/API state and forbids real fetch; no dependencies or secrets.
+On the untouched source: 3 PASS, 2 FAIL (the two intended stale-display cases).
+An engineer-authored SYNTHETIC verifier positive control in a temporary
+directory passes 5/5. That control was removed with its temporary directory,
+never written into the real UI or published as a repair, never attributed to
+Hermes, and is not a live acceptance result. Original ui.ts still hashes to
+Git blob 21d6d90babdbc6921075c0a2f2a050c9f9e8cf49.
+Independent suite SHA-256:
+54881bbb9bbd8f8dedc2ee537d3eddbebd1e7522989e26f46157a19584dc8a5c
+
+### Modal account read-only observations
+
+The signed-in Modal account is ceo-53153 on Starter. In environment main:
+Containers All=0, Functions=0, Sandboxes=0; the page says no containers found.
+The environment selector lists only main. This is a fresh UI observation, not
+a historical cleanup assertion. No app/sandbox/function/image was started.
+
+Usage & billing shows this cycle's spend rounded to $0.00, $1.00 included
+credits, and a workspace Usage limit of $1 set by Modal. Raising the limit
+offers Add payment method; that action was NOT taken. Do not claim the
+marketing $30 as available: the actual account currently exposes $1 without
+adding a payment method. The displayed rounded spend is not an exact invoice.
+
+Official pricing rechecked:
+Sandbox physical CPU USD 0.00003942/core-second and memory
+USD 0.00000667/GiB-second. Six sequential guests, each capped at 0.5 physical
+CPU + 1 GiB and 90 seconds, estimate USD 0.0142452 guest compute at list rate.
+This excludes image preparation, region multipliers and other known extras;
+it is NOT the proposed all-inclusive ceiling or an invoice.
+
+The proposed new bounded round is recorded in
+deploy/hermes-coding/real-ui-round-proposal.json. Its financialApproval and
+newWindowAuthorized flags are FALSE. Proposed ceiling: USD 1 total new usage
+for one campaign, while keeping the EXISTING USD 1 account-cycle outer cap;
+never raise it, add payment details, buy credits, upgrade, use paid inference
+or create a new paid host. Count gate/repair/retry guests together (maximum 6,
+concurrency 1), only one real repair, no GPU/volumes/guest network/credentials.
+Image/controller-death/current-runtime/transfer/publisher gates must pass;
+otherwise stop before generated-code execution or publication.
+
+A fresh explicit test window, at most 60 minutes, is proposed; no previous
+window/role deadline was renewed. Current PostgreSQL role expiry has not been
+read live through an internal authorized path. A filtered Render log read
+returned historical storage-verification entries and did not establish current
+deadline or permission for a new round. Do not infer one from prior acceptance.
+
+### Current blocker / next step
+
+The next resource-consuming step is preparing/verifying the immutable Node
+guest and the expanded live gate. It requires a NEW fixed financial approval;
+the previous USD 5 approval is not reusable. The new approval may cover the
+bounded gate and one real UI task only after all prerequisites pass. It is not
+permission for a paid model, subscription, wider PG grants, production rollout
+or linking credentials to Hermes/candidate execution. Actual key validation,
+scoped token authentication and trusted publisher registration remain unproven;
+do not claim the real repair ready or complete.
+
+No new billable operation was initiated in this resumption. Existing services,
+deployment source, data, App grants, main rule and broad ChatGPT connection were
+not changed. No secret content was accessed; the vault remains unlinked and the
+publisher disabled. No real Hermes repair, independent live verification,
+repair Draft PR or new container-restart proof exists yet.
+
+Primary references read:
+https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app
+https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps
+https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app
+https://modal.com/pricing
+https://modal.com/docs/guide/budgets
+
+---
+
 ## Main protection verified; unlinked key vault prepared — 2026-10-26
 
 The owner saved main protection. Fresh authorized branch metadata now reports
