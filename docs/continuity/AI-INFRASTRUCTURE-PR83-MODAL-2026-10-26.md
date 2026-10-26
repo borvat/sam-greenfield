@@ -38,3 +38,20 @@ Intermediate connection fix dd80f4b: 14 PASS / 1 failure / 0 skipped / exit 1. T
 Final ledger fix bounds pre-BEGIN admission attempts by initial idleCount+1, discards broken clients and observes checked-out error events. It never retries fn, COMMIT, a reservation mutation or a provider request. Strengthened existing assertions additionally restart PostgreSQL after service revocation and reconciled consumption, and reject malformed usage. No assertions removed or weakened; 15 case identities retained.
 
 Evidence: docs/architecture/evidence/pr83-postgres/. Regression runs and cleanup still pending at this checkpoint. Reattach only to the existing sandbox; do not create another. No shared operation authorized.
+
+
+## Final regression and cleanup — 2026-10-26T22:22Z
+
+52/52 related regressions PASS at f27152e271e3945a89dbc2bbaa6f54ab7d05a97a, 0 fail/skipped/cancelled, exit 0. Original 40 retained, plus 3 prior units, 2 new driver-fault guards and 7 actual Gateway cases. Both root and actual Hermes-fixture typechecks exit 0.
+
+The sandbox's 180-second idle timeout ended it while the already successful acceptance evidence was being committed. A subsequent remote regression exec returned NotFound before test launch; no second sandbox was created. Regression instead ran in root-only Work (Linux 6.18.55 / Node 24.22.1) with real Vault 1.21.0 and the current actual Gateway fixture. This environment difference is explicit and does not replace the saved real PostgreSQL run.
+
+Cleanup independently verified: SDK poll exit 0; Modal dashboard shows 0 active containers and 0 active sandboxes. Displayed remaining credits USD 0.94 from USD 1.00, approximately USD 0.06 usage, not a final verified invoice. No payment method, budget setting, persistent disk, snapshot or second sandbox created.
+
+Final observed Hermes head ffa0fd480dd59ec64ae10ec7c060b558cbbe6e69 has the tested Gateway blob unchanged. No explicit contract acceptance appears in the reviewed comments/reviews. Existing coordination request is refreshed with the final report; acceptance remains pending.
+
+Current delivery: docs/architecture/AI-INFRASTRUCTURE-POSTGRES-DELIVERY-2026-10-26.md. Reproduction and complete logs are in docs/architecture/evidence/pr83-postgres/. No runtime code changed after a644ba6; f27152e adds the targeted driver regression file and documentation.
+
+No running test process, database, Vault server, model request or resource operation remains. Shared pilot/schema/RLS/identity/health-query coordination is the remaining separate step; do not recreate resources or deploy automatically.
+
+The local temporary Modal credential file was removed after cleanup verification. Its issued token retains the original one-hour expiry; revocation is not claimed. No production/provider/Vault key was accessed.

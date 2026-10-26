@@ -1,4 +1,4 @@
-# SAM–Hermes–AI infrastructure contract, revision 2 (PROPOSED)
+# SAM–Hermes–AI infrastructure contract, revision 3 (PROPOSED)
 
 Date: 2026-10-26. PR83 owns this extension. No acceptance by the Hermes engineer is recorded.
 This document does not activate or authorize a shared schema/runtime change.
@@ -90,7 +90,7 @@ Exact-source patches are in `packages/ai-infrastructure/integration/`. They were
 copies of the actual PR83 base and Hermes 2a488c8 gateway. Hermes 3570e30 has the identical gateway blob
 769d2d3774aa3eac81e07d9e25ea9ce6a6093d8b; its intervening change was documentation only.
 Seven local Gateway cases per source passed using a storage test double, real Vault and synthetic HTTP.
-The PostgreSQL + actual Gateway + Vault acceptance case exists but is BLOCKED, not passed.
+The PostgreSQL + actual Gateway + Vault acceptance case now PASSED on real PostgreSQL 15.19 + real Vault 1.21.0 with synthetic HTTP. All 15 engine cases passed at a644ba6158c1fdd7e49c7332ff74782726c79ff2. The 52 related regressions passed at f27152e271e3945a89dbc2bbaa6f54ab7d05a97a; the seven Gateway control-flow cases still use explicitly doubled storage. The actual Hermes fixture was 57a19d8; final observed head ffa0fd4 has the same Gateway blob. No shared file was patched.
 
 ## Disable / rollback
 
@@ -102,7 +102,7 @@ remain; the old path cannot be claimed governed by new limits. Re-enable only af
 
 ## Unmet compatibility/operation gates
 
-- Real PostgreSQL concurrency, process/server-crash and durable revocation acceptance: BLOCKED by local OS UID restrictions.
+- Real PostgreSQL 15.19 concurrency, process/server-crash, persisted service/project revocation, usage/invoice history and the integrated Gateway case: LOCAL_VERIFIED in a fully isolated sandbox. This is not live shared-runtime verification.
 - Shared schema, tenant RLS, least-privilege runtime/admin roles: proposed only; no role or shared table changed.
 - Existing circuit-breaker query counts success=false reservations; its handling of pending AI rows needs owner review
   before concurrent pilot use. No shared health-query change was made here.
@@ -112,7 +112,13 @@ remain; the old path cannot be claimed governed by new limits. Re-enable only af
   local Vault tests do not establish hosted availability. No publisher/GitHub secret group was linked.
 - Hermes protocol/owner acceptance: PROPOSED. A repository handoff/comment is not approval.
 
-No live inference, Modal run, paid fallback, TestSprite tunnel, Zvec deployment, shared migration, service
-configuration change, merge or production deployment is included in this revision.
+One separately authorized PR83-only Modal Sandbox was used for the real-engine test and has finished. No live inference, paid fallback, TestSprite tunnel, Zvec deployment, shared migration, existing service configuration change, merge or production deployment was performed.
 
 Final source recheck: Hermes e7a746aec41654c026337bb06c746bcb073e8fe7 has the same Gateway blob as 2a488c8 and 3570e30; intervening changes were continuity documents only. Reserved-path overlap remains empty.
+
+
+## Connection recovery and current delivery
+
+A crashed server may leave stale idle sockets in the driver pool. The ledger bounds replacement checkouts by the initial idle count plus one, only before BEGIN succeeds and before running the transaction body. Checked-out connection errors are observed and broken clients are discarded. The transaction body, COMMIT acknowledgement, reservation and provider send are never automatically replayed. A failure after a possible commit remains a failure/uncertainty requiring durable identity lookup, not a new logical request.
+
+See [PostgreSQL delivery and exact reproduction](AI-INFRASTRUCTURE-POSTGRES-DELIVERY-2026-10-26.md). This revision remains PROPOSED until the Hermes engineer records acceptance or specific requested changes. No shared role/schema activation is authorized by the test result.

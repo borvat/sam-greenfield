@@ -1,3 +1,5 @@
+> **Current update:** [real PostgreSQL acceptance delivery](AI-INFRASTRUCTURE-POSTGRES-DELIVERY-2026-10-26.md): 15/15 real engine PASS, 52/52 related regression PASS; Hermes acceptance still pending. The report below is the historical 5cbc06d checkpoint and its BLOCKED claims describe that earlier environment only.
+
 # PR83 durable accounting increment — explicit acceptance status
 
 The storage implementation and integration package are prepared. **PostgreSQL persistence/atomicity is

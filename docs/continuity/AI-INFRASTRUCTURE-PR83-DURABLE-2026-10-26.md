@@ -1,3 +1,5 @@
+> **Historical checkpoint.** Current results: [PostgreSQL delivery](../architecture/AI-INFRASTRUCTURE-POSTGRES-DELIVERY-2026-10-26.md) and [authorized run checkpoint](AI-INFRASTRUCTURE-PR83-MODAL-2026-10-26.md). Real PostgreSQL acceptance is now 15/15 PASS; the BLOCKED statements below describe the earlier root-only host.
+
 # PR83 durable infrastructure continuation checkpoint
 
 Parent: a4a960d2e90c4bc10b120e2f078cbb9074449025. Work remains on PR83's own scope.
