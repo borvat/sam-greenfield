@@ -168,3 +168,16 @@ A next operator needs independent authorization for ONE fresh, maximum-60-minute
 - No coding tool, general Terminal/GitHub access or unrelated connector was enabled.
 - No old goal, successful arithmetic task or accepted isolation probe should be replayed.
 - Before real projects: finish the restricted coding integration and independent immutable-test verifier, perform one synthetic repair including wrong-result refusal and test-only Draft PR publication, then prove persisted task/receipt identity across coordinator restart without a second execution. The current evidence is bounded isolation acceptance, not full coding readiness.
+
+
+## Coding integration prepared after lifecycle approval
+
+The user independently authorized ONE fresh maximum-60-minute restricted PostgreSQL window, activated only after preparation. It has NOT been activated by this code-preparation checkpoint.
+
+Prepared an opt-in synthetic coding composition, preserving the existing arithmetic profile. Hermes remains tool-free: it produces the one-file repair and requested tests as a bounded JSON artifact. SAM mediates execution through the official Modal SDK rather than granting a general Terminal/GitHub tool. This is explicitly mediated artifact execution, not native unrestricted Hermes tooling.
+
+The optional authenticated broker admits one durable job, rejects conflicting replay/another job and does not expose host commands or file paths. Candidate function syntax is restricted before execution; requested tests run only in a limited guest with bounded output. A fresh guest runs the immutable independent suite, and a third wrong-source control must fail. All three must be terminated; SAM binds source/candidate/receipt/native model lock and distinct sandbox identities before VERIFIED. The isolated runtime and intake flags default off. A separate review creates a citable completion report.
+
+Local validation: TypeScript PASS; 142 isolated Node tests PASS; five Python controller tests PASS (including durable SQLite replay/conflict/ceiling with a FAKE worker, not cloud execution). The accepted real provider gate was not repeated. No live coding task or new role window has run yet.
+
+Next: install/review the narrow optional HTTP route on the existing isolated Hermes service with a disabled campaign policy, verify authentication and tool-free policy; then safely inspect the existing restricted role and open the approved window ONCE immediately before the pinned SAM rollout. Preserve all previous evidence and failures. No production/main/merge/Actions or other connector changes.
