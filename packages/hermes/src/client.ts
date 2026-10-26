@@ -66,7 +66,14 @@ export class HermesClient {
       throw new HermesError('HERMES_SERVER_TOOL_SCOPE_EXCESSIVE');
     return {durableIdempotency:true,serverTools:[]};
   }
-  async status(id:string){return runSchema.parse(await this.request(`/v1/runs/${runId.parse(id)}`));}
+  async status(id:string){
+    const run=runSchema.parse(await this.request(`/v1/runs/${runId.parse(id)}`));
+    // Hermes' durable readback after gateway replacement nests the committed
+    // served metadata under usage.runtime instead of the live top-level field.
+    if(run.runtime===undefined&&typeof run.usage==='object'&&run.usage!==null&&'runtime' in run.usage)
+      return {...run,runtime:run.usage.runtime};
+    return run;
+  }
   async stop(id:string){await this.request(`/v1/runs/${runId.parse(id)}/stop`,'POST',{});}
   async execute(raw:HermesTask,store:ReceiptStore):Promise<Receipt>{
     const parsed=taskSchema.safeParse(raw);if(!parsed.success)throw new HermesError('HERMES_TASK_SCOPE_DENIED');

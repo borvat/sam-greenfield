@@ -8,6 +8,12 @@ const task=():HermesTask=>({task_id:randomUUID(),goal_id:randomUUID(),agent_role
   allowed_tools:[],repository_scope:[],execution_budget:{max_cost_usd:0,max_concurrency:1},timeout:3000,created_at:new Date().toISOString()});
 const store=()=>{let receipt:Receipt|undefined;return {load:async()=>receipt,save:async(r:Receipt)=>{receipt=structuredClone(r);},assertActive:async()=>{}} satisfies ReceiptStore;};
 const caps={auth:{type:'bearer',required:true},features:{run_submission:true,run_status:true,run_stop:true,runs_idempotency:{durable:true,retention_seconds:86400}}};
+test('native durable readback after restart preserves committed usage.runtime metadata',async()=>{
+  const runtime={provider:'nous',model:'poolside/laguna-s-2.1:free',model_lock:'confirmed'};
+  const client=new HermesClient({baseUrl:'https://hermes.invalid',apiKey:'x'.repeat(32),assertServerPolicy:async()=>{},
+    transport:async()=>new Response(JSON.stringify({run_id:'run_durable',status:'completed',output:'42',usage:{runtime}}))});
+  assert.deepEqual((await client.status('run_durable')).runtime,runtime);
+});
 async function fixture(t:any,overrides?:{tools?:any[];lost?:boolean;running?:boolean;wrongId?:boolean;reject?:number;modelLock?:boolean;wrongLock?:boolean}){
   const requests:{path:string;method:string;key?:string;body:any}[]=[],keys=new Map<string,string>();let executions=0,stops=0;
   const send=(r:ServerResponse,status:number,body:any)=>{r.writeHead(status,{'content-type':'application/json'});r.end(JSON.stringify(body));};
