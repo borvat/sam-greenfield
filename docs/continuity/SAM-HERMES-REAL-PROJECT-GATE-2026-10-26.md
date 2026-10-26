@@ -1,3 +1,52 @@
+## Authorized link completed, deployment auto-review blocked; access cleaned up — 2026-10-26 06:56 UTC
+
+The owner explicitly approved binding the vault to sam-isolated-test and the
+authentication-only diagnostic component. Link only succeeded for that TEST
+service, with the group name shown under Linked Environment Groups.
+
+Automatic approval review then REJECTED saving the service branch change to
+review/hermes-auth-baseline-20261026. Stated reason: changing a Render service
+branch is an external operational change that may deploy/change the live
+version, and this specific change/effect lacked explicit confirmation.
+The requested Save was NOT executed. Do not bypass this rejection through
+another UI route, connector, API or indirect command.
+
+Cancelled the unsaved branch edit and used Unlink only to remove the temporary
+vault binding without deployment. UI confirmed Unlinked. Existing saved
+credential values remain masked in their group; none was viewed, copied,
+deleted, renewed or passed to a model/guest.
+
+Fresh Render API confirms:
+- branch remains deploy/isolated-render-test-20261024
+- Docker Command remains empty; autoDeploy=no
+- latest deployment remains dep-dbfcs1ss728c73euoid0 / 93f37e5
+No new SAM deploy was created. The preceding storage-start failure is unchanged
+and has not been repaired or represented as healthy application readiness.
+
+No actual Modal/GitHub authentication check ran. No App token was minted by
+the helper, no model/guest/image/App was started, no PG data/deadline/permission
+changed. Financial approval remains the same USD 1 bounded round; zero new
+Modal compute/model operations. Existing Render hosting invoice delta remains
+unaudited. The real UI repair and all live expanded acceptance remain pending.
+
+Next required explicit approval is ONE concrete operational action set:
+change ONLY sam-isolated-test's branch to the reviewed unchanged baseline
+review/hermes-auth-baseline-20261026 (d731a6e, identical tree to 93f37e5), and
+change its Docker Command to the hash-pinned authentication-only diagnostic
+launcher documented above. This may deploy on the existing TEST plan; it is
+not a production deployment, model/guest execution or a new runtime/PG window.
+The vault binding authorization already exists; do not ask for it again
+within the same recipient, scope and approved round.
+
+After explicit operational confirmation, recheck state, rebind using Link only,
+save the fixed safe baseline FIRST (never deploy the 32-commit-older branch),
+and run the reviewed authentication-only launcher. If automatic review rejects
+again, diagnose/report it; never bypass. Keep real application /readyz 503 in
+diagnostic mode; operator health must never be claimed as SAM app acceptance.
+Restore/clean up according to the preceding checkpoint on failure/end.
+
+---
+
 ## Owner stored replacement; credential activation prepared but NOT granted — 2026-10-26 06:42 UTC
 
 The owner confirmed replacing the existing Modal fields (no duplicate fields,
