@@ -4,6 +4,7 @@ import {open,lstat} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {isAbsolute} from 'node:path';
 import {Client} from 'pg';
+import {storageFailureCode} from './storageFailure.cjs';
 import {assertIntegrationAccess} from '../../packages/db/src/integrationProfile';
 import {assertEvaluationAccess} from '../../packages/db/src/evaluationProfile';
 import {assertSharedGoalProfile} from '../../packages/db/src/sharedGoalProfile';
@@ -61,6 +62,6 @@ export async function openPersistentBinding(path:string){
  const started=performance.now();
  try{const b=await readPersistentBinding(path);const c=new Client({connectionString:b.connectionString,connectionTimeoutMillis:5000,statement_timeout:10000});
   try{await c.connect();const report=await inspectPersistentBinding(c,b);return {binding:b,report,leaseDeadline:started+report.leaseRemainingMs};}finally{await c.end();}
- }catch(e){const s=e instanceof Error?e.message:'';
-  throw Error(/^PERSISTENT_[A-Z_]+$|^PRIVATE_BINDING_FILE_REQUIRED$/.test(s)?s:'PERSISTENT_STORAGE_PREFLIGHT_FAILED');}
+ }catch(e){
+  throw Error(storageFailureCode(e));}
 }
