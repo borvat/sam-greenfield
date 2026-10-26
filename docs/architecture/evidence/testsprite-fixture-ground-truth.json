@@ -1,0 +1,23 @@
+{
+  "evaluator": "independent-local-HTTP-and-mocked-DOM",
+  "browserRun": false,
+  "testspriteRun": false,
+  "evidence": [
+    {
+      "variant": "seeded-faults",
+      "healthSmoke": true,
+      "paidFilterMeetsPRD": false,
+      "projectIsolationMeetsPRD": false,
+      "invoiceTotalMeetsPRD": false,
+      "actualTotal": "EUR 10.00"
+    },
+    {
+      "variant": "positive-control",
+      "healthSmoke": true,
+      "paidFilterMeetsPRD": true,
+      "projectIsolationMeetsPRD": true,
+      "invoiceTotalMeetsPRD": true,
+      "actualTotal": "EUR 20.00"
+    }
+  ]
+}

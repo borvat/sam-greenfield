@@ -1,0 +1,1403 @@
+{
+  "tool": "0.2.1",
+  "model": "local/potion-code-16m-v2",
+  "syntheticFiles": 10,
+  "cases": 8,
+  "repeats": 3,
+  "indexMs": 3093.748,
+  "indexPeakRssKb": 1648892,
+  "summary": [
+    {
+      "mode": "rg-literal",
+      "runs": 24,
+      "errors": 0,
+      "recallAt3": 0.125,
+      "mrrAt3": 0.125,
+      "p50Ms": 4.906,
+      "p95Ms": 6.581,
+      "maxPeakRssKb": 44928
+    },
+    {
+      "mode": "bm25",
+      "runs": 24,
+      "errors": 0,
+      "recallAt3": 0.75,
+      "mrrAt3": 0.5833,
+      "p50Ms": 1036.31,
+      "p95Ms": 1208.034,
+      "maxPeakRssKb": 329136
+    },
+    {
+      "mode": "semantic",
+      "runs": 24,
+      "errors": 0,
+      "recallAt3": 0.875,
+      "mrrAt3": 0.7292,
+      "p50Ms": 1194.526,
+      "p95Ms": 1361.99,
+      "maxPeakRssKb": 407256
+    },
+    {
+      "mode": "hybrid",
+      "runs": 24,
+      "errors": 0,
+      "recallAt3": 0.75,
+      "mrrAt3": 0.6875,
+      "p50Ms": 1222.238,
+      "p95Ms": 1399.374,
+      "maxPeakRssKb": 406372
+    }
+  ],
+  "limits": [
+    "Tiny synthetic English corpus; not a production benchmark.",
+    "Each CLI invocation includes Node/native/model startup; not a warm daemon.",
+    "rg-literal is literal phrase matching, not a ranked semantic baseline.",
+    "SAM SQL memory and Hermes memory were not accessed or benchmarked."
+  ],
+  "observations": [
+    {
+      "mode": "rg-literal",
+      "case": "exact",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 5.796,
+      "peakRssKb": 44928,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "rg-literal",
+      "case": "exact",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 5.206,
+      "peakRssKb": 44928,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "rg-literal",
+      "case": "exact",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 3.962,
+      "peakRssKb": 44928,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "rg-literal",
+      "case": "stock",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 5.011,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "stock",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.48,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "stock",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.541,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "returns",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 6.581,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "returns",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 5.761,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "returns",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.532,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "revocation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 8.437,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "revocation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.932,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "revocation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 5.166,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "uncertain",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.914,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "uncertain",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.898,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "uncertain",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.68,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "rotation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.638,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "rotation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.851,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "rotation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.43,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "privacy",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.415,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "privacy",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 5.365,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "privacy",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 5.077,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "cache",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.709,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "cache",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 4.423,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "rg-literal",
+      "case": "cache",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 6.003,
+      "peakRssKb": 44928,
+      "returnedFiles": []
+    },
+    {
+      "mode": "bm25",
+      "case": "exact",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 993.237,
+      "peakRssKb": 328104,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "exact",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 980.618,
+      "peakRssKb": 328112,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "exact",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 967.615,
+      "peakRssKb": 328516,
+      "returnedFiles": [
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "stock",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1002.726,
+      "peakRssKb": 328304,
+      "returnedFiles": [
+        "distractor.md",
+        "budget.ts",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "stock",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 996.765,
+      "peakRssKb": 328436,
+      "returnedFiles": [
+        "distractor.md",
+        "budget.ts",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "stock",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 984.115,
+      "peakRssKb": 329136,
+      "returnedFiles": [
+        "distractor.md",
+        "budget.ts",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "returns",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1024.844,
+      "peakRssKb": 328008,
+      "returnedFiles": [
+        "budget.ts",
+        "identity.ts",
+        "refunds.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "returns",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1017.181,
+      "peakRssKb": 328476,
+      "returnedFiles": [
+        "budget.ts",
+        "identity.ts",
+        "refunds.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "returns",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1436.892,
+      "peakRssKb": 328176,
+      "returnedFiles": [
+        "budget.ts",
+        "identity.ts",
+        "refunds.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "revocation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 907.222,
+      "peakRssKb": 328140,
+      "returnedFiles": [
+        "budget.ts",
+        "distractor.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "revocation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 914.501,
+      "peakRssKb": 328956,
+      "returnedFiles": [
+        "budget.ts",
+        "distractor.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "revocation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1112.255,
+      "peakRssKb": 328812,
+      "returnedFiles": [
+        "budget.ts",
+        "distractor.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "uncertain",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1047.775,
+      "peakRssKb": 327808,
+      "returnedFiles": [
+        "cache.md",
+        "distractor.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "uncertain",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1007.23,
+      "peakRssKb": 328328,
+      "returnedFiles": [
+        "cache.md",
+        "distractor.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "uncertain",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1023.9,
+      "peakRssKb": 328224,
+      "returnedFiles": [
+        "cache.md",
+        "distractor.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "rotation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1154.026,
+      "peakRssKb": 328336,
+      "returnedFiles": [
+        "rotation.md",
+        "orders.md",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "rotation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1076.579,
+      "peakRssKb": 328936,
+      "returnedFiles": [
+        "rotation.md",
+        "orders.md",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "rotation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1207.489,
+      "peakRssKb": 328248,
+      "returnedFiles": [
+        "rotation.md",
+        "orders.md",
+        "cache.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "privacy",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1101.402,
+      "peakRssKb": 328452,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "privacy",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1167.132,
+      "peakRssKb": 328156,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "privacy",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1149.002,
+      "peakRssKb": 328200,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "cache",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1116.536,
+      "peakRssKb": 328552,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "cache",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1208.034,
+      "peakRssKb": 328564,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "bm25",
+      "case": "cache",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1113.517,
+      "peakRssKb": 329024,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "distractor.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "exact",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1285.095,
+      "peakRssKb": 404484,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "exact",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1473.39,
+      "peakRssKb": 402680,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "exact",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1361.99,
+      "peakRssKb": 404404,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "stock",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1238.525,
+      "peakRssKb": 403996,
+      "returnedFiles": [
+        "privacy.md",
+        "orders.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "stock",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1187.097,
+      "peakRssKb": 404344,
+      "returnedFiles": [
+        "privacy.md",
+        "orders.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "stock",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1166.356,
+      "peakRssKb": 404616,
+      "returnedFiles": [
+        "privacy.md",
+        "orders.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "returns",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1201.955,
+      "peakRssKb": 403804,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "returns",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1099.38,
+      "peakRssKb": 402076,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "returns",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1231.431,
+      "peakRssKb": 403908,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "revocation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1302.4,
+      "peakRssKb": 404604,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "revocation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1284.301,
+      "peakRssKb": 407256,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "revocation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.3333333333333333,
+      "latencyMs": 1156.298,
+      "peakRssKb": 406328,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "uncertain",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1134.734,
+      "peakRssKb": 404428,
+      "returnedFiles": [
+        "budget.ts",
+        "inventory.ts",
+        "rotation.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "uncertain",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1056.262,
+      "peakRssKb": 403832,
+      "returnedFiles": [
+        "budget.ts",
+        "inventory.ts",
+        "rotation.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "uncertain",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1211.446,
+      "peakRssKb": 404820,
+      "returnedFiles": [
+        "budget.ts",
+        "inventory.ts",
+        "rotation.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "rotation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1315.014,
+      "peakRssKb": 403924,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "privacy.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "rotation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1215.709,
+      "peakRssKb": 402660,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "privacy.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "rotation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1090.379,
+      "peakRssKb": 403376,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "privacy.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "privacy",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1040.393,
+      "peakRssKb": 403704,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "privacy",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1080.425,
+      "peakRssKb": 403892,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "privacy",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1061.968,
+      "peakRssKb": 402860,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "cache",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1024.006,
+      "peakRssKb": 402644,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "cache",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1040.365,
+      "peakRssKb": 404720,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "semantic",
+      "case": "cache",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1209.386,
+      "peakRssKb": 404684,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "exact",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1280.804,
+      "peakRssKb": 403608,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "exact",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1203.465,
+      "peakRssKb": 402240,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "exact",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1239.034,
+      "peakRssKb": 404460,
+      "returnedFiles": [
+        "inventory.ts",
+        "budget.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "stock",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1169.44,
+      "peakRssKb": 404960,
+      "returnedFiles": [
+        "privacy.md",
+        "distractor.md",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "stock",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1077.97,
+      "peakRssKb": 402268,
+      "returnedFiles": [
+        "privacy.md",
+        "distractor.md",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "stock",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1138.517,
+      "peakRssKb": 403004,
+      "returnedFiles": [
+        "privacy.md",
+        "distractor.md",
+        "orders.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "returns",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1132.847,
+      "peakRssKb": 404556,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "returns",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1081.551,
+      "peakRssKb": 403720,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "returns",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 0.5,
+      "latencyMs": 1183.354,
+      "peakRssKb": 404632,
+      "returnedFiles": [
+        "budget.ts",
+        "refunds.ts",
+        "identity.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "revocation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1180.2,
+      "peakRssKb": 403824,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "revocation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1299.537,
+      "peakRssKb": 403160,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "revocation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 0,
+      "reciprocalRank": 0,
+      "latencyMs": 1456.078,
+      "peakRssKb": 402700,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "uncertain",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1399.374,
+      "peakRssKb": 404208,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "uncertain",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1274.364,
+      "peakRssKb": 403164,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "uncertain",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1260.752,
+      "peakRssKb": 404380,
+      "returnedFiles": [
+        "budget.ts",
+        "rotation.md",
+        "inventory.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "rotation",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1222.518,
+      "peakRssKb": 402936,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "rotation",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1248.289,
+      "peakRssKb": 404592,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "rotation",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1220.481,
+      "peakRssKb": 406372,
+      "returnedFiles": [
+        "rotation.md",
+        "cache.md",
+        "shipping.md"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "privacy",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1259.925,
+      "peakRssKb": 404528,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "privacy",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1221.957,
+      "peakRssKb": 402788,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "privacy",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1240.44,
+      "peakRssKb": 405356,
+      "returnedFiles": [
+        "privacy.md",
+        "cache.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "cache",
+      "repeat": 0,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1182.73,
+      "peakRssKb": 402012,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "cache",
+      "repeat": 1,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1229.446,
+      "peakRssKb": 404824,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "budget.ts"
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "case": "cache",
+      "repeat": 2,
+      "valid": true,
+      "recallAt3": 1,
+      "reciprocalRank": 1.0,
+      "latencyMs": 1214.757,
+      "peakRssKb": 402712,
+      "returnedFiles": [
+        "cache.md",
+        "rotation.md",
+        "budget.ts"
+      ]
+    }
+  ]
+}
