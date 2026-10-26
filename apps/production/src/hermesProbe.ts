@@ -8,12 +8,8 @@ import {transitionGoal} from '../../kernel/src/stateMachine';
 import {persistPlanAndDelegate} from '../../kernel/src/planning';
 import {evaluatePlanAuthority} from '../../brain/src/authorityGuard';
 import {reviewNextReadGoal} from './readGoalReview';
-
-export function sumProbe(objective:string){
-  const m=/^SUM (-?\d{1,5}) (-?\d{1,5})$/.exec(objective);
-  if(!m||m.slice(1).some(v=>Math.abs(Number(v))>10000))throw Error('HERMES_PROBE_OBJECTIVE_DENIED');
-  return {a:Number(m[1]),b:Number(m[2]),instructions:`Calculate ${m[1]} + ${m[2]}. Return ONLY the integer result. No explanation, markdown or tools.`};
-}
+import {sumProbe} from '../../../packages/hermes/src/probeObjective';
+export {sumProbe} from '../../../packages/hermes/src/probeObjective';
 export function hermesProbeBundle(client:HermesClient){
   return validateProductionBundle(withHermesCandidate({capabilities:[],toolDefinitions:[],toolAdapters:[],workerLeaseTtlSeconds:180},{client,
     verifier:{capabilityId:HERMES_CAPABILITY,async verify(input){

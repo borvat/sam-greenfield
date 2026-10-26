@@ -4,6 +4,7 @@ import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import { assertSafeScalar } from "../../development/src/planningPolicy";
 import { encodeGoalAcceptance } from "../../kernel/src/goalAcceptance";
 import {goalProgress} from './goalProgress';
+import {sumProbe} from '../../../packages/hermes/src/probeObjective';
 
 function restrictedReadScope(){
   return process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'||autonomyEnabled()||process.env.SAM_RELEASE_SYNTHETIC_PLANNER==="1";
@@ -120,7 +121,9 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput,
     if(input.domain!==undefined&&input.domain!=="development_probe")throw new Error("AUTONOMY_DOMAIN");
   }
   if(objective.length<3||objective.length>2000) throw new Error("objective must be 3-2000 characters");
-  const domain=autonomyEnabled()?"development_probe":String(input.domain??"owner_command").trim();
+  const hermesProbe=process.env.NODE_ENV==='development'&&process.env.SAM_DEVELOPMENT_SAFE_MODE==='1'&&process.env.SAM_HERMES_PROBE_ENABLED==='1'&&objective.startsWith('SUM ');
+  if(hermesProbe)sumProbe(objective);
+  const domain=hermesProbe?'hermes_probe':autonomyEnabled()?"development_probe":String(input.domain??"owner_command").trim();
   if(!/^[a-zA-Z0-9_-]{1,80}$/.test(domain)) throw new Error("invalid domain");
   const authority=autonomyEnabled()||readOnlyStage?"GREEN":input.authorityCeiling??"YELLOW";
   if(readOnlyStage&&input.authorityCeiling!==undefined&&input.authorityCeiling!=='GREEN')return denyReadOnly('READ_ONLY_STAGE_AUTHORITY_REQUIRED');

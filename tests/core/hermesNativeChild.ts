@@ -57,9 +57,21 @@ async function main(){
     await pool.query("UPDATE goals SET state='CANCELLED' WHERE id=$1",[second.goal]);
     await assert.rejects(inFlight,/HERMES_WORK_NO_LONGER_AUTHORIZED/);assert.equal(stops,1);
     assert.equal((await pool.query('SELECT count(*)::int n FROM executions WHERE goal_id=$1',[second.goal])).rows[0].n,0);
+    hold=false;
+    const {hermesProbeBundle,prepareHermesProbe,reviewHermesProbe}=await import('../../apps/production/src/hermesProbe');
+    const {createProductionComposition}=await import('../../apps/production/src/composition');
+    const bundle=hermesProbeBundle(new HermesClient({baseUrl,apiKey:'native-fixture-key-not-a-live-secret',assertServerPolicy:async()=>{},pollMs:5}));
+    const probeId=randomUUID();
+    await pool.query(`INSERT INTO goals(id,business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
+      VALUES($1,$2,$3,'hermes_probe','SUM 17 25','NEW','GREEN','sam.read_report.v1')`,[probeId,'probe-'+probeId,binding.binding.entity]);
+    await prepareHermesProbe(bundle,probeId,binding.binding.entity,new Date(Date.now()-10000).toISOString());
+    const runtime=createProductionComposition({bundle,workerId:'native-hermes-probe',maintenanceGoalIds:[probeId],verificationGoalId:probeId,specialistScopeGoalId:probeId,specialistConcurrency:1});
+    await runtime.runWorkTick();await reviewHermesProbe(bundle,probeId);
+    assert.equal((await pool.query('SELECT state FROM goals WHERE id=$1',[probeId])).rows[0].state,'COMPLETED');
+    assert.equal((await pool.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1',[probeId])).rows[0].decision.summary,'النتيجة: 42');
     const digest=sha256Hex((await pool.query('SELECT id,handoff FROM work_queue WHERE id=ANY($1::uuid[]) ORDER BY id',[taskIds])).rows);
     console.log(JSON.stringify({status:'PASS',nativePostgres:true,restrictedRole:true,httpTransport:'STUB',submissions,stops,taskIds,receiptDigest:digest,
-      checks:['durable_receipt','duplicate_replay','stale_fence_denial','single_flight_advisory_lock','cancel_and_stop','no_execution_after_cancel'],liveHermes:false}));
+      checks:['durable_receipt','duplicate_replay','stale_fence_denial','single_flight_advisory_lock','cancel_and_stop','no_execution_after_cancel','kernel_plan_execute_sql_verify_report'],liveHermes:false}));
   }finally{await pool.end();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 }
 void main().catch(()=>{console.error('HERMES_NATIVE_SQL_FAILED');process.exitCode=1;});
