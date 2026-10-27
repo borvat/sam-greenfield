@@ -36,16 +36,28 @@ export interface ProductionCapabilityDescriptor{
   availability:ToolAvailability;
   sideEffect:boolean;
   description?:string;
+  inputSchema?:Record<string,unknown>;
 }
 
 export interface ProductionActionDispatcher{
-  manifest():Promise<ProductionCapabilityDescriptor[]>|ProductionCapabilityDescriptor[];
+  manifest():ProductionCapabilityDescriptor[];
+  continueReview?(input:{goalId:string;legalEntityId:string;actor:string}):Promise<unknown>;
+  submitAnalysisFollowUp?(input:{objective:string;legalEntityId:string;actor:string;sourceBinding:unknown}):Promise<unknown>;
+  submitGoal?(input:{
+    objective:string;
+    legalEntityId:string;
+    actor:string;
+    submissionKind?:'bounded_data_analysis';
+    acceptanceContract?:unknown;
+    analysisRequest?:{sourceCapabilityId:'bol_sales_stock_report';startDate:string;endDate:string};
+  }):Promise<unknown>;
   execute(input:{
     capabilityId:string;
     params:Record<string,unknown>;
     actor:string;
     legalEntityId?:string;
     objective?:string;
+    acceptanceContract?:unknown;
   }):Promise<unknown>;
   reconcile?(input:{
     operationKey?:string;

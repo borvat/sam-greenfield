@@ -1,0 +1,4 @@
+PASS tests/release/synthetic_pilot.ts
+{"test":"SYNTHETIC_RELEASE_PILOT","status":"PASS","refusedCases":37,"mockHttpRequests":7,"contextReads":0,"realProviderCalls":0,"migrations":0,"rolesCreated":0,"classification":"UNIT_MOCK_DB_LOCAL_HTTP_REAL_PLANNER_AND_LOCAL_EXECUTOR_NOT_LIVE_ACCEPTANCE"}
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/synthetic_pilot.ts","passed":true,"exit":0}]}

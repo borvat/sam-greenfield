@@ -1,12 +1,24 @@
 export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED";
 
 export interface ModelTask {
+  signal?:AbortSignal;
+  /** Fail closed: only explicitly synthetic adapters with usage-limit support. */
+  boundedSynthetic?: {
+    maxInputTokens: number;
+    maxOutputTokens: number;
+    reserveAttempt(input:{providerId:string;model:string;tokens:number;costUsd:number}):Promise<string|void>;
+    finishAttempt?(id:string|void,result:{status:'success'|'failure';result?:ProviderResult}):Promise<void>;
+    note?(event:{kind:'ADAPTER_MISSING';providerId:string;model:string}):Promise<void>;
+  };
+  boundedEvaluation?: NonNullable<ModelTask['boundedSynthetic']>&{permit:import('./evaluationPermit').EvaluationPermit};
   task: string;
   capability: string;
   dataClassification: DataClassification;
   input: unknown;
   maxCostUsd?: number;
   preferredProviders?: string[];
+  /** Hard routing boundary, unlike preferredProviders. An empty list allows none. */
+  allowedProviders?: string[];
   requiredModels?: string[];
 }
 
@@ -29,11 +41,14 @@ export interface ProviderResult {
   output: unknown;
   model: string;
   modelVersion?: string;
+  providerRequestId?: string;
   usage: ModelUsage;
 }
 
 export interface ModelProviderAdapter {
   providerId: string;
+  executionMode?: "synthetic"|"evaluation-fixture"|"evaluation-live";
+  supportsUsageLimits?: boolean;
   invoke(task: ModelTask, model: string): Promise<ProviderResult>;
 }
 

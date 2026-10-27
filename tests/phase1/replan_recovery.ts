@@ -5,6 +5,7 @@ import { leaseWorkAtomic } from "../../apps/kernel/src/queue";
 import { recordExecutionAndRequestVerificationAtomic } from "../../apps/kernel/src/execution";
 import { recordIndependentVerificationAtomic } from "../../apps/kernel/src/verification";
 import { beginReplanAtomic } from "../../apps/kernel/src/replanning";
+import { recordWorkFailure } from "../../apps/kernel/src/failures";
 import { reconcileFinishedPlansAfterRestart } from "../../apps/kernel/src/recovery";
 import { wakeGoalFromEventAtomic } from "../../apps/kernel/src/continuation";
 
@@ -50,13 +51,13 @@ async function main() {
   const contract = await one("SELECT id FROM verification_contracts WHERE capability_id='gmail_send' LIMIT 1");
   await recordIndependentVerificationAtomic({
     executionId:e1.executionId,verifier:"verify-1",contractId:contract.id,
-    independentEvidence:{readback:true,step:1},result:"VERIFIED"
+    independentEvidence:{provider_message_id:"fixture",readback:true,step:1},result:"VERIFIED"
   });
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[multi.goalId])).state,"VERIFYING");
 
   await recordIndependentVerificationAtomic({
     executionId:e2.executionId,verifier:"verify-2",contractId:contract.id,
-    independentEvidence:{readback:true,step:2},result:"VERIFIED"
+    independentEvidence:{provider_message_id:"fixture",readback:true,step:2},result:"VERIFIED"
   });
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[multi.goalId])).state,"COMPLETED");
 
@@ -75,6 +76,27 @@ async function main() {
   assert.equal((await one("SELECT state FROM goals WHERE id=$1",[failed.goalId])).state,"REPLANNING");
   assert.equal(await beginReplanAtomic(failed.goalId,"verification failed"),"PLANNING");
   assert.equal(Number((await one("SELECT replan_attempts FROM goals WHERE id=$1",[failed.goalId])).replan_attempts),1);
+
+  // A read-only Drive 404 can recover inside the SAME goal, with bounded replans.
+  const readOnly=await createGoal("PLANNING");
+  const roPlan=await persistPlanAndDelegateAtomic({
+    goalId:readOnly.goalId,steps:[{capabilityId:"drive_get_metadata",params:{fileId:"synthetic-missing"}}]
+  });
+  const roLease=await leaseWorkAtomic(roPlan.queueIds[0],"worker-drive-404",60);
+  await recordWorkFailure({queueId:roPlan.queueIds[0],fencingToken:roLease.token,actor:"worker-drive-404",error:new Error("Google Drive API HTTP 404: File not found")});
+  assert.equal((await one("SELECT state FROM goals WHERE id=$1",[readOnly.goalId])).state,"REPLANNING");
+  assert.equal((await one("SELECT status FROM work_queue WHERE id=$1",[roPlan.queueIds[0]])).status,"FAILED");
+  assert.equal(await beginReplanAtomic(readOnly.goalId,"missing file"),"PLANNING");
+  assert.equal(Number((await one("SELECT replan_attempts FROM goals WHERE id=$1",[readOnly.goalId])).replan_attempts),1);
+
+  // A failure on a write capability must NOT retry or replan.
+  const writeFailure=await createGoal("PLANNING");
+  const writePlan=await persistPlanAndDelegateAtomic({
+    goalId:writeFailure.goalId,steps:[{capabilityId:"gmail_send",params:{test:"no-automatic-retry"}}]
+  });
+  const writeLease=await leaseWorkAtomic(writePlan.queueIds[0],"worker-write-fail",60);
+  await recordWorkFailure({queueId:writePlan.queueIds[0],fencingToken:writeLease.token,actor:"worker-write-fail",error:new Error("Google Drive API HTTP 404: File not found")});
+  assert.equal((await one("SELECT state FROM goals WHERE id=$1",[writeFailure.goalId])).state,"FAILED");
 
   const crash = await createGoal("EXECUTING");
   const cp = await pool.query(

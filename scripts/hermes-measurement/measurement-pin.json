@@ -1,0 +1,17 @@
+{
+  "image": "docker.io/nousresearch/hermes-agent@sha256:fd822bae0a61bf023450737edbeaeea5fc6460f17cb4ee240a7e67b306ed63fb",
+  "hermesVersion": "0.22.5",
+  "hermesCommit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "sdk": {
+    "openai": "2.24.0",
+    "httpx": "0.28.1"
+  },
+  "before": {
+    "agent/chat_completion_helpers.py": "d5ac7612af5819891293c4ec182f71a1a9e59f6aa32e98f15266a85fca64e4a8",
+    "agent/stream_diag.py": "c4ca4586560e32d973a46b480b529d38bab07e399e38089c8eb839122e25cef2"
+  },
+  "after": {
+    "agent/chat_completion_helpers.py": "a95cbf4dfa3053b4703c44c04f9cdb8cdcae81df5814adab88288192ed1d1358",
+    "agent/stream_diag.py": "0345ae3a01d6672b4eec71e8b774f64e1183446894487f84d86c4237ca553e12"
+  }
+}

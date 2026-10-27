@@ -1,9 +1,14 @@
+import { randomUUID } from 'node:crypto';
+import {normalizeDependencies,validateStepGraph,type ResultReference} from './dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
 import { enqueueWork } from "./queue";
 import { transitionGoal } from "./stateMachine";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 
 export interface PlanStepInput {
+  stepKey?: string;
+  dependsOn?: string[];
+  resultRefs?: Record<string,ResultReference>;
   capabilityId: string;
   params?: Record<string, unknown>;
   priority?: number;
@@ -25,9 +30,15 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
   planHash: string;
   queueIds: string[];
 }> {
-  if (input.steps.length === 0) throw new Error("Plan requires at least one step");
+  return withTransaction(client=>persistPlanAndDelegate(client,input));
+}
 
-  return withTransaction(async (client) => {
+// Shared transaction boundary for atomic report continuation; same engine.
+export async function persistPlanAndDelegate(client:import('pg').PoolClient,input:PersistPlanInput):Promise<{planId:string;planHash:string;queueIds:string[]}>{
+  validateStepGraph(input.steps);
+  input={...input,steps:normalizeDependencies(input.steps,input.dependencies)};
+  validateStepGraph(input.steps);
+
     const goal = await client.query(
       "SELECT id, state FROM goals WHERE id=$1 FOR UPDATE",
       [input.goalId]
@@ -51,6 +62,7 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
       dependencies: input.dependencies ?? {},
       steps: input.steps.map((step, index) => ({
         index,
+        step_key:step.stepKey??String(index),depends_on:step.dependsOn??[],result_refs:step.resultRefs??{},
         capability_id: step.capabilityId,
         params: step.params ?? {},
         priority: step.priority ?? 0,
@@ -83,8 +95,13 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
     );
 
     const queueIds: string[] = [];
-    for (const step of input.steps) {
+    const ids=input.steps.map(()=>randomUUID());
+    for (const [index,step] of input.steps.entries()) {
       const queueId = await enqueueWork(client, {
+        id:ids[index],
+        stepKey:step.stepKey??String(index),
+        dependsOn:(step.dependsOn??[]).map(key=>ids[input.steps.findIndex((s,i)=>(s.stepKey??String(i))===key)]),
+        resultRefs:step.resultRefs??{},
         goalId: input.goalId,
         planId,
         capabilityId: step.capabilityId,
@@ -107,5 +124,4 @@ export async function persistPlanAndDelegateAtomic(input: PersistPlanInput): Pro
     );
 
     return { planId, planHash, queueIds };
-  });
-}
+  }

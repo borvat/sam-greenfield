@@ -1,3 +1,4 @@
+import {readReviewBudget} from './readReviewBudget';
 import type { GoalState } from "../../../packages/shared/src/types";
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
@@ -24,7 +25,7 @@ export async function scheduleContinuationAtomic(
 export async function wakeDueGoals(limit = 100): Promise<string[]> {
   return withTransaction(async (client) => {
     const res = await client.query(
-      `SELECT id, state
+      `SELECT id, state, completion_definition, current_plan_id
          FROM goals
         WHERE next_wake_at IS NOT NULL
           AND next_wake_at <= now()
@@ -38,6 +39,20 @@ export async function wakeDueGoals(limit = 100): Promise<string[]> {
     const ids: string[] = [];
     for (const row of res.rows) {
       const from = row.state as GoalState;
+      if(row.completion_definition==='sam.read_report.v1'&&from==='WAITING_EXTERNAL'){
+        const review=(await client.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[row.id,row.current_plan_id])).rows[0];
+        const budget=await readReviewBudget(client,row.id,row.current_plan_id);
+        if(review||budget){
+        const retry=review?undefined:budget;
+        if(retry?.retryable===true&&retry.attempts<2&&retry.callsUsed<4){
+          await transitionGoal(client,row.id,'WAITING_EXTERNAL','VERIFYING','read_review_continuation_due');
+          ids.push(row.id);
+        }
+        // Never send a completed-read report back through MODELING/planning.
+        await client.query('UPDATE goals SET next_wake_at=NULL WHERE id=$1',[row.id]);
+        continue;
+        }
+      }
       await client.query(
         "UPDATE goals SET state='MODELING', next_wake_at=NULL, updated_at=now() WHERE id=$1",
         [row.id]
@@ -62,7 +77,7 @@ export async function wakeGoalFromEventAtomic(
 ): Promise<boolean> {
   return withTransaction(async (client) => {
     const goal = await client.query(
-      "SELECT id,state FROM goals WHERE id=$1 FOR UPDATE",
+      "SELECT id,state,completion_definition,current_plan_id FROM goals WHERE id=$1 FOR UPDATE",
       [goalId]
     );
     if (goal.rowCount !== 1) return false;
@@ -70,6 +85,7 @@ export async function wakeGoalFromEventAtomic(
       return false;
     }
 
+    if(await isWaitingReadReview(client,goal.rows[0]))return false;
     const from = goal.rows[0].state as GoalState;
     await client.query(
       "UPDATE goals SET state='MODELING',next_wake_at=NULL,updated_at=now() WHERE id=$1",
@@ -88,4 +104,10 @@ export async function wakeGoalFromEventAtomic(
     });
     return true;
   });
+}
+
+/** Generic events must not reset report-review budgets or repeat verified reads. */
+export async function isWaitingReadReview(client:any,goal:any):Promise<boolean>{
+ if(goal?.state!=='WAITING_EXTERNAL'||goal.completion_definition!=='sam.read_report.v1')return false;
+ return Boolean(await readReviewBudget(client,goal.id,goal.current_plan_id))||(await client.query('SELECT 1 FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[goal.id,goal.current_plan_id])).rows.length>0;
 }

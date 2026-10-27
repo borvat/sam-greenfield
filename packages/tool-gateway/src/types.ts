@@ -4,12 +4,19 @@ export interface ToolDefinition {
   capabilityId:string;
   authorityClass:AuthorityClass;
   sideEffect:boolean;
+  description?:string;
+  inputSchema?:Record<string,unknown>;
+  /** Operator-reviewed per-attempt ceiling; required by bounded specialist profile. */
+  costUpperBoundUsd?:number;
+  companyScopes?:string[];
 }
 
 export interface ToolExecutionRequest {
   capabilityId:string;
   params:Record<string,unknown>;
   idempotencyKey:string;
+  /** SAM-owned lease identity; never accepted in capability parameters. */
+  executionContext?:{queueId:string;fencingToken:number};
 }
 
 export interface ToolExecutionResult {

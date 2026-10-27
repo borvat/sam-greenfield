@@ -1,3 +1,4 @@
+import {prepareWorkParameters} from './dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
 import { acquireLease } from "../../../packages/db/src/fencing";
 import { recordExecutionAndRequestVerificationAtomic } from "./execution";
@@ -27,6 +28,7 @@ export async function claimNextWorkAtomic(
          FROM work_queue
         WHERE status IN ('QUEUED','HANDBACK')
           AND (due_at IS NULL OR due_at <= now())
+          AND (plan_id IS NULL OR work_dependencies_ready(id))
         ORDER BY priority DESC,due_at ASC NULLS FIRST,queued_at ASC,id ASC
         FOR UPDATE SKIP LOCKED
         LIMIT 1`
@@ -43,11 +45,13 @@ export async function claimNextWorkAtomic(
       [queueId]
     );
 
+    const params=await prepareWorkParameters(client,queueId,row.rows[0].params??{});
+    if(!params)return null;
     return {
       queueId,
       fencingToken,
       capabilityId: row.rows[0].capability_id,
-      params: row.rows[0].params ?? {},
+      params,
       goalId: row.rows[0].goal_id ?? null,
       planId: row.rows[0].plan_id ?? null
     };

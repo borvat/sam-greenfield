@@ -3,6 +3,7 @@ import { acquireLease, commitWithFencing } from "../../../packages/db/src/fencin
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 
 export interface EnqueueWorkInput {
+  id?:string;stepKey?:string;dependsOn?:string[];resultRefs?:Record<string,unknown>;
   goalId?: string | null;
   planId?: string | null;
   stepId?: string | null;
@@ -17,8 +18,8 @@ export interface EnqueueWorkInput {
 export async function enqueueWork(client: any, input: EnqueueWorkInput): Promise<string> {
   const res = await client.query(
     `INSERT INTO work_queue
-      (goal_id, plan_id, step_id, capability_id, params, priority, due_at, idempotency_key, operation_key_ref)
-     VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9)
+      (goal_id, plan_id, step_id, capability_id, params, priority, due_at, idempotency_key, operation_key_ref,id,step_key,depends_on,result_refs)
+     VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,COALESCE($10::uuid,gen_random_uuid()),$11,$12::uuid[],$13::jsonb)
      RETURNING id`,
     [
       input.goalId ?? null,
@@ -29,7 +30,7 @@ export async function enqueueWork(client: any, input: EnqueueWorkInput): Promise
       input.priority ?? 0,
       input.dueAt ?? null,
       input.idempotencyKey ?? null,
-      input.operationKeyRef ?? null
+      input.operationKeyRef ?? null, input.id??null,input.stepKey??null,input.dependsOn??[],JSON.stringify(input.resultRefs??{})
     ]
   );
   const id = res.rows[0].id as string;

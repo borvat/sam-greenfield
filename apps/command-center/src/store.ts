@@ -100,7 +100,7 @@ export async function createOwnerGoal(legalEntityId:string,input:OwnerGoalInput,
   const authority=autonomyEnabled()?"GREEN":input.authorityCeiling??"YELLOW";
   if(authority!=="GREEN"&&authority!=="YELLOW") throw new Error("authority ceiling must be GREEN or YELLOW");
   const priority=boundedPriority(input.priority);
-  if(process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==="1"&&input.acceptanceContract===undefined){
+  if((process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==="1"||process.env.NODE_ENV==="production")&&input.acceptanceContract===undefined){
     throw new Error("GOAL_CONTRACT_REQUIRED");
   }
   // The isolated autonomy intake deliberately retains its existing field boundary.

@@ -1,3 +1,4 @@
+import {standardContract} from './standardContracts';
 import type { AuthorityClass } from "../../../packages/shared/src/types";
 import type { SpecialistAgentDefinition } from "./types";
 import { SpecialistRegistry } from "./registry";
@@ -9,6 +10,8 @@ export interface CapabilityDefinition {
   specialistVersion: string;
   description?: string;
   parameters?: Record<string,unknown>;
+  sideEffect?: boolean;
+  companyScopes?: string[];
 }
 
 export class CapabilityCatalog {
@@ -18,7 +21,8 @@ export class CapabilityCatalog {
   constructor(items: readonly CapabilityDefinition[]) {
     const byAgent = new Map<string, { version: string; capabilities: string[] }>();
 
-    for (const item of items) {
+    for (const raw of items) {
+      const item=standardContract(raw);
       if (!item.capabilityId.trim()) throw new Error("capabilityId is required");
       if (!item.specialistAgentId.trim()) throw new Error(`specialistAgentId is required for ${item.capabilityId}`);
       if (!item.specialistVersion.trim()) throw new Error(`specialistVersion is required for ${item.capabilityId}`);
@@ -65,7 +69,9 @@ export class CapabilityCatalog {
   planningDescriptors(){
     return [...this.definitions.values()].map(item=>({
       capabilityId:item.capabilityId,authorityClass:item.authorityClass,
-      description:item.description??item.capabilityId,parameters:item.parameters??{}
+      description:item.description??item.capabilityId,parameters:item.parameters??{},
+      ...(item.sideEffect===undefined?{}:{sideEffect:item.sideEffect}),
+      ...(item.companyScopes===undefined?{}:{companyScopes:item.companyScopes})
     }));
   }
 }

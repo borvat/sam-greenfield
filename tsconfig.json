@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["apps/**/*.ts", "packages/**/*.ts", "tests/**/*.ts"],
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "tests/**/*.ts", "scripts/release/integration-migrate.ts", "scripts/release/staging-service.ts"],
   "exclude": ["node_modules"]
 }

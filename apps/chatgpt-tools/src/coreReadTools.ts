@@ -105,6 +105,7 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
         verifications:await rows(`SELECT v.* FROM verifications v
           JOIN executions e ON e.id=v.execution_id
           WHERE e.goal_id=$1 ORDER BY v.checked_at,v.id`,[goalId]),
+        reports:await rows("SELECT * FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round",[goalId]),
         audit:await rows("SELECT * FROM audit_log WHERE goal_id=$1 ORDER BY timestamp,id",[goalId])
       };
       return {ok:true,data};

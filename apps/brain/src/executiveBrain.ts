@@ -1,3 +1,5 @@
+import type {PlanningCandidatePolicy} from './planner';
+import {loadReplanContext} from './replanContext';
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
@@ -10,10 +12,13 @@ import { assembleContext } from "./contextAssembler";
 import {pilotEnabled,authorizePilotGoal} from "../../production/src/syntheticPilotScope";
 
 export async function runBrainPlanningCycle(input: {
+  alreadyModeling?:boolean;
   gateway: ModelGateway;
   goalId: string;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
+  candidatePolicy?:PlanningCandidatePolicy;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
   availableCapabilities?: unknown[];
@@ -22,7 +27,7 @@ export async function runBrainPlanningCycle(input: {
     if(pilotEnabled())await authorizePilotGoal(client,input.goalId);
     await authorizeDevelopmentGoal(client, input.goalId);
     const res = await client.query(
-      "SELECT id,objective,state,company_scope,replan_reason FROM goals WHERE id=$1",
+      "SELECT id,objective,state,company_scope,replan_reason,completion_definition FROM goals WHERE id=$1",
       [input.goalId]
     );
     if (res.rowCount !== 1) throw new Error("Goal not found");
@@ -35,8 +40,8 @@ export async function runBrainPlanningCycle(input: {
 
   const context = goal.state==="NEW"?await observeAndEnterPlanning(input.goalId):await withTransaction(async client=>{
     if(!goal.company_scope) return {entityType:"legal_entity",entityId:null,facts:[],memory:[]};
-    const assembled=await assembleContext(client,"legal_entity",goal.company_scope);
-    return {entityType:assembled.entity.type,entityId:assembled.entity.id,facts:assembled.facts,memory:assembled.memory};
+    const assembled=await assembleContext(client,"legal_entity",goal.company_scope,goal.objective);
+    return {entityType:assembled.entity.type,entityId:assembled.entity.id,facts:assembled.facts,memory:assembled.memory,...('knowledge' in assembled?{knowledge:assembled.knowledge}:{})};
   });
   if(goal.state==="MODELING")await transitionGoalAtomic(input.goalId,"MODELING","PLANNING","kernel_observe_resumed");
 
@@ -44,11 +49,11 @@ export async function runBrainPlanningCycle(input: {
     gateway: input.gateway,
     goalId: input.goalId,
     objective: goal.objective,
-    context:goal.replan_reason?{...context,replan_reason:goal.replan_reason}:context,
-    availableCapabilities:input.availableCapabilities,
+    context:goal.replan_reason?{...context,...await loadReplanContext(input.goalId),replan_reason:goal.replan_reason}:context,
+    availableCapabilities:goal.completion_definition==="sam.read_report.v1"?input.availableCapabilities?.filter((x:any)=>x.sideEffect===false&&x.authorityClass==="GREEN"):input.availableCapabilities,
     dataClassification: input.dataClassification,
     maxCostUsd: input.maxCostUsd,
-    preferredProviders: input.preferredProviders
+    signal:input.signal,candidatePolicy:input.candidatePolicy,preferredProviders: input.preferredProviders
   });
 
   const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
@@ -69,6 +74,7 @@ export async function runBrainPlanningCycle(input: {
     throw new Error("Candidate plan blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

@@ -1,0 +1,53 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 773B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 104B done
+#3 DONE 0.0s
+
+#4 [stage-0 1/6] FROM docker.io/library/node:22-alpine
+#4 DONE 0.0s
+
+#5 [stage-0 2/6] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 10.91kB done
+#6 DONE 0.0s
+
+#7 [stage-0 3/6] COPY --chown=node:node package.json package-lock.json ./
+#7 DONE 1.1s
+
+#8 [stage-0 4/6] COPY --chown=node:node apps ./apps
+#8 DONE 0.3s
+
+#9 [stage-0 5/6] COPY --chown=node:node packages ./packages
+#9 DONE 0.7s
+
+#10 [stage-0 6/6] RUN --mount=type=secret,id=registry_ca     if [ -s /run/secrets/registry_ca ]; then       NODE_EXTRA_CA_CERTS=/run/secrets/registry_ca npm ci --omit=dev --fetch-retries=1 --fetch-timeout=20000;     else npm ci --omit=dev --fetch-retries=1 --fetch-timeout=20000; fi
+#10 2.394
+#10 2.394 added 23 packages, and audited 24 packages in 2s
+#10 2.394
+#10 2.394 1 package is looking for funding
+#10 2.394   run `npm fund` for details
+#10 2.395
+#10 2.395 found 0 vulnerabilities
+#10 2.396 npm notice
+#10 2.396 npm notice New major version of npm available! 10.9.9 -> 12.2.0
+#10 2.396 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#10 2.396 npm notice To update run: npm install -g npm@12.2.0
+#10 2.396 npm notice
+#10 DONE 2.4s
+
+#11 exporting to image
+#11 exporting layers
+#11 exporting layers 0.3s done
+#11 writing image sha256:1aae1f38a51cae00d6ef6d9a095a592752e6ec9d33cf4659c67906372a135d5e done
+#11 naming to docker.io/library/sam-core-reliability:acceptance done
+#11 DONE 0.3s

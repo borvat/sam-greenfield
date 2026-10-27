@@ -5,6 +5,19 @@ export interface GoalAcceptance{
   version:1;
   constraints:{capabilityId:string;params:Record<string,Scalar>;result:{field:string;equals:Scalar}}[];
 }
+const acceptanceScalar={type:['string','number','boolean','null']};
+export const GOAL_ACCEPTANCE_SCHEMA={
+ type:'object',additionalProperties:false,required:['version','constraints'],properties:{
+  version:{const:1},constraints:{type:'array',minItems:1,maxItems:16,items:{
+   type:'object',additionalProperties:false,required:['capabilityId','params','result'],properties:{
+    capabilityId:{type:'string',pattern:'^[a-zA-Z0-9_.-]{1,80}$'},
+    params:{type:'object',maxProperties:16,additionalProperties:acceptanceScalar},
+    result:{type:'object',additionalProperties:false,required:['field','equals'],properties:{
+     field:{type:'string',pattern:'^[a-zA-Z][a-zA-Z0-9_]{0,79}$'},equals:acceptanceScalar}}
+   }
+  }}
+ }
+};
 function scalar(v:unknown):v is Scalar{
   return v===null||typeof v==="boolean"||(typeof v==="number"&&Number.isFinite(v))||
     (typeof v==="string"&&v.length<=200&&!/[\u0000-\u001f]/.test(v));
@@ -33,7 +46,7 @@ export function encodeGoalAcceptance(v:unknown):string{
 }
 export function checkGoalAcceptance(definition:string|null,executions:any[]):{passed:boolean;reason:string}{
   if(!definition?.startsWith(ACCEPTANCE_PREFIX)){
-    return {passed:process.env.SAM_REQUIRE_GOAL_ACCEPTANCE!=="1",reason:"GOAL_CONTRACT_MISSING"};
+    return {passed:process.env.SAM_REQUIRE_GOAL_ACCEPTANCE!=="1"&&process.env.NODE_ENV!=="production",reason:"GOAL_CONTRACT_MISSING"};
   }
   try{
     const contract=validateGoalAcceptance(JSON.parse(definition.slice(ACCEPTANCE_PREFIX.length)));

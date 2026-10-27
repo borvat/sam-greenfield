@@ -1,3 +1,4 @@
+import {validateEvidence} from './verificationEvidence';
 import { withTransaction } from "../../../packages/db/src/client";
 import { insertOutboxEvent } from "../../../packages/db/src/outbox";
 import { transitionGoal } from "./stateMachine";
@@ -11,10 +12,14 @@ export async function recordIndependentVerificationAtomic(input: {
   contractId: string;
   independentEvidence: Record<string, unknown>;
   result: VerificationResult;
+  terminalFailure?:boolean;
+  // Trusted production finalizer: same transaction, only after acceptance.
+  onAccepted?:(client:import('pg').PoolClient,context:{goalId:string;planId:string;executionId:string;verificationId:string})=>Promise<unknown>;
 }): Promise<string> {
   return withTransaction(async (client) => {
+    let goalState:string|undefined;
     const execution = await client.query(
-      "SELECT id, goal_id, plan_id, plan_hash, execution_hash, actor FROM executions WHERE id=$1 FOR UPDATE",
+      "SELECT id, goal_id, plan_id, plan_hash, execution_hash, actor,capability_id FROM executions WHERE id=$1 FOR UPDATE",
       [input.executionId]
     );
     if (execution.rowCount !== 1) throw new Error("Execution not found");
@@ -25,7 +30,7 @@ export async function recordIndependentVerificationAtomic(input: {
     }
 
     const contract = await client.query(
-      "SELECT id, must_not_trust_execution_result FROM verification_contracts WHERE id=$1",
+      "SELECT id, capability_id,required_evidence_fields, must_not_trust_execution_result FROM verification_contracts WHERE id=$1",
       [input.contractId]
     );
     if (contract.rowCount !== 1) throw new Error("Verification contract not found");
@@ -55,10 +60,14 @@ export async function recordIndependentVerificationAtomic(input: {
       return prior.rows[0].id as string;
     }
 
+    if(contract.rows[0].capability_id!==ex.capability_id)throw new Error('VERIFICATION_CONTRACT_CAPABILITY_MISMATCH');
+    if(input.result==='VERIFIED')validateEvidence(contract.rows[0].required_evidence_fields,input.independentEvidence);
     if (ex.goal_id) {
-      const goal = await client.query("SELECT state FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
+      const goal = await client.query("SELECT state,current_plan_id FROM goals WHERE id=$1 FOR UPDATE", [ex.goal_id]);
       if (goal.rowCount !== 1) throw new Error("Goal not found for execution");
-      if (goal.rows[0].state !== "VERIFYING") {
+      if(goal.rows[0].current_plan_id!==ex.plan_id)throw new Error('VERIFICATION_PLAN_OBSOLETE');
+      goalState=goal.rows[0].state;
+      if (!["VERIFYING","EXECUTING"].includes(goal.rows[0].state)) {
         throw new Error(`Goal must be VERIFYING before verification, got ${goal.rows[0].state}`);
       }
     }
@@ -104,31 +113,38 @@ export async function recordIndependentVerificationAtomic(input: {
         );
         const total = Number(coverage.rows[0].total);
         const verified = Number(coverage.rows[0].verified);
-        if (total > 0 && total === verified) {
+        if (goalState==="VERIFYING" && total > 0 && total === verified) {
           const definition=await client.query("SELECT completion_definition FROM goals WHERE id=$1",[ex.goal_id]);
           const verifiedResults=await client.query(
             `SELECT e.capability_id,e.params,e.result FROM executions e
              WHERE e.goal_id=$1 AND e.plan_id=$2 AND EXISTS
                (SELECT 1 FROM verifications v WHERE v.execution_id=e.id AND v.result='VERIFIED')`,
             [ex.goal_id,ex.plan_id]);
+          // Integration read reports have a separate atomic evidence/critique
+          // gate. Preserve VERIFYING until that gate commits report + knowledge.
+          if(definition.rows[0].completion_definition==='sam.read_report.v1'){
+            await insertOutboxEvent(client,{aggregateType:'goal',aggregateId:ex.goal_id,eventType:'READ_REPORT_READY',payload:{plan_id:ex.plan_id}});
+          }else{
           const acceptance=checkGoalAcceptance(definition.rows[0].completion_definition,verifiedResults.rows);
           if(!acceptance.passed){
-            await transitionGoal(client,ex.goal_id,"VERIFYING","REPLANNING","goal_acceptance_failed",{
+            await transitionGoal(client,ex.goal_id,"VERIFYING",input.terminalFailure?"FAILED":"REPLANNING","goal_acceptance_failed",{
               verification_id:verificationId,reason:acceptance.reason
             });
           }else{
+          await input.onAccepted?.(client,{goalId:ex.goal_id,planId:ex.plan_id,executionId:ex.id,verificationId});
           await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
             verification_id: verificationId,
             verified_executions: verified
           });
           }
+          }
         }
       } else if (input.result === "FAILED") {
-        await transitionGoal(client, ex.goal_id, "VERIFYING", "REPLANNING", "independent_verification_failed", {
+        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", input.terminalFailure?"FAILED":"REPLANNING", "independent_verification_failed", {
           verification_id: verificationId
         });
       } else {
-        await transitionGoal(client, ex.goal_id, "VERIFYING", "WAITING_EXTERNAL", "independent_verification_inconclusive", {
+        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", "WAITING_EXTERNAL", "independent_verification_inconclusive", {
           verification_id: verificationId,
           result: input.result
         });

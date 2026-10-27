@@ -14,7 +14,7 @@ export class GoogleGeminiAdapter implements ModelProviderAdapter{
     const body=await fetchJson(
       `${base}/${encodeURIComponent(model)}:generateContent`,
       {
-        method:"POST",
+        method:"POST",signal:task.signal,
         headers:{
           "x-goog-api-key":this.options.apiKey,
           "content-type":"application/json"

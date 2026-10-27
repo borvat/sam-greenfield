@@ -29,6 +29,7 @@ export function routeModel(
   const candidates: RouteCandidate[] = [];
 
   for (const provider of providers) {
+    if (task.allowedProviders && !task.allowedProviders.includes(provider.providerId)) continue;
     if (provider.health === "DOWN") continue;
     if (!provider.capabilities.includes(task.capability)) continue;
     if (!provider.privacyClasses.includes(task.dataClassification)) continue;

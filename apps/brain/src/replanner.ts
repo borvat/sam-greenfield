@@ -1,3 +1,5 @@
+import type {PlanningCandidatePolicy} from './planner';
+import {loadReplanContext} from './replanContext';
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ModelGateway } from "../../../packages/model-gateway/src/gateway";
 import type { DataClassification } from "../../../packages/model-gateway/src/types";
@@ -11,11 +13,14 @@ import { authorizeDevelopmentGoal } from "../../development/src/planningPolicy";
 import {pilotEnabled,authorizePilotGoal} from "../../production/src/syntheticPilotScope";
 
 export async function runBrainReplanCycle(input: {
+  alreadyStarted?:boolean;
   gateway: ModelGateway;
   goalId: string;
   reason: string;
   dataClassification: DataClassification;
   maxCostUsd: number;
+  signal?: AbortSignal;
+  candidatePolicy?:PlanningCandidatePolicy;
   preferredProviders?: string[];
   capabilityPolicies: CapabilityAuthorityPolicy;
   availableCapabilities?: unknown[];
@@ -31,11 +36,11 @@ export async function runBrainReplanCycle(input: {
     return res.rows[0];
   });
 
-  if (goal.state !== "REPLANNING") {
+  if (goal.state !== (input.alreadyStarted?"PLANNING":"REPLANNING")) {
     throw new Error(`Brain replan cycle requires REPLANNING goal, got ${goal.state}`);
   }
 
-  const replanState = await beginReplanAtomic(input.goalId,input.reason);
+  const replanState = input.alreadyStarted?"PLANNING":await beginReplanAtomic(input.goalId,input.reason);
   if (replanState === "FAILED") {
     return { failed:true, reason:"replan_budget_exhausted" as const };
   }
@@ -44,21 +49,29 @@ export async function runBrainReplanCycle(input: {
     if (!goal.company_scope) {
       return { entity:{type:"legal_entity",id:null},facts:[],memory:[] };
     }
-    return assembleContext(client,"legal_entity",goal.company_scope);
+    return assembleContext(client,"legal_entity",goal.company_scope,goal.objective);
   });
 
+  const failedReads=await withTransaction(async client=>{
+    const r=await client.query("SELECT DISTINCT capability_id,params FROM work_queue WHERE goal_id=$1 AND status='FAILED'",[input.goalId]);
+    const readOnly=new Set((input.availableCapabilities??[]).filter((x:any)=>x?.sideEffect===false).map((x:any)=>String(x.capabilityId)));
+    return r.rows.filter((x:any)=>readOnly.has(String(x.capability_id))).map((x:any)=>({capabilityId:String(x.capability_id),params:x.params??{}}));
+  });
+  const history=await loadReplanContext(input.goalId);
   const candidate = await proposePlan({
     gateway:input.gateway,
     goalId:input.goalId,
     objective:goal.objective,
     availableCapabilities:input.availableCapabilities,
+    forbiddenReadSteps:failedReads,
     context:{
       ...context,
+      ...history,
       replan_reason:input.reason
     },
     dataClassification:input.dataClassification,
     maxCostUsd:input.maxCostUsd,
-    preferredProviders:input.preferredProviders
+    signal:input.signal,candidatePolicy:input.candidatePolicy,preferredProviders:input.preferredProviders
   });
 
   const authority = await withTransaction((client) => evaluatePlanAuthority(client, {
@@ -79,6 +92,7 @@ export async function runBrainReplanCycle(input: {
     throw new Error("Replanned candidate blocked by authority policy");
   }
 
+  input.signal?.throwIfAborted();
   const persisted = await persistPlanAndStartExecution(candidate);
 
   return {

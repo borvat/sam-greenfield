@@ -1,0 +1,101 @@
+# Specification only. No services deployed by this task. Operator authorization
+# and separate restricted identities are prerequisites; never use production URLs.
+services:
+  postgres:
+    image: pgvector/pgvector:pg15@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+    environment:
+      POSTGRES_DB: ${SAM_STAGING_DB_NAME:?isolated staging database required}
+      POSTGRES_USER: ${SAM_STAGING_OWNER_ROLE:?staging owner role required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/owner_password
+    secrets: [owner_password, pg_server_cert, pg_server_key, pg_hba]
+    command: [postgres, -c, ssl=on, -c, ssl_cert_file=/run/secrets/pg_server_cert, -c, ssl_key_file=/run/secrets/pg_server_key, -c, hba_file=/run/secrets/pg_hba]
+    volumes: [staging_pg:/var/lib/postgresql/data]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  worker:
+    image: ${SAM_STAGING_IMAGE:?verified local image ID or approved immutable digest required}
+    pull_policy: never
+    command: [node, --import, tsx, scripts/release/staging-service.ts, worker]
+    environment:
+      NODE_ENV: production
+      SAM_DATABASE_TARGET: staging
+      SAM_INTEGRATION_PROFILE: synthetic-local
+      SAM_STAGING_DB_HOST: ${SAM_STAGING_DB_HOST:?reviewed TLS hostname required}
+      SAM_STAGING_ORG_ID: ${SAM_STAGING_ORG_ID:?synthetic org required}
+      SAM_STAGING_ENTITY_ID: ${SAM_STAGING_ENTITY_ID:?synthetic entity required}
+      DATABASE_URL: ${SAM_STAGING_WORKER_DATABASE_URL:?fixed worker LOGIN and verify-full TLS URL required}
+      SAM_WORKER_ID: staging-synthetic
+      SAM_INTEGRATION_ENABLED: '1'
+      SAM_COMPOSITION_MODULE: /app/apps/integration/src/stagingCompositionModule.ts
+      SAM_RUNTIME_STATUS_BEARER_TOKEN: ${SAM_STAGING_STATUS_BEARER:?distinct test bearer required}
+      SAM_TICK_INTERVAL_MS: '1000'
+      SAM_RUNTIME_HOST: 0.0.0.0
+      SAM_KNOWLEDGE_ENABLED: 'false'
+      SAM_NOTIFICATIONS_ENABLED: 'false'
+      SAM_PERCEPTION_ACTION_ENABLED: 'false'
+    volumes: ['${SAM_STAGING_CA_FILE:?reviewed CA file required}:/run/staging-ca.pem:ro']
+    networks: [isolated]
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, 'fetch("http://127.0.0.1:8080/readyz").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+  command-center:
+    image: ${SAM_STAGING_IMAGE:?verified image required}
+    pull_policy: never
+    command: [node, --import, tsx, scripts/release/staging-service.ts, command-center]
+    environment:
+      NODE_ENV: production
+      SAM_DATABASE_TARGET: staging
+      SAM_INTEGRATION_PROFILE: synthetic-local
+      SAM_STAGING_DB_HOST: ${SAM_STAGING_DB_HOST:?reviewed TLS hostname required}
+      SAM_STAGING_ORG_ID: ${SAM_STAGING_ORG_ID:?synthetic org required}
+      SAM_STAGING_ENTITY_ID: ${SAM_STAGING_ENTITY_ID:?synthetic entity required}
+      DATABASE_URL: ${SAM_STAGING_CC_DATABASE_URL:?distinct fixed Command Center LOGIN required}
+      SAM_COMMAND_CENTER_PORT: '5000'
+      SAM_COMMAND_CENTER_LEGAL_ENTITY_ID: ${SAM_STAGING_ENTITY_ID:?synthetic entity required}
+      SAM_COMMAND_CENTER_ALLOWED_HOSTS: ${SAM_STAGING_CC_HOSTS:?exact hosts required}
+      SAM_COMMAND_CENTER_ALLOWED_ORIGINS: ${SAM_STAGING_CC_ORIGINS:?exact HTTPS origins required}
+      SAM_COMMAND_CENTER_BEARER_TOKEN: ${SAM_STAGING_CC_BEARER:?distinct test bearer required}
+    volumes: ['${SAM_STAGING_CA_FILE:?CA required}:/run/staging-ca.pem:ro']
+    network_mode: service:worker
+    depends_on:
+      worker: {condition: service_healthy}
+  mcp:
+    image: ${SAM_STAGING_IMAGE:?verified image required}
+    pull_policy: never
+    command: [node, --import, tsx, scripts/release/staging-service.ts, mcp]
+    environment:
+      NODE_ENV: production
+      SAM_DATABASE_TARGET: staging
+      SAM_INTEGRATION_PROFILE: synthetic-local
+      SAM_STAGING_DB_HOST: ${SAM_STAGING_DB_HOST:?reviewed TLS hostname required}
+      SAM_STAGING_ORG_ID: ${SAM_STAGING_ORG_ID:?synthetic org required}
+      SAM_STAGING_ENTITY_ID: ${SAM_STAGING_ENTITY_ID:?synthetic entity required}
+      DATABASE_URL: ${SAM_STAGING_MCP_DATABASE_URL:?distinct fixed MCP LOGIN required}
+      SAM_MCP_PORT: '3001'
+      PORT: '8080'
+      SAM_COMMAND_CENTER_PORT: '5000'
+      SAM_MCP_RELEASE_READ_ONLY: '1'
+      SAM_MCP_ALLOWED_HOSTS: ${SAM_STAGING_MCP_HOSTS:?exact hosts required}
+      SAM_MCP_ALLOWED_ORIGINS: ${SAM_STAGING_MCP_ORIGINS:?exact HTTPS origins required}
+      SAM_MCP_BEARER_TOKEN: ${SAM_STAGING_MCP_BEARER:?distinct test bearer required}
+    volumes: ['${SAM_STAGING_CA_FILE:?CA required}:/run/staging-ca.pem:ro']
+    network_mode: service:worker
+    depends_on:
+      worker: {condition: service_healthy}
+networks:
+  isolated: {internal: true}
+volumes:
+  staging_pg: {}
+secrets:
+  owner_password: {file: '${SAM_STAGING_OWNER_PASSWORD_FILE:?reviewed test secret file required}'}
+  pg_server_cert: {file: '${SAM_STAGING_PG_CERT_FILE:?staging certificate required}'}
+  pg_server_key: {file: '${SAM_STAGING_PG_KEY_FILE:?restricted postgres-readable key required}'}
+  pg_hba: {file: '${SAM_STAGING_PG_HBA_FILE:?reviewed hostssl-only HBA required}'}

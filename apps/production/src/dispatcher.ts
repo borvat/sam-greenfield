@@ -1,45 +1,72 @@
+import {continueReadReview} from './readReviewContinuation';
+import {encodeGoalAcceptance,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {ANALYST,SOURCE,ANALYSIS_MARKER,validateAnalysisRequest,admitDataAnalysisContract,assertAnalysisWindow,assertDataAnalysisSubmission} from './dataAnalysisContract';
+import {validateFollowupInput,loadVerifiedFollowupSource,sourceFollowupAcceptance,ANALYSIS_FOLLOWUP_MAX_WINDOW_MS} from './hermesSourceFollowup';
+import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import { evaluatePlanAuthority } from "../../brain/src/authorityGuard";
-import { persistPlanAndDelegateAtomic } from "../../kernel/src/planning";
-import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
+import { persistPlanAndDelegateAtomic,persistPlanAndDelegate } from "../../kernel/src/planning";
+import { transitionGoalAtomic,transitionGoal } from "../../kernel/src/stateMachine";
 import { reconcileOneSideEffectAtomic,reconcilePendingSideEffects } from "../../tools/src/reconciler";
 import type { ProductionActionDispatcher,ProductionCapabilityDescriptor } from "../../chatgpt-tools/src/types";
 import type { ValidatedProductionBundle } from "./bundle";
 
-async function createGoal(input:{
+type GoalInput={
   legalEntityId:string;
   objective:string;
+  actor:string;
   authorityCeiling:"GREEN"|"YELLOW"|"RED";
-}):Promise<string>{
-  return withTransaction(async(client)=>{
+  domain?:string;
+  completionDefinition?:string;
+  acceptanceContract?:unknown;
+};
+async function createGoalRecord(client:import('pg').PoolClient,input:GoalInput):Promise<{id:string;businessId:string}>{
+  if(input.completionDefinition!=="sam.read_report.v1"&&(process.env.NODE_ENV==='production'||process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==='1')&&input.acceptanceContract===undefined)throw Error("GOAL_CONTRACT_REQUIRED");
+  const completion=input.acceptanceContract===undefined?input.completionDefinition??null:encodeGoalAcceptance(input.acceptanceContract);
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
       [input.legalEntityId]
     );
     if(entity.rowCount!==1) throw new Error("Legal entity not found");
 
-    // Goal business IDs are globally unique by schema. Use the canonical global
-    // goal sequence (NULL scope), matching the Phase 0 RLS/security paths.
+    // Allocate within the fixed tenant; the canonical function includes its
+    // organization identity in the globally unique business ID.
     const business=await client.query(
-      "SELECT next_business_id('goal',NULL) AS business_id"
+      "SELECT next_business_id('goal',current_org_id()) AS business_id"
     );
 
     const inserted=await client.query(
       `INSERT INTO goals
-       (business_id,company_scope,domain,objective,state,authority_ceiling)
-       VALUES($1,$2,'chatgpt_direct',$3,'NEW',$4)
-       RETURNING id`,
+       (business_id,company_scope,domain,objective,state,authority_ceiling,completion_definition)
+       VALUES($1,$2,$3,$4,'NEW',$5,$6)
+       RETURNING id,business_id`,
       [
         business.rows[0].business_id,
         input.legalEntityId,
+        input.domain??"chatgpt_direct",
         input.objective,
+        input.authorityCeiling,
+        completion
+      ]
+    );
+    await client.query(
+      `INSERT INTO audit_log
+       (actor,goal_id,action,entity_type,entity_id,after_ref,source,authority_class,result)
+       VALUES($1,$2,'SAM_GOAL_SUBMITTED','goal',$2,$3::jsonb,'sam_mcp',$4,'CREATED')`,
+      [
+        input.actor,
+        inserted.rows[0].id,
+        JSON.stringify({business_id:inserted.rows[0].business_id,domain:input.domain??"chatgpt_direct",objective:input.objective}),
         input.authorityCeiling
       ]
     );
-    return inserted.rows[0].id as string;
-  });
+    return {
+      id:inserted.rows[0].id as string,
+      businessId:inserted.rows[0].business_id as string
+    };
 }
+async function createGoal(input:GoalInput){return withTransaction(client=>createGoalRecord(client,input));}
 
 async function ensureApprovalRequests(input:{
   goalId:string;
@@ -106,6 +133,110 @@ export function createKernelProductionDispatcher(
   bundle:ValidatedProductionBundle
 ):ProductionActionDispatcher{
   return {
+    continueReview:continueReadReview,
+    async submitAnalysisFollowUp(input){
+      const normalized=validateFollowupInput({objective:input.objective,legal_entity_id:input.legalEntityId,source_binding:input.sourceBinding});
+      input={...input,...normalized};
+      const objective=normalized.objective,binding=normalized.sourceBinding,policy=bundle.raw.hermesDataAnalysis;
+      if(!policy||!bundle.raw.capabilities.some(c=>c.capabilityId===ANALYST))throw Error('HERMES_DATA_ANALYSIS_NOT_ENABLED');
+      assertAnalysisWindow(policy,input.legalEntityId);
+      if(Date.parse(policy.expiresAt)-Date.parse(policy.activatedAt)>ANALYSIS_FOLLOWUP_MAX_WINDOW_MS)throw Error('ANALYSIS_FOLLOWUP_WINDOW_DENIED');
+      if(binding.legalEntityId!==input.legalEntityId)throw Error('ANALYSIS_SOURCE_SCOPE_DENIED');
+      return withTransaction(async client=>{
+        await client.query("SELECT pg_advisory_xact_lock(hashtext('sam-hermes-data-analysis-admission'))");
+        assertAnalysisWindow(policy,input.legalEntityId);
+        await loadVerifiedFollowupSource(client,binding,input.legalEntityId);
+        // Source identity, not prose or window, is the durable one-follow-up key.
+        const previous=(await client.query(`SELECT g.id,g.business_id,g.current_plan_id,p.goal_assumptions,p.plan_hash
+          FROM goals g JOIN plans p ON p.goal_id=g.id
+          WHERE g.domain='hermes_data_analysis' AND p.goal_assumptions->'sourceReuse'->>'sourceExecutionId'=$1
+          ORDER BY p.created_at,p.id LIMIT 1`,[binding.sourceExecutionId])).rows[0];
+        if(previous){
+          if(sha256Hex(previous.goal_assumptions.sourceReuse)!==sha256Hex(binding))throw Error('ANALYSIS_FOLLOWUP_BINDING_CONFLICT');
+          return {status:'EXISTING',goalId:previous.id,businessId:previous.business_id,planId:previous.current_plan_id,sourceBindingHash:sha256Hex(binding)};
+        }
+        const used=await client.query("SELECT count(*)::int n FROM goals WHERE domain='hermes_data_analysis' AND company_scope=$1 AND created_at>=$2",[input.legalEntityId,policy.activatedAt]);
+        if(Number(used.rows[0].n)>=1)throw Error('HERMES_DATA_ANALYSIS_TASK_CEILING');
+        const contract=sourceFollowupAcceptance(binding);
+        const goal=await createGoalRecord(client,{...input,objective,authorityCeiling:'GREEN',domain:'hermes_data_analysis',acceptanceContract:contract});
+        const steps=[{stepKey:'analysis',capabilityId:ANALYST,params:{agent_role:'data_analyst',instructions:ANALYSIS_MARKER}}];
+        const authority=await evaluatePlanAuthority(client,{goalId:goal.id,legalEntityId:input.legalEntityId,steps,capabilityPolicies:bundle.catalog.authorityPolicies()});
+        if(!authority.authorized)throw Error('HERMES_DATA_ANALYSIS_AUTHORITY_DENIED');
+        await transitionGoal(client,goal.id,'NEW','MODELING','bounded_verified_source_followup');
+        await transitionGoal(client,goal.id,'MODELING','PLANNING','reuse_exact_original_verified_source');
+        const plan=await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:'sam_mcp',actor:input.actor,modelPlanning:false,
+          acceptanceFixedBeforeExecution:true,sourceReuse:binding,sourceReuseWindow:{activatedAt:policy.activatedAt,expiresAt:policy.expiresAt}},steps});
+        return {status:'QUEUED',goalId:goal.id,businessId:goal.businessId,...plan,acceptanceContract:contract,
+          sourceBindingHash:sha256Hex(binding),planning:'TRUSTED_VERIFIED_SOURCE_FOLLOWUP'};
+      });
+    },
+    async submitGoal(input){
+      const objective=input.objective.trim();
+      if(!objective) throw new Error("objective is required");
+      if(objective.length>4000) throw new Error("objective must be 4000 characters or fewer");
+      if(!input.legalEntityId) throw new Error("legalEntityId is required");
+      if(input.acceptanceContract!==undefined)validateGoalAcceptance(input.acceptanceContract);
+      if(assertDataAnalysisSubmission(input)){
+        const request=validateAnalysisRequest(input.analysisRequest),policy=bundle.raw.hermesDataAnalysis;
+        if(!policy||!bundle.raw.capabilities.some(c=>c.capabilityId===ANALYST))throw Error('HERMES_DATA_ANALYSIS_NOT_ENABLED');
+        assertAnalysisWindow(policy,input.legalEntityId);
+        const contract=admitDataAnalysisContract(input.legalEntityId,request,input.acceptanceContract);
+        return withTransaction(async client=>{
+          // No NEW goal is exposed to the general model planner between commits.
+          await client.query("SELECT pg_advisory_xact_lock(hashtext('sam-hermes-data-analysis-admission'))");
+          assertAnalysisWindow(policy,input.legalEntityId);
+          const used=await client.query("SELECT count(*)::int n FROM goals WHERE domain='hermes_data_analysis' AND company_scope=$1 AND created_at>=$2",[input.legalEntityId,policy.activatedAt]);
+          if(Number(used.rows[0].n)>=1)throw Error('HERMES_DATA_ANALYSIS_TASK_CEILING');
+          const goal=await createGoalRecord(client,{...input,objective,authorityCeiling:'GREEN',domain:'hermes_data_analysis',acceptanceContract:contract});
+          const steps=[{stepKey:'source',capabilityId:SOURCE,params:{startDate:request.startDate,endDate:request.endDate}},
+            {stepKey:'analysis',dependsOn:['source'],capabilityId:ANALYST,params:{agent_role:'data_analyst',instructions:ANALYSIS_MARKER}}];
+          const authority=await evaluatePlanAuthority(client,{goalId:goal.id,legalEntityId:input.legalEntityId,steps,capabilityPolicies:bundle.catalog.authorityPolicies()});
+          if(!authority.authorized)throw Error('HERMES_DATA_ANALYSIS_AUTHORITY_DENIED');
+          await transitionGoal(client,goal.id,'NEW','MODELING','bounded_data_analysis_request');
+          await transitionGoal(client,goal.id,'MODELING','PLANNING','existing_source_then_verified_data_analysis');
+          const plan=await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:'sam_mcp',actor:input.actor,modelPlanning:false,acceptanceFixedBeforeExecution:true},steps});
+          return {status:'QUEUED',goalId:goal.id,businessId:goal.businessId,...plan,acceptanceContract:contract,planning:'TRUSTED_DATA_DEPENDENCY_PLAN'};
+        });
+      }
+      const planningReady=await withTransaction(async(client)=>{
+        const classification=bundle.raw.dataClassification??"INTERNAL";
+        const result=await client.query(
+          `SELECT provider_id FROM model_providers
+            WHERE health='HEALTHY'
+              AND capabilities @> '["planning"]'::jsonb
+              AND privacy_class_allowed @> $1::jsonb
+            ORDER BY provider_id
+            LIMIT 1`,
+          [JSON.stringify([classification])]
+        );
+        return (result.rowCount??0)>0;
+      });
+      if(!planningReady){
+        return {
+          status:"UNAVAILABLE",
+          reason:"MODEL_PROVIDER_NOT_CONFIGURED",
+          message:"Configure a SAM planning model provider before submitting autonomous goals. No goal was created."
+        };
+      }
+
+      const goal=await createGoal({
+        legalEntityId:input.legalEntityId,
+        objective,
+        actor:input.actor,
+        authorityCeiling:"GREEN",
+        completionDefinition:"sam.read_report.v1",
+        acceptanceContract:input.acceptanceContract,
+        domain:"chatgpt_goal_submission"
+      });
+      return {
+        status:"SUBMITTED",
+        goalId:goal.id,
+        businessId:goal.businessId,
+        state:"NEW",
+        planning:"SAM_RUNTIME_WORKER"
+      };
+    },
+
     manifest():ProductionCapabilityDescriptor[]{
       return bundle.raw.capabilities
         .map((capability)=>{
@@ -116,7 +247,9 @@ export function createKernelProductionDispatcher(
             specialistAgentId:capability.specialistAgentId,
             specialistVersion:capability.specialistVersion,
             availability:"AVAILABLE" as const,
-            sideEffect:tool.sideEffect
+            sideEffect:tool.sideEffect,
+            description:tool.description??capability.description,
+            inputSchema:tool.inputSchema
           };
         })
         .sort((a,b)=>a.capabilityId.localeCompare(b.capabilityId));
@@ -126,12 +259,15 @@ export function createKernelProductionDispatcher(
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
       const capability=bundle.catalog.get(input.capabilityId);
       bundle.tools.definition(input.capabilityId);
+      validateParameters(capability.parameters,input.params);
 
-      const goalId=await createGoal({
+      const goal=await createGoal({
         legalEntityId:input.legalEntityId,
         objective:input.objective?.trim() || `Execute capability ${input.capabilityId}`,
-        authorityCeiling:capability.authorityClass
+        actor:input.actor,
+        acceptanceContract:input.acceptanceContract,authorityCeiling:capability.authorityClass
       });
+      const goalId=goal.id;
 
       await transitionGoalAtomic(goalId,"NEW","MODELING","chatgpt_direct_observe");
       await transitionGoalAtomic(goalId,"MODELING","PLANNING","chatgpt_direct_plan");

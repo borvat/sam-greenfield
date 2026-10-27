@@ -73,12 +73,13 @@ export async function evaluatePlanAuthority(
           AND params_hash=$2
           AND legal_entity_id IS NOT DISTINCT FROM $3
           AND authority_class=$4
+          AND (goal_id IS NULL OR goal_id=$5)
           AND status='APPROVED'
           AND expiry_at > now()
           AND used_count < max_uses
         ORDER BY created_at DESC
         LIMIT 1`,
-      [step.capabilityId, paramsHash, input.legalEntityId, authorityClass]
+      [step.capabilityId, paramsHash, input.legalEntityId, authorityClass,input.goalId]
     );
 
     if (approval.rowCount !== 1) {

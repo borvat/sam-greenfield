@@ -121,6 +121,8 @@ async function main(){
   assert.ok(mock.seen.some((r)=>r.headers["x-api-key"]==="anthropic-secret"));
   assert.ok(mock.seen.some((r)=>r.headers["x-goog-api-key"]==="google-secret"));
   assert.ok(mock.seen.some((r)=>r.headers.authorization==="Bearer deepseek-secret"));
+  const deepseekRequest=mock.seen.find((r)=>r.url==="/deepseek/chat/completions");
+  assert.deepEqual(deepseekRequest?.body.response_format,{type:"json_object"});
   assert.ok(mock.seen.some((r)=>r.headers.authorization==="Bearer qwen-secret"));
 
   const built=buildStandardModelProvidersFromEnv({

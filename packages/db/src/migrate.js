@@ -45,6 +45,12 @@ async function main(){
         applied_at timestamptz NOT NULL DEFAULT now()
       )`);
 
+      // Relocated deployed migrations remain immutable in the historical ledger.
+      // Accept only these exact files/hashes; never erase history or replay DDL.
+      const relocated=[{file:'00011_mcp_internal_oauth.sql',hash:'9bceae24618447455ca05351d401b94d529f6c18559cb91ad328be043618ec92'},{file:'00099_sam_google_oauth.sql',hash:'e8890c451c732238f82c8729d47c6a250d1fbe2b986192afb2f6743d07050a76'},{file:'00100_sam_google_oauth_runtime.sql',hash:'ffcfc08b3d16972d6aa1a7a8834029d4054de497d4a0d3f0e1767b1d273aa210'},{file:'00101_goal_read_reviews.sql',hash:'a118d796178147db17fa4839b20863dbd2191e41e951657571fc4c03cd3b008d'}];
+      const allowed=new Map([...descriptors,...relocated].map(m=>[m.file,m.hash]));
+      const before=await client.query('SELECT filename,sha256 FROM sam_schema_migrations');
+      for(const row of before.rows){if(allowed.get(row.filename)!==row.sha256)throw new Error('Applied migration hash mismatch or unrecognized historical migration: '+row.filename);}
       for(const migration of descriptors){
         const existing=await client.query(
           "SELECT sha256 FROM sam_schema_migrations WHERE filename=$1",
@@ -75,7 +81,7 @@ async function main(){
 
       const applied=await client.query("SELECT filename,sha256,applied_at FROM sam_schema_migrations ORDER BY filename");
       console.log(`Applied migrations recorded: ${applied.rowCount}`);
-      if(applied.rowCount!==descriptors.length){
+      if(applied.rowCount!==descriptors.length+before.rows.filter(row=>relocated.some(m=>m.file===row.filename)).length){
         throw new Error(`Migration count mismatch: expected ${descriptors.length}, recorded ${applied.rowCount}`);
       }
       console.log("DATABASE MIGRATION PASS");

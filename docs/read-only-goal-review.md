@@ -1,0 +1,13 @@
+# Verified observations and read-only goal reports
+
+New autonomous submissions use the `sam.read_report.v1` completion contract and a GREEN authority ceiling. Direct single-capability executions retain their existing completion behavior. Existing historical goals are not rewritten.
+
+The first plan may perform discovery. After every current-plan execution is independently verified, the executive reviews the original objective and all verified observations. It may enqueue concrete follow-up reads using returned IDs, or produce a cited report. Continuations use the normal specialist queue and persist a new plan version atomically. No placeholder expression is executed. Every continuation is schema-validated, limited to four GREEN non-mutating steps, and cannot repeat a completed request. At most five observation rounds run. A rejected review blocks completion rather than declaring the reduced plan successful.
+
+Final reports contain deliverable checks, findings with exact source quotes and execution IDs, and limitations. A separate model call critiques objective coverage before the runtime atomically saves the report and marks completion. The goal timeline exposes the persisted `reports`. Source reads retain independent API readback; the synthesis is a model-reviewed interpretation, not an independent guarantee that every inference is correct. Specialist handoffs do not imply multiple independently reasoning models.
+
+Google read evidence version 2 compares selected data, retaining whether a next page exists while excluding the opaque navigation cursor. Actual selected-record changes still produce INCONCLUSIVE. Searches remain bounded by their requested page; this is not full pagination verification.
+
+For generated attachments, the adapter downloads the actual bytes without bearer headers, permits only the fixed MCP origin and attachment path, rejects redirects, and bounds downloads to 10 MiB/20 seconds. Temporary URLs and their generated filename UUIDs are replaced by the retrieved content hash for comparison. A fresh independent call downloads again; changed bytes cannot pass. Bounded text previews are available to the executive; truncation is recorded. Binary exports still require equal bytes and may remain inconclusive if the exporter itself produces different bytes.
+
+Regression checks: `npm run test:sam-google`, isolated planner fault tests, and the bol surface test. The SQL regression runs in isolated PGlite; it does not demonstrate network PostgreSQL or multi-process advisory locking. Live acceptance must separately prove native exports, dependent reads across specialist owners, persisted aggregation and ten varied completed goals on one fixed deployment.

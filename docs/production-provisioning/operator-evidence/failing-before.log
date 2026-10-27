@@ -1,0 +1,10 @@
+FAIL tests/compatibility/operatorProvisioning.ts
+PROVISIONED runtime
+Error: RUNTIME_TENANT_MISMATCH
+    at provisionRuntimeAccess (/workspace/sam-provisioning-rehearsal/packages/db/src/runtimeAccess.ts:46:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async provisionIntegrationAccess (/workspace/sam-provisioning-rehearsal/packages/db/src/integrationProfile.ts:51:2)
+    at async provisionServiceAccess (/workspace/sam-provisioning-rehearsal/packages/db/src/serviceAccess.ts:46:2)
+    at async main (/workspace/sam-provisioning-rehearsal/tests/compatibility/operatorProvisioning.ts:43:31)
+
+{"passed":0,"failed":1,"results":[{"test":"tests/compatibility/operatorProvisioning.ts","passed":false,"status":"FAIL","exit":1,"startedAt":"2026-10-22T20:29:20.769Z","completedAt":"2026-10-22T20:29:21.749Z","commands":[{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","packages/db/src/migrate.js","--apply"],"startedAt":"2026-10-22T20:29:20.772Z","completedAt":"2026-10-22T20:29:20.966Z","exitCode":0,"signal":null,"error":null},{"argv":["/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node","--import","tsx","tests/compatibility/operatorProvisioning.ts"],"startedAt":"2026-10-22T20:29:20.966Z","completedAt":"2026-10-22T20:29:21.749Z","exitCode":1,"signal":null,"error":null}],"testExecuted":true}]}

@@ -1,0 +1,4 @@
+PASS tests/release/provider_auth.ts
+PROVIDER_AUTH PASS: local HTTP 401/403/429/503 fixtures, one request per case, typed redacted errors; not a live-provider authentication test.
+
+{"passed":1,"failed":0,"results":[{"test":"tests/release/provider_auth.ts","passed":true,"exit":0}]}

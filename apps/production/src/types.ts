@@ -11,6 +11,7 @@ export interface VerificationAdapter{
       id:string;
       capabilityId:string;
       params:Record<string,unknown>;
+      result?:Record<string,unknown>;
       evidence:Record<string,unknown>;
       operationKeyRef:string|null;
     };
@@ -39,6 +40,7 @@ export interface ProductionBundle{
   workerLeaseTtlSeconds?:number;
   plannerGateway?:()=>ModelGateway;
   deferVerification?:boolean;
+  hermesDataAnalysis?:{legalEntityId:string;activatedAt:string;expiresAt:string};
   replanPolicy?:{recoverableEvidenceReasons:string[]};
   verifiedLearning?:{
     capabilityIds:string[];

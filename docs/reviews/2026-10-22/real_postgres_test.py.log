@@ -1,0 +1,34 @@
+=== Real PostgreSQL Phase 0 Verification - FULL SUITE ===
+DB: postgres://postgres:phase2-fixture@127.0.0.1:55433/sam_core_test_security
+App Role DB: postgres://app_tenant_test:test_password@127.0.0.1:55433/sam_core_test_security (NOSUPERUSER NOBYPASSRLS - proves superuser bypass avoided)
+✓ extensions provisioned: pgcrypto
+✓ all 9 migrations applied from zero: 22 tables (expected 22), final hash 40da9a3081ffc4f7
+✓ RLS isolation real: 22 tables rowsecurity=true
+✓ RLS fail-closed policies verified, no fail-open patterns, 21 policies
+  Policies: ['approvals_current', 'audit_current', 'business_ids_current', 'events_current', 'executions_current', 'financial_documents_tenant_isolation_fail_closed', 'goals_org_boundary', 'goals_tenant_isolation_fail_closed', 'inbox_current', 'legal_entities_tenant_isolation_fail_closed', 'memory_current', 'calls_current', 'providers_read', 'organizations_current', 'outbox_current', 'plans_current', 'side_effects_current', 'contracts_read', 'verifications_current', 'work_current', 'facts_current']
+✓ RLS app role app_tenant_test NOSUPERUSER NOBYPASSRLS created and can connect (proves superuser bypass avoided)
+✓ append-only audit UPDATE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ append-only audit DELETE rejection real: audit_log is append-only, UPDATE/DELETE forbidden
+CONTEXT:  PL/pgSQL function prevent_audit_mutation() line 2 at RAISE
+
+✓ financial immutability UPDATE rejection real: financial_documents is immutable once issued, id=bf5feaea-7ffb-480a-84a8-97961f987733, business_id=INV1792617288858
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ financial immutability DELETE rejection real: financial_documents is immutable once issued, id=bf5feaea-7ffb-480a-84a8-97961f987733, business_id=INV1792617288858
+CONTEXT:  PL/pgSQL function prevent_financial_mutation() line 2 at RAISE
+
+✓ concurrent next_business_id() real: 100 IDs from 10 connections, no duplicates, no MAX()+1
+✓ lease-fencing race real: stale worker token 2 commit rejected (ok=False)
+✓ lease-fencing race real: current worker token 3 commit accepted (ok=True)
+✓ transactional outbox rollback real: state change + outbox atomic, rollback proved (state=NEW, outbox=0)
+✓ transactional outbox commit real: state + outbox committed atomically
+✓ concurrent inbox deduplication real: 10 concurrent inserts same dedup_key, 1 ok, 9 deduped (UNIQUE constraint)
+✓ concurrent semantic side-effect dedup real: operation_key UNIQUE, 1 ok, 9 deduped, effectively-once
+✓ side-effect reconciliation real: crash-after-provider-success simulated, reconciled to CONFIRMED
+✓ monotonic event_seq replay/cursor real: seqs [1, 2, 3, 4, 5], replay ordered by event_seq ASC
+
+=== All Real PostgreSQL Tests PASS - FULL SUITE ===
+Phase 0 Status: MECHANICALLY_TESTED + SECURITY FIXED + FULL REAL POSTGRES INVARIANTS VERIFIED
+Requires actual GitHub Actions run for LIVE_PROVEN

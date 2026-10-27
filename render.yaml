@@ -1,0 +1,83 @@
+# Shared configuration and credentials live in existing Render Environment Groups.
+# Secret values are managed only in Render; per-service tokens and DATABASE_URL remain scoped.
+previews:
+  generation: 'off'
+services:
+- name: sam-runtime
+  type: web
+  runtime: node
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: deploy/sam-free-trial-ready
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh runtime
+  healthCheckPath: /readyz
+  envVars:
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google-client
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-bol
+  - fromGroup: sam-prod-models
+  - &id001
+    key: DATABASE_URL
+    fromDatabase:
+      name: sam-trial-postgres
+      property: connectionString
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
+  - key: SAM_WORKER_ID
+    value: sam-render-1
+  - key: SAM_COMPOSITION_MODULE
+    value: apps/runtime/src/productionCompositionModule.ts
+  - key: SAM_TICK_INTERVAL_MS
+    value: '1000'
+  - key: SAM_SHUTDOWN_GRACE_MS
+    value: '15000'
+- name: sam-command-center
+  type: web
+  runtime: node
+  plan: free
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: deploy/sam-free-trial-ready
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh command-center
+  healthCheckPath: /readyz
+  envVars:
+  - fromGroup: sam-prod-common
+  - *id001
+  - key: SAM_GOOGLE_READ_ONLY
+    value: 'true'
+  - key: SAM_COMMAND_CENTER_BEARER_TOKEN
+    generateValue: true
+- name: sam-mcp
+  type: web
+  runtime: node
+  plan: free
+  region: frankfurt
+  repo: https://github.com/borvat/sam-greenfield
+  branch: deploy/sam-free-trial-ready
+  autoDeployTrigger: 'off'
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh mcp
+  healthCheckPath: /livez
+  envVars:
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google-client
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-bol
+  - *id001
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
+  - key: SAM_MCP_BEARER_TOKEN
+    generateValue: true
+databases:
+- name: sam-trial-postgres
+  databaseName: sam_trial_postgres
+  user: sam_trial_postgres_user
+  plan: free
+  region: frankfurt
+  postgresMajorVersion: '15'
+  ipAllowList: []

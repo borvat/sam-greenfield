@@ -1,0 +1,14 @@
+livez 200 {"status":"alive"}
+readyz 200 {"status":"ready","started":true,"recovering":false,"shuttingDown":false,"recoveredAt":"2026-10-21T20:53:43.514Z"}
+statusz 401
+livez 200 {"status":"alive"}
+readyz 200 {"status":"ready","started":true,"recovering":false,"shuttingDown":false,"recoveredAt":"2026-10-21T20:54:13.761Z"}
+statusz 401
+
+> start
+> tsx apps/runtime/src/main.ts
+
+SAM shutdown requested: SIGTERM
+
+> start
+> tsx apps/runtime/src/main.ts

@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {Client} from 'pg';
+import {randomUUID} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+import {applyIntegrationProfile} from '../packages/db/src/integrationProfile';
+import {applyServiceProfile} from '../packages/db/src/serviceAccess';
+async function main(){
+ const base='postgres://postgres:verification-fixture@127.0.0.1:55435/sam_core_test';
+ const admin=new Client({connectionString:base});await admin.connect();const schema='fresh_'+randomUUID().replaceAll('-','');await admin.query('CREATE SCHEMA '+schema);
+ const u=new URL(base);u.searchParams.set('options','-c search_path='+schema+',public');const c=new Client({connectionString:u.href});await c.connect();
+ try{
+ const r=spawnSync(process.execPath,['packages/db/src/migrate.js','--apply'],{env:{PATH:process.env.PATH,DATABASE_URL:u.href},encoding:'utf8'});assert.equal(r.status,0,r.stderr);
+ await applyIntegrationProfile(c);await applyServiceProfile(c);await applyServiceProfile(c);
+ assert.equal((await c.query('SELECT count(*)::int n FROM sam_schema_migrations')).rows[0].n,12);
+ assert.equal((await c.query('SELECT count(*)::int n FROM sam_integration_migrations')).rows[0].n,8);
+ assert.equal((await c.query('SELECT count(*)::int n FROM sam_service_migrations')).rows[0].n,1);
+ await c.query("UPDATE sam_service_migrations SET sha256='synthetic-invalid'");
+ await assert.rejects(applyServiceProfile(c),/SERVICE_PROFILE_HASH_MISMATCH/);
+ console.log('PASS fresh core 12, integration 8, service 1; restart idempotent; service hash mismatch denied');
+ }finally{await c.end();await admin.query('DROP SCHEMA '+schema+' CASCADE');await admin.end();}
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

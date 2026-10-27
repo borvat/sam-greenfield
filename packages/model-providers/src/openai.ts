@@ -24,7 +24,7 @@ export class OpenAIResponsesAdapter implements ModelProviderAdapter{
     const body=await fetchJson(
       `${(this.options.baseUrl??"https://api.openai.com/v1").replace(/\/$/,"")}/responses`,
       {
-        method:"POST",
+        method:"POST",signal:task.signal,
         headers:{
           authorization:`Bearer ${this.options.apiKey}`,
           "content-type":"application/json"

@@ -1,7 +1,11 @@
+import {samGoogleConfigFromEnv,SamGoogleConnection} from '../../production/src/samGoogleConnection';
+import {googleConnectionTools} from './googleOauth';
+import {InternalOAuthServer,internalOAuthConfig,postgresOAuthStore} from './internalOAuth';
 import { createChatGPTToolSurface } from "../../chatgpt-tools/src/surface";
 import { createKernelProductionDispatcher } from "../../production/src/dispatcher";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { pool } from "../../../packages/db/src/client";
+import {assertRuntimeTenantBinding} from '../../../packages/db/src/runtimeAccess';
 import { startMcpHttpServer } from "./http";
 import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
 import {createReleaseReadSurface} from "./releaseReadSurface";
@@ -25,7 +29,10 @@ async function main(){
   const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
   if(localDevelopment() && bundlePath) denyDevelopment("PRODUCTION_BUNDLE_NOT_ALLOWED");
 
-  if(production&&!token&&!oauth){
+  const internalConfig=synthetic?undefined:internalOAuthConfig(process.env);
+  if(internalConfig&&token)throw Error("CHOOSE_ONE_MCP_AUTH_MODE");
+  const internalOAuth=internalConfig?new InternalOAuthServer(internalConfig,postgresOAuthStore(pool)):undefined;
+  if(production&&!token&&!oauth&&!internalOAuth){
     throw new Error("SAM_MCP_BEARER_TOKEN is required in production");
   }
   if(production&&!allowedHosts){
@@ -35,18 +42,21 @@ async function main(){
   const releaseReadOnly=process.env.SAM_MCP_RELEASE_READ_ONLY==="1";
   if((releaseReadOnly||synthetic)&&bundlePath)throw new Error("RELEASE_MCP_DISPATCHER_FORBIDDEN");
   if(synthetic)await admitSyntheticMcpDatabase();
+  if(production&&!synthetic)await assertRuntimeTenantBinding(pool);
   const dispatcher=bundlePath
     ? createKernelProductionDispatcher(await loadProductionBundle(bundlePath))
     : undefined;
 
-  const surface=synthetic?createSyntheticGoalSurface():releaseReadOnly?createReleaseReadSurface():createChatGPTToolSurface({dispatcher});
+  const googleConfig=synthetic||releaseReadOnly?undefined:samGoogleConfigFromEnv();
+  const googleConnection=googleConfig?new SamGoogleConnection(googleConfig):undefined;
+  const surface=synthetic?createSyntheticGoalSurface():releaseReadOnly?createReleaseReadSurface():createChatGPTToolSurface({dispatcher,additionalTools:googleConnection?googleConnectionTools(googleConnection):[]});
   const service=await startMcpHttpServer({
     surface,
     actor:process.env.SAM_MCP_ACTOR?.trim()||"chatgpt-mcp",
     port:positiveInt("SAM_MCP_PORT",process.env.SAM_MCP_PORT,8081),
     host:process.env.SAM_MCP_HOST?.trim()||"0.0.0.0",
     bearerToken:oauth?undefined:token||undefined,
-    oauth,
+    oauth,internalOAuth,googleConnection,
     allowedHosts,
     allowedOrigins
   });
