@@ -146,11 +146,26 @@ export function createKernelProductionDispatcher(
         await client.query("SELECT pg_advisory_xact_lock(hashtext('sam-hermes-data-analysis-admission'))");
         assertAnalysisWindow(policy,input.legalEntityId);
         await loadVerifiedFollowupSource(client,binding,input.legalEntityId);
-        // Source identity, not prose or window, is the durable one-follow-up key.
+        // Default source-global idempotency stays unchanged. An operator-pinned
+        // failed parent permits one separately authorized successor, never a replay.
+        const retryOf=policy.retryOfGoalId;
+        if(retryOf!==undefined){
+          const parent=(await client.query(`SELECT g.id,g.state,g.company_scope,g.updated_at,p.goal_assumptions,
+            EXISTS(SELECT 1 FROM goal_read_reviews r WHERE r.goal_id=g.id) AS has_report,
+            EXISTS(SELECT 1 FROM work_queue w WHERE w.goal_id=g.id AND w.status NOT IN ('FAILED','CANCELLED','EXECUTED')) AS has_active_work,
+            EXISTS(SELECT 1 FROM work_queue w WHERE w.goal_id=g.id AND w.plan_id=p.id AND w.capability_id=$2) AS has_analysis
+            FROM goals g JOIN plans p ON p.id=g.current_plan_id AND p.goal_id=g.id
+            WHERE g.id=$1 AND g.domain='hermes_data_analysis' FOR SHARE OF g,p`,[retryOf,ANALYST])).rows[0];
+          if(!parent||parent.state!=='FAILED'||parent.company_scope!==input.legalEntityId||parent.has_report||parent.has_active_work||!parent.has_analysis||
+            !parent.goal_assumptions?.sourceReuse||sha256Hex(parent.goal_assumptions.sourceReuse)!==sha256Hex(binding)||
+            parent.updated_at==null||!Number.isFinite(new Date(parent.updated_at).getTime())||new Date(parent.updated_at).getTime()>=Date.parse(policy.activatedAt))
+            throw Error('ANALYSIS_FOLLOWUP_RETRY_PARENT_DENIED');
+        }
         const previous=(await client.query(`SELECT g.id,g.business_id,g.current_plan_id,p.goal_assumptions,p.plan_hash
           FROM goals g JOIN plans p ON p.goal_id=g.id
           WHERE g.domain='hermes_data_analysis' AND p.goal_assumptions->'sourceReuse'->>'sourceExecutionId'=$1
-          ORDER BY p.created_at,p.id LIMIT 1`,[binding.sourceExecutionId])).rows[0];
+          AND ($2::text IS NULL OR p.goal_assumptions->>'analysisRetryOfGoalId'=$2)
+          ORDER BY p.created_at,p.id LIMIT 1`,[binding.sourceExecutionId,retryOf??null])).rows[0];
         if(previous){
           if(sha256Hex(previous.goal_assumptions.sourceReuse)!==sha256Hex(binding))throw Error('ANALYSIS_FOLLOWUP_BINDING_CONFLICT');
           return {status:'EXISTING',goalId:previous.id,businessId:previous.business_id,planId:previous.current_plan_id,sourceBindingHash:sha256Hex(binding)};
@@ -165,7 +180,8 @@ export function createKernelProductionDispatcher(
         await transitionGoal(client,goal.id,'NEW','MODELING','bounded_verified_source_followup');
         await transitionGoal(client,goal.id,'MODELING','PLANNING','reuse_exact_original_verified_source');
         const plan=await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:'sam_mcp',actor:input.actor,modelPlanning:false,
-          acceptanceFixedBeforeExecution:true,sourceReuse:binding,sourceReuseWindow:{activatedAt:policy.activatedAt,expiresAt:policy.expiresAt}},steps});
+          acceptanceFixedBeforeExecution:true,sourceReuse:binding,...(retryOf===undefined?{}:{analysisRetryOfGoalId:retryOf}),
+          sourceReuseWindow:{activatedAt:policy.activatedAt,expiresAt:policy.expiresAt}},steps});
         return {status:'QUEUED',goalId:goal.id,businessId:goal.businessId,...plan,acceptanceContract:contract,
           sourceBindingHash:sha256Hex(binding),planning:'TRUSTED_VERIFIED_SOURCE_FOLLOWUP'};
       });
@@ -179,6 +195,7 @@ export function createKernelProductionDispatcher(
       if(assertDataAnalysisSubmission(input)){
         const request=validateAnalysisRequest(input.analysisRequest),policy=bundle.raw.hermesDataAnalysis;
         if(!policy||!bundle.raw.capabilities.some(c=>c.capabilityId===ANALYST))throw Error('HERMES_DATA_ANALYSIS_NOT_ENABLED');
+        if(policy.retryOfGoalId!==undefined)throw Error('ANALYSIS_FOLLOWUP_RETRY_ONLY');
         assertAnalysisWindow(policy,input.legalEntityId);
         const contract=admitDataAnalysisContract(input.legalEntityId,request,input.acceptanceContract);
         return withTransaction(async client=>{

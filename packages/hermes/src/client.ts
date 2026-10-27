@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {sha256Hex,stableStringify} from '../../shared/src/stableJson';
 
 export const FREE_MODEL='poolside/laguna-s-2.1:free';
@@ -8,7 +8,7 @@ export const FREE_RUNTIME:HermesRuntimePolicy=Object.freeze({provider:'nous',mod
 // Existing SAM per-request ceiling is 0.25; reserve 0.10 for the separate
 // explicitly authorized connection check. This is not a free-model claim.
 export const DEEPSEEK_RUNTIME:HermesRuntimePolicy=Object.freeze({provider:'deepseek',model:'deepseek-flash',maxCostUsd:0.15});
-export const DEEPSEEK_GUARD_SHA256='6119b3808fcbcd399393ff9ffb1d553c5f29e007f703b4cad0aa4df55a6906b2';
+export const DEEPSEEK_GUARD_SHA256='144737ef9769cf29890653b738d94bac45e4e1e09e1d2260a9a5b26fdeed4531';
 export const taskSchema=z.object({
   task_id:z.uuid(),goal_id:z.uuid(),agent_role:z.enum(['programmer','code_reviewer','researcher','data_analyst','tester']),
   instructions:z.string().min(1).max(16000),allowed_tools:z.array(z.string()).max(0),
@@ -33,7 +33,7 @@ const terminal=new Set(['completed','failed','cancelled','interrupted','unknown'
 const measurementProcess=randomUUID();
 export type HermesMeasurement={event:string;at:string;elapsed_ms:number;process_id:string;operation_id:string;
   task_id:string;goal_id:string;task_hash:string;session_id:string;work_created_at:string;absolute_deadline:string;
-  run_id?:string;status?:string;attempt?:number};
+  run_id?:string;status?:string;attempt?:number;output_sha256?:string};
 type MeasurementOptions={write:(event:HermesMeasurement)=>void;monotonic?:()=>number};
 
 /** No caller-supplied tools, provider, URL, key, model, repository or permission fields.
@@ -106,7 +106,9 @@ export class HermesClient {
         session_id:`sam_${task.task_id}`,work_created_at:task.created_at,absolute_deadline:new Date(start+task.timeout).toISOString(),
         ...(fields.run_id&&runId.safeParse(fields.run_id).success?{run_id:fields.run_id}:{}),
         ...(fields.status?{status:runSchema.shape.status.safeParse(fields.status).success||fields.status==='TIMEOUT_UNCONFIRMED'?fields.status:'unknown'}:{}),
-        ...(fields.attempt===undefined?{}:{attempt:fields.attempt})});}catch{}
+        ...(fields.attempt===undefined?{}:{attempt:fields.attempt}),
+        ...(event==='sam_terminal'&&receipt?.status==='completed'&&typeof receipt.output==='string'?
+          {output_sha256:createHash('sha256').update(receipt.output,'utf8').digest('hex')}:{})});}catch{}
     };
     const stop=async(id:string)=>{mark('sam_stop_requested',{run_id:id});
       try{await this.stop(id);mark('sam_stop_acknowledged',{run_id:id});}

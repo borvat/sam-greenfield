@@ -1,4 +1,5 @@
 import {test} from 'node:test';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {HermesClient,FREE_MODEL,type HermesTask,type Receipt,type ReceiptStore,type HermesMeasurement} from '../../packages/hermes/src/client';
 import {sha256Hex} from '../../packages/shared/src/stableJson';
@@ -52,6 +53,8 @@ test('measurement: metadata-only timing and identical execution with observation
   assert.equal(r.task_id,task.task_id);assert.equal(r.goal_id,task.goal_id);assert.equal(r.task_hash,sha256Hex(task));
   assert.equal(r.session_id,`sam_${task.task_id}`);assert.equal(r.absolute_deadline,new Date(epoch+120000).toISOString());
  }
+ assert.equal(on.rows.at(-1)!.output_sha256,createHash('sha256').update('PRIVATE_CANDIDATE_NOT_FOR_LOG','utf8').digest('hex'));
+ assert.ok(on.rows.slice(0,-1).every(r=>!('output_sha256' in r)));
  assert.equal(on.rows[1].run_id,'run_synthetic');assert(!JSON.stringify(on.rows).includes('PRIVATE_'));
  assert.equal(broken.rows.length,0);assert.equal(off.rows.length,0);
 });
@@ -79,6 +82,7 @@ test('measurement: original deadline and cancellation unchanged, late output sti
   assert.deepEqual(measured.calls,off.calls);assert.deepEqual(measured.history,off.history);
   assert.equal(measured.error,'HERMES_TASK_TIMEOUT');assert.equal(measured.current?.status,'TIMEOUT_UNCONFIRMED');
   assert(!measured.history.some(r=>r.status==='completed'));
+  assert.ok(measured.rows.every(r=>!('output_sha256' in r)),'Refused late output must not be logged as an accepted terminal output');
   if(mode==='on')assert.deepEqual(measured.rows.slice(-3).map(r=>r.event),['sam_stop_requested','sam_stop_acknowledged','sam_terminal']);
  }
 });

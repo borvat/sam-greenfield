@@ -8,6 +8,7 @@ import {HermesClient,DEEPSEEK_RUNTIME} from '../../packages/hermes/src/client';
 import {ANALYST,SOURCE} from '../../apps/production/src/dataAnalysisContract';
 import {withHermesDataAnalysis} from '../../apps/production/src/hermesDataAnalysis';
 import {validateProductionBundle} from '../../apps/production/src/bundle';
+import type {ProductionBundle} from '../../apps/production/src/types';
 import {createKernelProductionDispatcher} from '../../apps/production/src/dispatcher';
 import {createChatGPTToolSurface} from '../../apps/chatgpt-tools/src/surface';
 import {leaseWorkAtomic} from '../../apps/kernel/src/queue';
@@ -55,8 +56,9 @@ export function report(){return {account:{retailerId:'synthetic-retailer'},perio
  totals:{ordered:3,cancelled:0,shipped:2,netOrdered:3},values:{orderedPriceCents:2997,afterCancellationPriceCents:2997,pricedOrderedUnits:3,unpricedOrderedUnits:0,commissions:null,returns:null,netProfit:null,currency:null,taxBasis:null},
  products:[{ean:'synthetic-public-product',fulfilment:'FBR',ordered:3,cancelled:0,shipped:2,netOrdered:3,stock:5,orderedPriceCents:2997,afterCancellationPriceCents:2997}],limitations:['Synthetic local source; no live collection.']};}
 
-export async function followupFixture(privateTimeline?:string){
+export async function followupFixture(privateTimeline?:string,candidate:string=answer,syntheticOptions:{sourceReport?:any;objective?:string}={}){
  const privateData=privateTimeline?await readStrictPrivateFixture(privateTimeline):undefined;
+ assert.ok(!privateData||!Object.keys(syntheticOptions).length,'Private replay must not override captured evidence');
  const sql=new PGlite();
  await sql.exec(`CREATE SEQUENCE ids;
  CREATE FUNCTION current_org_id() RETURNS uuid LANGUAGE sql AS $$SELECT '00000000-0000-4000-8000-000000000099'::uuid$$;
@@ -97,7 +99,7 @@ export async function followupFixture(privateTimeline?:string){
  (pool as any).query=query;
  const data=privateData?.data;
  const entity=privateData?data.goal.company_scope:ENTITY,oldGoal=privateData?data.goal.id:ORIGINAL_GOAL,oldPlan=privateData?privateData.plan.id:ORIGINAL_PLAN;
- const sourceReport=privateData?privateData.source.result.report:report();
+ const sourceReport=privateData?privateData.source.result.report:(syntheticOptions.sourceReport??report());
  const params={startDate:'2026-10-26',endDate:'2026-10-26'};
  const now=new Date(Date.now()-3600000).toISOString();
  const plan=privateData?privateData.plan:{id:oldPlan,goal_id:oldGoal,version:1,goal_assumptions:{source:'synthetic-preexisting-source'},constraints:{},dependencies:{},steps:[
@@ -154,23 +156,27 @@ export async function followupFixture(privateTimeline?:string){
   if(path==='/api/sessions')return Response.json({}, {status:201});
   if(path.endsWith('/model'))return Response.json({session_id:path.split('/')[3],runtime:{model:DEEPSEEK_RUNTIME.model,provider:'deepseek',model_lock:'accepted'}});
   if(path==='/v1/runs')return Response.json({run_id:'run_synthetic_followup',status:'running'});
-  if(path==='/v1/runs/run_synthetic_followup')return Response.json({run_id:'run_synthetic_followup',status:'completed',output:answer,runtime:{model:DEEPSEEK_RUNTIME.model,provider:'deepseek',model_lock:'confirmed'}});
+  if(path==='/v1/runs/run_synthetic_followup')return Response.json({run_id:'run_synthetic_followup',status:'completed',output:candidate,runtime:{model:DEEPSEEK_RUNTIME.model,provider:'deepseek',model_lock:'confirmed'}});
   throw Error('Unexpected synthetic route '+path);
  }});
- const makeBundle=(activePolicy=policy)=>validateProductionBundle(withHermesDataAnalysis({capabilities:[{capabilityId:SOURCE,authorityClass:'GREEN',specialistAgentId:'marketplace',specialistVersion:'1'}],toolDefinitions:[{capabilityId:SOURCE,authorityClass:'GREEN',sideEffect:false}],toolAdapters:[{capabilityId:SOURCE,async execute(){sourceCalls++;throw Error('Source collection forbidden');}}]},
+ const makeBundle=(activePolicy:NonNullable<ProductionBundle['hermesDataAnalysis']>=policy)=>validateProductionBundle(withHermesDataAnalysis({capabilities:[{capabilityId:SOURCE,authorityClass:'GREEN',specialistAgentId:'marketplace',specialistVersion:'1'}],toolDefinitions:[{capabilityId:SOURCE,authorityClass:'GREEN',sideEffect:false}],toolAdapters:[{capabilityId:SOURCE,async execute(){sourceCalls++;throw Error('Source collection forbidden');}}]},
   {client,policy:activePolicy,db:{query},runtimePolicy:DEEPSEEK_RUNTIME}));
  const bundle=makeBundle(),dispatcher=createKernelProductionDispatcher(bundle),surface=createChatGPTToolSurface({dispatcher});
- const objective=privateData?privateData.preparedRequest.arguments.objective:'Interpret the already verified source';
+ const objective=privateData?privateData.preparedRequest.arguments.objective:(syntheticOptions.objective??'Interpret the already verified source');
  const submit=async(overrides:any={},targetSurface=surface)=>{
   const response=await targetSurface.invoke('sam_submit_analysis_followup',{objective,legal_entity_id:entity,source_binding:binding,...overrides},owner);
   assert.equal(response.ok,true,JSON.stringify(response));return response.data as any;
  };
- const execute=async(admission:any)=>{
+ const prepare=async(admission:any)=>{
   const queueId=admission.queueIds[0],lease=await leaseWorkAtomic(queueId,'synthetic-followup-worker',300);
   const request={capabilityId:ANALYST,idempotencyKey:queueId,params:lease.work.params,executionContext:{queueId,fencingToken:lease.token}};
-  const outcome=await bundle.raw.toolAdapters.find(a=>a.capabilityId===ANALYST)!.execute(request);
-  return {request,outcome,record:()=>recordExecutionAndRequestVerificationAtomic({queueId,fencingToken:lease.token,actor:'synthetic-followup-worker',...outcome})};
+  return request;
  };
- return {sql,query,rawQuery,queries,wire,binding,entity,oldGoal,oldPlan,originalHash,original,sourceReport,objective,addSecondSource,policy,bundle,surface,submit,execute,makeBundle,
+ const execute=async(admission:any)=>{
+  const request=await prepare(admission),{queueId,fencingToken}=request.executionContext;
+  const outcome=await bundle.raw.toolAdapters.find(a=>a.capabilityId===ANALYST)!.execute(request);
+  return {request,outcome,record:()=>recordExecutionAndRequestVerificationAtomic({queueId,fencingToken,actor:'synthetic-followup-worker',...outcome})};
+ };
+ return {sql,query,rawQuery,queries,wire,binding,entity,oldGoal,oldPlan,originalHash,original,sourceReport,objective,addSecondSource,policy,bundle,surface,submit,prepare,execute,makeBundle,
   get sourceCalls(){return sourceCalls;},setBeforeQuery(value:typeof beforeQuery){beforeQuery=value;},async close(){pool.connect=originalConnect;pool.query=originalQuery;await sql.close();}};
 }

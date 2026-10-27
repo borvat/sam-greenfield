@@ -55,6 +55,11 @@ async function sentPrompt(report=sourceReport()){
 test('actual adapter sends strict aggregate-specific schema and verifier binds the same prompt',async()=>{
  const {prompt,instructions,aggregate,outcome}=await sentPrompt(),schema=prompt.outputSchema;
  assert.ok(instructions.length<=16000,'Full thirty-product prompt must retain the existing ceiling');
+ assert.match(prompt.observationRules,/substantive/);
+ assert.match(prompt.observationRules,/analysisCoverage/);
+ assert.equal(prompt.formatExample.label,'FORMAT ONLY; never copy as actual analysis');
+ assert.doesNotThrow(()=>validateInterpretation(JSON.stringify(prompt.formatExample.output),aggregate));
+ assert.notDeepEqual(outcome.result.report.interpretation.summary,prompt.formatExample.output.summary);
  assert.equal(schema.additionalProperties,false);assert.deepEqual(schema.required,['summary','observations']);
  assert.equal(schema.properties.summary.minLength,1);assert.equal(schema.properties.summary.maxLength,1800);
  assert.equal(schema.properties.observations.minItems,1);assert.equal(schema.properties.observations.maxItems,8);
@@ -83,7 +88,7 @@ test('sent schema and local parser agree on bounds, forbidden paths, numeric nar
  assert.equal(prompt.outputSchema.properties.observations.items.properties.reference.allOf[0]['x-sam-max-utf16-code-units'],100);
  const cases:[string,any,boolean][]=[['minimal',candidate(),true],
   ['upper bounds',{summary:'ت'.repeat(1800),observations:Array.from({length:8},()=>({reference:'totals.netOrdered',comment:'ت'.repeat(800)}))},true],
-  ['empty summary',{...candidate(),summary:''},false],['long summary',{...candidate(),summary:'ت'.repeat(1801)},false],
+  ['empty summary',{...candidate(),summary:''},false],['whitespace summary',{...candidate(),summary:' \n\t\u00a0'},false],['long summary',{...candidate(),summary:'ت'.repeat(1801)},false],
   ['no observations',{...candidate(),observations:[]},false],['nine observations',{...candidate(),observations:Array.from({length:9},()=>candidate().observations[0])},false],
   ['astral summary at limit',{...candidate(),summary:'😀'.repeat(900)},true],
   ['astral summary over limit',{...candidate(),summary:'😀'.repeat(901)},false],
@@ -92,7 +97,7 @@ test('sent schema and local parser agree on bounds, forbidden paths, numeric nar
   ['extra root',{...candidate(),extra:'no'},false]];
  for(const reference of ['', 'x'.repeat(101),'analysisCoverage.sentProducts','period.days','account.retailerId','totals','products.0','products.30.stock','products.0.unknown','totals.invented','includedOrdersSuffix'])
   cases.push(['reference '+reference,{...candidate(),observations:[{reference,comment:'تفسير'}]},false]);
- for(const comment of ['', 'ت'.repeat(801),'عدد 1','عدد ١','عدد ۱'])cases.push(['comment '+comment.length,{...candidate(),observations:[{reference:'totals.netOrdered',comment}]},false]);
+ for(const comment of ['', ' \n\t\u00a0', 'ت'.repeat(801),'عدد 1','عدد ١','عدد ۱'])cases.push(['comment '+comment.length,{...candidate(),observations:[{reference:'totals.netOrdered',comment}]},false]);
  for(const summary of ['عدد 1','عدد ١','عدد ۱'])cases.push(['numeric summary',{...candidate(),summary},false]);
  cases.push(['extra observation',{...candidate(),observations:[{...candidate().observations[0],value:76}]},false]);
  for(const [name,value,accepted] of cases){
@@ -117,10 +122,16 @@ if(process.env.SAM_HERMES_SOURCE_REPORT_FILE)test('preserved verified source fit
 
 if(process.env.SAM_HERMES_REJECTED_OUTPUT_FILE)test('original privately preserved Hermes output remains rejected and byte-identical',async()=>{
  const path=process.env.SAM_HERMES_REJECTED_OUTPUT_FILE!,bytes=await readFile(path),original=JSON.parse(bytes.toString('utf8'));
- const expected='7b956f6fb14c67214076dc75516804c847eff711c7f4c7297f00cedb1c6efa2e';
+ const expected=['a26a742581a2bc61f82ab755998851948258a50ee6befbd97cfef537155ef604','7b956f6fb14c67214076dc75516804c847eff711c7f4c7297f00cedb1c6efa2e'];
  const {createHash}=await import('node:crypto'),hash=(input:Buffer)=>createHash('sha256').update(input).digest('hex');
- assert.equal(hash(bytes),expected,'Use the exact saved original output, not a shortened or repaired response');
- assert.equal(original.observations.length,14);assert.ok(original.observations.some((o:any)=>o.reference==='analysisCoverage.sentProducts'));
- assert.throws(()=>validateInterpretation(bytes.toString('utf8'),aggregateForHermes(sourceReport())),/Too big|too_big/);
- assert.equal(hash(await readFile(path)),expected,'Validation must not mutate the original evidence');
+ const originalHash=hash(bytes);
+ assert.ok(expected.includes(originalHash),'Use exact saved original bytes, not a shortened or repaired response');
+ if(originalHash===expected[0]){
+  assert.equal(original.observations.length,7);assert.ok(original.observations.every((o:any)=>o.comment===''));assert.equal(original.observations[0].reference,'analysisCoverage');
+  assert.throws(()=>validateInterpretation(bytes.toString('utf8'),aggregateForHermes(sourceReport())),/ANALYSIS_UNSUPPORTED_CLAIM|Too small|too_small/);
+ }else{
+  assert.equal(original.observations.length,14);assert.ok(original.observations.some((o:any)=>o.reference==='analysisCoverage.sentProducts'));
+  assert.throws(()=>validateInterpretation(bytes.toString('utf8'),aggregateForHermes(sourceReport())),/Too big|too_big/);
+ }
+ assert.equal(hash(await readFile(path)),originalHash,'Validation must not mutate the original evidence');
 });

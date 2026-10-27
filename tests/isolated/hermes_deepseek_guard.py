@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import importlib.util
 import json
 import os
@@ -135,6 +136,32 @@ class NativeGuard(unittest.TestCase):
             with self.assertRaises(RuntimeError):run(kw)
             self.assertEqual(calls,[])
 
+    def test_actual_finish_join_hash_preserves_decoded_content(self):
+        from hermes_deepseek_json import Log
+        log=Log()
+        tree=ast.parse(guard.patch(SOURCE))
+        method=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_finish_chat_stream')
+        ns={'json':json,'logger':log,'SimpleNamespace':NS,
+            '_provider_stream_error_from_text':lambda *a,**kw:None,'is_router_timeout_shim':lambda r:False}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[method],type_ignores=[])),'native_finish_test','exec'),ns)
+        text='{"summary":"بيانات","observations":[]}'
+        for width in (1,7,37):
+            owner=NS(agent=NS(),_assemble_tool_calls=lambda *a:(None,False),
+                _sam_data_analysis_provenance={'task_id':'synthetic-task','session_id':'synthetic-session','sdk_request_sha256':'a'*64})
+            parts=[text[i:i+width] for i in range(0,len(text),width)]
+            response=ns['_finish_chat_stream'](owner,None,'assistant',parts,['synthetic reasoning'],{},'stop',
+                'deepseek-flash',None,flush_pending=lambda:None,response_id='synthetic-response')
+            self.assertEqual(response.choices[0].message.content,text)
+            self.assertEqual(log.rows[-1]['decoded_content_sha256'],hashlib.sha256(text.encode()).hexdigest())
+            self.assertEqual(log.rows[-1]['finish_reason'],'stop')
+        self.assertNotIn(text,json.dumps(log.rows,ensure_ascii=False))
+
+    def test_actual_analysis_wire_uses_json_object(self):
+        from hermes_deepseek_json import envelope
+        run,_,_,calls=harness()
+        run({'model':'deepseek-flash','messages':[{'role':'user','content':json.dumps(envelope())}]})
+        self.assertEqual(calls[0]['response_format'],{'type':'json_object'})
+
     def test_pinned_idempotent_patch_preserves_free_path(self):
         changed=guard.patch(SOURCE);self.assertEqual(guard.patch(changed),changed)
         with self.assertRaisesRegex(RuntimeError,'PINNED'):
@@ -144,7 +171,7 @@ class NativeGuard(unittest.TestCase):
 
     def test_incomplete_guard_patch_is_rejected(self):
         changed=guard.patch(SOURCE)
-        for insertion in (guard.GUARD,guard.PROBE_GUARD,guard.NONSTREAM_GUARD):
+        for insertion in (guard.GUARD,guard.PROBE_GUARD,guard.NONSTREAM_GUARD,guard.FINISH_GUARD):
             with self.subTest(insertion=insertion.splitlines()[0]):
                 with self.assertRaisesRegex(RuntimeError,'PINNED'):
                     guard.patch(changed.replace(insertion,'',1))
