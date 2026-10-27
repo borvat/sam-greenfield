@@ -46,6 +46,9 @@ export interface ProductionActionDispatcher{
     objective:string;
     legalEntityId:string;
     actor:string;
+    submissionKind?:'bounded_data_analysis';
+    acceptanceContract?:unknown;
+    analysisRequest?:{sourceCapabilityId:'bol_sales_stock_report';startDate:string;endDate:string};
   }):Promise<unknown>;
   execute(input:{
     capabilityId:string;

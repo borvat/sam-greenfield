@@ -10,7 +10,7 @@ export function buildSamMcpServer(input:{
 }):McpServer{
   const server=new McpServer({
     name:"sam-executive",
-    version:"1.0.1"
+    version:"1.0.2"
   });
   const invoke=async(name:string,args:Record<string,unknown>)=>{
     const result=await input.surface.invoke(name,args,{actor:input.actor,systemOwner:true});

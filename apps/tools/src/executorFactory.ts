@@ -67,7 +67,8 @@ export function createToolExecutors(input:{
         const result=await input.tools.adapter(capabilityId).execute({
           capabilityId,
           params,
-          idempotencyKey:operationKey
+          idempotencyKey:operationKey,
+          executionContext:{queueId:work.queueId,fencingToken:work.fencingToken}
         });
         return {
           result:result.result,

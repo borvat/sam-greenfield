@@ -1,0 +1,31 @@
+Base: 8ebbe5ab5caf53a870cd252441e6199a08b3b5af (matched current sam-mcp and sam-runtime deployments)
+Environment: Node 24.22.1; TypeScript; local PGlite 0.5.10 SQL fixture; synthetic bol/Hermes transport.
+Command: npx tsc --noEmit && DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic SAM_TEST_PGLITE_MODULE=<private-test-dependency-prefix>/@electric-sql/pglite/dist/index.cjs node --import tsx --test tests/isolated/hermes_business_report.ts tests/phase22/bol_analysis.ts tests/phase22/submit_goal_surface.ts
+Typecheck completed before the test command (shell &&); final exit code: 0
+
++✔ MCP schema and actual HTTP handler pass and persist the original nonempty acceptance with actor and company (3053.362917ms)
+✔ invalid contracts and unauthorized owner context are rejected before any goal is persisted (2324.994575ms)
+✔ bounded source→Hermes plan is atomic, auto-builds the substantive contract, has a task ceiling and denies a different company (2274.744095ms)
+✔ existing bol collector retains full pagination, exact decimal arithmetic, privacy and unknown-value limits (15.0173ms)
+HERMES_DATA_ANALYSIS_ADMISSION_CLOSED
+✔ SAM verified source→existing Hermes client→same-task saved report; forged receipts or source are rejected (2832.446911ms)
+✔ unsupported numeric narrative, invented metric references, malformed output and expired admission are denied (4.174612ms)
+✔ an expired or disabled analysis feature preserves the ordinary SAM bundle without reading credentials (0.907923ms)
+✔ MCP dispatch-only registration exposes the same bounded request without requiring a Hermes credential file (0.920774ms)
+✔ all pages, exact change dates through today, placement timezone, dedup and cancellation arithmetic (42.628389ms)
+✔ failure, malformed/looping pages, missing quantity and invalid date cannot yield a partial report (15.04142ms)
+✔ missing stock stays unknown and cannot produce a replenishment candidate (3.741095ms)
+✔ verification requires independent recomputation and detects source changes and tampering (4.544669ms)
+✔ planner uses the executable report capability and concrete dates (69.792979ms)
+✔ sam_submit_goal is exposed only when a planner is configured and forwards the whole objective (219.216787ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11496.757621
+
+Scope: LOCAL_VERIFIED only. PGlite is not native multi-session PostgreSQL or Render evidence.
+The frozen recovery 24-test suite, SUM/model-lock acceptance, Modal and PR83 suites were not run.
