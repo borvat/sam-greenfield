@@ -2,6 +2,8 @@ import type {
   ProductionActionDispatcher,
   RegisteredChatGPTTool
 } from "./types";
+import {GOAL_ACCEPTANCE_SCHEMA,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {ANALYSIS_REQUEST_SCHEMA,validateAnalysisRequest,ANALYSIS_SUBMISSION,ANALYSIS_SUBMIT_TOOL,assertDataAnalysisSubmission} from '../../production/src/dataAnalysisContract';
 
 export function createActionTools(dispatcher?:ProductionActionDispatcher):RegisteredChatGPTTool[]{
   const manifestAvailable=!!dispatcher;
@@ -44,35 +46,46 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
         return {ok:true,data:await dispatcher.continueReview({goalId:String(args.goal_id),legalEntityId:String(args.legal_entity_id),actor:context.actor})};
       }
     },
-    {
+    ...[false,true].map((bounded):RegisteredChatGPTTool=>({
       definition:{
-        name:"sam_submit_goal",
-        description:"Submit a new business objective to SAM's autonomous production planner. SAM creates a NEW goal; the Render worker chooses and persists the plan, delegates its steps, executes them, and verifies the results. YELLOW/RED or unknown capabilities remain blocked by SAM authority controls. Requires a configured planning model; no provider write is authorized by this tool.",
+        name:bounded?ANALYSIS_SUBMIT_TOOL:"sam_submit_goal",
+        description:bounded
+          ?"Submit bounded source-linked data analysis to the existing SAM dispatcher. Requires the original acceptance_contract and analysis_request; missing fields are refused before goal creation or model access. Never fall back to sam_submit_goal."
+          :"Submit a new business objective to SAM's autonomous production planner. SAM creates a NEW goal; the Render worker chooses and persists the plan, delegates its steps, executes them, and verifies the results. YELLOW/RED or unknown capabilities remain blocked by SAM authority controls. Requires a configured planning model; no provider write is authorized by this tool. Use sam_submit_data_analysis for bounded source-linked analysis.",
         risk:"YELLOW",
         availability:dispatcher?.submitGoal?"AVAILABLE":"UNAVAILABLE",
         inputSchema:{
           type:"object",
           properties:{
             objective:{type:"string",minLength:1,maxLength:4000},
+            acceptance_contract:GOAL_ACCEPTANCE_SCHEMA,
+            analysis_request:ANALYSIS_REQUEST_SCHEMA,
             legal_entity_id:{type:"string",description:"SAM legal entity UUID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}
           },
-          required:["objective"],
+          required:bounded?["objective","legal_entity_id","acceptance_contract","analysis_request"]:["objective"],
           additionalProperties:false
         }
       },
       handler:async(args,context)=>{
         if(!dispatcher?.submitGoal) return {ok:false,unavailable:true,error:"Production goal planner is not registered"};
+        if(bounded&&(typeof args.legal_entity_id!=='string'||!args.legal_entity_id.trim()))return {ok:false,error:'legal_entity_id is required for bounded analysis'};
         const legalEntityId=String(args.legal_entity_id??process.env.SAM_DEFAULT_LEGAL_ENTITY_ID??process.env.SAM_COMMAND_CENTER_LEGAL_ENTITY_ID??process.env.SAM_FINANCE_LEGAL_ENTITY_ID??"").trim();
         if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
         const objective=String(args.objective??"").trim();
         if(!objective) return {ok:false,error:"objective is required"};
-        const data=await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor}) as Record<string,unknown>;
+        const isAnalysis=assertDataAnalysisSubmission({submissionKind:bounded?ANALYSIS_SUBMISSION:undefined,
+          acceptanceContract:args.acceptance_contract,analysisRequest:args.analysis_request});
+        const acceptanceContract=args.acceptance_contract===undefined?undefined:validateGoalAcceptance(args.acceptance_contract);
+        const analysisRequest=args.analysis_request===undefined?undefined:validateAnalysisRequest(args.analysis_request);
+        const data=await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor,
+          ...(isAnalysis?{submissionKind:ANALYSIS_SUBMISSION}:{}),
+          ...(acceptanceContract===undefined?{}:{acceptanceContract}),...(analysisRequest===undefined?{}:{analysisRequest})}) as Record<string,unknown>;
         if(data?.status==="UNAVAILABLE"){
           return {ok:false,unavailable:true,error:String(data.message??"SAM planning is unavailable; no goal was created"),data};
         }
         return {ok:true,data};
       }
-    },
+    })),
     {
       definition:{
         name:"sam_capability_manifest",
@@ -98,7 +111,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
             capability_id:{type:"string"},
             legal_entity_id:{type:"string"},
             objective:{type:"string"},
-            acceptance_contract:{type:"object"},
+            acceptance_contract:GOAL_ACCEPTANCE_SCHEMA,
             params:{type:"object"}
           },
           required:["capability_id","legal_entity_id","params"],
@@ -122,7 +135,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           params,
           actor:context.actor,
           legalEntityId,
-          objective,acceptanceContract:args.acceptance_contract
+          objective,acceptanceContract:args.acceptance_contract===undefined?undefined:validateGoalAcceptance(args.acceptance_contract)
         })};
       }
     },

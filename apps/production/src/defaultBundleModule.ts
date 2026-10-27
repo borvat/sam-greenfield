@@ -7,6 +7,7 @@ import { withGoogleDriveFromEnv } from "./driveBundle";
 import { withEBoekhoudenFromEnv } from "./eboekhoudenBundle";
 import { withBolRetailerFromEnv } from "./bolMcpBundle";
 import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle";
+import {withHermesDataAnalysisFromEnv} from './hermesDataAnalysis';
 
 async function buildBundle():Promise<ProductionBundle>{
   let bundle:ProductionBundle={capabilities:[],toolDefinitions:[],toolAdapters:[]};
@@ -30,7 +31,7 @@ async function buildBundle():Promise<ProductionBundle>{
       toolAdapters:bundle.toolAdapters.filter(a=>keep(a.capabilityId)),
       verificationAdapters:bundle.verificationAdapters?.filter(v=>keep(v.capabilityId))};
   }
-  return bundle;
+  return withHermesDataAnalysisFromEnv(bundle);
 }
 
 export default buildBundle;

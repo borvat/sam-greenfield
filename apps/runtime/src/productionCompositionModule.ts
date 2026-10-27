@@ -12,6 +12,7 @@ import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
 import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
+import {HERMES_VERIFICATION_CONTRACTS} from '../../production/src/hermesDataAnalysis';
 import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
 
 export default (async()=>{
@@ -21,6 +22,7 @@ if(config.mode==='production'){
 }
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);
+if(bundle.raw.hermesDataAnalysis)await syncVerificationContracts(HERMES_VERIFICATION_CONTRACTS);
 await syncProductionModelRegistry(bundle.raw.modelProviderConfigs??[]);
 if(bundle.raw.capabilities.some(c=>c.capabilityId.startsWith("google_mcp_")))await syncVerificationContracts(SAM_GOOGLE_VERIFICATION_CONTRACTS);
 if(bundle.raw.capabilities.some(c=>c.capabilityId==="gmail_list_messages"))await syncVerificationContracts(GMAIL_READ_VERIFICATION_CONTRACTS);
