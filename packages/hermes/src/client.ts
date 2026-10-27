@@ -8,7 +8,7 @@ export const FREE_RUNTIME:HermesRuntimePolicy=Object.freeze({provider:'nous',mod
 // Existing SAM per-request ceiling is 0.25; reserve 0.10 for the separate
 // explicitly authorized connection check. This is not a free-model claim.
 export const DEEPSEEK_RUNTIME:HermesRuntimePolicy=Object.freeze({provider:'deepseek',model:'deepseek-flash',maxCostUsd:0.15});
-export const DEEPSEEK_GUARD_SHA256='0b95495d8f3b2d5bdb7fb86d412c3595499c3461a20ee0f2a664e1f7c1c3f6dc';
+export const DEEPSEEK_GUARD_SHA256='6119b3808fcbcd399393ff9ffb1d553c5f29e007f703b4cad0aa4df55a6906b2';
 export const taskSchema=z.object({
   task_id:z.uuid(),goal_id:z.uuid(),agent_role:z.enum(['programmer','code_reviewer','researcher','data_analyst','tester']),
   instructions:z.string().min(1).max(16000),allowed_tools:z.array(z.string()).max(0),
