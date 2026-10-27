@@ -1,3 +1,4 @@
+import {hasPreflightRecoveryEvidence} from '../../kernel/src/readReviewDiagnostic';
 import {readReviewBudget} from '../../kernel/src/readReviewBudget';
 import {withTransaction} from '../../../packages/db/src/client';
 import {transitionGoal} from '../../kernel/src/stateMachine';
@@ -12,8 +13,9 @@ export async function continueReadReview(input:{goalId:string;legalEntityId:stri
   const retry=review?undefined:await readReviewBudget(client,goal.id,goal.current_plan_id);
   // Legacy reviews already consumed their two in-call attempts. Never reset
   // those budgets, infer a new grant, or use a direct read to evade the contract.
-  if(!retry||retry.attempts>=2||retry.callsUsed>=4)throw Error('REVIEW_BUDGET_EXHAUSTED_REQUIRES_NEW_AUTHORIZATION');
-  if(retry.retryable!==true)throw Error('REVIEW_NOT_RETRYABLE');
+  if(review||retry&&(retry.attempts>=2||retry.callsUsed>=4))throw Error('REVIEW_BUDGET_EXHAUSTED_REQUIRES_NEW_AUTHORIZATION');
+  if(!retry&&!await hasPreflightRecoveryEvidence(client,goal.id,goal.current_plan_id))throw Error('REVIEW_PREFLIGHT_EVIDENCE_REQUIRED');
+  if(retry&&retry.retryable!==true)throw Error('REVIEW_NOT_RETRYABLE');
   const valid=await client.query(`SELECT 1 FROM executions e WHERE e.goal_id=$1 AND e.plan_id=$2
    AND (SELECT v.result FROM verifications v WHERE v.execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1)='VERIFIED' LIMIT 1`,[goal.id,goal.current_plan_id]);
   const unfinished=await client.query("SELECT 1 FROM work_queue WHERE goal_id=$1 AND plan_id=$2 AND status<>'EXECUTED' LIMIT 1",[goal.id,goal.current_plan_id]);
@@ -24,6 +26,6 @@ export async function continueReadReview(input:{goalId:string;legalEntityId:stri
   await client.query('UPDATE goals SET next_wake_at=NULL WHERE id=$1',[goal.id]);
   await client.query(`INSERT INTO audit_log(actor,goal_id,action,entity_type,entity_id,source,authority_class,result)
    VALUES($1,$2,'READ_REVIEW_CONTINUATION_REQUESTED','goal',$2,'sam_mcp','GREEN','SCHEDULED')`,[input.actor,goal.id]);
-  return {goalId:goal.id,state:'VERIFYING',remainingAttempts:2-retry.attempts,sourceWork:'REUSE_VERIFIED_EXECUTIONS'};
+  return {goalId:goal.id,state:'VERIFYING',remainingAttempts:2-(retry?.attempts??0),sourceWork:'REUSE_VERIFIED_EXECUTIONS'};
  });
 }

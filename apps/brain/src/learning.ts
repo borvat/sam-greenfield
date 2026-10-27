@@ -2,8 +2,10 @@ import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import type { MemoryType } from "./memory";
 
-function stableScope(scope?:Record<string,unknown>):string{
-  return JSON.stringify(scope ?? {});
+function verifiedScope(execution:any,scope?:Record<string,unknown>){
+  if(!execution.company_scope)throw new Error('LEARNING_SCOPE_REQUIRED');
+  if(['legalEntityId','legal_entity_id','company_scope'].some(key=>scope?.[key]!==undefined&&scope[key]!==execution.company_scope))throw new Error('LEARNING_SCOPE_MISMATCH');
+  return {...scope,legal_entity_id:execution.company_scope};
 }
 
 async function requireVerifiedExecution(client:any,executionId:string){
@@ -44,7 +46,10 @@ export async function learnVerifiedWorldFact(input:{
   const work=async(client:any)=>{
     const execution=await requireVerifiedExecution(client,input.executionId);
     if(input.entityType!=='legal_entity'||input.entityId!==execution.company_scope)throw new Error('LEARNING_ENTITY_MISMATCH');
-    const scope=input.scope ?? {};
+    verifiedScope(execution,input.scope);
+    // World-fact identity already includes entity_id; preserve historical scope
+    // so duplicate detection and supersession still match existing records.
+    const scope=input.scope??{};
     const now=input.sourceTimestamp ?? new Date();
     const duplicate=await client.query(`SELECT id FROM world_facts WHERE source=$1
       AND entity_type=$2 AND entity_id=$3 AND attribute=$4 AND scope=$5::jsonb AND value=$6::jsonb`,
@@ -109,9 +114,8 @@ export async function observeVerifiedMemory(input:{
   reinforcementThreshold?:number;
 }):Promise<{memoryId:string;status:"OBSERVED"|"REINFORCED";supportCount:number}>{
   return withTransaction(async(client)=>{
-    await requireVerifiedExecution(client,input.executionId);
-
-    const scope=input.scope ?? {};
+    const execution=await requireVerifiedExecution(client,input.executionId);
+    const scope=verifiedScope(execution,input.scope);
     const source=`verified_execution:${input.executionId}`;
     const statementKey=sha256Hex({type:input.type,statement:input.statement,scope});
 

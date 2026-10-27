@@ -1,3 +1,5 @@
+import {createReliabilityReadTools} from './reliabilityReadTools';
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import { captureHealthSnapshot } from "../../supervisor/src/health";
 import { loadActiveIncidents } from "../../supervisor/src/incidents";
 import { withTransaction } from "../../../packages/db/src/client";
@@ -31,6 +33,7 @@ function readTool(
 
 export function createCoreReadTools():RegisteredChatGPTTool[]{
   return [
+    ...createReliabilityReadTools(),
     readTool("sam_system_status","Get high-level SAM state counts.",async()=>{
       const data=await one(`SELECT
         (SELECT COUNT(*)::int FROM goals WHERE state NOT IN ('COMPLETED','CANCELLED','FAILED')) AS active_goals,
@@ -38,12 +41,12 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
         (SELECT COUNT(*)::int FROM approvals WHERE status='PENDING') AS pending_approvals,
         (SELECT COUNT(*)::int FROM side_effect_operations WHERE reconciliation_state='NEEDS_RECONCILIATION') AS unresolved_side_effects,
         (SELECT COUNT(*)::int FROM model_providers WHERE health='DOWN') AS down_model_providers`);
-      return {ok:true,data};
+      return {ok:true,data:{...data,...buildRevision()}};
     },objectSchema),
 
     readTool("sam_runtime_health","Get deterministic runtime health snapshot.",async()=>{
       const data=await withTransaction((client)=>captureHealthSnapshot(client));
-      return {ok:true,data};
+      return {ok:true,data:{...data,...buildRevision()}};
     },objectSchema),
 
     readTool("sam_pending_owner_decisions","List WAITING_OWNER goals and pending approvals.",async(args)=>{

@@ -1,0 +1,21 @@
+{
+  "status": "PREPARED_NOT_DEPLOYED",
+  "targetServiceId": "srv-dbe27ics728c738tuoc0",
+  "targetWorkspaceId": "tea-db35rbflot8c739g8rhg",
+  "branch": "repair/sam-operational-reliability-20261028",
+  "dockerfilePath": "./deploy/reliability-test/Dockerfile",
+  "healthCheckPath": "/readyz",
+  "autoDeploy": false,
+  "additionalEnvironment": {"SAM_RELIABILITY_TEST_ENABLED": "1"},
+  "existingSecretFiles": ["sam-restricted-connection.json"],
+  "existingTokenEnvironmentName": "SAM_TEST_BEARER_TOKEN",
+  "requiresExplicitDecision": ["RESUME_SUSPENDED_EXISTING_TEST_SERVICE"],
+  "storageAdmission": "Existing fixed tenant, non-owner role and previously reviewed profiles; current login lease must already be valid for 5 to 60 minutes. No automatic renewal or privilege expansion.",
+  "models": "NO_MODEL_OR_EXTERNAL_ADAPTER",
+  "analysisAdmission": "CLOSED",
+  "hermesPolicyCreditUsed": 0,
+  "newResources": 0,
+  "newBudget": 0,
+  "productionChanges": false,
+  "containerPersistence": "NOT_VERIFIED"
+}

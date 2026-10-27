@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 export const commandCenterHtml=`<!doctype html>
 <html lang="en">
 <head>
@@ -12,7 +13,7 @@ export const commandCenterHtml=`<!doctype html>
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
 </style>
 </head>
-<body>
+<body><small>Build ${buildRevision().revision??"UNKNOWN"}</small>
 <div class="shell">
   <div class="top"><div class="brand"><h1>SAM Executive Command Center</h1><p>Owner view of goals, execution, verification and finance.</p></div><div class="badge" id="status">Connecting…</div></div>
   <div class="card form" id="authPanel" style="margin-bottom:16px">
@@ -43,7 +44,7 @@ export const commandCenterHtml=`<!doctype html>
       <div class="card finance" style="margin-top:16px"><div class="section-title"><h2>Latest Finance Brief</h2></div><div id="finance">No brief yet.</div></div>
     </div>
   </div>
-  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><pre id="timeline">Select a goal.</pre></div>
+  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
 let token=sessionStorage.getItem("sam_cc_token")||"";
@@ -82,7 +83,7 @@ async function refresh(){
   }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2)}catch(e){document.getElementById("timeline").textContent=e.message}}
+async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);const result=document.getElementById("report-result");result.textContent="";for(const r of x.data.reports||[]){const pre=document.createElement("pre");pre.textContent=JSON.stringify({reportId:r.id,hash:r.report_hash,summary:r.decision.summary,coverage:r.decision.report?.analysisCoverage||r.decision.coverage,limitations:r.decision.limitations||r.decision.report?.limitations,waitDiagnostics:r.decision.runtimeReview},null,2);result.appendChild(pre)}for(const a of x.data.audit||[]){if(a.action==="READ_REVIEW_DIAGNOSTIC"){const pre=document.createElement("pre");pre.textContent=JSON.stringify({waitDiagnostics:a.after_ref},null,2);result.appendChild(pre)}}}catch(e){document.getElementById("timeline").textContent=e.message}}
 async function createGoal(){
   const error=document.getElementById("formError");error.textContent="";
   try{

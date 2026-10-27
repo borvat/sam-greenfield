@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import {timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
@@ -28,10 +29,10 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
 
   const server=createServer(async(req,res)=>{
     try{
-      if(req.method==="GET"&&req.url==="/livez"){json(res,200,{status:"alive"});return}
+      if(req.method==="GET"&&req.url==="/livez"){json(res,200,{status:"alive",...buildRevision()});return}
       if(req.method==="GET"&&req.url==="/readyz"){
         const state=await commandCenterReadiness(options.legalEntityId);
-        json(res,state.ready?200:503,{status:state.ready?"ready":"not_ready",...state});
+        json(res,state.ready?200:503,{status:state.ready?"ready":"not_ready",...state,...buildRevision()});
         return;
       }
 

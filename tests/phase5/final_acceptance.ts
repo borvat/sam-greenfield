@@ -12,10 +12,10 @@ async function one(sql:string,params:any[]=[]){
   return r.rows[0];
 }
 
-async function createGoal(state="PLANNING"){
+async function createGoal(state="PLANNING",existingLegalEntityId?:string){
   return withTransaction(async(client)=>{
     const org=await client.query("INSERT INTO organizations(name) VALUES($1) RETURNING id",[`P5FA-${Date.now()}-${Math.random()}`]);
-    const le=await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,$2) RETURNING id",[org.rows[0].id,`P5FALE-${Date.now()}-${Math.random()}`]);
+    const le=existingLegalEntityId?{rows:[{id:existingLegalEntityId}]}:await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,$2) RETURNING id",[org.rows[0].id,`P5FALE-${Date.now()}-${Math.random()}`]);
     const g=await client.query(
       "INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'GREEN') RETURNING id",
       [`P5FAG-${Date.now()}-${Math.floor(Math.random()*1e9)}`,le.rows[0].id,"Phase5 final acceptance",state]
@@ -108,7 +108,7 @@ async function main(){
   });
   assert.equal(duplicateObs.supportCount,1);
 
-  const g2=await createGoal();
+  const g2=await createGoal("PLANNING",g1.legalEntityId);
   const e2=await makeExecution({
     goalId:g2.goalId,
     capabilityId:"p5fa_observe2",

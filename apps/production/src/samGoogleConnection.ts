@@ -37,6 +37,6 @@ export class SamGoogleConnection{
  }
  async status(){
   const stored=await this.config.store.tools(this.config.ownerId,this.config.clientId);
-  return {configured:true,discoveredReadTools:filterReadOnlyTools(stored).length,authorizationStored:!!await this.config.store.loadRefresh(this.config.ownerId,this.config.clientId),liveReadVerified:false};
+  return {configured:true,discoveredReadTools:filterReadOnlyTools(stored).length,authorizationStored:!!await this.config.store.loadRefresh(this.config.ownerId,this.config.clientId),liveReadVerified:null,liveReadProbe:"NOT_PERFORMED",sendCapability:"NOT_AUTHORIZED",historicalEvidence:"INDEPENDENT_EXECUTION_RECORDS_ONLY"};
  }
 }

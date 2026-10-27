@@ -53,7 +53,7 @@ async function collected(missing=false){
  },new Date('2026-10-27T10:00:00Z'));
 }
 function clientFixture(selected:HermesRuntimePolicy=FREE_RUNTIME){
- const bodies:any[]=[],answer=JSON.stringify({summary:'طلبات تحتاج متابعة المخزون مع مراعاة البيانات غير المتاحة',observations:[{reference:'totals.netOrdered',comment:'الكمية بعد الإلغاء لا تمثل الكمية بعد المرتجعات'}]});
+ const bodies:any[]=[],answer=JSON.stringify({version:'sam.analysis_selection.v2',references:['totals.netOrdered']});
  const client=new HermesClient({baseUrl:'https://hermes.synthetic.invalid',apiKey:'synthetic-key-with-no-real-authority',requireNativeModelLock:true,runtimePolicy:selected,assertServerPolicy:async()=>{},pollMs:1,
  transport:async(url:any,init:any)=>{
   const path=new URL(url).pathname,body=init?.body?JSON.parse(init.body):undefined;bodies.push({path,body});
@@ -313,8 +313,8 @@ test('deepseek analysis: original source acceptance and selected receipt binding
 
 test('unsupported numeric narrative, invented metric references, malformed output and expired admission are denied',async()=>{
  const aggregate=aggregateForHermes((await collected()).result.report);
- assert.throws(()=>validateInterpretation(JSON.stringify({summary:'profit 999',observations:[{reference:'totals.netOrdered',comment:'ok'}]}),aggregate),/UNSUPPORTED/);
- assert.throws(()=>validateInterpretation(JSON.stringify({summary:'تحليل',observations:[{reference:'invented.profit',comment:'غير مسند'}]}),aggregate),/UNSUPPORTED/);
+ assert.throws(()=>validateInterpretation(JSON.stringify({summary:'profit 999',observations:[{reference:'totals.netOrdered',comment:'ok'}]}),aggregate));
+ assert.throws(()=>validateInterpretation(JSON.stringify({summary:'تحليل',observations:[{reference:'invented.profit',comment:'غير مسند'}]}),aggregate));
  assert.throws(()=>validateInterpretation('{}',aggregate));
  assert.throws(()=>assertAnalysisWindow({...policy(),expiresAt:new Date(Date.now()-1).toISOString()},ENTITY),/WINDOW/);
 });

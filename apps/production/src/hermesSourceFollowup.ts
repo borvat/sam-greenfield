@@ -89,7 +89,7 @@ export async function saveAcceptedFollowupReport(db:any,input:{goalId:string;pla
    row.accepted_evidence?.reportHash!==sha256Hex(r.report)||row.accepted_evidence?.candidateHash!==sha256Hex(r.candidate)||
    row.accepted_evidence?.sourceBindingHash!==sha256Hex(binding)||row.accepted_evidence?.receiptHash!==sha256Hex(row.handoff?.hermes))
   throw Error('ANALYSIS_FOLLOWUP_REPORT_BINDING_DENIED');
- const decision={status:'complete',summary:r.report.interpretation.summary,classification:'MODEL_INFERENCE',
+ const decision={status:'complete',summary:r.report.interpretation.summary,classification:r.report.interpretation.classification,
   sourceReuse:binding,executionId:input.executionId,verificationId:input.verificationId,report:r.report};
  const reportHash=sha256Hex(decision);
  const saved=(await db.query(`INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash)
