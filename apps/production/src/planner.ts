@@ -22,6 +22,7 @@ export async function planNextNewGoal(bundle:ValidatedProductionBundle,options:{
   const reservation=await withTransaction(async client=>{
     const next=(await client.query(`SELECT id,state,planning_attempts,planning_failure,replan_attempts,replan_reason FROM goals
       WHERE state IN ('NEW','MODELING','PLANNING','REPLANNING')
+      AND domain IS DISTINCT FROM 'hermes_data_analysis'
       AND ($1::uuid IS NULL OR id=$1)
       AND (planning_retry_at IS NULL OR planning_retry_at<=now())
       AND ${options.excludeDelegatedSpecialistTasks?'NOT EXISTS(SELECT 1 FROM specialist_delegations d WHERE d.goal_id=goals.id)':'true'}
