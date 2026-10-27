@@ -3,6 +3,7 @@ import { OpenAIResponsesAdapter } from "./openai";
 import { AnthropicMessagesAdapter } from "./anthropic";
 import { GoogleGeminiAdapter } from "./google";
 import { OpenAICompatibleChatAdapter } from "./openaiCompatible";
+import { buildAnonymousFreeProvidersFromEnv } from "./anonymousFree";
 
 function list(value:string|undefined,fallback:string[]):string[]{
   const parsed=(value??"").split(",").map((v)=>v.trim()).filter(Boolean);
@@ -88,5 +89,8 @@ export function buildStandardModelProvidersFromEnv(
     }),env.QWEN_MODEL,"QWEN");
   }
 
+  const free=buildAnonymousFreeProvidersFromEnv(env);
+  adapters.push(...free.adapters);
+  configs.push(...free.configs);
   return {adapters,configs};
 }

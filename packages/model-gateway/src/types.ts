@@ -17,6 +17,8 @@ export interface ModelTask {
   input: unknown;
   maxCostUsd?: number;
   preferredProviders?: string[];
+  /** Hard routing boundary, unlike preferredProviders. An empty list allows none. */
+  allowedProviders?: string[];
   requiredModels?: string[];
 }
 
