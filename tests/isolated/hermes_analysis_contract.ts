@@ -56,6 +56,7 @@ test('actual adapter sends strict aggregate-specific schema and verifier binds t
  const {prompt,instructions,aggregate,outcome}=await sentPrompt(),schema=prompt.outputSchema;
  assert.ok(instructions.length<=16000,'Full thirty-product prompt must retain the existing ceiling');
  assert.match(prompt.observationRules,/substantive/);
+ assert.match(prompt.observationRules,/^Before writing JSON, select one to eight useful observations\./);
  assert.match(prompt.observationRules,/analysisCoverage/);
  assert.equal(prompt.formatExample.label,'FORMAT ONLY; never copy as actual analysis');
  assert.doesNotThrow(()=>validateInterpretation(JSON.stringify(prompt.formatExample.output),aggregate));
@@ -116,6 +117,8 @@ if(process.env.SAM_HERMES_SOURCE_REPORT_FILE)test('preserved verified source fit
  const path=process.env.SAM_HERMES_SOURCE_REPORT_FILE!,before=await readFile(path),report=JSON.parse(before.toString('utf8'));
  const {instructions,prompt}=await sentPrompt(report);
  assert.ok(instructions.length<=16000);assert.equal(prompt.aggregate.products.length,30);
+ assert.match(prompt.observationRules,/Before writing JSON, select one to eight/);
+ assert.equal(prompt.outputSchema.properties.observations.maxItems,8);
  assert.deepEqual(await readFile(path),before,'Source evidence must remain unchanged');
  console.log(JSON.stringify({kind:'PRESERVED_SOURCE_PROMPT',sourceProducts:report.products.length,sentProducts:prompt.aggregate.products.length,promptCharacters:instructions.length}));
 });

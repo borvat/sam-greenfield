@@ -147,7 +147,7 @@ class NativeGuard(unittest.TestCase):
         text='{"summary":"بيانات","observations":[]}'
         for width in (1,7,37):
             owner=NS(agent=NS(),_assemble_tool_calls=lambda *a:(None,False),
-                _sam_data_analysis_provenance={'task_id':'synthetic-task','session_id':'synthetic-session','sdk_request_sha256':'a'*64})
+                _sam_data_analysis_provenance={'task_id':'synthetic-task','session_id':'synthetic-session','request_body_sha256':'a'*64})
             parts=[text[i:i+width] for i in range(0,len(text),width)]
             response=ns['_finish_chat_stream'](owner,None,'assistant',parts,['synthetic reasoning'],{},'stop',
                 'deepseek-flash',None,flush_pending=lambda:None,response_id='synthetic-response')
@@ -155,6 +155,26 @@ class NativeGuard(unittest.TestCase):
             self.assertEqual(log.rows[-1]['decoded_content_sha256'],hashlib.sha256(text.encode()).hexdigest())
             self.assertEqual(log.rows[-1]['finish_reason'],'stop')
         self.assertNotIn(text,json.dumps(log.rows,ensure_ascii=False))
+
+    def test_exact_previous_installed_guard_upgrades_without_changing_original(self):
+        pristine=SOURCE
+        digest=hashlib.sha256(pristine.encode()).hexdigest()
+        if digest==guard.INSTALLED_SOURCE:
+            for part in (guard.LEGACY_GUARD,guard.PROBE_GUARD,guard.NONSTREAM_GUARD):pristine=pristine.replace(part,'',1)
+        elif digest==guard.PREVIOUS_SOURCE:
+            for part in (guard.PREVIOUS_GUARD,guard.PROBE_GUARD,guard.NONSTREAM_GUARD,guard.PREVIOUS_FINISH_GUARD):pristine=pristine.replace(part,'',1)
+        elif digest!=guard.SOURCE:
+            guard.patch(pristine)
+            for part in (guard.GUARD,guard.PROBE_GUARD,guard.NONSTREAM_GUARD,guard.FINISH_GUARD):pristine=pristine.replace(part,'',1)
+        self.assertEqual(hashlib.sha256(pristine.encode()).hexdigest(),guard.SOURCE)
+        previous=pristine.replace(guard.ANCHOR,guard.PREVIOUS_GUARD+guard.ANCHOR,1)
+        previous=previous.replace(guard.PROBE_ANCHOR,guard.PROBE_GUARD+guard.PROBE_ANCHOR,1)
+        previous=previous.replace(guard.NONSTREAM_ANCHOR,guard.NONSTREAM_GUARD+guard.NONSTREAM_ANCHOR,1)
+        previous=previous.replace(guard.FINISH_ANCHOR+'\n',guard.FINISH_ANCHOR+'\n'+guard.PREVIOUS_FINISH_GUARD,1)
+        self.assertEqual(hashlib.sha256(previous.encode()).hexdigest(),guard.PREVIOUS_SOURCE)
+        self.assertEqual(guard.patch(previous),guard.patch(pristine))
+        with self.assertRaisesRegex(RuntimeError,'PINNED'):
+            guard.patch(previous+'# unpinned installed change\n')
 
     def test_actual_analysis_wire_uses_json_object(self):
         from hermes_deepseek_json import envelope
