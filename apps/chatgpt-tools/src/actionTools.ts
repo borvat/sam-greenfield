@@ -4,6 +4,7 @@ import type {
 } from "./types";
 import {GOAL_ACCEPTANCE_SCHEMA,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
 import {ANALYSIS_REQUEST_SCHEMA,validateAnalysisRequest,ANALYSIS_SUBMISSION,ANALYSIS_SUBMIT_TOOL,assertDataAnalysisSubmission} from '../../production/src/dataAnalysisContract';
+import {ANALYSIS_FOLLOWUP_TOOL,ANALYSIS_SOURCE_BINDING_SCHEMA,validateFollowupInput} from '../../production/src/hermesSourceFollowup';
 
 export function createActionTools(dispatcher?:ProductionActionDispatcher):RegisteredChatGPTTool[]{
   const manifestAvailable=!!dispatcher;
@@ -37,6 +38,16 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
 
   return [
     ...directBolTools,
+    {
+      definition:{name:ANALYSIS_FOLLOWUP_TOOL,description:'Admit one new bounded analysis over an exact already verified source from a failed analysis goal. Never recollects source or reopens the old goal. Requires owner context and an active separately authorized window.',risk:'YELLOW',
+        availability:dispatcher?.submitAnalysisFollowUp?'AVAILABLE':'UNAVAILABLE',inputSchema:{type:'object',additionalProperties:false,
+          required:['objective','legal_entity_id','source_binding'],properties:{objective:{type:'string',minLength:1,maxLength:4000},legal_entity_id:{type:'string',format:'uuid'},source_binding:ANALYSIS_SOURCE_BINDING_SCHEMA}}},
+      handler:async(args,context)=>{
+        if(!context.systemOwner)return {ok:false,error:'System-owner context is required'};
+        if(!dispatcher?.submitAnalysisFollowUp)return {ok:false,unavailable:true,error:'Analysis follow-up is unavailable'};
+        return {ok:true,data:await dispatcher.submitAnalysisFollowUp({...validateFollowupInput(args),actor:context.actor})};
+      }
+    },
     {
       definition:{name:'sam_continue_review',description:'Resume a waiting read-report review using existing verified execution evidence and only its remaining review budget. Never repeats source work or resets an exhausted budget. Requires the existing goal contract and owner authorization.',risk:'YELLOW',
         availability:dispatcher?.continueReview?'AVAILABLE':'UNAVAILABLE',inputSchema:{type:'object',properties:{goal_id:{type:'string',format:'uuid'},legal_entity_id:{type:'string',format:'uuid'}},required:['goal_id','legal_entity_id'],additionalProperties:false}},

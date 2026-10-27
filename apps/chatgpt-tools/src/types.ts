@@ -42,6 +42,7 @@ export interface ProductionCapabilityDescriptor{
 export interface ProductionActionDispatcher{
   manifest():ProductionCapabilityDescriptor[];
   continueReview?(input:{goalId:string;legalEntityId:string;actor:string}):Promise<unknown>;
+  submitAnalysisFollowUp?(input:{objective:string;legalEntityId:string;actor:string;sourceBinding:unknown}):Promise<unknown>;
   submitGoal?(input:{
     objective:string;
     legalEntityId:string;

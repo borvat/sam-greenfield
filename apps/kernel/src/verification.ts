@@ -12,6 +12,9 @@ export async function recordIndependentVerificationAtomic(input: {
   contractId: string;
   independentEvidence: Record<string, unknown>;
   result: VerificationResult;
+  terminalFailure?:boolean;
+  // Trusted production finalizer: same transaction, only after acceptance.
+  onAccepted?:(client:import('pg').PoolClient,context:{goalId:string;planId:string;executionId:string;verificationId:string})=>Promise<unknown>;
 }): Promise<string> {
   return withTransaction(async (client) => {
     let goalState:string|undefined;
@@ -124,10 +127,11 @@ export async function recordIndependentVerificationAtomic(input: {
           }else{
           const acceptance=checkGoalAcceptance(definition.rows[0].completion_definition,verifiedResults.rows);
           if(!acceptance.passed){
-            await transitionGoal(client,ex.goal_id,"VERIFYING","REPLANNING","goal_acceptance_failed",{
+            await transitionGoal(client,ex.goal_id,"VERIFYING",input.terminalFailure?"FAILED":"REPLANNING","goal_acceptance_failed",{
               verification_id:verificationId,reason:acceptance.reason
             });
           }else{
+          await input.onAccepted?.(client,{goalId:ex.goal_id,planId:ex.plan_id,executionId:ex.id,verificationId});
           await transitionGoal(client, ex.goal_id, "VERIFYING", "COMPLETED", "independent_verification_passed", {
             verification_id: verificationId,
             verified_executions: verified
@@ -136,7 +140,7 @@ export async function recordIndependentVerificationAtomic(input: {
           }
         }
       } else if (input.result === "FAILED") {
-        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", "REPLANNING", "independent_verification_failed", {
+        await transitionGoal(client, ex.goal_id, goalState as "VERIFYING"|"EXECUTING", input.terminalFailure?"FAILED":"REPLANNING", "independent_verification_failed", {
           verification_id: verificationId
         });
       } else {

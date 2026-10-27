@@ -1,6 +1,7 @@
 import {continueReadReview} from './readReviewContinuation';
 import {encodeGoalAcceptance,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
 import {ANALYST,SOURCE,ANALYSIS_MARKER,validateAnalysisRequest,admitDataAnalysisContract,assertAnalysisWindow,assertDataAnalysisSubmission} from './dataAnalysisContract';
+import {validateFollowupInput,loadVerifiedFollowupSource,sourceFollowupAcceptance,ANALYSIS_FOLLOWUP_MAX_WINDOW_MS} from './hermesSourceFollowup';
 import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
@@ -133,6 +134,42 @@ export function createKernelProductionDispatcher(
 ):ProductionActionDispatcher{
   return {
     continueReview:continueReadReview,
+    async submitAnalysisFollowUp(input){
+      const normalized=validateFollowupInput({objective:input.objective,legal_entity_id:input.legalEntityId,source_binding:input.sourceBinding});
+      input={...input,...normalized};
+      const objective=normalized.objective,binding=normalized.sourceBinding,policy=bundle.raw.hermesDataAnalysis;
+      if(!policy||!bundle.raw.capabilities.some(c=>c.capabilityId===ANALYST))throw Error('HERMES_DATA_ANALYSIS_NOT_ENABLED');
+      assertAnalysisWindow(policy,input.legalEntityId);
+      if(Date.parse(policy.expiresAt)-Date.parse(policy.activatedAt)>ANALYSIS_FOLLOWUP_MAX_WINDOW_MS)throw Error('ANALYSIS_FOLLOWUP_WINDOW_DENIED');
+      if(binding.legalEntityId!==input.legalEntityId)throw Error('ANALYSIS_SOURCE_SCOPE_DENIED');
+      return withTransaction(async client=>{
+        await client.query("SELECT pg_advisory_xact_lock(hashtext('sam-hermes-data-analysis-admission'))");
+        assertAnalysisWindow(policy,input.legalEntityId);
+        await loadVerifiedFollowupSource(client,binding,input.legalEntityId);
+        // Source identity, not prose or window, is the durable one-follow-up key.
+        const previous=(await client.query(`SELECT g.id,g.business_id,g.current_plan_id,p.goal_assumptions,p.plan_hash
+          FROM goals g JOIN plans p ON p.goal_id=g.id
+          WHERE g.domain='hermes_data_analysis' AND p.goal_assumptions->'sourceReuse'->>'sourceExecutionId'=$1
+          ORDER BY p.created_at,p.id LIMIT 1`,[binding.sourceExecutionId])).rows[0];
+        if(previous){
+          if(sha256Hex(previous.goal_assumptions.sourceReuse)!==sha256Hex(binding))throw Error('ANALYSIS_FOLLOWUP_BINDING_CONFLICT');
+          return {status:'EXISTING',goalId:previous.id,businessId:previous.business_id,planId:previous.current_plan_id,sourceBindingHash:sha256Hex(binding)};
+        }
+        const used=await client.query("SELECT count(*)::int n FROM goals WHERE domain='hermes_data_analysis' AND company_scope=$1 AND created_at>=$2",[input.legalEntityId,policy.activatedAt]);
+        if(Number(used.rows[0].n)>=1)throw Error('HERMES_DATA_ANALYSIS_TASK_CEILING');
+        const contract=sourceFollowupAcceptance(binding);
+        const goal=await createGoalRecord(client,{...input,objective,authorityCeiling:'GREEN',domain:'hermes_data_analysis',acceptanceContract:contract});
+        const steps=[{stepKey:'analysis',capabilityId:ANALYST,params:{agent_role:'data_analyst',instructions:ANALYSIS_MARKER}}];
+        const authority=await evaluatePlanAuthority(client,{goalId:goal.id,legalEntityId:input.legalEntityId,steps,capabilityPolicies:bundle.catalog.authorityPolicies()});
+        if(!authority.authorized)throw Error('HERMES_DATA_ANALYSIS_AUTHORITY_DENIED');
+        await transitionGoal(client,goal.id,'NEW','MODELING','bounded_verified_source_followup');
+        await transitionGoal(client,goal.id,'MODELING','PLANNING','reuse_exact_original_verified_source');
+        const plan=await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:'sam_mcp',actor:input.actor,modelPlanning:false,
+          acceptanceFixedBeforeExecution:true,sourceReuse:binding,sourceReuseWindow:{activatedAt:policy.activatedAt,expiresAt:policy.expiresAt}},steps});
+        return {status:'QUEUED',goalId:goal.id,businessId:goal.businessId,...plan,acceptanceContract:contract,
+          sourceBindingHash:sha256Hex(binding),planning:'TRUSTED_VERIFIED_SOURCE_FOLLOWUP'};
+      });
+    },
     async submitGoal(input){
       const objective=input.objective.trim();
       if(!objective) throw new Error("objective is required");
