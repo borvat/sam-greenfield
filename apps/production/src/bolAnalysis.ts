@@ -22,6 +22,11 @@ function number(value:unknown,label:string):number{
 function quantity(value:unknown,label:string):number{
   const n=number(value,label);if(!Number.isInteger(n))throw new Error(`Invalid ${label}`);return n;
 }
+function priceCents(value:unknown):number|null{
+ if(value===undefined||value===null)return null;
+ if(typeof value!=='number'||!Number.isFinite(value)||value<0||!Number.isSafeInteger(Math.round(value*100))||Math.abs(value*100-Math.round(value*100))>0.000001)throw Error('Invalid source unit price');
+ return Math.round(value*100);
+}
 
 // No customer names, addresses or email addresses leave this collector.
 export async function buildBolAnalysis(params:RecordValue,source:AnalysisCall,now=new Date()){
@@ -86,8 +91,12 @@ export async function buildBolAnalysis(params:RecordValue,source:AnalysisCall,no
       const ordered=quantity(item.quantity,"quantity"),cancelled=quantity(item.quantityCancelled,"quantityCancelled"),shipped=quantity(item.quantityShipped,"quantityShipped");
       if(cancelled+shipped>ordered)throw new Error("Inconsistent order quantities");
       const key=`${ean}:${method}`;
-      const row=products.get(key)??{ean,fulfilment:method,title:item.product?.title??item.title??null,ordered:0,cancelled:0,shipped:0,netOrdered:0,offerIds:[]};
+      const row=products.get(key)??{ean,fulfilment:method,title:item.product?.title??item.title??null,ordered:0,cancelled:0,shipped:0,netOrdered:0,offerIds:[],pricedOrderedUnits:0,unpricedOrderedUnits:0,knownOrderedPriceCents:0,knownAfterCancellationPriceCents:0};
       row.ordered+=ordered;row.cancelled+=cancelled;row.shipped+=shipped;row.netOrdered+=ordered-cancelled;
+      const cents=priceCents(item.unitPrice??item.offerPrice);
+      if(cents===null)row.unpricedOrderedUnits+=ordered;
+      else{row.pricedOrderedUnits+=ordered;row.knownOrderedPriceCents+=cents*ordered;row.knownAfterCancellationPriceCents+=cents*(ordered-cancelled);}
+      if(!Number.isSafeInteger(row.knownOrderedPriceCents)||!Number.isSafeInteger(row.knownAfterCancellationPriceCents))throw Error('Price aggregate exceeds safe range');
       const offerId=item.offer?.offerId;
       if(typeof offerId==="string"&&!row.offerIds.includes(offerId))row.offerIds.push(offerId);
       products.set(key,row);
@@ -103,6 +112,8 @@ export async function buildBolAnalysis(params:RecordValue,source:AnalysisCall,no
   }
   const days=Math.round((end-start)/DAY)+1;
   for(const row of products.values()){
+    row.orderedPriceCents=row.unpricedOrderedUnits?null:row.knownOrderedPriceCents;
+    row.afterCancellationPriceCents=row.unpricedOrderedUnits?null:row.knownAfterCancellationPriceCents;
     row.stock=null;
     if(row.fulfilment==="FBB")row.stock=stocks.get(row.ean)??null;
     else if(row.offerIds.length){
@@ -125,7 +136,17 @@ export async function buildBolAnalysis(params:RecordValue,source:AnalysisCall,no
   const limitations=["الكمية بعد الإلغاء ليست صافي المبيعات بعد المرتجعات؛ المرتجعات غير محسوبة.","لا يمكن حساب الربح الصافي أو التوصية بميزانية شراء دون تكاليف المنتجات والرسوم.","المخزون الحالي لقطة متغيرة: FBB من واجهة المخزون، وFBR للعروض المباعة المعروفة فقط؛ ليس كامل الكتالوج.","الطلبات مبنية على أحدث تغييرات الواجهة حتى يوم الجمع؛ لا توجد لقطة ذرية، وقد تغيّر القراءات المتزامنة النتائج."];
   const report={account,period:{startDate:params.startDate,endDate:params.endDate,timeZone:"Europe/Amsterdam",days},totals,includedOrders,orderItems:itemIds.size,products:rows,candidates,limitations,coverage:{changedThrough:businessDate(now),discoveredOrders:orderIds.size,inventoryItems:inventory.length,apiReads:reads.length,pagination:"every requested collection reached an empty terminal page"}};
   const markdown=[`تقرير الطلبات والمخزون: ${params.startDate} — ${params.endDate}`,`الطلبات: ${includedOrders}؛ الوحدات المطلوبة: ${totals.ordered}؛ الملغاة: ${totals.cancelled}؛ المشحونة: ${totals.shipped}؛ بعد الإلغاء: ${totals.netOrdered}.`,"مرشحو إعادة التزويد (حتى ثلاثة، تغطية أقل من 7 أيام):",...candidates.map(row=>`${row.ean} (${row.fulfilment}): ${row.netOrdered} وحدة بعد الإلغاء؛ مخزون ${row.stock}؛ تغطية ${row.daysCover.toFixed(1)} يوم. ${row.recommendation}`),...(candidates.length?[]:["لا توجد منتجات تستوفي الشروط ببيانات مخزون معلومة؛ لم يتم اختلاق ثلاثة مرشحين."]),...limitations].join("\n");
-  return {result:{report,markdown},evidence:{report,reportHash:sha256Hex(report),reads,collectedAt:now.toISOString()}};
+  const values=rows.reduce<{pricedOrderedUnits:number;unpricedOrderedUnits:number;knownOrderedPriceCents:number;knownAfterCancellationPriceCents:number}>((a,r)=>({pricedOrderedUnits:a.pricedOrderedUnits+r.pricedOrderedUnits,unpricedOrderedUnits:a.unpricedOrderedUnits+r.unpricedOrderedUnits,
+    knownOrderedPriceCents:a.knownOrderedPriceCents+r.knownOrderedPriceCents,knownAfterCancellationPriceCents:a.knownAfterCancellationPriceCents+r.knownAfterCancellationPriceCents}),
+    {pricedOrderedUnits:0,unpricedOrderedUnits:0,knownOrderedPriceCents:0,knownAfterCancellationPriceCents:0});
+  if(!Object.values(values).every(Number.isSafeInteger))throw Error('Price aggregate exceeds safe range');
+  const fullReport={...report,values:{...values,orderedPriceCents:values.unpricedOrderedUnits?null:values.knownOrderedPriceCents,
+    afterCancellationPriceCents:values.unpricedOrderedUnits?null:values.knownAfterCancellationPriceCents,
+    currency:null,taxBasis:null,commissions:null,returns:null,netProfit:null,
+    basis:'source unitPrice (or offerPrice) multiplied by ordered or non-cancelled quantity; integer hundredths; currency and tax basis not supplied by this collector'},
+    limitations:[...limitations,'قيم الأسعار محسوبة من سعر الوحدة المبلّغ؛ أساس الضريبة والعملة غير مثبتين في هذا التجميع. العمولات والمرتجعات غير محسوبة وليست صفراً. المبلغ بعد الإلغاء ليس ربحاً صافياً.']};
+  return {result:{report:fullReport,markdown:markdown+'\n'+fullReport.limitations.at(-1),startDate:params.startDate,endDate:params.endDate,timeZone:'Europe/Amsterdam',coverageComplete:true},
+    evidence:{report:fullReport,reportHash:sha256Hex(fullReport),reads,collectedAt:now.toISOString()}};
 }
 
 export async function verifyBolAnalysis(params:RecordValue,evidence:RecordValue,call:AnalysisCall){

@@ -40,6 +40,7 @@ export interface ProductionBundle{
   workerLeaseTtlSeconds?:number;
   plannerGateway?:()=>ModelGateway;
   deferVerification?:boolean;
+  hermesDataAnalysis?:{legalEntityId:string;activatedAt:string;expiresAt:string};
   replanPolicy?:{recoverableEvidenceReasons:string[]};
   verifiedLearning?:{
     capabilityIds:string[];

@@ -2,6 +2,8 @@ import type {
   ProductionActionDispatcher,
   RegisteredChatGPTTool
 } from "./types";
+import {GOAL_ACCEPTANCE_SCHEMA,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {ANALYSIS_REQUEST_SCHEMA,validateAnalysisRequest} from '../../production/src/dataAnalysisContract';
 
 export function createActionTools(dispatcher?:ProductionActionDispatcher):RegisteredChatGPTTool[]{
   const manifestAvailable=!!dispatcher;
@@ -54,6 +56,8 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           type:"object",
           properties:{
             objective:{type:"string",minLength:1,maxLength:4000},
+            acceptance_contract:GOAL_ACCEPTANCE_SCHEMA,
+            analysis_request:ANALYSIS_REQUEST_SCHEMA,
             legal_entity_id:{type:"string",description:"SAM legal entity UUID; optional when SAM_DEFAULT_LEGAL_ENTITY_ID is configured."}
           },
           required:["objective"],
@@ -66,7 +70,10 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
         if(!legalEntityId) return {ok:false,error:"Provide legal_entity_id or configure SAM_DEFAULT_LEGAL_ENTITY_ID in SAM."};
         const objective=String(args.objective??"").trim();
         if(!objective) return {ok:false,error:"objective is required"};
-        const data=await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor}) as Record<string,unknown>;
+        const acceptanceContract=args.acceptance_contract===undefined?undefined:validateGoalAcceptance(args.acceptance_contract);
+        const analysisRequest=args.analysis_request===undefined?undefined:validateAnalysisRequest(args.analysis_request);
+        const data=await dispatcher.submitGoal({objective,legalEntityId,actor:context.actor,
+          ...(acceptanceContract===undefined?{}:{acceptanceContract}),...(analysisRequest===undefined?{}:{analysisRequest})}) as Record<string,unknown>;
         if(data?.status==="UNAVAILABLE"){
           return {ok:false,unavailable:true,error:String(data.message??"SAM planning is unavailable; no goal was created"),data};
         }
@@ -98,7 +105,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
             capability_id:{type:"string"},
             legal_entity_id:{type:"string"},
             objective:{type:"string"},
-            acceptance_contract:{type:"object"},
+            acceptance_contract:GOAL_ACCEPTANCE_SCHEMA,
             params:{type:"object"}
           },
           required:["capability_id","legal_entity_id","params"],
@@ -122,7 +129,7 @@ export function createActionTools(dispatcher?:ProductionActionDispatcher):Regist
           params,
           actor:context.actor,
           legalEntityId,
-          objective,acceptanceContract:args.acceptance_contract
+          objective,acceptanceContract:args.acceptance_contract===undefined?undefined:validateGoalAcceptance(args.acceptance_contract)
         })};
       }
     },

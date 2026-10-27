@@ -1,16 +1,17 @@
 import {continueReadReview} from './readReviewContinuation';
-import {encodeGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {encodeGoalAcceptance,validateGoalAcceptance} from '../../kernel/src/goalAcceptance';
+import {ANALYST,SOURCE,ANALYSIS_MARKER,validateAnalysisRequest,admitDataAnalysisContract,assertAnalysisWindow} from './dataAnalysisContract';
 import {validateParameters} from '../../../packages/tool-gateway/src/validation';
 import { withTransaction } from "../../../packages/db/src/client";
 import { sha256Hex } from "../../../packages/shared/src/stableJson";
 import { evaluatePlanAuthority } from "../../brain/src/authorityGuard";
-import { persistPlanAndDelegateAtomic } from "../../kernel/src/planning";
-import { transitionGoalAtomic } from "../../kernel/src/stateMachine";
+import { persistPlanAndDelegateAtomic,persistPlanAndDelegate } from "../../kernel/src/planning";
+import { transitionGoalAtomic,transitionGoal } from "../../kernel/src/stateMachine";
 import { reconcileOneSideEffectAtomic,reconcilePendingSideEffects } from "../../tools/src/reconciler";
 import type { ProductionActionDispatcher,ProductionCapabilityDescriptor } from "../../chatgpt-tools/src/types";
 import type { ValidatedProductionBundle } from "./bundle";
 
-async function createGoal(input:{
+type GoalInput={
   legalEntityId:string;
   objective:string;
   actor:string;
@@ -18,10 +19,10 @@ async function createGoal(input:{
   domain?:string;
   completionDefinition?:string;
   acceptanceContract?:unknown;
-}):Promise<{id:string;businessId:string}>{
+};
+async function createGoalRecord(client:import('pg').PoolClient,input:GoalInput):Promise<{id:string;businessId:string}>{
   if(input.completionDefinition!=="sam.read_report.v1"&&(process.env.NODE_ENV==='production'||process.env.SAM_REQUIRE_GOAL_ACCEPTANCE==='1')&&input.acceptanceContract===undefined)throw Error("GOAL_CONTRACT_REQUIRED");
   const completion=input.acceptanceContract===undefined?input.completionDefinition??null:encodeGoalAcceptance(input.acceptanceContract);
-  return withTransaction(async(client)=>{
     const entity=await client.query(
       "SELECT id FROM legal_entities WHERE id=$1",
       [input.legalEntityId]
@@ -63,8 +64,8 @@ async function createGoal(input:{
       id:inserted.rows[0].id as string,
       businessId:inserted.rows[0].business_id as string
     };
-  });
 }
+async function createGoal(input:GoalInput){return withTransaction(client=>createGoalRecord(client,input));}
 
 async function ensureApprovalRequests(input:{
   goalId:string;
@@ -137,6 +138,29 @@ export function createKernelProductionDispatcher(
       if(!objective) throw new Error("objective is required");
       if(objective.length>4000) throw new Error("objective must be 4000 characters or fewer");
       if(!input.legalEntityId) throw new Error("legalEntityId is required");
+      if(input.acceptanceContract!==undefined)validateGoalAcceptance(input.acceptanceContract);
+      if(input.analysisRequest!==undefined){
+        const request=validateAnalysisRequest(input.analysisRequest),policy=bundle.raw.hermesDataAnalysis;
+        if(!policy||!bundle.raw.capabilities.some(c=>c.capabilityId===ANALYST))throw Error('HERMES_DATA_ANALYSIS_NOT_ENABLED');
+        assertAnalysisWindow(policy,input.legalEntityId);
+        const contract=admitDataAnalysisContract(input.legalEntityId,request,input.acceptanceContract);
+        return withTransaction(async client=>{
+          // No NEW goal is exposed to the general model planner between commits.
+          await client.query("SELECT pg_advisory_xact_lock(hashtext('sam-hermes-data-analysis-admission'))");
+          assertAnalysisWindow(policy,input.legalEntityId);
+          const used=await client.query("SELECT count(*)::int n FROM goals WHERE domain='hermes_data_analysis' AND company_scope=$1 AND created_at>=$2",[input.legalEntityId,policy.activatedAt]);
+          if(Number(used.rows[0].n)>=1)throw Error('HERMES_DATA_ANALYSIS_TASK_CEILING');
+          const goal=await createGoalRecord(client,{...input,objective,authorityCeiling:'GREEN',domain:'hermes_data_analysis',acceptanceContract:contract});
+          const steps=[{stepKey:'source',capabilityId:SOURCE,params:{startDate:request.startDate,endDate:request.endDate}},
+            {stepKey:'analysis',dependsOn:['source'],capabilityId:ANALYST,params:{agent_role:'data_analyst',instructions:ANALYSIS_MARKER}}];
+          const authority=await evaluatePlanAuthority(client,{goalId:goal.id,legalEntityId:input.legalEntityId,steps,capabilityPolicies:bundle.catalog.authorityPolicies()});
+          if(!authority.authorized)throw Error('HERMES_DATA_ANALYSIS_AUTHORITY_DENIED');
+          await transitionGoal(client,goal.id,'NEW','MODELING','bounded_data_analysis_request');
+          await transitionGoal(client,goal.id,'MODELING','PLANNING','existing_source_then_verified_data_analysis');
+          const plan=await persistPlanAndDelegate(client,{goalId:goal.id,assumptions:{source:'sam_mcp',actor:input.actor,modelPlanning:false,acceptanceFixedBeforeExecution:true},steps});
+          return {status:'QUEUED',goalId:goal.id,businessId:goal.businessId,...plan,acceptanceContract:contract,planning:'TRUSTED_DATA_DEPENDENCY_PLAN'};
+        });
+      }
       const planningReady=await withTransaction(async(client)=>{
         const classification=bundle.raw.dataClassification??"INTERNAL";
         const result=await client.query(
@@ -164,6 +188,7 @@ export function createKernelProductionDispatcher(
         actor:input.actor,
         authorityCeiling:"GREEN",
         completionDefinition:"sam.read_report.v1",
+        acceptanceContract:input.acceptanceContract,
         domain:"chatgpt_goal_submission"
       });
       return {
