@@ -18,9 +18,9 @@ export const commandCenterHtml=`<!doctype html>
   <div class="top"><div class="brand"><h1>SAM Executive Command Center</h1><p>Owner view of goals, execution, verification and finance.</p></div><div class="badge" id="status">Connecting…</div></div>
   <div class="card form" id="authPanel" style="margin-bottom:16px">
     <label for="bearerToken">Command Center bearer token</label>
-    <input id="bearerToken" type="password" autocomplete="off" placeholder="Enter your token from Replit Secrets"/>
+    <input id="bearerToken" type="password" autocomplete="off" placeholder="Enter the existing token for this Command Center service"/>
     <button class="btn" onclick="connect()">Connect</button>
-    <p class="muted">Authentication is required. The token is kept only in this browser session; never put it in a URL or chat.</p>
+    <p class="muted">Use the existing bearer token configured for this Command Center service. The token is kept only in this browser session; never put it in a URL or chat.</p>
     <div id="authError" class="err"></div>
   </div>
   <div class="grid" id="metrics"></div>
@@ -80,7 +80,18 @@ async function api(path,options={}){
   const headers={...(options.headers||{}),Authorization:"Bearer "+token};
   if(options.body) headers["Content-Type"]="application/json";
   const r=await fetch(path,{...options,headers});
-  if(r.status===401){sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;throw new Error("Unauthorized. Enter the correct bearer token.");}
+  if(r.status===401){
+    sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;
+    let body;try{body=await r.json()}catch{}
+    let message="Authentication was rejected. Check this Command Center service's existing authentication configuration.";
+    if(body&&body.error==="unauthorized"){
+      if(body.reason==="missing_authorization")message="Authentication rejected: the service received no Authorization header.";
+      if(body.reason==="invalid_bearer_scheme")message="Authentication rejected: the service did not receive the required Bearer scheme.";
+      if(body.reason==="bearer_rejected")message="Authentication rejected: the service rejected the Bearer credential. Confirm the existing token configured for this Command Center service.";
+    }
+    if(typeof body?.request_id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(body.request_id))message+=" Request ID: "+body.request_id;
+    throw new Error(message);
+  }
   const body=await r.json();
   if(!r.ok) throw new Error(body.error||"Request failed");
   return body;

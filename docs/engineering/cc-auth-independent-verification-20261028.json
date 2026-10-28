@@ -1,0 +1,151 @@
+{
+  "schema": "sam.cc_auth.independent_verification.v1",
+  "status": "PASS_WITH_SCOPED_LIMITATIONS",
+  "verified_at_utc": "2026-10-28T02:53:32.030Z",
+  "repository": "/workspace/scratch/66eecfb7baca/sam-greenfield",
+  "head": "7dfe995159bfcb8038c981530f3e34b9a3e5b7c9",
+  "parent_reported_content_sha256": "f62a93ffae1d625bd79d3f7daac74a80d248063b91bd6a5d3436d7767e4407b3",
+  "scope": {
+    "read_only_verification": true,
+    "code_changes": false,
+    "tests_added": false,
+    "native_database_access": false,
+    "production_access": false,
+    "remote_changes": false,
+    "real_credentials_accessed": false,
+    "source_instructions_read": [
+      "AGENTS.md",
+      "docs/engineering-memory/POLICY.md",
+      "_bmad-output/plan-sam-auth-diagnosis-20261028.md"
+    ],
+    "parent_memory_restore_reused": true
+  },
+  "commands": [
+    {
+      "command": "DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test tests/isolated/command_center_auth.ts",
+      "chunk_id": "c3edf5",
+      "wall_time_seconds": 0.287529335,
+      "exit_code": 0,
+      "original_token_count": 171,
+      "output": "✔ HTTP rejection classifies transport without serializing caller data; exact bearer and guards remain enforced (75.302833ms)\n✔ routes that require a configured token retain denial and conservative diagnostics (9.874082ms)\n✔ connect emits exact synthetic Bearer on same-origin API calls before concurrent rejections and clears input/session (2.959133ms)\n✔ UI renders bounded classified 401s, tolerates non-JSON proxy 401s, and omits unsafe metadata (5.725609ms)\n✔ successful connect retains existing UI success behavior with synthetic responses (0.977768ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 314.03182\n"
+    },
+    {
+      "command": "npm run typecheck",
+      "chunk_id": "eea9ad",
+      "wall_time_seconds": 1.001319657,
+      "original_token_count": 32,
+      "output": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n\n> typecheck\n> tsc --noEmit\n\n",
+      "exit_code": 0,
+      "completion_poll": {
+        "exit_code": 0,
+        "output": ""
+      }
+    },
+    {
+      "command": "git diff --check",
+      "chunk_id": "af60e9",
+      "wall_time_seconds": 2.1533e-05,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "command": "DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test --test-name-pattern='^(independent UI: emitted embedded JavaScript|Command Center continuity endpoints require authentication|read-only Command Center rejects new internal mutations|independent Command Center read-only mode)' tests/isolated/sam_reliability_independent.ts tests/isolated/executive_continuity.ts tests/isolated/executive_continuity_independent.ts",
+      "chunk_id": "37e047",
+      "wall_time_seconds": 0.56545087,
+      "exit_code": 0,
+      "original_token_count": 428,
+      "output": "{\"event\":\"command_center_auth_rejected\",\"method\":\"GET\",\"reason\":\"missing_authorization\",\"request_id\":\"5e005593-85b4-40fd-8ab6-6355eae29930\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"371de1ad-faf3-4bbf-a268-65c3b278b1a9\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"GET\",\"reason\":\"missing_authorization\",\"request_id\":\"0e00e1df-4514-4988-9640-63d6c376eee3\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"38929220-76b2-4459-928c-fd376faa2c68\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"e51bdfba-e962-4d1f-9494-c4e118ee7969\"}\n✔ Command Center continuity endpoints require authentication and render report approval/delivery limits as text (70.412616ms)\n✔ read-only Command Center rejects new internal mutations and release MCP remains read-only (37.362642ms)\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"dd98f4d5-1645-4605-9efa-d6d8482909ec\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"f53f9ec5-41cd-41e3-8020-36f6aac3ff8c\"}\n{\"event\":\"command_center_auth_rejected\",\"method\":\"POST\",\"reason\":\"missing_authorization\",\"request_id\":\"35713046-4bdb-4f01-82ca-26254da67ef7\"}\n✔ independent Command Center read-only mode rejects all new POST writes before database access (67.422198ms)\n✔ independent UI: emitted embedded JavaScript parses and renders original report/wait fields as text (4.719259ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 599.115741\n"
+    }
+  ],
+  "counts": {
+    "focused_auth": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "selected_existing_regressions": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "typecheck_exit": 0,
+    "diffcheck_exit": 0
+  },
+  "matrix": [
+    {
+      "scenario": "missing_authorization",
+      "result": "PASS",
+      "evidence": "Focused HTTP test: 401/error unauthorized/missing_authorization; random UUID; denial on protected owner-memory route with unusable synthetic DB URL."
+    },
+    {
+      "scenario": "wrong_scheme",
+      "result": "PASS",
+      "evidence": "Focused HTTP test: Basic and lowercase bearer classify invalid_bearer_scheme; no serialized caller data."
+    },
+    {
+      "scenario": "rejected_bearer",
+      "result": "PASS",
+      "evidence": "Focused HTTP test: wrong token, altered suffix and changed case classify bearer_rejected; exact comparison and timingSafeEqual implementation unchanged."
+    },
+    {
+      "scenario": "accepted_bearer",
+      "result": "PASS_SCOPED",
+      "evidence": "Exact synthetic Bearer reaches OPTIONS 204 and existing CORS response. Existing read-only tests reach authenticated 405 without database access; no accepted business/database handler exercised."
+    },
+    {
+      "scenario": "bad_host_origin",
+      "result": "PASS",
+      "evidence": "Focused HTTP test: valid synthetic Bearer still returns original host_not_allowed and origin_not_allowed 403; source order unchanged."
+    },
+    {
+      "scenario": "browser_submission",
+      "result": "PASS_SYNTHETIC_VM",
+      "evidence": "Embedded script constructs exact Authorization Bearer headers for /api/overview, /api/goals and /api/finance/latest before concurrent 401 responses; clears visible input and rejected session token. Successful synthetic connect remains LIVE and fetches notifications."
+    },
+    {
+      "scenario": "generic_non_json_proxy_401",
+      "result": "PASS",
+      "evidence": "VM test verifies classified and unknown/non-JSON bodies; fixed neutral fallback survives JSON parse failure, rejects unsafe metadata, omits arbitrary error/reason, and accepts only lower-case UUIDv4 request IDs."
+    },
+    {
+      "scenario": "diagnostics_redaction",
+      "result": "PASS",
+      "evidence": "Exact structured log-object assertions plus sentinel absence cover synthetic auth/query/cookie/request-ID/path values; unrecognized HTTP method maps OTHER. Source event contains only fixed event, bounded method/reason and random UUID, no path/hash/length."
+    }
+  ],
+  "truthfulness_findings": [
+    "No new historical root-cause attribution is supported or made by this verification.",
+    "UI rejected-Bearer message identifies the service rejection and asks to confirm that service's existing configuration; generic/proxy failure does not assert owner supplied a wrong token.",
+    "401/error unauthorized compatibility preserved with additive reason/request_id; changed responses set no-store in source.",
+    "Host/origin checks, exact Bearer extraction/comparison, read-only checks, business handlers and tenant/RLS implementation are unchanged in the scoped diff."
+  ],
+  "limitations": [
+    "Local synthetic HTTP and VM execution only; not authenticated browser, current live transport or deployed revision evidence.",
+    "No real credentials, native/production database, native phase19 suite, broad 36-test suite, provider calls or business writes used.",
+    "Accepted-token HTTP success uses the existing DB-free OPTIONS path; no authenticated database query or tenant/RLS runtime check performed.",
+    "Parent-reported aggregate snapshot hash recorded for correlation; independently computed per-file SHA-256 values are the source binding here.",
+    "npm printed a non-failing Unknown env config http-proxy warning; TypeScript completed exit 0.",
+    "Source instructions permit parent-owned archive/publication; this verifier produced only an external evidence file."
+  ],
+  "findings": [],
+  "verified_source_files": [
+    {
+      "path": "apps/command-center/src/http.ts",
+      "sha256": "dd7bd049d923cbb78786c677f94e89943b24ba4b3ff0269ac72c03afa4682bfe"
+    },
+    {
+      "path": "apps/command-center/src/ui.ts",
+      "sha256": "9e598035197576af0c09df1b277363a2bc89bcd5ee803e79f88bf9a91ee485d4"
+    },
+    {
+      "path": "tests/isolated/command_center_auth.ts",
+      "sha256": "01dfcf4028a21e1e27987dedab2e3a03dd915649b1a841b9344f33b75a21eb79"
+    }
+  ],
+  "evidence_representation_note": "Parent normalized source-hash map to explicit path/sha256 records after Gitleaks mistook auth test file SHA-256 for an API key; all digest values independently recomputed, unchanged. Original verifier output and command receipts preserved."
+}

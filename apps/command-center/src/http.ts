@@ -1,5 +1,5 @@
 import {buildRevision} from '../../../packages/shared/src/buildRevision';
-import {timingSafeEqual} from "node:crypto";
+import {randomUUID,timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
 import {commandCenterHtml} from "./ui";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
@@ -11,6 +11,15 @@ function bearer(req:IncomingMessage):string{const h=req.headers.authorization??"
 function safeEqual(a:string,b:string):boolean{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y)}
 function host(req:IncomingMessage):string{try{return new URL("http://"+(req.headers.host??"")).hostname.toLowerCase()}catch{return ""}}
 function json(res:ServerResponse,status:number,body:unknown){res.statusCode=status;res.setHeader("content-type","application/json");res.end(JSON.stringify(body))}
+function rejectAuthentication(req:IncomingMessage,res:ServerResponse,configurationUnavailable=false){
+  const authorization=req.headers.authorization;
+  const reason=configurationUnavailable?"authentication_unavailable":authorization===undefined?"missing_authorization":!authorization.startsWith("Bearer ")?"invalid_bearer_scheme":"bearer_rejected";
+  const request_id=randomUUID();
+  const method=["GET","POST","OPTIONS","HEAD","PUT","PATCH","DELETE"].includes(req.method??"")?req.method:"OTHER";
+  process.stderr.write(JSON.stringify({event:"command_center_auth_rejected",method,reason,request_id})+"\n");
+  res.setHeader("cache-control","no-store");
+  json(res,401,{error:"unauthorized",reason,request_id});
+}
 async function readJson(req:IncomingMessage):Promise<any>{const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));if(chunks.reduce((n,b)=>n+b.length,0)>64*1024)throw new Error("request too large");const raw=Buffer.concat(chunks).toString("utf8");return raw?JSON.parse(raw):{}}
 
 export interface CommandCenterHttpOptions{
@@ -75,7 +84,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
       const origin=req.headers.origin;
       if(origin&&origins.size>0&&!origins.has(origin)){json(res,403,{error:"origin_not_allowed"});return}
-      if(token&&!safeEqual(bearer(req),token)){json(res,401,{error:"unauthorized"});return}
+      if(token&&!safeEqual(bearer(req),token)){rejectAuthentication(req,res);return}
 
       if(req.method==="OPTIONS"){
         res.statusCode=204;
@@ -90,7 +99,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       const ownerMemory=new URL(req.url??'/',"http://local");
       const notificationAck=req.url?.match(/^\/api\/notifications\/([0-9a-fA-F-]+)\/ack$/);
       if(ownerMemory.pathname==='/api/owner-memory'||ownerMemory.pathname==='/api/notifications'||req.url==='/api/notifications/poll'||notificationAck){
-        if(!token){json(res,401,{error:'unauthorized'});return;}
+        if(!token){rejectAuthentication(req,res,true);return;}
         if(req.method==='POST'&&process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){res.setHeader('allow','GET');json(res,405,{error:'command_center_read_only'});return;}
         if(req.method==='GET'&&ownerMemory.pathname==='/api/owner-memory'){
           json(res,200,{ok:true,data:await commandCenterOwnerMemory(options.legalEntityId,ownerMemory.searchParams.get('query')??'')});return;
@@ -111,7 +120,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
         json(res,200,{ok:true,data:await commandCenterOverview(options.legalEntityId)});return;
       }
       if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
-        if(!token){json(res,401,{error:"unauthorized"});return;}
+        if(!token){rejectAuthentication(req,res,true);return;}
         try{json(res,200,{ok:true,data:await commandCenterDevelopmentTelemetry(options.legalEntityId,token)});}
         catch{json(res,503,{error:"telemetry_unavailable",details:"withheld"});}
         return;

@@ -1,0 +1,105 @@
+{
+  "schema": "sam.cc_auth.diagnosis.v1",
+  "baseline_head": "7dfe995159bfcb8038c981530f3e34b9a3e5b7c9",
+  "baseline_application": "62ccbdbb94e080f22425f64396c894270ee551aa",
+  "historical_failure_cause": "UNKNOWN",
+  "confirmed_defects": [
+    "Production UI incorrectly directed owner to Replit Secrets",
+    "All401 responses were described as incorrect token without distinguishing missing header, wrong scheme, rejected bearer, missing configuration or proxy rejection"
+  ],
+  "service_metadata": {
+    "workspace": "tea-db35rbflot8c739g8rhg",
+    "service": "srv-db37vbvlk1mc739o0b6g",
+    "plan": "free",
+    "branch": "delivery/sam-reliability-reviewed-20261028",
+    "auto_deploy": "off",
+    "start_command": "sh deploy/render/start.sh command-center",
+    "latest_live_deploy": "dep-dbglcqegekts7388ksfg"
+  },
+  "configuration_conclusions": [
+    "Token variable name is SAM_COMMAND_CENTER_BEARER_TOKEN; no value was inspected",
+    "Observed API401 from matching-source path proves a configured token guard is active under the inspected app source; it does not establish that configured value is the expected owner value",
+    "Launcher configures allowed host and origin from Render external hostname; matching-origin401 and foreign-origin403 confirmed without real credentials",
+    "Production entrypoint requires nonempty token, allowed host and valid restricted tenant binding; /readyz returned ready200"
+  ],
+  "historical_logs": {
+    "window_start": "2026-10-28T02:28:00Z",
+    "window_end": "2026-10-28T02:34:00Z",
+    "app_entries": 0,
+    "request_entries": 0,
+    "meaning": "No entries available; not proof of no requests or root cause"
+  },
+  "baseline_live_negative_controls": [
+    {
+      "case": "missing_header",
+      "status": 401,
+      "error": "unauthorized"
+    },
+    {
+      "case": "synthetic_basic",
+      "status": 401,
+      "error": "unauthorized"
+    },
+    {
+      "case": "synthetic_wrong_bearer",
+      "status": 401,
+      "error": "unauthorized"
+    },
+    {
+      "case": "same_origin_synthetic_bearer",
+      "status": 401,
+      "error": "unauthorized"
+    },
+    {
+      "case": "foreign_origin_synthetic_bearer",
+      "status": 403,
+      "error": "origin_not_allowed"
+    }
+  ],
+  "reviews": {
+    "quick": "NO_FINDINGS",
+    "independent_security": "NO_FINDINGS",
+    "independent_verifier": "PASS_WITH_SCOPED_LIMITATIONS"
+  },
+  "local_tests": {
+    "new_auth": {
+      "pass": 5,
+      "fail": 0
+    },
+    "selected_existing_cc": {
+      "pass": 4,
+      "fail": 0
+    },
+    "typecheck_exit": 0,
+    "diffcheck_exit": 0
+  },
+  "secret_scan": {
+    "scanner": "original bundled Gitleaks8.30.1",
+    "mode": "directory",
+    "exit": 0,
+    "findings": 0,
+    "scope": [
+      "apps/command-center/src/http.ts",
+      "apps/command-center/src/ui.ts",
+      "tests/isolated/command_center_auth.ts",
+      "_bmad-output/plan-sam-auth-diagnosis-20261028.md",
+      "docs/engineering/cc-auth-diagnosis-20261028.json",
+      "docs/engineering/cc-auth-independent-verification-20261028.json"
+    ],
+    "exclusions": "unchanged base, full history and dependencies; no scanner rules weakened",
+    "triage": {
+      "rule": "generic-api-key",
+      "file": "docs/engineering/cc-auth-independent-verification-20261028.json",
+      "original_line": 11,
+      "verdict": "FALSE_POSITIVE_FILE_SHA256",
+      "proof": "Recomputed all three file SHA-256 digests; exact matches. Hash-map representation normalized to explicit path and sha256 records; no rules/allowlists/exclusions changed."
+    }
+  },
+  "live_patch_status": "PENDING_DEPLOYMENT",
+  "authenticated_browser_acceptance": "BLOCKED_NO_AUTHENTICATED_SESSION",
+  "real_credentials_read_or_changed": false,
+  "business_data_written": false,
+  "real_notification_acknowledged": false,
+  "new_resources_costs_permissions": false,
+  "recovery_analysis_mail_execution": false
+}
