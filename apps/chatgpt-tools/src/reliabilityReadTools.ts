@@ -30,7 +30,8 @@ export function createReliabilityReadTools():RegisteredChatGPTTool[]{return [
   if(typeof args.report_id!=='string'||!uuid.test(args.report_id))throw Error('INVALID_REPORT_ID');
   const row=(await c.query(`SELECT r.* FROM goal_read_reviews r JOIN goals g ON g.id=r.goal_id
    WHERE r.id=$1 AND g.company_scope=$2`,[args.report_id,id])).rows[0];
-  return {report:row??null,interpretation:row?describeSavedReports([row])[0]:null,visibility:'CURRENT_ROLE_RLS_VISIBLE_REPORTS',nullReason:row?null:'NOT_FOUND_OR_NOT_VISIBLE_UNDER_CURRENT_RLS',executionPerformed:false,semanticValidation:row?(row.decision?.report?.semanticPolicy??'HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED'):null};
+  const successor=row?.revision===1?(await c.query(`SELECT r.id,r.report_hash,r.decision FROM goal_read_reviews r JOIN goals g ON g.id=r.goal_id WHERE r.goal_id=$1 AND r.plan_id=$2 AND g.company_scope=$3 AND r.decision->'supersedesReport'->>'id'=$4`,[row.goal_id,row.plan_id,id,row.id])).rows:[];
+  return {report:row??null,interpretation:row?describeSavedReports([row,...successor])[0]:null,visibility:'CURRENT_ROLE_RLS_VISIBLE_REPORTS',nullReason:row?null:'NOT_FOUND_OR_NOT_VISIBLE_UNDER_CURRENT_RLS',executionPerformed:false,semanticValidation:row?(row.decision?.report?.semanticPolicy??'HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED'):null};
  }),
  tool('sam_memory_status','Inspect scoped execution and operational memory availability; engineering memory is maintained separately.',schema({}),async(c,id)=>{
   const operational=(await c.query(`SELECT COUNT(*)::int AS count FROM memory_records WHERE scope->>'legal_entity_id'=$1`,[id])).rows[0];

@@ -79,6 +79,7 @@ export async function followupFixture(privateTimeline?:string,candidate:string=a
  ALTER TABLE verification_contracts ADD COLUMN description text,ADD COLUMN created_at timestamptz DEFAULT now(),ADD COLUMN capability_pattern text;
  ALTER TABLE model_calls ADD COLUMN model_version text,ADD COLUMN legal_entity_id uuid;`);
  await sql.exec(await readFile(new URL('../../packages/db/integration-migrations/00101_goal_read_reviews.sql',import.meta.url),'utf8'));
+ await sql.exec(await readFile(new URL('../../packages/db/integration-migrations/00106_read_review_revisions.sql',import.meta.url),'utf8'));
  const migration=await readFile(new URL('../../packages/db/migrations/00004_outbox_and_side_effect.sql',import.meta.url),'utf8');
  await sql.exec(migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION acquire_lease')));
  const queries:string[]=[],wire:any[]=[];

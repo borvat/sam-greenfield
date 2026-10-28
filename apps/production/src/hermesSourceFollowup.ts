@@ -93,7 +93,7 @@ export async function saveAcceptedFollowupReport(db:any,input:{goalId:string;pla
   sourceReuse:binding,executionId:input.executionId,verificationId:input.verificationId,report:r.report};
  const reportHash=sha256Hex(decision);
  const saved=(await db.query(`INSERT INTO goal_read_reviews(goal_id,plan_id,round,decision,report_hash)
-   VALUES($1,$2,1,$3::jsonb,$4) ON CONFLICT(goal_id,plan_id) DO NOTHING RETURNING id,report_hash`,
+   VALUES($1,$2,1,$3::jsonb,$4) ON CONFLICT(goal_id,plan_id,revision) DO NOTHING RETURNING id,report_hash`,
   [input.goalId,input.planId,JSON.stringify(decision),reportHash])).rows[0];
  if(saved)return saved.id as string;
  const previous=(await db.query('SELECT id,report_hash FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[input.goalId,input.planId])).rows[0];

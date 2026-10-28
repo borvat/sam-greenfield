@@ -1,0 +1,168 @@
+{
+  "schema": "sam.independent_review_recovery_local.v1",
+  "observer": "independent_verifier",
+  "observed_date": "2026-10-28",
+  "baseline": "f3539d7b1f154758449f32ba7f9c93fb43579077",
+  "production_mutations": false,
+  "source_reads": 0,
+  "provider_calls": 0,
+  "checks": [
+    {
+      "name": "Core review acceptance on disposable embedded PostgreSQL",
+      "command": "DATABASE_URL=postgres://synthetic@127.0.0.1:1/synthetic NODE_ENV=test node --import tsx tests/isolated/review_reliability_pglite.ts",
+      "status": "PASS",
+      "exit_code": 0,
+      "reported_request_bytes": [
+        22442,
+        19413
+      ],
+      "limit": 48000,
+      "unit": "One executable core acceptance script; its assertions are not counted as individual node:test cases",
+      "scope": [
+        "provider HTTP deadline actually aborts a local synthetic transport",
+        "review and critique byte ceilings",
+        "large source projections retain totals/periods/provenance/omissions",
+        "multi-byte/escaping oversized input does not invoke provider",
+        "preflight rejection writes no review-budget reservation",
+        "saved-evidence-only recovery reuses execution/work counts",
+        "immutable same-plan revision and foreign-goal supersession rejection",
+        "bounded attempts and calls",
+        "owner-only continuation",
+        "notification completion deduplication and actionable waiting reason",
+        "explicit Arabic objective crosses UTF-8 ceiling while character count fits; zero calls/budget rows",
+        "four large prior narratives omitted explicitly while unmet requirements remain",
+        "mismatched EAN and null stock/amount/currency/UNKNOWN tax remain unchanged in saved blocked evidence",
+        "slow audit may reserve callsUsed1 while actual gatewayInvocations0 is recorded",
+        "actual tenant-bound sam_get_report old/new successor metadata and original hash",
+        "waiting progress notice links exact blocked revision ID/hash and preserves actionable requiredAction",
+        "accounting fields explicitly distinguish conservative reservations from gateway invocations and historical unknowns"
+      ]
+    },
+    {
+      "name": "Affected existing isolated regression suites",
+      "command": "DATABASE_URL=postgres://synthetic@127.0.0.1:1/synthetic NODE_ENV=test node --import tsx --test tests/isolated/sam_google_review.ts tests/isolated/sam_reliability.ts tests/isolated/sam_reliability_independent.ts tests/isolated/executive_continuity.ts tests/isolated/executive_continuity_independent.ts",
+      "status": "PASS",
+      "exit_code": 0,
+      "tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "duration_ms": 28106.621126,
+      "rerun_reason": "Final amendment changed notification report linkage and review accounting meanings; all34 cases rerun on final source, no historical pass substituted"
+    },
+    {
+      "name": "TypeScript",
+      "command": "npm run typecheck",
+      "status": "PASS",
+      "exit_code": 0
+    },
+    {
+      "name": "Whitespace patch validation",
+      "command": "git diff --check",
+      "status": "PASS",
+      "exit_code": 0
+    },
+    {
+      "name": "Original baseline size-regression module red to current projection green",
+      "status": "PASS",
+      "evidence": "docs/engineering/review-recovery-independent-red-green-20261028.json",
+      "old_bytes": 110380,
+      "new_bytes": 31446,
+      "limit": 48000
+    },
+    {
+      "name": "One-shot migration operator synthetic tests",
+      "command": "node --test tests/isolated/review_revision_operator.cjs",
+      "status": "PASS",
+      "exit_code": 0,
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "limits": "Synthetic query model only; no native migration or credential authentication tested",
+      "scope": [
+        "exact reviewed SQL SHA256",
+        "single apply and idempotent ledger replay",
+        "wrong principal/hash/owner and ACL-policy fingerprint mismatch rollback",
+        "synthetic complex credential driver parsing without disclosure"
+      ]
+    },
+    {
+      "name": "Existing source-followup report INSERT schema compatibility",
+      "command": "DATABASE_URL=postgres://synthetic@127.0.0.1:1/synthetic NODE_ENV=test node --import tsx --test tests/isolated/hermes_report_revision_sql.ts",
+      "status": "PASS",
+      "exit_code": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Exact production INSERT SQL executes against both real migrations; retry does not duplicate revision1 or rewrite it after revision2",
+      "providerCalls": 0,
+      "sourceReads": 0,
+      "limits": "SQL compatibility only; no Hermes runtime/model/source path invoked"
+    }
+  ],
+  "initial_failure_preserved": {
+    "command": "Core embedded PostgreSQL runner before fixture tenant-context correction",
+    "status": "FAIL",
+    "error": "AUTHORIZED_COMPANY_CONTEXT_REQUIRED",
+    "location": "tests/core/reviewReliability.ts:144 pollScopedOwnerNotifications",
+    "old_test_sha256": "75d391f89ee5ac5ebc96351a7dccfee0f560a476baa7f1c34b4e62da73cd9445",
+    "resolution": "Fixture now supplies its seeded organization/entity through setTenantContext inside withTransaction; production owner-scope guard remains unchanged",
+    "rerun_status": "PASS"
+  },
+  "tested_source_sha256": {
+    "apps/production/src/readGoalReview.ts": "cab2e8e631a50e855c369565e49d49aead33eebc70064a7bda088717a0c6ea34",
+    "apps/production/src/reviewInputBudget.ts": "4ad7ecb5ecc366e7858c1151813f71f680caf70a1267e7f2ea95303b2d800b4e",
+    "apps/production/src/readReviewContinuation.ts": "1126f0a5167eacfce4bbd714e159a877842abca05a9d0f99e3e1a626f680f740",
+    "apps/kernel/src/readReviewBudget.ts": "5b034c05ac17c36af0f629e23fd8e917a616796e10c693899a4462013c9343a2",
+    "apps/kernel/src/continuation.ts": "3f2c58360f443eb122427613cb3ec485d7d7707bbb32f6ecf8c8fa22585539f9",
+    "apps/notifications/src/center.ts": "747bf9a9df3733dd5fb656bc0ba7b2f8577a5991c3624127564eaaafe160ef59",
+    "apps/chatgpt-tools/src/reliabilityReadTools.ts": "57b63a6b289edb2332e5d2d2c98e4307351390bd19b50c1e1699326239bc0250",
+    "apps/chatgpt-tools/src/continuityReadSidecar.ts": "490908bf0d88eded70fa12fdfed7c7835b5211a78a04a6492a9d53994a3cc289",
+    "packages/db/src/integrationProfile.ts": "d3a9132910825df63c89bfe9c26865462ba96bb25586b6fb6f2be8d0cfa9845c",
+    "packages/shared/src/savedReportSemantics.ts": "bc25f187de7c8e06dd967827601a39af7149ad42a2080c025a7c874732cb518b",
+    "packages/db/integration-migrations/00106_read_review_revisions.sql": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+    "tests/core/reviewReliability.ts": "f673fe96125d64969699329ab812352d4c661eec53738f202e92e2dd6c39e3fe",
+    "tests/isolated/review_reliability_pglite.ts": "0d1c568602be09a3daf5cf60ed8d236509a48ac6a8734d5a2a71fc5988e9e450",
+    "scripts/release/review-revision-operator.cjs": "a57c9a9920334b5fa1e95be216a35bc2be6fcda7eda1313c508d6edc74981e68",
+    "tests/isolated/review_revision_operator.cjs": "d7ede0b985f416c4c9d899cb143a4690627e1bd816b2ac6a6a42970cd2bd53d4",
+    "apps/production/src/hermesSourceFollowup.ts": "6f4fc7d2d2b0dad32cde6910df3db664160ca09f34875cad1355c015369ed66f",
+    "tests/isolated/hermes_source_followup_fixture.ts": "088790487296d67f2d4460a7d310624e26563cf79510112888a226742e957eb5",
+    "tests/isolated/hermes_report_revision_sql.ts": "4c9571b861f8cd11567cc5d99164365650751c376ea30b3896c03d9d0c81f341"
+  },
+  "limits": [
+    "Core runner stubs session advisory locks for a single-client embedded engine; no concurrent/native lock or production restricted-role proof is claimed",
+    "Existing isolated tests include local modeled RLS and authority negatives; no new native production admission or live UI proof is claimed",
+    "34 node:test cases overlap implementer and historical suites; counts are not additive across workers",
+    "Exact real saved-goal 50637-byte reconstruction was observed by root separately, not rerun as a live independent source call",
+    "Standalone old-vs-new 61-descriptor size regression is independently authored and separately labeled synthetic",
+    "No live recovery, new acceptance, migration or deployment has been performed by this observer",
+    "One added source-followup SQL compatibility case and four operator cases are distinct local checks; earlier34case worker counts still overlap and are not additive across agents"
+  ],
+  "previous_core_pass_sha256": "92780d26c1a4277602fa812c3e03a07ede0347d1ffdcf2a003275eb378d629c8",
+  "open_findings": [],
+  "resolved_findings": [
+    {
+      "id": "operator-percent-credential-roundtrip",
+      "severity": "P2",
+      "file": "scripts/release/review-revision-operator.cjs",
+      "observed": "Assigning raw hidden password into URL.password changes a synthetic percent-encoded sequence when pg-connection-string parses it",
+      "recommendation": "Use a separate driver password field or explicit safe encoding; add synthetic credential round-trip test before operator handoff",
+      "real_credential_used": false,
+      "native_operation_performed": false,
+      "status": "RESOLVED",
+      "resolution": "Operator applies encodeURIComponent before URL password serialization; added synthetic percent-encoded and complex Unicode credential round-trip test passed without real credentials"
+    }
+  ],
+  "finalLocalVerdict": "PASS on final verified source hashes, including final waiting-report/accounting amendment; native migration/deployment/recovery/acceptance remain unverified",
+  "prior_passed_source_hashes": {
+    "before_final_waiting_report_and_accounting_amendment": {
+      "readGoalReview": "77fc82362698387a7e8c76690a2f526b415caf44922bf10263b32c822f62c612",
+      "notificationCenter": "18ace2562a8f4c4c2c13fd6a084cfa541de79bdaf6b0b20099d156e0836573cc",
+      "coreTest": "64b71955592095806faffba9f94b9e4bac96039551ed878e46db0627e38e9b3c"
+    }
+  },
+  "final_source_checked_after_execution": "2026-10-28T07:03:11.488Z"
+}

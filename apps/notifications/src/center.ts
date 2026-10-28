@@ -92,7 +92,10 @@ async function projectGoalNotificationEvent(c:any,event:any,companyId?:string){
    if(goal?.company_scope && kind && goal.state===state && !(goal.domain==='sam_perception'&&kind==='COMPLETED')){
     const report=kind==='COMPLETED'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
       WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='complete'
-        AND ($3::text IS NULL OR report_hash=$3) ORDER BY round DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id,event.payload?.report_hash??null])).rows[0]:null;
+        AND ($3::text IS NULL OR report_hash=$3) ORDER BY round DESC,coalesce((decision->'runtimeReview'->>'attempts')::int,0) DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id,event.payload?.report_hash??null])).rows[0]:
+     kind==='PROGRESS'&&goal.completion_definition==='sam.read_report.v1'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
+      WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='blocked'
+      ORDER BY revision DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id])).rows[0]:null;
     const verified=await c.query(`SELECT e.id,v.result FROM executions e
       LEFT JOIN LATERAL(SELECT result FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) v ON true
       WHERE e.goal_id=$1 ORDER BY e.started_at,e.id`,[goal.id]);
@@ -109,7 +112,7 @@ async function projectGoalNotificationEvent(c:any,event:any,companyId?:string){
       summary,reasonCode:reasonCode(event.payload?.reason),reason:reasonLabel(event.payload?.reason),replans:attempts,
       failedAttempts:failedWork.map((r:any)=>({capabilityId:r.capability_id,reasonCode:reasonCode(r.wake_reason),attempt:Number(r.attempt)})),
       verifiedExecutions:verified.rows.filter((r:any)=>r.result==='VERIFIED').length,
-      totalExecutions:verified.rows.length,requiredAction:kind==='APPROVAL'?'REVIEW_OWNER_DECISION':kind==='FAILED'?'REVIEW_FAILURE':'NONE',
+      totalExecutions:verified.rows.length,requiredAction:kind==='APPROVAL'?'REVIEW_OWNER_DECISION':kind==='FAILED'?'REVIEW_FAILURE':kind==='PROGRESS'?(goal.completion_definition==='sam.read_report.v1'?'INSPECT_REVIEW_DIAGNOSTICS_AND_BUDGET_THEN_OWNER_CONTINUE_IF_ELIGIBLE':'REVIEW_WAITING_DEPENDENCY'):'NONE',
       approvalRequests:approvals,report:report?{id:report.id,hash:report.report_hash}:null,
       evidenceExecutionIds:verified.rows.filter((r:any)=>r.result==='VERIFIED').map((r:any)=>r.id),
       eventAt:event.created_at,deliveryMeaning:'UNROUTED means stored internally, not sent to the owner'};

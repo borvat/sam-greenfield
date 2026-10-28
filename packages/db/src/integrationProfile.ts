@@ -27,7 +27,7 @@ export function integrationManifest(){return readdirSync(integrationDirectory).f
 });}
 // Operator API only. Not called at runtime or by any production startup hook.
 export async function applyIntegrationProfile(c:Pick<PoolClient,'query'>){
- const manifest=integrationManifest();if(manifest.length!==8)throw Error('INTEGRATION_MANIFEST_REVIEW_REQUIRED');
+ const manifest=integrationManifest();if(manifest.length!==9)throw Error('INTEGRATION_MANIFEST_REVIEW_REQUIRED');
  await c.query('BEGIN');
  try{
   await c.query("SELECT pg_advisory_xact_lock(hashtext('sam-integration-migrations'))");

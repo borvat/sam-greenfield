@@ -22,6 +22,6 @@ export async function readContinuitySidecar(context:OwnerContext,objective='',go
 }
 
 export async function readSavedReports(goalId:string){
- try{return await withTransaction(async client=>{const availability=await access(client,'goal_read_reviews');return {availability,records:availability==='AVAILABLE'?(await client.query('SELECT * FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round',[goalId])).rows:[]};})}
+ try{return await withTransaction(async client=>{const availability=await access(client,'goal_read_reviews');return {availability,records:availability==='AVAILABLE'?(await client.query('SELECT * FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round',[goalId])).rows.sort((a:any,b:any)=>a.round-b.round||Number(a.revision??1)-Number(b.revision??1)):[]};})}
  catch{return {availability:'CURRENT_ROLE_REPORT_READ_UNAVAILABLE',records:[]}}
 }
