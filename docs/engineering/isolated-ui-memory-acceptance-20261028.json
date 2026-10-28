@@ -1,0 +1,110 @@
+{
+  "schema": "sam.isolated_ui_memory_acceptance.v1",
+  "observedDate": "2026-10-28",
+  "revision": "9005b02254c4f55d307b4ffbb38f832e45612b60",
+  "browser": "ACTUAL_AUTHENTICATED_CLOUD_BROWSER",
+  "service": "srv-dbe27ics728c738tuoc0",
+  "window": {
+    "explicitOwnerConsentMinutes": 8,
+    "resumeAt": "2026-10-28T05:29:16.748495Z",
+    "suspendAt": "2026-10-28T05:34:52.476392Z",
+    "durationSeconds": 335.727897,
+    "independentlyConfirmedSuspended": true,
+    "planUnchanged": "0.5c-512mb"
+  },
+  "authentication": {
+    "result": "PASS",
+    "proof": "Rendered READ ONLY \u00b7 CONNECTED and existing isolated goal cards after reload; no credential inspection",
+    "earlierSuspendedFormResult": "Secure corrected credential request submitted while service suspended; client returned non-JSON gateway error, not an authentication verdict",
+    "approvalBoundary": "Auto-review rejected first resume before credential readiness; no bypass. Owner then explicitly approved8min; retry was approved and executed."
+  },
+  "memory": {
+    "result": "PASS_BROWSER_SAVE_RECALL_WRONG_CONTEXT_AND_EXACT_RETRY",
+    "id": "e7beb6ae-ea5c-496b-9567-d84041ffd5fd",
+    "company": "2796e0d9-1701-4e53-a7ac-d198c0e44c01",
+    "type": "OWNER_DECISION",
+    "status": "APPROVED_RULE",
+    "statement": "TEST DATA ONLY \u2014 SAM UI acceptance fixture; no business decision or execution authority.",
+    "source": "synthetic:ui-acceptance:20261028",
+    "sourceTimestamp": "2026-10-28T05:30:35.447Z",
+    "context": "sam_ui_acceptance_20261028",
+    "approvedBy": "command-center-owner",
+    "createdAt": "2026-10-28T05:31:05.541Z",
+    "approval": "Actual explicit checkbox for labelled TEST DATA ONLY fixture",
+    "retry": {
+      "firstButtonClick": "Genuine handler committed; reviewed gateway intentionally withheld successful response once",
+      "secondButtonClick": "Same unchanged form/key; returned same saved record and source timestamp; no new generated request after success",
+      "idempotencyDigest": {
+        "algorithm": "SHA256",
+        "value": "91ff82b5d4cf8a7dc69105cd2f25f7969cb4536efb2d5690cacf265fcf2a8350"
+      }
+    },
+    "appropriateRecall": {
+      "query": "sam_ui_acceptance_20261028",
+      "records": 1,
+      "sameId": true
+    },
+    "wrongTaskRecall": {
+      "query": "unrelated_ui_fixture_20261028",
+      "records": 0
+    }
+  },
+  "nativeAdjunct": {
+    "channel": "Restricted test role, READ ONLY; not browser evidence",
+    "role": "sam_eval_runtime_20261024",
+    "privateBindingAdmission": true,
+    "memoryCount": 1,
+    "saveAudits": 1,
+    "fixtureNotifications": 0,
+    "scopedEvaluationTrials": 0
+  },
+  "otherCompanyExclusion": {
+    "channel": "Actual production ChatGPT connector; not second-company browser session",
+    "memoryStatusCount": 0,
+    "query": "sam_ui_acceptance_20261028",
+    "recallRecords": 0,
+    "firstParallelRecall": {
+      "isError": true,
+      "error": "Mcp error -32603 Internal error"
+    },
+    "identicalSerializedRetry": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"ok\":true,\"data\":{\"engineering\":{\"availability\":\"SEPARATE_GIT_SYSTEM\"},\"execution\":{\"availability\":\"FEATURE_DISABLED\"},\"operational\":{\"availability\":\"AVAILABLE\",\"records\":[]},\"ownerDecisions\":{\"records\":[],\"relevance\":\"EXPLICIT_CONTEXT_TERMS_IN_TASK\"},\"approvalMeaning\":\"Only APPROVED_RULE or explicit OWNER_DECISION with approval is owner-approved; observations and reinforcement never expand authority.\"},\"error\":null,\"unavailable\":false}"
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    },
+    "transientCause": "UNKNOWN; no code/config/permission mutation",
+    "limit": "No second-company browser switch was available/performed."
+  },
+  "notification": {
+    "result": "BLOCKED_FIXTURE_ELIGIBILITY",
+    "syntheticNotificationId": "a1829450-3810-4aac-8af3-4e0331ff0186",
+    "reason": "Reviewed helper assumes an existing evaluation_trial root; actual isolated company has zero trials. Existing synthetic startup goals are visible.",
+    "seedPerformed": false,
+    "acknowledgementPerformed": false,
+    "businessNotificationAcknowledged": false
+  },
+  "limits": {
+    "productionApplicationUnchanged": true,
+    "modelsOrHermes": false,
+    "externalExecution": false,
+    "mailCollectionOrRecovery": false,
+    "newGoalOrTenant": false,
+    "grantsOrRlsChanged": false
+  },
+  "continuation": "Preserve this successful memory test and fixture. Do not save/retest it with a fresh idempotency key. Prepare only narrow notification fixture eligibility correction with review/tests; service stays suspended. Recheck current role expiry and explicit activation duration before any future live window.",
+  "screenshots": [
+    {
+      "path": "docs/engineering/assets/isolated-ui-memory-success-20261028.jpg",
+      "sha256": "a0d2ac46540f2f75e3d3459d1e0f5277e1a5f0d6f4a1f9138761a2e8705bfb67"
+    },
+    {
+      "path": "docs/engineering/assets/isolated-ui-memory-exclusion-20261028.jpg",
+      "sha256": "8e2cacd844342219f87b3f1e5bc08e9129613a63abd5731e1ecac37a26827e87"
+    }
+  ]
+}

@@ -11,6 +11,32 @@ export const acceptanceHost='sam-isolated-test.onrender.com';
 export const acceptanceService='srv-dbe27ics728c738tuoc0';
 export const acceptanceHeader='x-sam-isolated-acceptance';
 export const notificationDedup='synthetic:ui-acceptance:20261028:notification';
+const startupGoalCompany='2796e0d9-1701-4e53-a7ac-d198c0e44c01';
+const startupGoalObjective='Read-only synthetic startup check. Execution remains disabled.';
+const goalMetadata='g.id,g.company_scope,g.business_id,g.objective,g.domain,g.state,g.authority_ceiling,g.parent_goal_id,g.current_plan_id';
+async function startupNotificationGoals(c:any,entity:string,goalId?:string){
+ if(entity!==startupGoalCompany)return [];
+ return (await c.query(`SELECT ${goalMetadata} FROM goals g
+ JOIN evaluation_companies ec ON ec.legal_entity_id=g.company_scope AND ec.purpose='SYNTHETIC_EVALUATION_ONLY'
+ WHERE g.company_scope=$1 AND ($2::uuid IS NULL OR g.id=$2) AND g.company_scope=$3
+ AND g.business_id='G000001' AND g.objective=$4 AND g.domain='owner_command' AND g.state='NEW' AND g.authority_ceiling='GREEN'
+ AND g.parent_goal_id IS NULL AND g.current_plan_id IS NULL
+ AND NOT EXISTS(SELECT 1 FROM plans p WHERE p.goal_id=g.id)
+ AND NOT EXISTS(SELECT 1 FROM work_queue w WHERE w.goal_id=g.id)
+ AND NOT EXISTS(SELECT 1 FROM executions e WHERE e.goal_id=g.id)`,[entity,goalId??null,startupGoalCompany,startupGoalObjective])).rows;
+}
+/** Read-only discovery refuses ambiguity; output is limited to goal provenance. */
+export async function inspectNotificationGoal(c:any,entity:string){
+ const trials=(await c.query(`SELECT DISTINCT g.id FROM goals g JOIN evaluation_trials t ON t.root_goal_id=g.id AND t.legal_entity_id=g.company_scope
+ JOIN evaluation_companies ec ON ec.legal_entity_id=g.company_scope AND ec.purpose='SYNTHETIC_EVALUATION_ONLY'
+ WHERE g.company_scope=$1`,[entity])).rows;
+ const startup=await startupNotificationGoals(c,entity);
+ const ids=[...new Set([...trials,...startup].map((g:any)=>g.id))];
+ if(ids.length!==1)throw Error('EXACT_SYNTHETIC_GOAL_REQUIRED');
+ const rows=(await c.query(`SELECT ${goalMetadata} FROM goals g WHERE g.id=$1 AND g.company_scope=$2`,[ids[0],entity])).rows;
+ if(rows.length!==1)throw Error('EXACT_SYNTHETIC_GOAL_REQUIRED');
+ return {goal:rows[0],eligibility:trials.some((g:any)=>g.id===ids[0])?'EXISTING_EVALUATION_TRIAL':'EXACT_SYNTHETIC_STARTUP_GOAL',modelCalls:0};
+}
 export function notificationBody(goalId:string){return {schema:'sam.owner_notification.v1',synthetic:true,source:acceptanceFixture.source,goalId,
  summary:acceptanceFixture.statement,requiredAction:'NONE',deliveryMeaning:'UNROUTED means stored internally, not sent to the owner'};}
 export async function assertOwnerAcceptancePrivileges(c:any){
@@ -24,9 +50,10 @@ export async function assertOwnerAcceptancePrivileges(c:any){
 export async function seedAcceptanceNotification(c:any,entity:string,goalId:string,insertIfMissing=true){
  if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(goalId))throw Error('EXACT_SYNTHETIC_GOAL_REQUIRED');
  await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',[notificationDedup]);
- const goal=(await c.query(`SELECT g.id FROM goals g JOIN evaluation_trials t ON t.root_goal_id=g.id AND t.legal_entity_id=g.company_scope
+ let goal=(await c.query(`SELECT g.id FROM goals g JOIN evaluation_trials t ON t.root_goal_id=g.id AND t.legal_entity_id=g.company_scope
  JOIN evaluation_companies ec ON ec.legal_entity_id=g.company_scope AND ec.purpose='SYNTHETIC_EVALUATION_ONLY'
  WHERE g.id=$1 AND g.company_scope=$2 LIMIT 1`,[goalId,entity])).rows[0];
+ if(!goal){const startup=await startupNotificationGoals(c,entity,goalId);if(startup.length===1)goal=startup[0];}
  if(!goal)throw Error('EXACT_SYNTHETIC_GOAL_REQUIRED');
  let rows=(await c.query('SELECT * FROM owner_notifications WHERE id=$1 OR dedup_key=$2',[acceptanceFixture.notificationId,notificationDedup])).rows;
  const body=notificationBody(goalId);

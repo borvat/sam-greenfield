@@ -2,7 +2,13 @@
 import {readFile,mkdtemp,writeFile,chmod,rm} from 'node:fs/promises';
 import {Client} from 'pg';
 import {openPersistentBinding} from './persistentBinding';
-import {acceptanceFixture as f,assertAcceptanceEnvironment,assertOwnerAcceptancePrivileges,seedAcceptanceNotification} from './ownerAcceptance';
+import {acceptanceFixture as f,assertAcceptanceEnvironment,assertOwnerAcceptancePrivileges,seedAcceptanceNotification,inspectNotificationGoal} from './ownerAcceptance';
+export function parseAcceptanceOperation(args:string[]){
+ const [mode,goalId,...extra]=args;
+ if(!['--seed-notification','--verify','--inspect-notification-goal'].includes(mode)||extra.length||
+  (mode==='--seed-notification'?!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(goalId??''):goalId!==undefined))throw Error('EXPLICIT_UI_ACCEPTANCE_OPERATION_REQUIRED');
+ return {mode,goalId};
+}
 export async function acceptanceReadback(c:any,entity:string){
  const memories=(await c.query(`SELECT id,type,statement,source,status,scope FROM memory_records
  WHERE scope->>'legal_entity_id'=$1 AND (source=$2 OR scope->>'context_key'=$3) ORDER BY id`,[entity,f.source,f.context_key])).rows;
@@ -18,8 +24,7 @@ export async function acceptanceReadback(c:any,entity:string){
 }
 export async function main(){
  assertAcceptanceEnvironment(process.env);
- const [mode,goalId,...extra]=process.argv.slice(2);
- if(!['--seed-notification','--verify'].includes(mode)||extra.length||(mode==='--verify'&&goalId))throw Error('EXPLICIT_UI_ACCEPTANCE_OPERATION_REQUIRED');
+ const {mode,goalId}=parseAcceptanceOperation(process.argv.slice(2));
  const bytes=await readFile('/etc/secrets/sam-restricted-connection.json');
  if(bytes.length<1||bytes.length>8192)throw Error('PRIVATE_BINDING_FILE_REQUIRED');
  const dir=await mkdtemp('/tmp/sam-ui-acceptance-');await chmod(dir,0o700);
@@ -29,9 +34,9 @@ export async function main(){
  const c=new Client({connectionString:storage.binding.connectionString,connectionTimeoutMillis:5000,statement_timeout:5000});
  try{
   await c.connect();await assertOwnerAcceptancePrivileges(c);
-  await c.query(mode==='--verify'?'BEGIN READ ONLY':'BEGIN');
+  await c.query(mode==='--seed-notification'?'BEGIN':'BEGIN READ ONLY');
   if(mode==='--seed-notification')await seedAcceptanceNotification(c,storage.binding.entity,goalId??'');
-  const result=await acceptanceReadback(c,storage.binding.entity);
+  const result=mode==='--inspect-notification-goal'?await inspectNotificationGoal(c,storage.binding.entity):await acceptanceReadback(c,storage.binding.entity);
   if(performance.now()>=storage.leaseDeadline)throw Error('STORAGE_WINDOW_ENDED');
   await c.query('COMMIT');console.info(JSON.stringify(result));
  }catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{await c.end();}

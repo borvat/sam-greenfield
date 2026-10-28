@@ -11,7 +11,7 @@ risk: high
 review: quick
 review_source: pinned
 lenses_ran: [quick, independent-security]
-review_loop_iteration: 0
+review_loop_iteration: 1
 context: ['{project-root}/AGENTS.md', '{project-root}/docs/engineering-memory/POLICY.md', '{project-root}/docs/engineering/cc-auth-diagnosis-20261028.md']
 ---
 
@@ -88,3 +88,21 @@ Latest remote/local baseline e90fc932 verified; service remains suspended, windo
 Quick and security independently found the same driver-query target override. Root patched it; both reinspections report no remaining concrete finding. Additional verified driver edges (inherited PGPORT/PGOPTIONS and raw-percent credential serialization) were patched by canonical5432, explicit pg_catalog startup options and credential encoding. Only synthetic credentials and local driver parsing were used. Renewal tests9/9 and final acceptance6/6 passed independently; unchanged startup/default-read-only/typechecks retain their earlier exact-file evidence. All results remain LOCAL, not actual isolated-browser acceptance. Public synthetic context literal was represented equivalently as joined tokens after a generic-api-key scanner false positive; no scanner suppression or rule weakening.
 
 Service remains SUSPENDED; no lease renewal, test opt-in update, deploy/resume or thirty-minute window has started. All publication/preparation must precede the secure existing-operator hidden TTY handoff. The handoff authenticates metadata only; RENEW_30_MINUTES remains parent-controlled. Browser owner-memory and notification fixture tests remain UNRUN. Actual ChatGPT discovery/read calls are PASS with one preserved transient notification error followed by identical serialized PASS.
+
+## Notification-only amendment after actual browser acceptance
+
+Amendment baseline9005b02254c4f55d307b4ffbb38f832e45612b60. Actual isolated browser memory save, correct/wrong-context recall and exact unchanged-form retry PASS, one native row/audit. Do not repeat them or modify accepted UI/gateway/lease/auth code. Service re-suspended05:34:52Z within explicit8min; owner input token accepted. Original report/tool proof remains valid.
+
+Plan correction: the evaluation_trials root requirement was an added harness assumption. Actual privately bound enrolled synthetic company2796e0d9-1701-4e53-a7ac-d198c0e44c01 has zero trials but existing G000001 owner_command NEW GREEN exact objective `Read-only synthetic startup check. Execution remains disabled.` visible in authenticated UI. Independent security design review permits retaining original trial branch plus one exact alternate existing-goal predicate, pinned to UNIQUE business_id and this company/objective/domain/state/ceiling, nullparent/currentplan and no associated plans/work/executions via directgoal_id. CallerUUID must match that row under common enrollment/company predicates. Compile-time UUID is unnecessary because business_id is UNIQUE. No generic synthetic-text matching.
+
+KEEP: every accepted memory/frontend/gateway/lease/auth behavior; exact notification UUID/body/dedup/UNROUTED/transport/conflict constraints; restricted private binding/RLS; no newgoal/trial/company/grant/model/externalaction. User explicitly requires preserving completed work, so correction is confined to operator eligibility and read-only inspection; no broad reversion/rebuild of accepted paths.
+
+Add --inspect-notification-goal read-only mode to return only allowed existing UUID/metadata, failing on zero/multiple matches or missing SELECT. Seed rechecks the same eligibility within its transaction. Run only affected notification tests plus deployment-entry typecheck, then independent delta review/verification and publication. No live claim until a fresh authorized bounded window after preparation/currentexpiry check; never repeat memory save.
+
+Review triage: missing trial fixture is a confirmed preparation defect caused by our additional assumption (medium); localized plan correction and strict alternative eligibility are authorized. Frozen owner intent/scope unchanged. Actual second-company exclusion was checked through production ChatGPT reads (empty), not a second browser session. Preserve transient parallel recall -32603 and identical serialized success; causeUNKNOWN, no unrelated MCP repair.
+
+## Amendment review triage
+
+- Quick inspection: no concrete finding; exactstartupidentity, suppliedUUID, readonlyinspection and notificationconflictchecks matched plan.
+- Security inspection: no privilege/scopebypass; found changed negative-path fixture now reached unavailable fallbackcolumns for a differentcompany. Root verified and routed medium/patch, preserving independent finding before grouping. Same implementer added immediate wrongcompanyreturn beforeSQL; selected existingnegative reproduced RED columnmissing→GREEN1/1; newnotification6/6. Securityreinspection: resolved, no remainingfinding. No fixture/grants widened.
+- Worker ran only newnotification and selectedexistingseednegative plus explicitdeploymenttsc/diff. Final independent delta receipt PASS: selectedexistingseednegative1/1, newnotification6/6, explicitdeploymenttsc anddiffcheck0; exact3filehashes stable. No memory/UI/gateway/lease edits or successfullive-memory reruns.

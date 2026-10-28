@@ -1,0 +1,78 @@
+{
+  "schema": "sam.notification_amendment_independent_verification_followup.v1",
+  "created_at": "2026-10-28T05:46:26.651Z",
+  "repository": "/workspace/scratch/66eecfb7baca/sam-greenfield",
+  "verdict": "PASS_SCOPED_LOCAL_FINAL_VERIFICATION",
+  "historical_receipt_preserved": "/workspace/scratch/66eecfb7baca/notification-amendment-independent-verification.json",
+  "supersession": "This followup verifies the corrected source. Historical receipt covered the earlier notification suite/typecheck only and did not run the selected existing seed negative.",
+  "resolved_regression": "startupNotificationGoals now immediately returns [] for entity other than exact startupGoalCompany before fallback SQL, preserving existing minimal-goals wrong-goal rejection.",
+  "pretest_snapshot": {
+    "head": "9005b02254c4f55d307b4ffbb38f832e45612b60",
+    "source_sha256": {
+      "deploy/reliability-test/notificationEligibility.test.ts": "f4aee26cfc60fbae0e313c2c1514e863dba0c4b1a1a576a076ea81b8e5e5fa06",
+      "deploy/reliability-test/ownerAcceptance.ts": "c25124974ffba46d00e5759cf49632e59549a9ffa60e01379a0224697d2f3f41",
+      "deploy/reliability-test/ownerAcceptanceOperator.ts": "9ed4d845b07890500d10d9f0a3c424fc228a4b6a76abe0a3982c2d74ad78fb4d"
+    }
+  },
+  "posttest_snapshot": {
+    "head": "9005b02254c4f55d307b4ffbb38f832e45612b60",
+    "source_sha256": {
+      "deploy/reliability-test/notificationEligibility.test.ts": "f4aee26cfc60fbae0e313c2c1514e863dba0c4b1a1a576a076ea81b8e5e5fa06",
+      "deploy/reliability-test/ownerAcceptance.ts": "c25124974ffba46d00e5759cf49632e59549a9ffa60e01379a0224697d2f3f41",
+      "deploy/reliability-test/ownerAcceptanceOperator.ts": "9ed4d845b07890500d10d9f0a3c424fc228a4b6a76abe0a3982c2d74ad78fb4d"
+    }
+  },
+  "source_unchanged_through_checks": true,
+  "matches_parent_expected_hashes": true,
+  "commands": [
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test --test-name-pattern='^notification seed is explicit scoped, deduplicated and refuses conflict; missing privileges fail closed$' deploy/reliability-test/ownerAcceptance.test.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test deploy/reliability-test/notificationEligibility.test.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "./node_modules/.bin/tsc --noEmit --target ES2023 --module ESNext --moduleResolution Bundler --lib ES2023,DOM,DOM.Iterable --types node --esModuleInterop --strict --skipLibCheck deploy/reliability-test/entry.ts deploy/reliability-test/persistentBinding.ts deploy/reliability-test/memorySentinel.ts deploy/reliability-test/startup.test.ts deploy/reliability-test/ownerAcceptance.ts deploy/reliability-test/ownerAcceptanceOperator.ts deploy/reliability-test/ownerAcceptance.test.ts deploy/reliability-test/notificationEligibility.test.ts",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "matrix": [
+    "Selected existing notification seed test including wrong-goal negative passes without broad fixture expansion.",
+    "New notification eligibility suite passes all six tests, including query assertion that wrong-company invocation performs no startup fallback query.",
+    "Exact startup company/business ID/objective/domain/NEW/GREEN/null parent/current plan and no direct plans/work/executions retained.",
+    "Synthetic enrollment, ambiguity, missing permissions, seed recheck, legacy trial and conflict/dedup controls retained.",
+    "Operator inspection remains read-only."
+  ],
+  "findings": [],
+  "boundaries": {
+    "accepted_memory_suite_executed": false,
+    "browser": false,
+    "native_database": false,
+    "live_service": false,
+    "secret_access": false,
+    "source_edits": false,
+    "local_synthetic_only": true
+  }
+}
