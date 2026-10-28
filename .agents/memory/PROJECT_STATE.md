@@ -16,25 +16,26 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
       "status": "unverified"
     },
     "evidence": [
-      "docs/engineering-memory/evidence/normal-adoption-acceptance-20261028.json",
-      "docs/engineering-memory/evidence/ordinary-acceptance.json"
+      "docs/engineering-memory/OWNER-ACCEPTANCE-20261028.json",
+      "docs/engineering-memory/evidence/owner-acceptance-sam-test-20261028.json"
     ],
-    "id": "sam-greenfield-normal-adoption-accepted-20261028",
+    "id": "sam-greenfield-owner-acceptance-reviewed-20261028",
     "next_steps": [
+      "Owner may approve this exact reviewed PR; before any later merge re-read head/base and obey all GitHub protection/review requirements.",
       "Use original BMAD ordinary tasks on feature/bmad-unified-memory-20261028; current Git outranks stored prose, candidates remain inactive, and source-bound historical suites are not a new runtime PASS.",
       "Use original bmad setup/build in this reviewed branch; memory activation and material-result archiving need no per-task memory prompt.",
       "For application continuation consult the existing source-bound product state and blockers; prior application tests keep their exact historical identity.",
       "Owner approval is required for main; do not infer protected integration from engineering readiness.",
       "Preserve current project/application blockers and historical test identities; no operational delivery is implied."
     ],
-    "recorded_at": "2026-10-28T00:52:41Z",
+    "recorded_at": "2026-10-28T01:53:23Z",
     "schema_version": 1,
     "source": {
-      "content_sha256": "ec28938bd4e9635fe346bbf31048224728b8e7cfeaa0e132861e948ceba3fb80",
-      "head": "08697958b5cfb903aaf91830a24ebb7aae05a0bc"
+      "content_sha256": "3b3135606cc2fff7cdf15d3b17a3c89a4818a1ea67689a43888084b0c3adc6bd",
+      "head": "7247265aaf373982e7d5f6db60fe9b18298b3cf1"
     },
     "status": "blocked",
-    "summary": "Engineering memory is ready on the reviewed feature branch; main/master adoption remains BLOCKED BY OWNER APPROVAL. Original BMAD clean setup/activation/retrieval and independent ordinary acceptance passed. Helper unchanged; tests keep historical identities; project/operational gates remain separate. SAM goal intake/MCP \u2192 Brain/dispatcher \u2192 bounded tools/verification \u2192 persisted result. Existing PostgreSQL operational Verified Learning + Memory is unchanged. Recovered 26 engineering preparation files from interrupted work and added Git-bound project resume/archive. Modules: MCP, runtime, verifier, Tool Gateway, provider reservations and scoped memory. This checkpoint verifies engineering adapters only; current deployed SAM goal behavior and full operational acceptance remain unverified.",
+    "summary": "Final independent engineering review: READY FOR OWNER APPROVAL for PR87. Current complete changes and unchanged base were authenticated; scope/security boundaries, relevant tests and safe revert plan are evidenced. Technical readiness is not formal GitHub or owner approval. No main/master merge is authorized or performed. Historical test identities remain historical. Application runtime, operational delivery and billing claims remain independent. SAM operational Verified Learning + Memory, goals, permissions and provider budgets are unchanged. A fresh ordinary verification task ran one existing Candidate-exclusion test, archived and recovered its result without changing real ledger/helper/tests/application.",
     "tests": [
       {
         "evidence": [
@@ -47,10 +48,34 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
           "head": "08697958b5cfb903aaf91830a24ebb7aae05a0bc"
         },
         "status": "pass"
+      },
+      {
+        "evidence": [
+          "docs/engineering-memory/OWNER-ACCEPTANCE-20261028.json"
+        ],
+        "name": "Current helper resume audit brief plus socket/process-denial read probes",
+        "scope": "historical",
+        "source": {
+          "content_sha256": "0647c0aa6d6771ebd15e91664028f9a1e541b7fd1ba16bb74461a675f171f05f",
+          "head": "f6b580d0075fe22835d3f7769f0ca855aab03a9e"
+        },
+        "status": "pass"
+      },
+      {
+        "evidence": [
+          "docs/engineering-memory/evidence/owner-acceptance-sam-test-20261028.json"
+        ],
+        "name": "Existing focused nonempty Candidate exclusion regression in fresh original BMAD task",
+        "scope": "historical",
+        "source": {
+          "content_sha256": "518116534f5b2d5d4c6d417f39b146ded5ca44e9cd4764585289f85b242cff9c",
+          "head": "f6b580d0075fe22835d3f7769f0ca855aab03a9e"
+        },
+        "status": "pass"
       }
     ]
   },
-  "event_digest": "3b5e995f0f23d329b5d0131d3e977b30d2f060a3166e95dd33dfedc45b9dd390",
+  "event_digest": "ea3c0aaabcecde18e18ef4d40740c6d753f2cad7f9c6cbed66a0d00bc94d776a",
   "schema_version": 1
 }
 ```

@@ -3,15 +3,15 @@ title: 'Close independent acceptance of five engineering-memory pull requests'
 type: chore
 ticket: ''
 created: '2026-10-28'
-status: in-progress
+status: built
 baseline_revision: 'f6b580d0075fe22835d3f7769f0ca855aab03a9e'
 route: oneshot
 route_source: auto
 risk: medium
 review: quick
 review_source: pinned
-lenses_ran: []
-review_loop_iteration: 0
+lenses_ran: [quick]
+review_loop_iteration: 1
 context: []
 ---
 
@@ -55,3 +55,5 @@ Per PR, publish one small sanitized evidence report on its existing feature bran
 
 - medium / patch: Quick review correctly requires final checkpoint recovery before acceptance closure. Original workflow commits task artifacts first; distinct archive follow-ups and fresh remote recovery are mandatory before final delivery. No acceptance close claimed at this intermediate stage.
 - medium / patch: Quick review found fresh SAM proof omitted exact tested content identity and command. Added a sanitized source-bound receipt with unchanged focused-test command/result, full tested source digest, independent review and archive/readback evidence; no cwd/raw stream published.
+
+- Acceptance checkpoint requirement implemented through distinct source-bound archive follow-ups after task commits. Preserve actual test identities and all unresolved application/owner gates; final remote recovery remains required before delivery.
