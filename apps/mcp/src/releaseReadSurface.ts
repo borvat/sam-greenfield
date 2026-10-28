@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import {ChatGPTToolRegistry} from "../../chatgpt-tools/src/registry";
 import type {RegisteredChatGPTTool} from "../../chatgpt-tools/src/types";
 
@@ -21,7 +22,7 @@ export function createReleaseReadSurface(){
           result[name]=r.status===200?"READY":"NOT_READY";
         }catch{result[name]="UNAVAILABLE";}
       }
-      return result;
+      return {...result,...buildRevision(),discovery:"SERVER_LIST_ONLY_CLIENT_CACHED_DISCOVERY_MAY_DIFFER"};
     }),
     tool("sam_release_test_results",async()=>{
       // Archived summaries do not attest this image and are not runtime assets.

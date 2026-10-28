@@ -1,3 +1,4 @@
+import {runScopedOwnerNotificationTick} from '../../notifications/src/center';
 import {recordWorkFailure} from "../../kernel/src/failures";
 import {reviewNextReadGoal} from './readGoalReview';
 import {relayOutboxUntilEmpty} from '../../kernel/src/outboxRelay';
@@ -81,7 +82,8 @@ export function createProductionComposition(input:{
       const review=input.readReportReview?await attempt("review",()=>reviewNextReadGoal(input.bundle)):null;
       const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
-      return {events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
+      const ownerNotifications=await runScopedOwnerNotificationTick();
+      return {ownerNotifications,events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
     }
   };
 }

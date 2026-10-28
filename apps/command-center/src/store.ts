@@ -1,3 +1,4 @@
+import {describeSavedReports} from '../../../packages/shared/src/savedReportSemantics';
 import {withTransaction} from "../../../packages/db/src/client";
 import type {PoolClient} from "pg";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
@@ -71,7 +72,9 @@ export async function commandCenterGoalTimeline(legalEntityId:string,goalId:stri
       goal:goal.rows[0],
       plans:plans.rows,
       reports:reports.rows,
+      reportInterpretations:describeSavedReports(reports.rows),
       reportsAvailability,
+      reportRetrieval:{executionPerformed:false,meaning:"SAVED_RESULTS_WITH_ORIGINAL_IDS_AND_HASHES",semanticValidation:"Historical narrative is not newly validated; preserve each report coverage and limitations."},
       work:work.rows,
       executions:executions.rows,
       verifications:verifications.rows,
@@ -154,4 +157,26 @@ export async function commandCenterReadiness(legalEntityId:string){
       legalEntityActive:entity.rowCount===1&&entity.rows[0].status==="ACTIVE"
     };
   });
+}
+
+const commandCenterOwner=(legalEntityId:string)=>({actor:'command-center-owner',systemOwner:true,legalEntityId});
+export async function commandCenterOwnerMemory(legalEntityId:string,query:string){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ const {recallApprovedOwnerDecisions}=await import('../../brain/src/memory');
+ if(typeof query!=='string'||query.length>4000)throw Error('INVALID_MEMORY_QUERY');
+ return withTransaction(async client=>{await authorizedCompany(client,commandCenterOwner(legalEntityId));return {records:await recallApprovedOwnerDecisions(client,legalEntityId,query),approvalMeaning:'Explicitly approved owner decisions only; never expands execution authority.'}});
+}
+export async function commandCenterSaveOwnerDecision(legalEntityId:string,body:Record<string,unknown>){
+ const {saveApprovedOwnerDecision}=await import('../../brain/src/learning');
+ const allowed=['statement','context_key','source','source_timestamp','idempotency_key','approved'];
+ if(Object.keys(body).some(k=>!allowed.includes(k)))throw Error('INVALID_OWNER_DECISION_FIELDS');
+ return withTransaction(client=>saveApprovedOwnerDecision(client,commandCenterOwner(legalEntityId),{statement:body.statement as string,contextKey:body.context_key as string,source:body.source as string,sourceTimestamp:body.source_timestamp as string,idempotencyKey:body.idempotency_key as string,approved:body.approved as boolean}));
+}
+export async function commandCenterNotifications(legalEntityId:string,action:'list'|'poll'|'ack',notificationId?:string){
+ const {listOwnerNotifications,pollScopedOwnerNotifications,acknowledgeOwnerNotification}=await import('../../notifications/src/center');
+ return withTransaction(async client=>{
+  if(action==='poll')return pollScopedOwnerNotifications(client,commandCenterOwner(legalEntityId));
+  if(action==='ack')return acknowledgeOwnerNotification(client,commandCenterOwner(legalEntityId),notificationId??'');
+  return listOwnerNotifications(client,commandCenterOwner(legalEntityId));
+ });
 }

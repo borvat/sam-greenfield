@@ -252,3 +252,30 @@ export async function recordOwnerRule(input:{
     return id;
   });
 }
+
+/** Explicit owner input only. Model/source observations never call this wrapper. */
+export async function saveApprovedOwnerDecision(client:any,context:import('../../../packages/shared/src/ownerScope').OwnerContext,input:{
+ statement:string;contextKey:string;source:string;sourceTimestamp:string;idempotencyKey:string;approved:boolean;
+}){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ const company=await authorizedCompany(client,context);
+ if(input.approved!==true)throw Error('OWNER_APPROVAL_REQUIRED');
+ const text=(v:unknown,max:number)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
+ if(!text(input.statement,4000)||!text(input.source,500)||!text(input.idempotencyKey,200)||
+  typeof input.contextKey!=='string'||!/^\p{L}[\p{L}\p{N}_-]{2,79}$/u.test(input.contextKey)||
+  typeof input.sourceTimestamp!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(input.sourceTimestamp)||!Number.isFinite(Date.parse(input.sourceTimestamp))||new Date(input.sourceTimestamp).toISOString()!==input.sourceTimestamp)throw Error('OWNER_DECISION_INVALID');
+ const key=sha256Hex({company,actor:context.actor,key:input.idempotencyKey});
+ const scope={schema:'sam.approved_owner_decision.v1',legal_entity_id:company,context_key:input.contextKey.toLowerCase(),approved_by:context.actor,source_timestamp:input.sourceTimestamp,idempotency_key:key};
+ await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',['owner-decision:'+key]);
+ const rows=(await client.query("SELECT * FROM memory_records WHERE scope->>'legal_entity_id'=$1 AND scope->>'idempotency_key'=$2 ORDER BY created_at,id FOR UPDATE",[company,key])).rows;
+ if(rows.length){
+  const row=rows[0];
+  if(rows.length!==1||row.type!=='OWNER_DECISION'||row.status!=='APPROVED_RULE'||row.statement!==input.statement.trim()||row.source!==input.source||sha256Hex(row.scope)!==sha256Hex(scope))throw Error('OWNER_DECISION_IDEMPOTENCY_CONFLICT');
+  return row;
+ }
+ const row=(await client.query(`INSERT INTO memory_records(type,statement,scope,source,confidence,support_count,status)
+  VALUES('OWNER_DECISION',$1,$2::jsonb,$3,1,1,'APPROVED_RULE') RETURNING *`,[input.statement.trim(),JSON.stringify(scope),input.source])).rows[0];
+ await client.query(`INSERT INTO audit_log(actor,action,entity_type,entity_id,after_ref,source,authority_class,result)
+  VALUES($1,'OWNER_DECISION_SAVED','legal_entity',$2,$3::jsonb,'owner_input','GREEN','APPROVED')`,[context.actor,company,JSON.stringify({memoryId:row.id,contextKey:scope.context_key,sourceTimestamp:input.sourceTimestamp})]);
+ return row;
+}

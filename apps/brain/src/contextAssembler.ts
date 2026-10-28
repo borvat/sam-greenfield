@@ -14,7 +14,7 @@ export async function assembleContext(
   if (localDevelopment()) return assembleDevelopmentContext(client, entityType, entityId);
   const [facts, memory] = await Promise.all([
     loadVerifiedWorldModel(client, entityType, entityId),
-    loadApprovedMemory(client,200,entityId)
+    loadApprovedMemory(client,200,entityId,objective)
   ]);
 
   return {

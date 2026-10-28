@@ -4,7 +4,7 @@ import {createServer,type IncomingMessage,type Server,type ServerResponse} from 
 import {commandCenterHtml} from "./ui";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import {commandCenterDevelopmentTelemetry} from "./developmentTelemetry";
-import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal} from "./store";
+import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal,commandCenterOwnerMemory,commandCenterSaveOwnerDecision,commandCenterNotifications} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
 function bearer(req:IncomingMessage):string{const h=req.headers.authorization??"";return h.startsWith("Bearer ")?h.slice(7):""}
@@ -66,6 +66,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('<body','<body data-read-only="true"')
             .replace('<div class="shell">','<div class="shell"><div class="card" role="status">Read-only mode · وضع القراءة فقط. Goal creation is disabled; goals, reports and wait diagnostics remain available.</div>')
             .replace('<div class="card form">','<div class="card form" hidden aria-hidden="true">')
+            .replaceAll('data-owner-mutation','data-owner-mutation hidden')
             .replace('async function createGoal(){','async function createGoal(){\n  if(document.body.dataset.readOnly==="true")return;')
             .replace('document.body.dataset.developmentSafe?','document.body.dataset.readOnly?"READ ONLY · CONNECTED":document.body.dataset.developmentSafe?');
         }
@@ -86,6 +87,26 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       if(origin&&origins.has(origin))res.setHeader("access-control-allow-origin",origin);
       res.setHeader("cache-control","no-store");
 
+      const ownerMemory=new URL(req.url??'/',"http://local");
+      const notificationAck=req.url?.match(/^\/api\/notifications\/([0-9a-fA-F-]+)\/ack$/);
+      if(ownerMemory.pathname==='/api/owner-memory'||ownerMemory.pathname==='/api/notifications'||req.url==='/api/notifications/poll'||notificationAck){
+        if(!token){json(res,401,{error:'unauthorized'});return;}
+        if(req.method==='POST'&&process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){res.setHeader('allow','GET');json(res,405,{error:'command_center_read_only'});return;}
+        if(req.method==='GET'&&ownerMemory.pathname==='/api/owner-memory'){
+          json(res,200,{ok:true,data:await commandCenterOwnerMemory(options.legalEntityId,ownerMemory.searchParams.get('query')??'')});return;
+        }
+        if(req.method==='POST'&&req.url==='/api/owner-memory'){
+          json(res,201,{ok:true,data:await commandCenterSaveOwnerDecision(options.legalEntityId,await readJson(req))});return;
+        }
+        if(req.method==='GET'&&req.url==='/api/notifications'){
+          json(res,200,{ok:true,data:await commandCenterNotifications(options.legalEntityId,'list')});return;
+        }
+        if(req.method==='POST'&&(req.url==='/api/notifications/poll'||notificationAck)){
+          const body=await readJson(req);if(Object.keys(body).length)throw Error('NOTIFICATION_ARGUMENTS_NOT_ALLOWED');
+          const data=await commandCenterNotifications(options.legalEntityId,notificationAck?'ack':'poll',notificationAck?.[1]);
+          json(res,data===null?404:200,{ok:data!==null,data});return;
+        }
+      }
       if(req.method==="GET"&&req.url==="/api/overview"){
         json(res,200,{ok:true,data:await commandCenterOverview(options.legalEntityId)});return;
       }

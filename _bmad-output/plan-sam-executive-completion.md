@@ -3,14 +3,14 @@ title: SAM usable saved results and executive continuity
 type: feature
 ticket: ''
 created: '2026-10-28'
-status: in-progress
+status: built
 baseline_revision: a55fe807827d0f6869c8bc313ae00ffb5672d207
 route: full
 route_source: auto
 risk: high
-review: thorough
-review_source: auto
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [quick, independent-security]
 review_loop_iteration: 0
 context: ["{project-root}/AGENTS.md", "{project-root}/docs/engineering-memory/POLICY.md"]
 ---
@@ -55,11 +55,11 @@ Never add resources, subscriptions, budget, grants/RLS relaxation, owner applica
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Recovery worker: implement exact deterministic diagnostic and focused rejection/atomicity/idempotency tests; preserve original records.
-- [ ] Memory worker: implement trusted scoped owner write/recall using existing memory_records; tests for two companies, wrong context, unapproved/irrelevant exclusion and provenance.
-- [ ] Surface worker: integrate MCP/CC saved-result limits, memory and notification polling/receipt path; test auth, dedup and no false delivery.
-- [ ] Root: investigate actual ChatGPT discovery/automation and existing secure Render access; record baseline counters/current service identities; no repeated acceptance unrelated to changes.
-- [ ] Independent reviewers/verifier: inspect full delta, run affected suite/typecheck and adversarial isolation tests; resolve actionable findings without weakening checks.
+- [x] Recovery worker: implement exact deterministic diagnostic and focused rejection/atomicity/idempotency tests; preserve original records.
+- [x] Memory worker: implement trusted scoped owner write/recall using existing memory_records; tests for two companies, wrong context, unapproved/irrelevant exclusion and provenance.
+- [x] Surface worker: integrate MCP/CC saved-result limits, memory and notification polling/receipt path; test auth, dedup and no false delivery.
+- [x] Root: investigate actual ChatGPT discovery/automation and existing secure Render access; record baseline counters/current service identities; no repeated acceptance unrelated to changes.
+- [x] Independent reviewers/verifier: inspect full delta, run affected suite/typecheck and adversarial isolation tests; resolve actionable findings without weakening checks.
 - [ ] Root: publish reviewed branch, stage MCP/CC then Runtime as justified, verify exact LIVE revisions and perform bounded diagnostic recovery and synthetic scoped acceptance within existing role. Keep rollback ready and stop outside authorization.
 
 **Acceptance Criteria:**
@@ -76,6 +76,17 @@ Intake: report v3 read fully; PR86 unchanged Draft/open at baseline; three servi
 ## Plan Change Log
 
 ## Review Triage Log
+
+Pass 1: high1, medium2, low0, false0, maybe-false0 (two findings share the stale-notification cause).
+
+| Finding | Verdict / route | Evidence / action |
+|---|---|---|
+| Quick: text-to-UUID projector join | high / patch | Native migrations/schema define outbox aggregate_id UUID; new cast-to-text join fails PostgreSQL resolution. Replace with UUID equality and use actual UUID fixture type; add regression. |
+| Quick: stale approval/progress notice persists | medium / patch | Narrow projector omits existing broad-path suppression and listing/UI expose unchanged requiredAction after goal resumes. Reuse scoped suppression and render stale notices non-actionable. |
+| Security: stale approval/progress notice persists | medium / patch | Independently confirmed same reachable WAITING_OWNER→EXECUTING/COMPLETED sequence; group with previous finding, retain observation-review exception and transport meaning. |
+| Root: release status output wrapped existing keys | low / patch | Return restored top-level worker/command-center keys alongside additive metadata; direct handler compatibility check passed. |
+
+Fix inspection: independent security reviewer confirmed UUID-compatible equality, scoped suppression, preserved historical bodies/observation exception/other companies, hidden suppressed notices and no concrete new issue. Verifier reproduced UUID RED2 and stale-state RED1 before patches; final affected suite36/36, no failures/cancellations/skips/todo. Earlier interrupted verifier run is incomplete. Follow-up type annotations are erased at runtime; exact final source/test evidence is separate from live acceptance.
 
 ## Verification
 

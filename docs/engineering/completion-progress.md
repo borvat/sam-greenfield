@@ -31,3 +31,19 @@ Observed via authenticated Render Runtime shell, role `sam_runtime_app`, org `56
 ## Next step
 
 Finish sequential candidate implementation, independently review and test affected paths, then publish and stage existing-service promotion with exact revision/rollback. Root will explicitly activate only the narrow authorized internal result center, run operator dry-run before any bounded mail apply, and record local versus native/connected/browser evidence separately. No general readiness claim before that work.
+
+## Review checkpoint
+
+Original configured BMAD build rendered a Quick review workflow; root additionally ran an independent security inspection and independent testing. Original Quick found the native UUID join mismatch and stale notices; security independently confirmed the stale-notice defect and no further concrete reachable issues in its inspection. These are recorded individually in the plan triage, grouped into two minimal patches. No application deployment or live recovery preceded the review.
+
+Independent verifier reproduced the UUID defect with actual UUID fixture type: focused run2/fail2/exit1, SQL42883. The first combined verifier run was interrupted at exit130 after its pool mock failed to implement the pool.query callback path; it is incomplete, never PASS, and was corrected in verifier-owned fixture code. Root/worker tests are overlapping and not additive. Final green evidence is pending at this checkpoint.
+
+## Existing-service deployment and rollback contract
+
+Publication uses the GitHub connector: direct Git push had no credential in this environment. Remote checkpoint `43bd5f011aa4c5aa26a2d1e9f0920d23a9f65c6a` has the exact same tree `36ef1c4a525b7e3fc79e8bb8c8edb7cc5143d82d` as local checkpoint e08e390; parents preserve PR86 baseline plus existing BMAD branch. No main ref was changed. Final published application must have a matching reviewed tree, be pinned on the existing application delivery branch, and remain separate from Blueprint branch/path.
+
+Deploy MCP, verify connected read/backward compatibility, then CC, verify health/auth gates/browser-visible build, then Runtime after a fresh no-active-work preflight. Add only the non-secret Runtime key `SAM_OWNER_CONTINUITY_ENABLED=true` with merge semantics; preserve every other env variable. This key is omitted from the separate existing Blueprint, whose omission preserves variables; AutoSync remains No. Do not enable integration/knowledge/perception/Hermes/model features. Native synthetic operator is rollback-only and must prove zero persisted business-test rows. Explicit scoped notification activation is a real authorized config audit, followed by operator diagnostic dry-run, bounded apply, idempotent replay and unchanged source/model/budget snapshots.
+
+Rollback target is the existing retained f859fda deployment/artifact on each service, with narrow flag false if necessary; no schema changes are introduced. Before using old code, require zero newly approved owner-decision rows: old f859 recall predates task-context filtering, so retained decisions would require the scoped-read fix or fix-forward rather than blind rollback. Native synthetic acceptance leaves no such rows. Rollback never deletes or rewrites reports/audit, or undoes a valid deterministic completion. The completed diagnostic remains a saved immutable current-plan result and must not be reopened by rollback. Existing original report, source reads and parent goal stay preserved.
+
+CC native shell is unavailable on the existing free plan: Render showed an upgrade-required modal. No upgrade/new job/secret extraction was performed. Actual authenticated CC browser/API traversal remains distinct from same-principal native store acceptance; public browser and 401 checks alone never establish an authenticated session.
