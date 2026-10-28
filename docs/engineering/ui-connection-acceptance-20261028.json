@@ -1,0 +1,209 @@
+{
+  "schema": "sam.ui_connection_acceptance.v1",
+  "observed_at": "2026-10-28T02:36:07.056Z",
+  "source_head": "d3f65873ced2aadf17200097376baf4666604cc4",
+  "application_revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+  "pr": {
+    "number": 86,
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "head": "d3f65873ced2aadf17200097376baf4666604cc4"
+  },
+  "command_center_deploy": {
+    "id": "dep-dbglcqegekts7388ksfg",
+    "status": "live",
+    "commit": "62ccbdbb94e080f22425f64396c894270ee551aa"
+  },
+  "registry": {
+    "checked_at": "2026-10-28T02:33:11Z",
+    "app": "Sam Mcp Reder",
+    "requested_names": [
+      {
+        "name": "sam_get_report",
+        "discovered": false
+      },
+      {
+        "name": "sam_memory_status",
+        "discovered": false
+      },
+      {
+        "name": "sam_recall_memory",
+        "discovered": false
+      },
+      {
+        "name": "sam_list_notifications",
+        "discovered": false
+      },
+      {
+        "name": "sam_save_owner_decision",
+        "discovered": false
+      },
+      {
+        "name": "sam_poll_notifications",
+        "discovered": false
+      },
+      {
+        "name": "sam_acknowledge_notification",
+        "discovered": false
+      }
+    ],
+    "refresh_operation_exposed": false
+  },
+  "connected_reads": [
+    {
+      "tool": "sam_system_status",
+      "result": "PASS",
+      "revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "continuity": {
+        "availability": "CURRENT_ROLE_SCOPED_READS",
+        "ownerDecisions": {
+          "availability": "AVAILABLE",
+          "approved_count": 0,
+          "records": [],
+          "relevance": "EXPLICIT_CONTEXT_TERMS_IN_TASK",
+          "executionAuthorityExpanded": false
+        },
+        "notifications": {
+          "availability": "AVAILABLE",
+          "enabled": true,
+          "activation": {
+            "id": "7b92ec83-df31-47b9-a74b-a4179c213d94",
+            "timestamp": "2026-10-28T02:00:30.900Z"
+          },
+          "counts": [
+            {
+              "status": "UNROUTED",
+              "count": 1
+            }
+          ],
+          "scope": "CURRENT_COMPANY",
+          "readReceiptAvailability": "AVAILABLE",
+          "delivery": "POLLING_ONLY",
+          "pushPerformed": false
+        },
+        "executionPerformed": false
+      }
+    },
+    {
+      "tool": "sam_list_memory",
+      "result": "PASS",
+      "records": 0
+    },
+    {
+      "name": "historical",
+      "tool": "sam_get_goal_timeline",
+      "result": "PASS",
+      "goal_id": "c8346c6c-67ef-412e-9689-5e94acd31fba",
+      "state": "COMPLETED",
+      "retrieval": {
+        "executionPerformed": false,
+        "meaning": "SAVED_RESULTS_WITH_ORIGINAL_IDS_AND_HASHES",
+        "semanticValidation": "Historical narrative is not newly validated; preserve each report coverage and limitations."
+      },
+      "reports": [
+        {
+          "id": "1ed20021-9b0d-47f8-904b-cd72e3d0846f",
+          "hash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7"
+        }
+      ],
+      "interpretations": [
+        {
+          "reportId": "1ed20021-9b0d-47f8-904b-cd72e3d0846f",
+          "reportHash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7",
+          "executionPerformed": false,
+          "semanticValidation": "HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED",
+          "originalLimitations": [
+            "الكمية بعد الإلغاء ليست صافي المبيعات بعد المرتجعات؛ المرتجعات غير محسوبة.",
+            "لا يمكن حساب الربح الصافي أو التوصية بميزانية شراء دون تكاليف المنتجات والرسوم.",
+            "المخزون الحالي لقطة متغيرة: FBB من واجهة المخزون، وFBR للعروض المباعة المعروفة فقط؛ ليس كامل الكتالوج.",
+            "الطلبات مبنية على أحدث تغييرات الواجهة حتى يوم الجمع؛ لا توجد لقطة ذرية، وقد تغيّر القراءات المتزامنة النتائج.",
+            "قيم الأسعار محسوبة من سعر الوحدة المبلّغ؛ أساس الضريبة والعملة غير مثبتين في هذا التجميع. العمولات والمرتجعات غير محسوبة وليست صفراً. المبلغ بعد الإلغاء ليس ربحاً صافياً.",
+            "تفسير Hermes استنتاج نموذجي؛ الأرقام المعروضة مصدرها حساب SAM والتحقق من المصدر."
+          ],
+          "unsupportedClaims": "Unsupported currency, tax, period or coverage claims in historical narrative must not be treated as established facts; retain the original evidence limits."
+        }
+      ]
+    },
+    {
+      "name": "mail",
+      "tool": "sam_get_goal_timeline",
+      "result": "PASS",
+      "goal_id": "53424b11-c854-40e4-a264-14af2b7d33b0",
+      "state": "COMPLETED",
+      "retrieval": {
+        "executionPerformed": false,
+        "meaning": "SAVED_RESULTS_WITH_ORIGINAL_IDS_AND_HASHES",
+        "semanticValidation": "Historical narrative is not newly validated; preserve each report coverage and limitations."
+      },
+      "reports": [
+        {
+          "id": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+          "hash": "6e6d9abe3e11f1fc92653f952d283987ba409d5c2240a47e8c3a6ef59adad97e"
+        }
+      ],
+      "interpretations": [
+        {
+          "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+          "reportHash": "6e6d9abe3e11f1fc92653f952d283987ba409d5c2240a47e8c3a6ef59adad97e",
+          "executionPerformed": false,
+          "semanticValidation": "DETERMINISTIC_BOUNDED_SAVED_EVIDENCE",
+          "originalLimitations": [
+            "Pagination tokens are not exposed by the saved response; token absence does not prove exhaustion.",
+            "Only the first page of each direction was requested, up to 100 identifiers. Counts are not mailbox totals.",
+            "The requested millisecond window was converted to second-based Gmail queries; exact boundary coverage is not established.",
+            "No message bodies, names, addresses, identifiers or links are included in this diagnostic.",
+            "The original broader objective remains unchanged and is not declared complete.",
+            "The inbox direction searches in:inbox only; it does not establish mailbox-wide incoming coverage.",
+            "Mailbox identity is unknown from these saved responses."
+          ],
+          "unsupportedClaims": "Unsupported currency, tax, period or coverage claims in historical narrative must not be treated as established facts; retain the original evidence limits."
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "url": "https://sam-command-center.onrender.com/",
+    "revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+    "authentication": {
+      "secure_request_result": "submitted",
+      "visible_result": "Unauthorized. Enter the correct bearer token.",
+      "authenticated": false,
+      "credential_read_or_changed": false,
+      "automatic_retries": 0
+    },
+    "tests": [
+      {
+        "id": "historical-report",
+        "result": "BLOCKED",
+        "reason": "No authenticated session; secure login attempt rejected."
+      },
+      {
+        "id": "mail-diagnostic",
+        "result": "BLOCKED",
+        "reason": "Same authentication blocker; connected read passed separately."
+      },
+      {
+        "id": "isolated-memory-save-recall-dedup-isolation",
+        "result": "BLOCKED",
+        "reason": "No authenticated session or authenticated isolated UI scope; no synthetic business rows written."
+      },
+      {
+        "id": "synthetic-notification-read-receipt",
+        "result": "BLOCKED",
+        "reason": "No authenticated session; no real notification acknowledged."
+      },
+      {
+        "id": "delivery-meaning-public-label",
+        "result": "PASS",
+        "meaning": "Polling only. Stored internally and never a claim of ChatGPT push or external delivery.",
+        "limit": "Authenticated notification rendering still blocked."
+      }
+    ],
+    "real_notification_do_not_ack": "e0283121-947e-47b9-94e7-8be1aae16299"
+  },
+  "code_changes": false,
+  "deployment_performed": false,
+  "new_models_or_mail_reads_or_recovery": false,
+  "new_resources_permissions_or_costs": false
+}

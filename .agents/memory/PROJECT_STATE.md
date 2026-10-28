@@ -9,52 +9,63 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
 {
   "event": {
     "blockers": [
-      "Standalone new-tool discovery is frozen in current ChatGPT app metadata; no app-refresh operation is exposed to this session.",
-      "No authenticated CC browser session is present; native store and public401/health proof are not authenticated UI proof."
+      "Seven standalone action names absent in actual session; management Refresh unavailable.",
+      "Secure sign-in attempt rejected by CC: Unauthorized. Enter the correct bearer token. No authenticated UI proof."
     ],
     "deployment": {
       "evidence": [
-        "docs/engineering/completion-production-evidence.json"
+        "docs/engineering/ui-connection-acceptance-20261028.json"
       ],
-      "identity": "62ccbdbb94e080f22425f64396c894270ee551aa:dep-dbglc7nb9u1s738l17p0,dep-dbglcqegekts7388ksfg,dep-dbgld96gekts7388md80",
+      "identity": "CC:62ccbdbb94e080f22425f64396c894270ee551aa:dep-dbglcqegekts7388ksfg",
       "status": "observed"
     },
     "evidence": [
-      "docs/engineering/completion-production-evidence.json",
-      "docs/engineering/completion-independent-verification.json",
-      "docs/engineering/completion-connected-verification.md",
+      "docs/engineering/ui-connection-acceptance-20261028.json",
+      "docs/engineering/ui-connection-acceptance-20261028.md",
       "docs/engineering/completion-progress.md"
     ],
-    "id": "sam-completion-final-checkpoint-20261028",
+    "id": "sam-ui-connection-acceptance-20261028",
     "next_steps": [
-      "App manager refreshes Sam Mcp Reder actions; continue using current cached status/timeline until the standalone names are actually visible.",
-      "If authenticated browser acceptance is required, use the existing CC token only through secure browser authentication; no token or password change.",
-      "Use saved report3ccab2cc-ed84-4534-9c17-70c9271b5e06; never recollect mailbox sources, reset budgets or revive the expired test lease."
+      "Connection manager Refresh Sam Mcp Reder action list; recheck actual registry and invoke newly discovered read-only tools.",
+      "Complete existing-token login through the secure cloud browser handoff; then execute prepared rendered-control tests. Never disclose/change token.",
+      "Use only an existing authorized isolated test scope and synthetic notification for writes/receipts; preserve real notification e0283121-947e-47b9-94e7-8be1aae16299."
     ],
-    "recorded_at": "2026-10-28T02:08:32Z",
+    "recorded_at": "2026-10-28T02:37:23Z",
     "schema_version": 1,
     "source": {
-      "content_sha256": "21dfeccb96ea7db07ea22c5e354ec19ae3898aa9db9aac11753e279077d5b608",
-      "head": "62ccbdbb94e080f22425f64396c894270ee551aa"
+      "content_sha256": "60ecc3f538e1a68fac4a9805be5e752658199e96ef6e3a552a712abfccabdfad",
+      "head": "d3f65873ced2aadf17200097376baf4666604cc4"
     },
     "status": "partial",
-    "summary": "SAM application 62ccbdbb94e080f22425f64396c894270ee551aa is LIVE on all three existing services. Reviewed exact saved-evidence mail recovery is complete and idempotent, with one diagnostic report and unchanged original sources, model ledger and review budgets. Existing owner-memory path and internal polling/receipts passed local and restricted native rollback acceptance. One real internal notification is UNROUTED and unread. Independent connected reads passed. A schema-fixture lesson is CANDIDATE only, separate from business memory. Standalone tool refresh and authenticated UI traversal remain external/unverified; general readiness and push are not claimed.",
+    "summary": "Bounded SAM UX continuation: actual cached ChatGPT status/memory/timelines PASS with original report hashes and no execution. Seven new standalone tools absent; no refresh operation exposed. Secure browser-auth submitted but visible login rejected Unauthorized; authenticated report/memory/synthetic-receipt checks remain blocked. Public internal-only polling label verified. No application/config/deploy/model/mail/recovery/business-memory/real-receipt change; original reviewed build retained.",
     "tests": [
       {
         "evidence": [
-          "docs/engineering/completion-independent-verification.json"
+          "docs/engineering/ui-connection-acceptance-20261028.json"
         ],
-        "name": "Affected synthetic continuity recovery and report suites:36/36, zero skips, exit0",
+        "name": "Actual ChatGPT cached status, memory list and two timelines",
         "scope": "historical",
         "source": {
-          "content_sha256": "36502b10366d6ebc9709e3e0bd27dfb01ae83032cbe3f219e58305a7ac009be8",
-          "head": "e08e390732cd26750ce8175c7e734581c137c5a3"
+          "content_sha256": "21dfeccb96ea7db07ea22c5e354ec19ae3898aa9db9aac11753e279077d5b608",
+          "head": "d3f65873ced2aadf17200097376baf4666604cc4"
         },
         "status": "pass"
+      },
+      {
+        "evidence": [
+          "docs/engineering/ui-connection-acceptance-20261028.json"
+        ],
+        "name": "Authenticated browser report/memory/synthetic receipt acceptance",
+        "scope": "historical",
+        "source": {
+          "content_sha256": "21dfeccb96ea7db07ea22c5e354ec19ae3898aa9db9aac11753e279077d5b608",
+          "head": "d3f65873ced2aadf17200097376baf4666604cc4"
+        },
+        "status": "blocked"
       }
     ]
   },
-  "event_digest": "a3b05f3257a79d1caad7c0bc1bc9f2f18be9ce3805a4e5a1222dca41cf4848bc",
+  "event_digest": "86f0d772f86b6b9c135fd3e32764938505697c72d2681b3464da843fbef170b0",
   "schema_version": 1
 }
 ```
