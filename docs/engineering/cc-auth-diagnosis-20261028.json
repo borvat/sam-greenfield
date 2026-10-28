@@ -95,11 +95,147 @@
       "proof": "Recomputed all three file SHA-256 digests; exact matches. Hash-map representation normalized to explicit path and sha256 records; no rules/allowlists/exclusions changed."
     }
   },
-  "live_patch_status": "PENDING_DEPLOYMENT",
-  "authenticated_browser_acceptance": "BLOCKED_NO_AUTHENTICATED_SESSION",
+  "live_patch_status": "LIVE_CC_AND_MCP; RUNTIME_UNAFFECTED_REDEPLOY_REJECTED",
+  "authenticated_browser_acceptance": {
+    "login": "PASS_LIVE_AUTH_PANEL_HIDDEN",
+    "historical_report": "PASS_ORIGINAL_ID_HASH_AND_LIMITS",
+    "mail_diagnostic": "PASS_ONE_SAVED_REPORT_COMPLETED_FIRST_PAGE_LIMITS",
+    "memory_read": "PASS_EMPTY_APPROVED_RECORDS",
+    "notification_display": "PASS_UNROUTED_NOT_DELIVERY_UNREAD",
+    "isolated_memory_write_dedup_isolation": "BLOCKED_NO_ACTIVE_AUTHORIZED_ISOLATED_UI_SCOPE",
+    "synthetic_notification_ack": "BLOCKED_NO_SYNTHETIC_NOTIFICATION_OR_ACTIVE_ISOLATED_UI_SCOPE"
+  },
   "real_credentials_read_or_changed": false,
   "business_data_written": false,
   "real_notification_acknowledged": false,
   "new_resources_costs_permissions": false,
-  "recovery_analysis_mail_execution": false
+  "recovery_analysis_mail_execution": false,
+  "application_commit": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+  "deployments": [
+    {
+      "service": "sam-command-center",
+      "deploy": "dep-dbgm8n5g1s2s73bp9k30",
+      "status": "live",
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "finished_at": "2026-10-28T02:57:03.814556Z"
+    },
+    {
+      "service": "sam-mcp",
+      "deploy": "dep-dbgm96k9v7es73arrs2g",
+      "status": "live",
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "finished_at": "2026-10-28T02:58:21.065892Z"
+    },
+    {
+      "service": "sam-runtime",
+      "deploy": "dep-dbgld96gekts7388md80",
+      "status": "live",
+      "revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "changed": false
+    }
+  ],
+  "runtime_redeploy": {
+    "result": "AUTO_REVIEW_REJECTED",
+    "reason": "Runtime contains no changes relevant to the authentication fix; avoidable operational impact. General deployment authority did not justify redeploying an unaffected service.",
+    "alternative": "Leave unaffected live Runtime at62; no retry, indirect execution, restart or workaround."
+  },
+  "live_negative_controls": [
+    {
+      "case": "missing_header",
+      "status": 401,
+      "reason": "missing_authorization",
+      "request_id": "d7e976e8-50ee-4e19-a5b0-34be230e5211"
+    },
+    {
+      "case": "synthetic_basic",
+      "status": 401,
+      "reason": "invalid_bearer_scheme",
+      "request_id": "a33cb4ae-e04c-4ec8-bc48-accba66bfc7e"
+    },
+    {
+      "case": "synthetic_wrong_bearer",
+      "status": 401,
+      "reason": "bearer_rejected",
+      "request_id": "a8f5a8e1-6c0b-458b-9d0f-2458ea64ea20"
+    },
+    {
+      "case": "foreign_origin",
+      "status": 403,
+      "error": "origin_not_allowed"
+    }
+  ],
+  "redacted_live_events": [
+    {
+      "timestamp": "2026-10-28T02:57:25.790636928Z",
+      "event": "command_center_auth_rejected",
+      "reason": "missing_authorization",
+      "method": "GET",
+      "request_id": "d7e976e8-50ee-4e19-a5b0-34be230e5211"
+    },
+    {
+      "timestamp": "2026-10-28T02:57:29.968109307Z",
+      "event": "command_center_auth_rejected",
+      "reason": "invalid_bearer_scheme",
+      "method": "GET",
+      "request_id": "a33cb4ae-e04c-4ec8-bc48-accba66bfc7e"
+    },
+    {
+      "timestamp": "2026-10-28T02:57:34.13269439Z",
+      "event": "command_center_auth_rejected",
+      "reason": "bearer_rejected",
+      "method": "GET",
+      "request_id": "a8f5a8e1-6c0b-458b-9d0f-2458ea64ea20"
+    },
+    {
+      "timestamp": "2026-10-28T02:57:45.65698244Z",
+      "event": "command_center_auth_rejected",
+      "reason": "missing_authorization",
+      "method": "GET",
+      "request_id": "2d92a312-f7bc-40c5-98cb-1818446e94ce"
+    },
+    {
+      "timestamp": "2026-10-28T02:58:19.371675512Z",
+      "event": "command_center_auth_rejected",
+      "reason": "invalid_bearer_scheme",
+      "method": "GET",
+      "request_id": "55584e00-8a6b-470b-b959-d29a1a618bc4"
+    }
+  ],
+  "browser_transport_probe": {
+    "action": "Rendered Recall approved decisions button clicked while unauthenticated; no credential input",
+    "result": "invalid_bearer_scheme",
+    "request_id": "55584e00-8a6b-470b-b959-d29a1a618bc4",
+    "correlation": "Same generated ID displayed in authenticated-target browser and current CC logs",
+    "limit": "This negative control proves header presence for that current request only. Empty Bearer formatting is not a claim about the old secure credential submission."
+  },
+  "current_auth_conclusion": "Current secure browser login succeeded using owner-supplied existing service credential without value access; actual same-origin authenticated business reads now pass. No current transport/comparison/configuration failure reproduced. Prior generic401 cause remains UNKNOWN; no claim that diagnostics patch changed the accepted credential.",
+  "isolated_test_service": {
+    "id": "srv-dbe27ics728c738tuoc0",
+    "name": "sam-isolated-test",
+    "suspended": "suspended",
+    "plan": "0.5c-512mb",
+    "restarted": false,
+    "expired_prior_lease_not_reused": true
+  },
+  "standalone_chatgpt_discovery": "Requested new names remain absent; prior manager Refresh action remains external and cached status/timeline stay available.",
+  "public_health_final": [
+    {
+      "service": "sam-command-center",
+      "status": 200,
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "health": "alive"
+    },
+    {
+      "service": "sam-mcp",
+      "status": 200,
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "health": "alive"
+    },
+    {
+      "service": "sam-runtime",
+      "status": 200,
+      "revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "health": "alive"
+    }
+  ]
 }

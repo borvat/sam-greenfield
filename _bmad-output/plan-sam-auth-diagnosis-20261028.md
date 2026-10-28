@@ -55,8 +55,8 @@ Never read/print/change a real credential, browser secret store, authorization h
 **Execution:**
 - [x] Implement only CC auth diagnostics/guidance and new focused tests; capture RED before patch for demonstrated diagnostic/guidance behavior, then GREEN.
 - [x] Independent scoped Quick reviewer and verifier inspect/run only this delta plus needed TypeScript/auth/CC regressions. Root triages each finding and checks matrix coverage.
-- [ ] Root scans final code for secrets; publish reviewed non-main tree, retain rollback62 and deploy existing CC (other services only if required by release consistency). No environment/secret changes.
-- [ ] Root verifies live build, readiness and synthetic missing/scheme/bearer probes. These prove current probe transport only. Preserve historical uncertainty and observe redacted logs if available. Only then prepare secure login if a credential is still necessary; no automatic old-secret replay.
+- [x] Root scans final code for secrets; publish reviewed non-main tree, retain rollback62 and deploy existing CC (other services only if required by release consistency). No environment/secret changes.
+- [x] Root verifies live build, readiness and synthetic missing/scheme/bearer probes. These prove current probe transport only. Preserve historical uncertainty and observe redacted logs if available. Only then prepare secure login if a credential is still necessary; no automatic old-secret replay.
 - [ ] After successful secure login, execute the already prepared two-report and isolated-memory/synthetic-receipt UI checks; otherwise preserve precise blocker and one existing-token login action.
 
 **Acceptance Criteria:**
@@ -77,3 +77,7 @@ Scoped Quick and independent security reviewers returned no findings. Independen
 ## Verification
 
 Parent captures source snapshot before meaningful final tests. Implementer uses `DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test tests/isolated/command_center_auth.ts`; no native DB. Independent verifier runs focused auth/adjacent CC tests and `npm run typecheck`; do not run all unrelated36 tests. `git diff --check` and original secret scanner final directory scope required. Deployment is root only, pinned exact reviewed commit with62 rollback. User explicitly authorizes these routine fixes/deployments, so no new routine plan-approval request.
+
+## Live/browser continuation result
+
+Published application1e4e21a773c88e2366915edd3bb2e307fddaa157 LIVE on CC and MCP. Runtime stays LIVE62 because automatic approval review rejected the unnecessary unaffected-service deploy; no bypass/retry. CC synthetic HTTP classifications and browser no-credential header-presence probe correlated with redacted logs. Secure login then succeeded, followed by actual rendered-card reads of both original reports/limits, empty approved-memory recall and unread internal-only UNROUTED notification. Historical Unauthorized cause remains UNKNOWN. Isolated write/dedup/isolation and synthetic acknowledgement remain BLOCKED: current session is business-bound; existing test service is suspended and prior lease expired. No business fixture or real receipt was written. See cc-auth-diagnosis and cc-authenticated-ui-acceptance evidence.

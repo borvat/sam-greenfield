@@ -1,0 +1,79 @@
+{
+  "applicationRevision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+  "url": "https://sam-command-center.onrender.com/",
+  "login": {
+    "state": "LIVE",
+    "authPanelHidden": true,
+    "method": "browserAuth secure credential request; no values read"
+  },
+  "companyScope": "73aa81c6-3a23-4369-9408-8bea0956d399",
+  "historical": {
+    "reportId": "1ed20021-9b0d-47f8-904b-cd72e3d0846f",
+    "hash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7",
+    "coverage": {
+      "subset": true,
+      "sentProducts": 30,
+      "sourceProducts": 43
+    },
+    "limitations": [
+      "الكمية بعد الإلغاء ليست صافي المبيعات بعد المرتجعات؛ المرتجعات غير محسوبة.",
+      "لا يمكن حساب الربح الصافي أو التوصية بميزانية شراء دون تكاليف المنتجات والرسوم.",
+      "المخزون الحالي لقطة متغيرة: FBB من واجهة المخزون، وFBR للعروض المباعة المعروفة فقط؛ ليس كامل الكتالوج.",
+      "الطلبات مبنية على أحدث تغييرات الواجهة حتى يوم الجمع؛ لا توجد لقطة ذرية، وقد تغيّر القراءات المتزامنة النتائج.",
+      "قيم الأسعار محسوبة من سعر الوحدة المبلّغ؛ أساس الضريبة والعملة غير مثبتين في هذا التجميع. العمولات والمرتجعات غير محسوبة وليست صفراً. المبلغ بعد الإلغاء ليس ربحاً صافياً.",
+      "تفسير Hermes استنتاج نموذجي؛ الأرقام المعروضة مصدرها حساب SAM والتحقق من المصدر."
+    ],
+    "semanticValidation": "HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED",
+    "retrieval": "SAVED_RESULT_ONLY_NO_EXECUTION"
+  },
+  "mail": {
+    "goalId": "53424b11-c854-40e4-a264-14af2b7d33b0",
+    "state": "COMPLETED",
+    "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+    "hash": "6e6d9abe3e11f1fc92653f952d283987ba409d5c2240a47e8c3a6ef59adad97e",
+    "limitations": [
+      "Pagination tokens are not exposed by the saved response; token absence does not prove exhaustion.",
+      "Only the first page of each direction was requested, up to 100 identifiers. Counts are not mailbox totals.",
+      "The requested millisecond window was converted to second-based Gmail queries; exact boundary coverage is not established.",
+      "No message bodies, names, addresses, identifiers or links are included in this diagnostic.",
+      "The original broader objective remains unchanged and is not declared complete.",
+      "The inbox direction searches in:inbox only; it does not establish mailbox-wide incoming coverage.",
+      "Mailbox identity is unknown from these saved responses."
+    ],
+    "semanticValidation": "DETERMINISTIC_BOUNDED_SAVED_EVIDENCE",
+    "retrieval": "SAVED_RESULT_ONLY_NO_EXECUTION",
+    "reportCount": 1,
+    "pages": [
+      {
+        "direction": "inbox",
+        "count": 66,
+        "pagination": "NOT_EXPOSED",
+        "exhaustive": "UNKNOWN"
+      },
+      {
+        "direction": "sent",
+        "count": 0,
+        "pagination": "NOT_EXPOSED",
+        "exhaustive": "UNKNOWN"
+      }
+    ],
+    "mailboxIdentity": "UNKNOWN",
+    "exactWindowCoverage": "UNKNOWN"
+  },
+  "memoryRead": {
+    "records": [],
+    "approvalMeaning": "Explicitly approved owner decisions only; never expands execution authority."
+  },
+  "notifications": [
+    {
+      "deliveryMeaning": "UNROUTED means stored internally, not sent to the owner",
+      "id": "e0283121-947e-47b9-94e7-8be1aae16299",
+      "readReceipt": null,
+      "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+      "status": "UNROUTED"
+    }
+  ],
+  "writeAndSyntheticAck": "BLOCKED_NO_ACTIVE_AUTHORIZED_ISOLATED_UI_SCOPE",
+  "businessWritesPerformed": false,
+  "realNotificationAcknowledged": false
+}
