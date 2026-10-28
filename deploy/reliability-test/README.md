@@ -1,4 +1,6 @@
-# Existing SAM test service — bounded native acceptance completed
+# Existing SAM test service — bounded acceptance completed; service re-suspended
+
+Current state: the sole test login expired at2026-10-28T01:00:25.521Z and the existing test service was re-suspended without deleting its PostgreSQL evidence. Production was subsequently promoted under a separate explicit owner decision; see docs/engineering/production-promotion-evidence.json. The following records the completed test phase.
 
 The owner explicitly approved resuming only the existing `sam-isolated-test` service and renewing only its existing restricted login once for at most 60 minutes. The owner entered the existing database password in a hidden prompt in their own Render browser. No password, grant, RLS policy, tenant, compute plan or analysis admission was changed. The login expires at **2026-10-28T01:00:25.521Z**; no automatic renewal is allowed. This service is a bounded synthetic read-only test, not a production deployment or general executive intake.
 

@@ -1,0 +1,156 @@
+# Existing resources only; exported live configuration, no secret values.
+# Reviewed delta: CC restricted connection reference and original launcher.
+version: '1'
+services:
+- type: web
+  name: sam-runtime
+  runtime: node
+  repo: https://github.com/borvat/sam-greenfield
+  branch: delivery/sam-reliability-reviewed-20261028
+  plan: 0.5c-512mb
+  envVars:
+  - key: SAM_HERMES_DATA_ANALYSIS_ACTIVATED_AT
+    sync: false
+  - key: SAM_COMPOSITION_MODULE
+    sync: false
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
+  - key: SAM_SHUTDOWN_GRACE_MS
+    sync: false
+  - key: SAM_WORKER_ID
+    sync: false
+  - key: SAM_HERMES_DEEPSEEK_GUARD_SHA256
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_RETRY_OF_GOAL_ID
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_ENABLED
+    sync: false
+  - key: DEEPSEEK_MODEL
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_MODE
+    sync: false
+  - key: SAM_FREE_OVH_ENABLED
+    sync: false
+  - key: SAM_FREE_KILO_ENABLED
+    sync: false
+  - key: DATABASE_URL
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_EXPIRES_AT
+    sync: false
+  - key: SAM_HERMES_MEASUREMENT_ENABLED
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_ENTITY_ID
+    sync: false
+  - key: SAM_TICK_INTERVAL_MS
+    sync: false
+  - key: sam_runtime_app
+    sync: false
+  - key: SAM_HERMES_PROVIDER
+    sync: false
+  - key: SAM_HERMES_TEST_CONFIG_PATH
+    sync: false
+  - key: sam-hermes-test.json
+    sync: false
+  - fromGroup: sam-prod-models
+  - fromGroup: sam-prod-bol
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-google-client
+  region: frankfurt
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh runtime
+  healthCheckPath: /readyz
+  autoDeployTrigger: 'off'
+- type: web
+  name: sam-command-center
+  runtime: node
+  repo: https://github.com/borvat/sam-greenfield
+  branch: delivery/sam-reliability-reviewed-20261028
+  plan: free
+  envVars:
+  - key: SAM_GOOGLE_READ_ONLY
+    sync: false
+  - key: SAM_COMMAND_CENTER_BEARER_TOKEN
+    sync: false
+  - key: DATABASE_URL
+    fromService:
+      name: sam-runtime
+      type: web
+      envVarKey: DATABASE_URL
+  - fromGroup: sam-prod-common
+  region: frankfurt
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh command-center
+  healthCheckPath: /readyz
+  autoDeployTrigger: 'off'
+- type: web
+  name: sam-mcp
+  runtime: node
+  repo: https://github.com/borvat/sam-greenfield
+  branch: delivery/sam-reliability-reviewed-20261028
+  plan: free
+  envVars:
+  - key: GOOGLE_OAUTH_REFRESH_TOKEN
+    sync: false
+  - key: SAM_MCP_OAUTH_OWNER_PASSWORD_HASH
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_RETRY_OF_GOAL_ID
+    sync: false
+  - key: SAM_FREE_KILO_ENABLED
+    sync: false
+  - key: SAM_FREE_OVH_ENABLED
+    sync: false
+  - key: sam_mcp_app
+    sync: false
+  - key: SAM_MCP_BEARER_TOKEN
+    sync: false
+  - key: SAM_MCP_OAUTH_OWNER_EMAIL
+    sync: false
+  - key: SAM_MCP_PUBLIC_RESOURCE_URL
+    sync: false
+  - key: SAM_HERMES_MEASUREMENT_ENABLED
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_ACTIVATED_AT
+    sync: false
+  - key: SAM_HERMES_DEEPSEEK_GUARD_SHA256
+    sync: false
+  - key: DEEPSEEK_MODEL
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_MODE
+    sync: false
+  - key: SAM_MCP_UNAUTHENTICATED_TEST_MODE
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_ENTITY_ID
+    sync: false
+  - key: SAM_HERMES_PROVIDER
+    sync: false
+  - key: SAM_MCP_OAUTH_SIGNING_PRIVATE_KEY
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_EXPIRES_AT
+    sync: false
+  - key: SAM_GOOGLE_MCP_AUTH_ENABLED
+    sync: false
+  - key: SAM_MCP_INTERNAL_OAUTH_ENABLED
+    sync: false
+  - key: DATABASE_URL
+    sync: false
+  - key: SAM_HERMES_DATA_ANALYSIS_ENABLED
+    sync: false
+  - fromGroup: sam-prod-bol
+  - fromGroup: sam-prod-common
+  - fromGroup: sam-prod-google
+  - fromGroup: sam-prod-google-client
+  region: frankfurt
+  buildCommand: npm ci --omit=dev
+  startCommand: sh deploy/render/start.sh mcp
+  healthCheckPath: /livez
+  autoDeployTrigger: 'off'
+databases:
+- name: sam-trial-postgres
+  databaseName: sam_trial_postgres
+  user: sam_trial_postgres_user
+  plan: 0.1c-256mb
+  region: frankfurt
+  ipAllowList: []
+  postgresMajorVersion: '15'
+  diskSizeGB: 1

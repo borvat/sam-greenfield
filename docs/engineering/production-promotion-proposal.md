@@ -1,6 +1,6 @@
 # Reviewable next decision: promote the verified SAM application
 
-Status: **prepared, not authorized or executed**. The owner authorized bounded isolated testing, explicitly excluded production changes/main merge, and approved one existing test login window only. That window ends 2026-10-28T01:00:25.521Z. Bounded test evidence is retained independently of availability.
+Status: **approved by the owner and completed**. Current acceptance is recorded in `production-promotion-evidence.json`; the proposal below is preserved as the pre-approval decision record, so its future-tense restrictions are historical. The owner authorized bounded isolated testing, explicitly excluded production changes/main merge, and approved one existing test login window only. That window ends 2026-10-28T01:00:25.521Z. Bounded test evidence is retained independently of availability.
 
 ## Exact proposed release
 
@@ -27,3 +27,26 @@ The original email goal `53424b11-c854-40e4-a264-14af2b7d33b0` remains WAITING_E
 The V2 interpretation contract intentionally restricts the model to source references; source-derived Arabic rendering replaces free prose for future reports. Original historical reports remain immutable and are labelled as not validated under V2. Existing RLS may hide earlier-plan reports; preserve it. Execution knowledge/notification feature flags retain their actual production state, never inferred from isolated testing.
 
 Rollback application services to their recorded prior revisions if health/scoped reads regress; do not reverse database history, reset money reservations or broaden access. No production rollback operation is currently requested. Continued test availability beyond the one approved lease is a separate access-duration decision; no automatic renewal is prepared.
+
+
+## Executed resolution
+
+All three existing application services run the approved application commit f859fda054f0d367c983e131feee6e6ddd7ae861. No PR/main merge was used. Their source is the isolated pinned delivery/sam-reliability-reviewed-20261028 branch, and auto-deploy stays off. The existing Blueprint uses a separate configuration branch delivery/sam-production-binding-20261028, commit9b212547fec4b27796f3aed25d97a39dab7a770d, path deploy/render/production-binding.yaml, AutoSync No. The configuration branch is not the application source branch.
+
+CC initially rejected its old sam_trial_postgres_user owner login. A reviewed temporary start diagnostic used one connection and BEGIN READ ONLY with exact-revision admission. The final repair changed only its DATABASE_URL reference to the existing Runtime variable and restored its normal launcher. Render resolved that reference internally; no credential value was exposed, generated or rotated. The current fixed production principal is sam_runtime_app, org566baa67-5d93-4195-a1d0-18c1649154bf, entity73aa81c6-3a23-4369-9408-8bea0956d399.
+
+Changing the Blueprint source branch triggered validation of the old root render.yaml before the custom path was updated, even though AutoSync was No. Render rejected its proposed database downgrade before applying it. Service configurations were confirmed unchanged, then the correct custom file produced a preview with exactly two CC changes. Only that reviewed preview was approved. The database remains0.1c-256mb/1GB/PostgreSQL15; no downgrade occurred.
+
+Recorded production deploys: MCP dep-dbgk81m7bikc73ae2ok0; Runtime dep-dbgk8ul9el5s73d1duf0; CC dep-dbgkfjs9v7es738fp7rg. All healths returned200 with the same exact revision. Existing report/hash, email state/records, model ledger29/cost-field sum0.75 and nine review-budget events were unchanged. New read-handler execution used the actual production principal; existing ChatGPT timeline/status reads were independently verified. This chat's cached tool metadata still omits the new read-tool names. No authenticated CC browser session is claimed.
+
+The original email goal remains WAITING_EXTERNAL/nullwake by explicit instruction. No new model/analysis, source recollection, send or other business effect occurred. Execution knowledge and notification features remain disabled; operational memory is scoped and available but currently has zero visible production records. The earlier synthetic persistence proof remains isolated from business data. The test service was re-suspended after its sole lease expired.
+
+## Proposed engineering lessons — not approved rules
+
+Scope: SAM engineering; source: this dated production rollout and its evidence JSON. Approval status: PROPOSED, not an owner decision or a planner rule. Keep these as review candidates; do not overwrite the separate concurrent BMAD learning work.
+
+- Check every component's own database principal. A healthy Runtime does not establish that an older UI avoids an owner connection.
+- Use a live secret-free export and explicit current-plan comparisons for Blueprint repairs. Source/path saves can initiate validation independently of AutoSync; an old root file can contain obsolete plans and privileged default connections.
+- Keep app revisions pinned separately from infrastructure configuration, and require the effective Render preview before approving a sync. Use supported service references instead of exposing credential values.
+
+References checked: https://render.com/docs/blueprint-spec ; https://render.com/docs/configure-environment-variables ; https://render.com/docs/compute-plans ; https://render.com/docs/infrastructure-as-code . Markdown responses were unsupported by the retrieval tool; the corresponding current HTML references were read, and the current public JSON Schema was fetched and validated with AJV.

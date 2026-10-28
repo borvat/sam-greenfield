@@ -4,8 +4,8 @@ type: bugfix
 ticket: ''
 created: '2026-10-28'
 status: built
-delivery_status: bounded_test_verified
-remaining_scope: "Production promotion, original email recovery, merchant legal identity and push delivery are not completed."
+delivery_status: production_promoted_read_acceptance_verified
+remaining_scope: "Original email remains parked by explicit owner instruction; merchant legal identity, execution knowledge, push delivery and cached discovery of new read-tool names remain limited."
 baseline_revision: e0eb20a6637b3ba4221172b341c8a27e156b9528
 route: full
 route_source: auto
@@ -65,6 +65,8 @@ Acceptance: Given unsupported narrative, when parsed, then it is rejected before
 Investigation used three actual read-only agents. Reproduced research-classification cause matches observed live event sequence; original exception was not logged, so it is not described as an observed database exception. Independent reviewer and verifier will follow implementation. No broad rewrite is justified.
 
 ## Plan Change Log
+
+2026-10-28 production update: Owner explicitly approved promoting reviewed application f859fda054f0d367c983e131feee6e6ddd7ae861 to all three existing production services, keeping Hermes closed and the email goal unresumed. All three are LIVE and passed native/connected read acceptance. CC's legacy owner connection failed the new principal guard; the existing Blueprint now references Runtime's already restricted DATABASE_URL inside Render. Current-schema validation and independent review preceded an effective preview limited to CC connection and original-launcher restoration. No secret was copied into chat/source, and no grant, RLS, plan or resource expansion was used. Expired isolated test service was re-suspended after its one login lease. This supersedes the earlier production exclusion only for the specific approved promotion.
 
 2026-10-28: Owner explicitly approved resuming only the existing test service and renewing only its existing restricted login once for at most 60 minutes. User completed hidden owner authentication; expiry is 2026-10-28T01:00:25.521Z, with unchanged privilege hash. Initial bounded test deployment and an actual container replacement passed native read-only acceptance. No production/model authorization was inferred. Hosted UI showed an enabled creation form despite read-only transport; the reviewed minimal HTTP/UI guard fixes this only when the existing read-only flag is enabled. See hosted-reliability-evidence.json for deployment and persistence evidence.
 

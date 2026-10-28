@@ -1,0 +1,244 @@
+{
+  "ownerApproved": true,
+  "approvedScope": "PROMOTE_REVIEWED_APP_TO_THREE_EXISTING_PRODUCTION_SERVICES; HERMES_CLOSED; EMAIL_NOT_RESUMED; NO_MAIN_MERGE",
+  "applicationCommit": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+  "deploymentMethod": "Existing three services pinned to isolated delivery/sam-reliability-reviewed-20261028 at exact reviewed f859 application; auto-deploy off; separate Blueprint config branch/path; no main merge.",
+  "preflight": {
+    "planning": 0,
+    "futurePlanning": 0,
+    "reviews": 0,
+    "executing": 0,
+    "scheduledWaits": 0,
+    "activeWork": 0,
+    "pendingOutbox": 0,
+    "unconsumedWakeEvents": 0,
+    "sideEffectsNeedingReconciliation": 0,
+    "financeTickConfigured": false,
+    "modelCalls": 29,
+    "modelReserved": "0.75",
+    "readReviewBudgetEntries": 9,
+    "states": {
+      "COMPLETED": 369,
+      "FAILED": 30,
+      "WAITING_EXTERNAL": 16,
+      "WAITING_OWNER": 1
+    }
+  },
+  "baseline": {
+    "runtime": "e0eb20a6637b3ba4221172b341c8a27e156b9528",
+    "mcp": "e0eb20a6637b3ba4221172b341c8a27e156b9528",
+    "commandCenter": "62ad8bd79095e4c10bfa0708f26e06bb21232d21"
+  },
+  "originalReport": {
+    "id": "1ed20021-9b0d-47f8-904b-cd72e3d0846f",
+    "hash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7"
+  },
+  "emailGoal": "53424b11-c854-40e4-a264-14af2b7d33b0",
+  "modelInvocationsAuthorized": false,
+  "deployments": {
+    "mcp": {
+      "id": "dep-dbgk81m7bikc73ae2ok0",
+      "status": "live",
+      "commit": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+      "finishedAt": "2026-10-28T00:39:15.971327Z"
+    },
+    "runtime": {
+      "id": "dep-dbgk8ul9el5s73d1duf0",
+      "status": "live",
+      "commit": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+      "finishedAt": "2026-10-28T00:41:29.993502Z"
+    },
+    "commandCenter": {
+      "id": "dep-dbgkfjs9v7es738fp7rg",
+      "status": "live",
+      "commit": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+      "finishedAt": "2026-10-28T00:55:12.404363Z",
+      "trigger": "blueprint_sync"
+    }
+  },
+  "releaseBranch": "delivery/sam-reliability-reviewed-20261028",
+  "commandCenterBlocker": {
+    "confirmedRole": "sam_trial_postgres_user",
+    "code": "RELEASE_APPLICATION_ROLE_UNSAFE",
+    "probeWritePerformed": false,
+    "failedDeploys": [
+      "dep-dbgk2futlv9c7388gqp0",
+      "dep-dbgk552fngtc73fssim0"
+    ],
+    "requiredAction": "Securely replace CC DATABASE_URL with existing restricted Runtime connection; do not expose value, change grants or bypass admission.",
+    "fallbackObservation": "The old62 fallback attempted CREATE TABLE IF NOT EXISTS for its already-existing migration ledger, skipped all migration bodies and failed expected14 versusrecorded16. The temporary revision-guarded diagnostic prefix subsequently blocked the old launcher; the successful binding repair removed that prefix and restored the normal reviewed launcher.",
+    "status": "RESOLVED",
+    "resolution": "Existing Blueprint fromService reference to sam-runtime DATABASE_URL; role narrowed from owner to existing sam_runtime_app; credentials remain inside Render; original launcher restored."
+  },
+  "postRuntimeNative": {
+    "planning": 0,
+    "futurePlanning": 0,
+    "reviews": 0,
+    "executing": 0,
+    "scheduledWaits": 0,
+    "activeWork": 0,
+    "pendingOutbox": 0,
+    "unconsumedWakeEvents": 0,
+    "sideEffectsNeedingReconciliation": 0,
+    "financeTickConfigured": false,
+    "modelCalls": 29,
+    "modelReserved": "0.75",
+    "readReviewBudgetEntries": 9,
+    "states": {
+      "COMPLETED": 369,
+      "FAILED": 30,
+      "WAITING_EXTERNAL": 16,
+      "WAITING_OWNER": 1
+    },
+    "role": "sam_runtime_app",
+    "org": "566baa67-5d93-4195-a1d0-18c1649154bf",
+    "entity": "73aa81c6-3a23-4369-9408-8bea0956d399",
+    "modelLedgerUnchanged": true,
+    "reviewBudgetUnchanged": true,
+    "writePerformed": false
+  },
+  "secureBindingPreparation": {
+    "existingBlueprint": "exs-db37v2gm7kps73dc3j80",
+    "autoSync": "No",
+    "configCommit": "9b212547fec4b27796f3aed25d97a39dab7a770d",
+    "configTree": "b07bbdd98894d536a5e0a94af7abd510ce90f5f4",
+    "configBranch": "delivery/sam-production-binding-20261028",
+    "path": "deploy/render/production-binding.yaml",
+    "liveExportCompared": true,
+    "currentSchemaValidationPassed": true,
+    "independentReview": "No findings; two CC fields only",
+    "syncApplied": true,
+    "syncId": "exe-dbgkeqmi0phs73amc9v0",
+    "effectivePreview": [
+      "Update only sam-command-center startCommand to sh deploy/render/start.sh command-center",
+      "Update only sam-command-center DATABASE_URL using existing sam-runtime DATABASE_URL reference"
+    ],
+    "newResources": 0,
+    "planChanges": 0,
+    "databaseChanges": 0,
+    "secretValuesExposed": false,
+    "credentialGeneration": false
+  },
+  "rejectedOldPathValidation": {
+    "syncId": "exe-dbgkdrd9el5s73d1t3kg",
+    "reason": "Old root render.yaml proposed invalid database downgrade from actual0.1c-256mb tofree after source branch save before path correction",
+    "applied": false,
+    "observedBehavior": "Changing Blueprint source branch triggered validation even with AutoSync No; source/path saves are consequential",
+    "unchangedAfterRejection": [
+      "service branches",
+      "service plans",
+      "service start commands"
+    ],
+    "databaseAfterSuccessfulSync": {
+      "plan": "0.1c-256mb",
+      "diskSizeGb": 1,
+      "postgresMajorVersion": "15",
+      "status": "available"
+    }
+  },
+  "postCommandCenterNative": {
+    "planning": 0,
+    "futurePlanning": 0,
+    "reviews": 0,
+    "executing": 0,
+    "scheduledWaits": 0,
+    "activeWork": 0,
+    "pendingOutbox": 0,
+    "unconsumedWakeEvents": 0,
+    "sideEffectsNeedingReconciliation": 0,
+    "financeTickConfigured": false,
+    "modelCalls": 29,
+    "modelReserved": "0.75",
+    "readReviewBudgetEntries": 9,
+    "states": {
+      "COMPLETED": 369,
+      "FAILED": 30,
+      "WAITING_EXTERNAL": 16,
+      "WAITING_OWNER": 1
+    },
+    "role": "sam_runtime_app",
+    "org": "566baa67-5d93-4195-a1d0-18c1649154bf",
+    "entity": "73aa81c6-3a23-4369-9408-8bea0956d399",
+    "modelLedgerUnchanged": true,
+    "reviewBudgetUnchanged": true,
+    "writePerformed": false
+  },
+  "finalAcceptance": {
+    "passed": true,
+    "healths": [
+      {
+        "service": "runtime",
+        "status": 200,
+        "revision": "f859fda054f0d367c983e131feee6e6ddd7ae861"
+      },
+      {
+        "service": "mcp",
+        "status": 200,
+        "revision": "f859fda054f0d367c983e131feee6e6ddd7ae861"
+      },
+      {
+        "service": "commandCenter",
+        "status": 200,
+        "revision": "f859fda054f0d367c983e131feee6e6ddd7ae861"
+      }
+    ],
+    "commandCenterUnauthenticated": 401,
+    "originalReportReplay": {
+      "id": "1ed20021-9b0d-47f8-904b-cd72e3d0846f",
+      "hash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7",
+      "identical": true,
+      "executionPerformed": false,
+      "semanticValidation": "HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED"
+    },
+    "newReadToolVerificationOrigin": "Native production database handlers using fixed production principal; current ChatGPT tool metadata does not yet list the new read tool names",
+    "existingChatGPTReadPathVerified": true,
+    "commandCenterStoreTimelineHashMatched": true,
+    "authenticatedCommandCenterBrowserSessionVerified": false,
+    "operationalMemory": {
+      "availability": "AVAILABLE",
+      "visibleCount": 0,
+      "crossScopeSyntheticRecords": 0
+    },
+    "executionKnowledge": {
+      "enabled": false,
+      "availability": "FEATURE_DISABLED"
+    },
+    "notifications": {
+      "availability": "FEATURE_DISABLED",
+      "delivery": "POLLING_ONLY",
+      "pushPerformed": false
+    },
+    "newModelCalls": 0,
+    "newHermesPolicyAttempts": 0,
+    "emailResumed": false,
+    "externalBusinessEffects": 0
+  },
+  "googleConnectedStatus": {
+    "configured": true,
+    "discoveredReadTools": 7,
+    "authorizationStored": true,
+    "liveReadVerified": null,
+    "liveReadProbe": "NOT_PERFORMED",
+    "sendCapability": "NOT_AUTHORIZED",
+    "historicalEvidence": "INDEPENDENT_EXECUTION_RECORDS_ONLY"
+  },
+  "capabilityManifest": {
+    "count": 84,
+    "hermesCapabilities": 0,
+    "origin": "Connected production MCP read"
+  },
+  "logsAfterCcSuccess": {
+    "start": "2026-10-28T00:55:00Z",
+    "observedLogCount": 13,
+    "startupOrWorkStageFailures": 0,
+    "hasMore": false
+  },
+  "expiredTestCleanup": {
+    "service": "srv-dbe27ics728c738tuoc0",
+    "leaseExpiredAt": "2026-10-28T01:00:25.521Z",
+    "suspendedAfterExpiry": true,
+    "postgresDataRetained": true,
+    "productionServicesNotSuspended": true
+  },
+  "status": "PRODUCTION_PROMOTED_AND_READ_ACCEPTANCE_VERIFIED"
+}
