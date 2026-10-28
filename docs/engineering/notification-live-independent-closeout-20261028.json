@@ -1,0 +1,118 @@
+{
+  "schema": "sam.notification_live_independent_closeout.v1",
+  "created_at": "2026-10-28T06:10:20.497Z",
+  "verdict": "ACCEPTANCE_EVIDENCE_CONSISTENT_AND_BOUNDED_LIFECYCLE_INDEPENDENTLY_CONFIRMED",
+  "reviewed_artifact_sha256": {
+    "/workspace/scratch/66eecfb7baca/sam-greenfield/docs/engineering/assets/isolated-ui-notification-receipt-20261028.jpg": "86d288e4220987ee87375962ede8ffe6731043753a80b533b92f28fcbc6c51a6",
+    "/workspace/scratch/66eecfb7baca/sam-greenfield/docs/engineering/assets/isolated-ui-notification-withheld-20261028.jpg": "1d684f5273311438b14b4158ebc4b7b65bc78c22b473d754da72ac9c9238647e",
+    "/workspace/scratch/66eecfb7baca/sam-greenfield/docs/engineering/isolated-ui-notification-acceptance-20261028.json": "4e9c520a56a2a866d2692fa780f2658da09260549c5fa488b1ef7c83b78882c1"
+  },
+  "screenshot_hashes_match_manifest": true,
+  "independent_render_observations": {
+    "source": "Prior direct Render get_service/get_deploy responses in this verifier session; no new live calls during artifact review.",
+    "serviceId": "srv-dbe27ics728c738tuoc0",
+    "workspaceId": "tea-db35rbflot8c739g8rhg",
+    "suspended": "suspended",
+    "suspenders": [
+      "user"
+    ],
+    "suspendedUpdatedAt": "2026-10-28T06:06:06.368938Z",
+    "plan": "0.5c-512mb",
+    "runtime": "docker",
+    "configuredInstances": 1,
+    "autoDeploy": "no",
+    "autoDeployTrigger": "off",
+    "deployId": "dep-dbgove6c6qcc73c980jg",
+    "revision": "d8530ded08016af4d0225d2948d207e18dcd3b6a",
+    "deployStatus": "live",
+    "resumeAt": "2026-10-28T06:01:28.264873Z",
+    "liveAt": "2026-10-28T06:03:27.639205Z",
+    "activeSeconds": 278.104065,
+    "beforeAbsoluteDeadline": true,
+    "withinEightMinutes": true,
+    "notes": "Deploy status live is historical deploy metadata; current service is suspended."
+  },
+  "visual_review": {
+    "withheld_image": {
+      "fixtureId": "a1829450-3810-4aac-8af3-4e0331ff0186",
+      "label": "TEST DATA ONLY — SAM UI acceptance notification",
+      "goalId": "f49dedc9-f35b-4396-aa1e-c163152a69c7",
+      "status": "UNROUTED",
+      "readReceipt": null,
+      "markReadButtonVisible": true,
+      "disclosureVisible": "Synthetic acceptance: committed response intentionally withheld once; retry this unchanged form or button.",
+      "internalOnlyTextVisible": true
+    },
+    "receipt_image": {
+      "status": "UNROUTED",
+      "receiptId": "f0d1b181-4bd5-4b74-8328-41511ac70225",
+      "receiptTimestamp": "2026-10-28T06:05:15.765Z",
+      "notificationId": "a1829450-3810-4aac-8af3-4e0331ff0186",
+      "internalOnlyTextVisible": true
+    },
+    "interpretation": "The saved rendered states show a disclosed withheld reply with retry control, then the same fixture's internal read receipt while status remains UNROUTED. They do not claim external send, push, or transport delivery."
+  },
+  "root_observed_evidence_review": {
+    "source": "Root-authored JSON and saved screenshots; reviewed, not independently replayed.",
+    "revisionMatchesIndependentRender": true,
+    "windowTimestampsMatchIndependentRender": true,
+    "goal": {
+      "id": "f49dedc9-f35b-4396-aa1e-c163152a69c7",
+      "company_scope": "2796e0d9-1701-4e53-a7ac-d198c0e44c01",
+      "business_id": "G000001",
+      "objective": "Read-only synthetic startup check. Execution remains disabled.",
+      "domain": "owner_command",
+      "state": "NEW",
+      "authority_ceiling": "GREEN",
+      "parent_goal_id": null,
+      "current_plan_id": null
+    },
+    "eligibility": "EXACT_SYNTHETIC_STARTUP_GOAL; exact pinned tuple and no associated plans/work/executions",
+    "beforeAckCounts": {
+      "memoryCount": 1,
+      "save_audits": 1,
+      "read_receipts": 0
+    },
+    "afterRetryCounts": {
+      "memoryCount": 1,
+      "save_audits": 1,
+      "read_receipts": 1,
+      "notificationStatus": "UNROUTED",
+      "modelCalls": 0,
+      "pushPerformed": false
+    },
+    "preservedMemoryId": "e7beb6ae-ea5c-496b-9567-d84041ffd5fd",
+    "memorySaveRepeated": false,
+    "productionNotificationRead": {
+      "channel": "Actual discovered ChatGPT sam_list_notifications({limit:5}), read-only",
+      "ok": true,
+      "availability": "AVAILABLE",
+      "delivery": "POLLING_ONLY",
+      "pushPerformed": false,
+      "records": [
+        {
+          "id": "e0283121-947e-47b9-94e7-8be1aae16299",
+          "status": "UNROUTED",
+          "readReceipt": null
+        }
+      ],
+      "syntheticTestNotificationVisible": false
+    },
+    "receiptWithinActiveWindow": true
+  },
+  "findings": [],
+  "limits": [
+    "I independently observed Render service/deploy metadata and independently inspected the saved images and JSON. Browser actions, restricted CLI seed/inspection/counters, role renewal and production notification read remain root-observed.",
+    "Static images show rendered before/after states; click chronology, real handler commit and single durable audit count rely on root's recorded browser/CLI observations and previously reviewed local implementation/tests.",
+    "No second-company authenticated browser session or ChatGPT push/external delivery is established.",
+    "Earlier authentication failure and suspension receipts remain historical evidence; this later acceptance does not erase them."
+  ],
+  "review_actions": {
+    "new_live_calls": false,
+    "browser": false,
+    "native_database": false,
+    "tests_or_replay": false,
+    "secrets": false,
+    "source_edits": false
+  }
+}

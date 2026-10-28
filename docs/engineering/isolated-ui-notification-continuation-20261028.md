@@ -1,3 +1,5 @@
+> CLOSED: actual synthetic notification browser acknowledgement/retry completed at d8530ded; service suspended06:06:06.369Z. See isolated-ui-acceptance-final-20261028.md. The steps below are retained historical preparation, not pending work or authorization for another activation.
+
 # Remaining isolated notification acceptance
 
 Production remains CC/MCP1e4e21a and Runtime62ccbdb. Actual isolated browser memory acceptance at9005b022 is complete; preserve recorde7beb6ae-ea5c-496b-9567-d84041ffd5fd and its audit. Do not save or retest memory with a fresh idempotency key. Both service windows ended in independently confirmed suspension within their approved durations.
