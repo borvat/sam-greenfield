@@ -38,9 +38,9 @@ Final affected run after optional-table/RLS metadata, enrollment and startup fix
 
 These are **local synthetic, stub, PGlite and local HTTP results**. The Gmail test named “isolated PostgreSQL” uses PGlite. Hermes/bol responses and model receipts are injected fixtures. Conditional private-source/rejected-output replay tests were not activated; zero registered skips does not prove those scenarios.
 
-No live service, model, business database, paid resource or external write was used by this verifier. No native PostgreSQL role deployment, real Google/provider operation, real browser layout, container build/replacement or hosted persistence was proved. Startup principal/profile tests use SQL-response stubs; PGlite RLS/ACL tests do not replace hosted admission evidence. Public staging surfaces are read-only, while the selected maintenance composition still performs isolated kernel/supervisor maintenance.
+No live service, model, business database, paid resource or external write was used by this verifier. At that local stage, native PostgreSQL role deployment, real Google/provider operation, real browser layout, container replacement and hosted persistence were not proved; subsequent root-observed native evidence is recorded below. Startup principal/profile tests use SQL-response stubs; PGlite RLS/ACL tests do not replace hosted admission evidence. Public staging surfaces are read-only, while the selected maintenance composition still performs isolated kernel/supervisor maintenance.
 
-Root separately reported that the hosted test role `sam_eval_runtime_20261024` expired at `2026-10-26T23:09:02.511Z` and knowledge is feature-disabled. Those are deployment blockers reported by root, not native checks independently performed here. All final local checks above pass; hosted acceptance remains outstanding.
+Root separately reported that the hosted test role `sam_eval_runtime_20261024` expired at `2026-10-26T23:09:02.511Z` and knowledge is feature-disabled. That was the initial deployment state reported by root, not a native check independently performed here. The renewal and completed bounded hosted acceptance below supersede that initial state; execution knowledge remains intentionally disabled.
 
 ## 2026-10-28 native acceptance plan and additional local check
 
@@ -63,4 +63,26 @@ Root's native acceptance sequence, with this verifier reviewing forwarded saniti
 4. Inspect memory status and recall: engineering remains `SEPARATE_GIT_SYSTEM`; execution knowledge and notifications are intentionally `FEATURE_DISABLED` because startup strips integration flags. Operational memory must retain its company, statement, source, timestamps and approval status. Notifications must say `POLLING_ONLY` and `pushPerformed:false`.
 5. Root alone handles the separately authorized synthetic sentinel. Compare its exact ID/hash/created timestamp before and after an independently evidenced container replacement. Same-process readback proves only readback; a code flag remaining `containerReplacementValidated:false` is expected and must not be promoted into persistence evidence. Retain the distinct container/deploy/boot identity alongside the matching row evidence.
 
-The database role must still have more than five and no more than sixty minutes remaining at startup. Its monotonic lease includes import time and stops the staging process before expiry; no automatic renewal is permitted. A readiness array `[503,200,200]` points to runtime/dependency readiness; `[200,200,503]` points to Command Center database/entity-ACTIVE readiness. A 401/403 is an auth/host/origin failure before data access. `SCOPED_READ_UNAVAILABLE` is an unavailable read, not an empty result. No hosted report, memory or container persistence result beyond the forwarded startup output has yet been verified here.
+The database role must still have more than five and no more than sixty minutes remaining at startup. Its monotonic lease includes import time and stops the staging process before expiry; no automatic renewal is permitted. A readiness array `[503,200,200]` points to runtime/dependency readiness; `[200,200,503]` points to Command Center database/entity-ACTIVE readiness. A 401/403 is an auth/host/origin failure before data access. `SCOPED_READ_UNAVAILABLE` is an unavailable read, not an empty result. Those were the pre-replacement acceptance criteria; the completed root-observed evidence follows.
+
+
+## Completed bounded native acceptance, 2026-10-28
+
+**Root-observed native acceptance passed.** This verifier read the updated sanitized `private-evidence/hosted-reliability.json`, checked its fields against root's forwarded output, and ran local assertions confirming their consistency (exit 0, `PASS ROOT_EVIDENCE_CONSISTENCY`). This verifier did not independently operate a hosted browser, open a database connection, use credentials or write a sentinel.
+
+| Evidence | Initial deployment | Replacement deployment |
+|---|---|---|
+| Deployment | `dep-dbgjmi08v5cc73fs5be0` | `dep-dbgjpu88v5cc73fsg410` |
+| Revision | `929593ff14c5ad33479a69826b394154d17fbab3` | `f859fda054f0d367c983e131feee6e6ddd7ae861` |
+| Instance suffix | `55b5ff5fb7-g4jp4` | `6bc877c9fc-q97ck` |
+| LIVE time, UTC | `00:03:01Z` | `00:09:05Z` |
+| Readiness | All three services 200 | All three services 200; all health revisions match replacement |
+
+The distinct service instances establish replacement rather than same-process replay. The replacement code matches inspected local `ba344f104fb596add765dfd965f0b31f9adb64cf`, tree `add7ef3bb27e0136a4eccbdf0f85100f8b9ba945`, as reported by root. Root's post-replacement shell acceptance marker was `POST_CONTAINER_REPLACEMENT_ACCEPTANCE`, `passed:true`.
+
+- Synthetic memory ID `91f50960-3004-4833-86a0-1c9b00dcaf25` retained hash `00c73718b3d192f7aec140245092115c6758747b2f9f13f52d22722a8a308ae6` and creation time `2026-10-28T00:03:45.811Z` after replacement. Native readback and MCP recall agreed on the single matching visible record, company `2796e0d9-1701-4e53-a7ac-d198c0e44c01`, source `operator_synthetic_sentinel:reliability_20261028proof001`, status `OBSERVED`, synthetic true and owner-approved false.
+- Existing synthetic report `b901c6c3-473f-4ab0-a25c-900205d9144d` retained hash `09dd65715597f890ae1855b5bac7abb3b3c3f77539a8a09c8b7faa636550d974`; repeated native MCP reads were identical before and after replacement, with `executionPerformed:false`. The foreign production report remained hidden.
+- Exactly seven read tools were exposed; submit/continuation tools were denied. Unauthenticated goals/MCP returned 401, foreign Origin 403, public writes 405. After replacement, direct authenticated Command Center POST still returned 405; the actual browser showed the new revision/read-only banner and no creation form.
+- Root reported zero model calls and unchanged production. No `WORK_TICK_FAILED` entries matched the bounded log search from `2026-10-28T00:02:50Z` through `2026-10-28T00:10:20.874411657Z`.
+
+This proves the bounded synthetic row survived one real container replacement in the existing operator-bound PostgreSQL test storage, and that existing report retrieval remained exact. It does not prove indefinite retention, disaster recovery, live reasoning, Google/Hermes/provider success, or production behavior. Execution knowledge and notification integration remain disabled; stored observations remain unapproved. The role expiry stays `2026-10-28T01:00:25.521Z`, with no automatic renewal. Application health fields intentionally still say live reasoning/container replacement were not validated by the application itself; the replacement proof is the separate observed evidence above. Only the existing test service and explicitly authorized synthetic fixture were involved.

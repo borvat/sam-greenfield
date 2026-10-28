@@ -4,8 +4,8 @@ type: bugfix
 ticket: ''
 created: '2026-10-28'
 status: built
-delivery_status: blocked
-blocked_reason: "Existing test service suspended and existing restricted database login expired; no automatic reactivation or renewal."
+delivery_status: bounded_test_verified
+remaining_scope: "Production promotion, original email recovery, merchant legal identity and push delivery are not completed."
 baseline_revision: e0eb20a6637b3ba4221172b341c8a27e156b9528
 route: full
 route_source: auto
@@ -66,6 +66,8 @@ Investigation used three actual read-only agents. Reproduced research-classifica
 
 ## Plan Change Log
 
+2026-10-28: Owner explicitly approved resuming only the existing test service and renewing only its existing restricted login once for at most 60 minutes. User completed hidden owner authentication; expiry is 2026-10-28T01:00:25.521Z, with unchanged privilege hash. Initial bounded test deployment and an actual container replacement passed native read-only acceptance. No production/model authorization was inferred. Hosted UI showed an enabled creation form despite read-only transport; the reviewed minimal HTTP/UI guard fixes this only when the existing read-only flag is enabled. See hosted-reliability-evidence.json for deployment and persistence evidence.
+
 ## Review Triage Log
 
 | Finding | Verdict / route | Evidence and resolution |
@@ -80,7 +82,7 @@ Investigation used three actual read-only agents. Reproduced research-classifica
 
 World-fact scope compatibility was also preserved after root inspection: validate company keys without changing historical scope identity; focused supersession/deduplication regression passes.
 
-Independent inspection re-review reported no further findings. Hosted acceptance remains blocked; this is not project closure.
+Independent inspection re-review reported no further findings. Bounded hosted read-only acceptance subsequently passed; production and general executive acceptance remain outside this completed test slice.
 
 ## Verification
 
