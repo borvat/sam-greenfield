@@ -1,0 +1,88 @@
+{
+  "schema": "sam.review_recovery_handoff.v1",
+  "recordedAt": "2026-10-28T07:13:57.399242+00:00",
+  "applicationCommit": "8a08e6163516f30f37c65313134170744330c4f4",
+  "applicationTree": "974bf2fa7eab05303fa47fbd354dc535838e25af",
+  "localTestCommit": "fe79e75d52e51dc6d88a74eada670fb1703adc46",
+  "localTestTree": "974bf2fa7eab05303fa47fbd354dc535838e25af",
+  "publishedPr": 86,
+  "branch": "repair/sam-operational-reliability-20261028",
+  "draft": true,
+  "merged": false,
+  "codeReview": "Original upstream BMAD Quick plus separate independent reviewer; no remaining source findings",
+  "finalCoordinatorChecks": [
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "stdout": "\n> typecheck\n> tsc --noEmit\n\n",
+      "stderr": "",
+      "source": {
+        "content_sha256": "fd77a1dd65be79b424c6b37c68cf9ac680c2d4050072fdb0a46335f3f6c3c5b2",
+        "head": "fe79e75d52e51dc6d88a74eada670fb1703adc46"
+      }
+    },
+    {
+      "name": "core-review",
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "tests/isolated/review_reliability_pglite.ts"
+      ],
+      "exitCode": 0,
+      "stdout": "PASS Arabic UTF-8 preflight, large prior narratives, identity and unknown monetary/stock evidence, reserved-without-invocation deadline, scoped old/new report linkage\nPASS total serialized review/critique input ceilings; four large sources retain totals/periods/provenance/omissions; Unicode/escaping oversized input makes zero calls {\"inputBytes\":[22442,19413],\"limit\":48000}\nPASS review deadlines abort provider transport; durable bounded continuation reuses verified work; exhaustion/cancellation/contracts/tenant/owner gates; deterministic large evidence metadata; wrong-period invoices and missing EUR/VAT/coverage cannot complete; incomplete reports remain honest\n",
+      "stderr": "",
+      "source": {
+        "content_sha256": "fd77a1dd65be79b424c6b37c68cf9ac680c2d4050072fdb0a46335f3f6c3c5b2",
+        "head": "fe79e75d52e51dc6d88a74eada670fb1703adc46"
+      }
+    }
+  ],
+  "independentEvidence": "docs/engineering/review-recovery-independent-local-20261028.json",
+  "secretScan": {
+    "engine": "Gitleaks8.30.1",
+    "scope": "full versions of25task files",
+    "findings": 0,
+    "historyScanned": false,
+    "wholeRepoUnchangedBaselineFindings": 45,
+    "newOrChangedRepoFindings": 0,
+    "suppressionsAdded": false
+  },
+  "nativeOriginalInputBytes": 50637,
+  "reconstructedCorrectedRecoveryInputBytes": 39621,
+  "limitBytes": 48000,
+  "tokenCount": "NOT_MEASURED",
+  "nativeBaselineReadGoalReviewSha256": "c4e7a8eaf292da65040f7bda389d70ffb13ae1c37a2f5151f420ab77f13dd06e",
+  "nativeModelCallsDuringReplay": 0,
+  "nativeSourceReadsDuringReplay": 0,
+  "nativeReplayCountersUnchanged": {
+    "modelCalls": 30,
+    "storedCost": 0.75,
+    "reviewBudgetRows": 11
+  },
+  "operatorAssets": {
+    "status": "PREPARED_HASH_VERIFIED",
+    "stage": "/tmp/sam-review-operator-8a08e616",
+    "revision": "8a08e6163516f30f37c65313134170744330c4f4",
+    "scriptSha256": "a57c9a9920334b5fa1e95be216a35bc2be6fcda7eda1313c508d6edc74981e68",
+    "sqlSha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+    "applicationSourceUnchanged": true,
+    "credentialsRead": false,
+    "migrationApplied": false
+  },
+  "operationalAcceptance": {
+    "status": "BLOCKED_PENDING_PRIVATE_OPERATOR_AUTHENTICATION",
+    "deployedNewRevision": false,
+    "originalGoalRecovered": false,
+    "newAcceptanceSubmitted": false,
+    "finalReportId": null,
+    "newAcceptanceGoalId": null,
+    "isolatedService": "REMAINS_SUSPENDED"
+  },
+  "next": "Private terminal login as existing schema owner; coordinator then applies reviewed00106, deploys existing services, recovers exact original goal, proves idempotence/retrieval and runs one new bounded acceptance. Authorization already supplied by owner; do not ask for permission again."
+}

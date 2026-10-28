@@ -8,63 +8,48 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
 ```json
 {
   "event": {
-    "blockers": [],
+    "blockers": [
+      "Existing sam_runtime_app is correctly non-owner; no operator credential configured. BrowserAuth prohibits model-visible reading/entry of passwords; user private terminal authentication required."
+    ],
     "deployment": {
-      "evidence": [
-        "docs/engineering/isolated-ui-notification-acceptance-20261028.json",
-        "docs/engineering/notification-live-independent-closeout-20261028.json"
-      ],
-      "identity": "ProductionCC/MCP1e4e21a+Runtime62ccbdb LIVE unchanged; isolatedd8530ded LIVE06:03:27Z thenSUSPENDED06:06:06Z",
-      "status": "observed"
+      "status": "unverified"
     },
     "evidence": [
-      "docs/engineering/isolated-ui-acceptance-final-20261028.md",
-      "docs/engineering/isolated-ui-notification-acceptance-20261028.json",
-      "docs/engineering/notification-live-independent-closeout-20261028.json",
-      "docs/engineering/isolated-ui-memory-acceptance-20261028.json",
-      "docs/engineering/completion-progress.md"
+      "docs/engineering/review-recovery-handoff-20261028.json",
+      "docs/engineering/review-recovery-progress-20261028.md",
+      "docs/engineering/review-recovery-independent-local-20261028.json",
+      "docs/engineering/review-recovery-measurement-20261028.md"
     ],
-    "id": "sam-ui-connection-acceptance-complete-20261028",
+    "id": "sam-review-recovery-built-auth-blocked-20261028",
     "next_steps": [
-      "No owner action remains for this completed acceptance scope. Keep isolated service suspended and preserve labelled fixtures/audits; do not rerun memory, completed goals, mail collection or model analysis.",
-      "Use discovered ChatGPT saved-report/memory/notification reads and existing production Command Center; internal polling is not external delivery. Historical transient MCP failures retain unknowncause and are a separate focused reliability followup if requested."
+      "Collect existing schema-owner password only through private hidden Runtime terminal; authentication alone applies nothing, coordinator then sends exact reviewed migration command.",
+      "Apply00106 and verify unchanged permissions/history, deploy affected existing MCP/CC/Runtime with pinned rollback, recover original goal from saved execution/verification; prove idempotence, ChatGPT/authenticated UI report retrieval.",
+      "Run exactly one newly authorized bounded offer acceptance; do not retry automatically on failure. Keep isolated service suspended unless necessary, same plan <=30min."
     ],
-    "recorded_at": "2026-10-28T06:17:29Z",
+    "recorded_at": "2026-10-28T07:14:47Z",
     "schema_version": 1,
     "source": {
-      "content_sha256": "b4f34d30af59804011e76db062bdc686e23e28961c4139a0be8c30a5a99cb801",
-      "head": "b72ef09b5ac9afa437084bd83835a2fe264ab808"
+      "content_sha256": "580bdae58c8da68f28cc15893d1ea3ae6d511e2d63e7ec65c67bbc4e127edd5a",
+      "head": "8a08e6163516f30f37c65313134170744330c4f4"
     },
-    "status": "complete",
-    "summary": "Scoped SAM UI/ChatGPT acceptance closed. Actual discovered read tools and previously authenticated saved-report reads retained; isolated browser owner-memory save/recall/exclusion/exact retry and synthetic notification button acknowledgement/retry PASS, one memory/saveaudit/readreceipt. Independent lifecycle and saved-evidence review confirmed final suspension after4m38s on sameplan. Production1e4e21a CC/MCP and62ccbdb Runtime unchanged. Final report/evidence publishedb72ef09. This is scoped acceptance, not a general readiness or ChatGPT push claim.",
+    "status": "blocked",
+    "summary": "Original BMAD build repair published8a08e616 on PR86, exact tree974bf2fa reviewed and independently locally verified. Saved-evidence prompt50637bytes diagnosed; corrected recovery reconstruction39621 under unchanged48000. Full scoped tool semantics/constraints retained, finite immutable source-only recovery, actionable report-linked waiting notifications. Native migration00106 and all live acceptance remain pending existing operator private authentication. No goal/source/model execution, deploy, grants/RLS/secret or main change occurred. Exact hashed operator files staged privately in existing Runtime shell.",
     "tests": [
       {
         "evidence": [
-          "docs/engineering/isolated-ui-memory-acceptance-20261028.json"
+          "docs/engineering/review-recovery-handoff-20261028.json"
         ],
-        "name": "Actual isolated authenticated browser owner-memory save/exact retry/context recall and exclusion",
+        "name": "Coordinator final typecheck and expanded core review acceptance",
         "scope": "historical",
         "source": {
-          "content_sha256": "aaabed9d8bc8fcaa1c2a81a1ade298dd91c621a0e4ce5db0c95facb1ceed502c",
-          "head": "9005b02254c4f55d307b4ffbb38f832e45612b60"
-        },
-        "status": "pass"
-      },
-      {
-        "evidence": [
-          "docs/engineering/isolated-ui-notification-acceptance-20261028.json"
-        ],
-        "name": "Actual isolated authenticated browser synthetic notification display/button acknowledgement/retry; native counts adjunct only",
-        "scope": "historical",
-        "source": {
-          "content_sha256": "bd28d910489ec1fd8233c8a84363022405a976de3aac6b106689dcb1d1808b9b",
-          "head": "d8530ded08016af4d0225d2948d207e18dcd3b6a"
+          "content_sha256": "fd77a1dd65be79b424c6b37c68cf9ac680c2d4050072fdb0a46335f3f6c3c5b2",
+          "head": "fe79e75d52e51dc6d88a74eada670fb1703adc46"
         },
         "status": "pass"
       }
     ]
   },
-  "event_digest": "8cd562c8e7c4936e2822b3c810f4666a1c4fb00b851b9a5fed6cea7f84359cc2",
+  "event_digest": "95080b8058c1ff7b8aa484366008d649613079125f53d881aa9f6d6ae3df5a71",
   "schema_version": 1
 }
 ```
