@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "workflow": {
+    "package": "bmad-original/0.1.1",
+    "module_version": "6.13.0-next",
+    "route": "oneshot",
+    "review": "quick",
+    "vendor_modified": false
+  },
+  "tested_source": {
+    "content_sha256": "518116534f5b2d5d4c6d417f39b146ded5ca44e9cd4764585289f85b242cff9c",
+    "head": "f6b580d0075fe22835d3f7769f0ca855aab03a9e"
+  },
+  "command": [
+    "python3",
+    "-B",
+    "tests/agent_learning/test_engineering_learning.py",
+    "EngineeringLearningTests.test_fresh_cli_excludes_candidate_and_preserves_approved_bytes",
+    "-v"
+  ],
+  "exit_code": 0,
+  "result": {
+    "tests_run": 1,
+    "failures": 0,
+    "status": "OK"
+  },
+  "observed_scope": "Exactly one unchanged existing focused test ran. Disposable standard-library subprocess fixture only.",
+  "test_assertions": [
+    "Seed one verified record; append a candidate with nonempty guidance.",
+    "Candidate append preserves original approved ledger bytes.",
+    "Audit reports VALID lessons=2, verified=1.",
+    "Fresh brief returns approved ID, excludes candidate ID and nonempty candidate guidance."
+  ],
+  "changes": "Evidence and workflow plan only; no helper, application or test modifications.",
+  "activation": {
+    "resume": "Read complete before planning; CURRENT_CONTENT / HEAD_CHANGED; older tests historical.",
+    "audit": "VALID lessons=0, verified=0",
+    "brief": "No verified lessons match. UNKNOWN is not PASS.",
+    "retrieval_implementation": "agent_learning.py imports argparse/json/pathlib/re/datetime only; project_memory.py uses standard library and local Git subprocesses. No application DB/provider/model clients are imported or invoked by those activation commands."
+  },
+  "limits": [
+    "Not application, PostgreSQL, native, deployed or live acceptance.",
+    "Actual test source includes the untracked workflow plan and differs from later evidence/bookkeeping content; preserve this identity as historical.",
+    "Original setup --status unexpectedly retrieved public upstream version metadata from raw.githubusercontent.com; no application/service/model calls or external writes; whole session is not claimed network-free.",
+    "uv renderer reported Installed 2 packages; this was the mandated original uv render invocation; no separate dependency-install command was issued.",
+    "This sanitized receipt is published as evidence only; the isolated task result itself is not merged or deployed."
+  ],
+  "source_receipt_sha256": "324a19dbe17750962d59901578b8fb178fe6e1bfcb91c7153e44696671eb81df",
+  "independent_review": {
+    "lens": "original oneshot quick",
+    "context": "Context-free independent reviewer; no findings",
+    "reviewed_diff_sha256": "fb8a15b11329a8cabc43e929013f6e0de774b9b512c98e75826d99d014bf2385"
+  },
+  "local_task_commit": "a39a3eee1db175864f65b3f1b2495a92f24b23f3",
+  "local_archive_commit": "560fd9bbec8e683abc416d1bb640e1505411c245",
+  "fresh_parent_process_recovery_pass": true,
+  "test_identity_is_historical_after_bookkeeping": true,
+  "test_source_overlay": "One untracked original workflow plan; helper, test and application bytes unchanged."
+}
