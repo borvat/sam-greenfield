@@ -1,0 +1,33 @@
+{
+  "schema": "sam.independent_review_size_regression.v1",
+  "observedAt": "2026-10-28T06:54:10.767Z",
+  "baseline": "f3539d7b1f154758449f32ba7f9c93fb43579077",
+  "method": "Original baseline budget module imported after TypeScript transpilation; unchanged taskPrompt dependency digest verified. Same independent 61-descriptor fixture is rejected by old path and accepted after current schema-annotation projection.",
+  "oldBytes": 110380,
+  "newBytes": 31446,
+  "limit": 48000,
+  "descriptorCount": 61,
+  "red": {
+    "expected": "REVIEW_INPUT_BUDGET_EXCEEDED",
+    "observed": true
+  },
+  "green": {
+    "fits": true,
+    "allIds": true,
+    "descriptorMeaningPreserved": true,
+    "companyScopes": true,
+    "validationConstraints": true,
+    "literalDescriptionPropertyAndEnum": true
+  },
+  "providerCalls": 0,
+  "sourceReads": 0,
+  "sourceHashes": {
+    "baselineReviewInputBudget": "0264089bdc11457b384f194e41ca8fba7ad9da2c6e31b8642f550268cf96aa5b",
+    "currentReviewInputBudget": "4ad7ecb5ecc366e7858c1151813f71f680caf70a1267e7f2ea95303b2d800b4e",
+    "unchangedTaskPromptModule": "0dd045f2d781ed0a76437b11e385d459b9659d57b3b80a0ddcf895e325e7bda2"
+  },
+  "limits": [
+    "This is an independently authored size-regression fixture; real saved-goal exact request reproduction is separately observed by root",
+    "No database, advisory lock, role admission or live deployment exercised"
+  ]
+}

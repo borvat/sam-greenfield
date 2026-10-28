@@ -1,3 +1,4 @@
+import {hasPreflightRecoveryEvidence} from './readReviewDiagnostic';
 import {readReviewBudget} from './readReviewBudget';
 import type { GoalState } from "../../../packages/shared/src/types";
 import { withTransaction } from "../../../packages/db/src/client";
@@ -42,7 +43,7 @@ export async function wakeDueGoals(limit = 100): Promise<string[]> {
       if(row.completion_definition==='sam.read_report.v1'&&from==='WAITING_EXTERNAL'){
         const review=(await client.query('SELECT decision FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[row.id,row.current_plan_id])).rows[0];
         const budget=await readReviewBudget(client,row.id,row.current_plan_id);
-        if(review||budget){
+        if(review||budget||await hasPreflightRecoveryEvidence(client,row.id,row.current_plan_id)){
         const retry=review?undefined:budget;
         if(retry?.retryable===true&&retry.attempts<2&&retry.callsUsed<4){
           await transitionGoal(client,row.id,'WAITING_EXTERNAL','VERIFYING','read_review_continuation_due');
@@ -109,5 +110,5 @@ export async function wakeGoalFromEventAtomic(
 /** Generic events must not reset report-review budgets or repeat verified reads. */
 export async function isWaitingReadReview(client:any,goal:any):Promise<boolean>{
  if(goal?.state!=='WAITING_EXTERNAL'||goal.completion_definition!=='sam.read_report.v1')return false;
- return Boolean(await readReviewBudget(client,goal.id,goal.current_plan_id))||(await client.query('SELECT 1 FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[goal.id,goal.current_plan_id])).rows.length>0;
+ return Boolean(await readReviewBudget(client,goal.id,goal.current_plan_id))||await hasPreflightRecoveryEvidence(client,goal.id,goal.current_plan_id)||(await client.query('SELECT 1 FROM goal_read_reviews WHERE goal_id=$1 AND plan_id=$2',[goal.id,goal.current_plan_id])).rows.length>0;
 }

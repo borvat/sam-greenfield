@@ -1,0 +1,91 @@
+{
+  "schema": "sam.isolated_ui_live_attempt.v1",
+  "observedAt": "2026-10-28T05:19:49.723Z",
+  "applicationRevision": "57f8ff82c03b95b361d613409422c9746750c6bf",
+  "reviewedCodeRevision": "d5f79c9ee1c096d31d59aa9d7beb0141eb8f7d0e",
+  "scope": "EXISTING_ISOLATED_TEST_ONLY",
+  "service": {
+    "id": "srv-dbe27ics728c738tuoc0",
+    "plan": "0.5c-512mb",
+    "workspace": "tea-db35rbflot8c739g8rhg",
+    "autoDeploy": false
+  },
+  "renewal": {
+    "source": "Owner submitted sanitized explicit-helper receipt from own authenticated Render terminal",
+    "role": "sam_eval_runtime_20261024",
+    "expiresAt": "2026-10-28T05:40:04.150Z",
+    "privilegeFingerprint": "8029e700c1331a67b4423deda3ac4068a481db1b539908d51406ca5fbbee8225",
+    "grantsChanged": false,
+    "rlsChanged": false,
+    "passwordChanged": false
+  },
+  "lifecycle": {
+    "resumeAt": "2026-10-28T05:12:20.140289Z",
+    "deploy": "dep-dbgo8d7b9u1s738rstfg",
+    "liveAt": "2026-10-28T05:13:23.501917Z",
+    "suspendedAt": "2026-10-28T05:17:43.096796Z",
+    "suspendedBy": "user",
+    "status": "SUSPENDED",
+    "maxWindowMinutes": 30,
+    "actualActiveIntervalSeconds": 322.957,
+    "independentVerifierConfirmedSuspension": true
+  },
+  "configuration": {
+    "onlyRequestedKey": "SAM_UI_ACCEPTANCE_ENABLED=1",
+    "updateAttemptWhileSuspended": "Render returned400 cannot deploy suspended service; persistence initially unknown",
+    "laterProof": "Actual ready body and startup log uiAcceptanceEnabled=true prove persisted configuration after resume",
+    "replaceOtherVariables": false
+  },
+  "browser": {
+    "readiness": {
+      "ready": true,
+      "revision": "57f8ff82c03b95b361d613409422c9746750c6bf",
+      "services": [
+        200,
+        200,
+        200
+      ],
+      "uiAcceptanceEnabled": true,
+      "applicationLeaseMaxMinutes": 30,
+      "liveReasoningValidated": false,
+      "modelCalls": 0
+    },
+    "auth": {
+      "capabilityResult": "submitted",
+      "renderedResult": "AUTH REQUIRED / Bearer credential rejected",
+      "requestId": "7b8b7632-450f-429f-be2f-8bed9a98f8ed",
+      "correlatedLog": {
+        "timestamp": "2026-10-28T05:16:25.34930143Z",
+        "method": "GET",
+        "reason": "bearer_rejected"
+      },
+      "conclusion": "Bearer authorization was transmitted; supplied credential was rejected. Exact input and reason for mismatch unknown; no attribution to owner typo/server config without evidence.",
+      "automaticCredentialRetry": false,
+      "credentialValueInspected": false
+    },
+    "memorySaveRecallIsolationRetry": "BLOCKED_AUTHENTICATION_NOT_RUN",
+    "syntheticNotificationButtonAck": "BLOCKED_AUTHENTICATION_NOT_RUN"
+  },
+  "nativeSupplement": {
+    "purpose": "read-only isolated-principal and existing-trial metadata",
+    "result": "FAILED_BEFORE_DATABASE_ACCESS",
+    "error": "ESM REPL named Client import from pg unavailable; no SQL/fixture seeding performed",
+    "productCodeChanged": false
+  },
+  "effects": {
+    "memoryFixtureSeeded": false,
+    "notificationSeeded": false,
+    "acknowledgementPerformed": false,
+    "businessDataModified": false,
+    "models": false,
+    "planner": false,
+    "externalAdapters": false,
+    "productionDeploys": false
+  },
+  "independent": {
+    "renderLiveAndPlan": "CONFIRMED",
+    "suspended": "CONFIRMED",
+    "publicReadiness": "UNAVAILABLE via verifier retrieval; root actual browser proof only"
+  },
+  "next": "Use only current SAM_TEST_BEARER_TOKEN of sam-isolated-test through secure browser auth. It is distinct from database operator password and production UI token. Do not inspect/change credentials. Prepare auth before another bounded activation; recheck existing expiry and remaining approved window."
+}

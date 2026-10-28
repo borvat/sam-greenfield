@@ -1,0 +1,181 @@
+{
+  "schema": "sam.isolated_ui_independent_verification.v1",
+  "created_at": "2026-10-28T04:01:23.046Z",
+  "repository": "/workspace/scratch/66eecfb7baca/sam-greenfield",
+  "verdict": "LOCAL_CHECKS_PASS_FIXED_TARGET_SOURCE_BLOCKER",
+  "parent_snapshot": {
+    "head": "e90fc932f3456dd4c14ceaac662d155ba2393b3b",
+    "content_sha256": "bd40018bb2dc02bbda4d725981d68ddbb2032a19bdcfddeda7545e9390e96a33",
+    "aggregate_independently_reproduced": false
+  },
+  "observed_source_snapshot": {
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "3e41ca3725af3c11b0b1b2795c82cb4061e2d3522686eda0b8de2e35e5d12f93"
+      },
+      {
+        "path": "_bmad-output/plan-isolated-ui-acceptance-20261028.md",
+        "sha256": "3f0883b4089e48bb134cfe684a3e64ee30140f5dcd279ef5d7038e4b8382c299"
+      },
+      {
+        "path": "apps/command-center/src/http.ts",
+        "sha256": "f8ad0042435d9d953f52b8c44844324fe957f0ac956e15585a40158a8eec2708"
+      },
+      {
+        "path": "apps/command-center/src/ui.ts",
+        "sha256": "377cce72a1945940a3364d29f3dcac7a946cb65fb9ea1800762dba390376c3ed"
+      },
+      {
+        "path": "deploy/reliability-test/Dockerfile",
+        "sha256": "478665a27fff8ba73be68e792748ca3fcccce48407262dcc2931b6ed0874c00e"
+      },
+      {
+        "path": "deploy/reliability-test/entry.ts",
+        "sha256": "1859ce640c0d8b757e2a01c2aa7929d76424699b759b8d778c61a98d3065ab47"
+      },
+      {
+        "path": "deploy/reliability-test/ownerAcceptance.test.ts",
+        "sha256": "39a34f4f68a6f9f5a0a671a62fcd16ddf8b5dda6f1409d3c74a9114bd474144a"
+      },
+      {
+        "path": "deploy/reliability-test/ownerAcceptance.ts",
+        "sha256": "7e35095397e262653216b8d90ef82efb8573f4e76457033788920676bcecb314"
+      },
+      {
+        "path": "deploy/reliability-test/ownerAcceptanceOperator.ts",
+        "sha256": "99b8ae2b5cf8fba2fd5fc137ec579687b27f5acbcdf4ffbd6e17dabbc21c5a27"
+      },
+      {
+        "path": "deploy/reliability-test/persistentBinding.ts",
+        "sha256": "b3ea1d5a2c105c43826e046033f345749b7eb6826abed17e0bd3ec4f1cc588e0"
+      },
+      {
+        "path": "deploy/reliability-test/renewLogin.cjs",
+        "sha256": "d6be531148fbd9a286f5ed7ba94659de72d3766e8f01e80d6620c7879f8dedb2"
+      },
+      {
+        "path": "deploy/reliability-test/renewLogin.test.cjs",
+        "sha256": "a30e3548970cac8a0bbfb4eba7f76ceceef072eba81446b6add6f03a4d87527b"
+      },
+      {
+        "path": "deploy/reliability-test/startup.test.ts",
+        "sha256": "2d160050db894ef7a4ab24b22ac3e451338fa3249f087724957c64f2de8b7307"
+      },
+      {
+        "path": "deploy/reliability-test/storageLease.cjs",
+        "sha256": "e9e6d5ec87e0a4fafb6a31ed306631ce3f91a1b8a6b6e33ed4d9749940199617"
+      },
+      {
+        "path": "docs/engineering-memory/POLICY.md",
+        "sha256": "5baf9d572e85fcde6436f5683241e18358a3badaa170b5606dcf56a36b989511"
+      },
+      {
+        "path": "package.json",
+        "sha256": "23102649e682a9a0a5abdcf960129922b554319c56cbd7b916cc52baa02d8eba"
+      },
+      {
+        "path": "tests/isolated/executive_continuity.ts",
+        "sha256": "1a423905626cec5f9dc77463fa38c82cc458bbfbfb151311d1b9ea70fbf43449"
+      },
+      {
+        "path": "tests/isolated/executive_continuity_independent.ts",
+        "sha256": "74b951efb7cc542658d65c0488a5461dc66cc2d1c57e98ad220a140476c6a955"
+      },
+      {
+        "path": "tsconfig.json",
+        "sha256": "f4d2c0c61cd1bbdc44caebf67c7ddaf0fa34d42d29ec940d1783a4663e9c3839"
+      }
+    ],
+    "head": "e90fc932f3456dd4c14ceaac662d155ba2393b3b"
+  },
+  "source_unchanged_through_checks": true,
+  "commands": [
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test deploy/reliability-test/startup.test.ts deploy/reliability-test/ownerAcceptance.test.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 10,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "node --test deploy/reliability-test/renewLogin.test.cjs",
+      "exit_code": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test --test-name-pattern='^(read-only Command Center rejects new internal mutations and release MCP remains read-only|independent Command Center read-only mode rejects all new POST writes before database access)$' tests/isolated/executive_continuity.ts tests/isolated/executive_continuity_independent.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "npm run typecheck",
+      "exit_code": 0,
+      "warning": "npm: Unknown env config http-proxy; typecheck exited 0"
+    },
+    {
+      "command": "./node_modules/.bin/tsc --noEmit --target ES2023 --module ESNext --moduleResolution Bundler --lib ES2023,DOM,DOM.Iterable --types node --esModuleInterop --strict --skipLibCheck deploy/reliability-test/entry.ts deploy/reliability-test/persistentBinding.ts deploy/reliability-test/memorySentinel.ts deploy/reliability-test/startup.test.ts deploy/reliability-test/ownerAcceptance.ts deploy/reliability-test/ownerAcceptanceOperator.ts deploy/reliability-test/ownerAcceptance.test.ts",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "totals": {
+    "tests": 18,
+    "pass": 18,
+    "fail": 0,
+    "commands": 6,
+    "exit_zero": 6
+  },
+  "verified_matrix": [
+    "exact service/host/opt-in guards; wrong method/path/nonce/approval/company override/body/source/context/statement/date/UUID and altered replay refused",
+    "original deadline capped at 30 minutes or earlier storage deadline; application environment replaces inherited credentials/provider/live flags",
+    "actual local PGlite-backed CC HTTP handlers commit before intentionally withheld first response; retries return same memory ID/read receipt with one save audit and one acknowledgement audit",
+    "appropriate context recalls fixture; unrelated and extended wrong-task context exclude it; provenance/company are asserted",
+    "default read-only CC rejects owner-memory, notification poll and acknowledgement before DB access; UI controls remain hidden; release tool risks READ",
+    "synthetic notification seed deduplicates and refuses conflict/missing scope/privileges; no memory seeding",
+    "operator renewal query-model tests prove fixed role/expired-only/server-clock30min VALID UNTIL-only mutation and fingerprint/rollback checks"
+  ],
+  "findings": [
+    {
+      "severity": "high",
+      "file": "deploy/reliability-test/renewLogin.cjs",
+      "symbol": "operatorTarget",
+      "issue": "URL query parameters are unrestricted before hidden credential prompt; pg parser honors query host/port/user/password ahead of URL authority fields, allowing fixed-target admission bypass.",
+      "evidence": "node_modules/pg-connection-string/index.js loops searchParams into config, keeps config.host/config.port if present, and prioritizes config.user/config.password. renewLogin main passes the resulting URL as Client.connectionString.",
+      "required_resolution": "Reject all query parameters or enforce a strict safe allowlist with duplicate rejection before credential entry, then rerun affected renewal tests and capture new source hashes."
+    }
+  ],
+  "limitations": {
+    "remote_database_access": false,
+    "operator_credential_access": false,
+    "native_database_access": false,
+    "browser_acceptance": false,
+    "second_tenant_acceptance": false,
+    "remote_service_status_independently_observed": false,
+    "service_lifecycle": "parent-owned; no lifecycle operations performed",
+    "model_provider_calls": 0,
+    "new_tests_or_source_edits": false
+  }
+}

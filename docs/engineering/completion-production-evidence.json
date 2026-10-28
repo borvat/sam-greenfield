@@ -1,0 +1,198 @@
+{
+  "schema": "sam.completion.production.v1",
+  "applicationCommit": "62ccbdbb94e080f22425f64396c894270ee551aa",
+  "applicationTree": "35d6fb8d6e0e875bd059fae669a15525755429de",
+  "scope": "OWNER_AUTHORIZED_EXISTING_SERVICES_ONLY_NO_MAIN_MERGE_NO_MODEL_CALLS",
+  "deployments": {
+    "mcp": {
+      "id": "dep-dbglc7nb9u1s738l17p0",
+      "status": "live",
+      "finishedAt": "2026-10-28T01:56:31.10525Z"
+    },
+    "commandCenter": {
+      "id": "dep-dbglcqegekts7388ksfg",
+      "status": "live",
+      "finishedAt": "2026-10-28T01:57:37.894692Z"
+    },
+    "runtime": {
+      "id": "dep-dbgld96gekts7388md80",
+      "status": "live",
+      "finishedAt": "2026-10-28T01:58:36.881827Z",
+      "trigger": "merge-only nonsecret flag update triggered deploy; no duplicate trigger"
+    }
+  },
+  "serviceUrls": {
+    "ui": "https://sam-command-center.onrender.com/",
+    "runtime": "https://sam-runtime.onrender.com",
+    "mcp": "https://sam-mcp-cn7q.onrender.com"
+  },
+  "protectedHealth": {
+    "runtime": 200,
+    "mcp": 200,
+    "commandCenter": 200,
+    "unauthenticatedNotifications": 401,
+    "allRevisionsMatch": true
+  },
+  "preflight": {
+    "observedAt": "2026-10-28T01:57:17.751Z",
+    "activeGoals": 0,
+    "activeWork": 0,
+    "scheduledGoals": 0,
+    "pendingOutbox": 0,
+    "pendingInbox": 0,
+    "unresolvedEffects": 0,
+    "models": 29,
+    "costFieldSum": 0.75,
+    "reviewBudgets": 9
+  },
+  "nativeSyntheticAcceptance": {
+    "observedAt": "2026-10-28T01:59:30.813Z",
+    "role": "sam_runtime_app",
+    "company": "73aa81c6-3a23-4369-9408-8bea0956d399",
+    "approvedMemory": true,
+    "provenanceRetained": true,
+    "idempotence": true,
+    "wrongTaskExcluded": true,
+    "wrongCompanyDenied": true,
+    "wrongOrgDenied": true,
+    "fixedRoleGucSpoofDenied": true,
+    "nativeForeignWriteDenied": true,
+    "syntheticNotificationDeduplicated": true,
+    "receiptIdempotent": true,
+    "externalPushPerformed": false,
+    "allSyntheticWritesRolledBack": true,
+    "countersUnchanged": true,
+    "scopeLimit": "One existing fixed native company principal; positive two-company behavior also tested locally, not a new native second-company login."
+  },
+  "ownerContinuityActivation": {
+    "id": "7b92ec83-df31-47b9-a74b-a4179c213d94",
+    "timestamp": "2026-10-28T02:00:30.900Z",
+    "created": 0,
+    "delivery": "POLLING_ONLY",
+    "pushPerformed": false,
+    "runtimeTickEnabled": true
+  },
+  "recovery": {
+    "goalId": "53424b11-c854-40e4-a264-14af2b7d33b0",
+    "planId": "c3a09dab-968f-4e44-9a25-39db8d2278f6",
+    "dryRunPassed": true,
+    "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+    "reportHash": "6e6d9abe3e11f1fc92653f952d283987ba409d5c2240a47e8c3a6ef59adad97e",
+    "bindingHash": "89230b74a5f3fc364a86c4516e9cf45b8820c59e4acb1a66b854c2ab06650f04",
+    "auditId": "d53a69aa-94d7-4027-b4b9-f0341481fce1",
+    "appliedAt": "2026-10-28T02:01:14.715Z",
+    "idempotentReplay": true,
+    "reportCount": 1,
+    "newReads": 0,
+    "modelCalls": 0,
+    "budgetReset": false,
+    "historicalPreflightWritten": false,
+    "inboxPageUniqueIdentifiers": 66,
+    "sentPageUniqueIdentifiers": 0,
+    "pagination": "NOT_EXPOSED",
+    "mailboxIdentity": "UNKNOWN",
+    "mailboxExhaustiveness": "UNKNOWN",
+    "exactWindowCoverage": "UNKNOWN",
+    "semantics": "DETERMINISTIC_BOUNDED_SAVED_EVIDENCE",
+    "broaderGoalCompleted": false
+  },
+  "finalNative": {
+    "observedAt": "2026-10-28T02:02:43.706Z",
+    "models": 29,
+    "costFieldSum": 0.75,
+    "reviewBudgets": 9,
+    "memories": 0,
+    "ownerReadReceipts": 0,
+    "syntheticGoals": 0,
+    "mailReports": 1,
+    "states": {
+      "FAILED": 30,
+      "COMPLETED": 370,
+      "WAITING_OWNER": 1,
+      "WAITING_EXTERNAL": 15
+    },
+    "mailExecutionSnapshot": "80c6660d9bb257c34efa38993b3a60a4",
+    "mailVerificationSnapshot": "2ce4274f779216983a6285f1a0fe71af",
+    "originalReportStoredAndComputedHash": "b7f7602baf275cc8c2a604e230859b22477c99fab64ec1f11f24d66cd6031de7"
+  },
+  "actualNotification": {
+    "id": "e0283121-947e-47b9-94e7-8be1aae16299",
+    "goalId": "53424b11-c854-40e4-a264-14af2b7d33b0",
+    "sourceEventId": "6d967c93-471f-407d-8f17-31a8e7f62d58",
+    "status": "UNROUTED",
+    "readAt": null,
+    "confirmedAt": null,
+    "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+    "meaning": "Projected by runtime narrow tick after actual recovery; stored internally and unread, never external delivery proof."
+  },
+  "features": {
+    "SAM_OWNER_CONTINUITY_ENABLED": "true",
+    "SAM_INTEGRATION_ENABLED": null,
+    "SAM_KNOWLEDGE_ENABLED": null,
+    "SAM_NOTIFICATIONS_ENABLED": null,
+    "ownerDecisionStore": "existing memory_records; scoped approved owner path available; zero seeded business decisions",
+    "engineeringMemory": "separate adopted BMAD Git system"
+  },
+  "discovery": {
+    "cachedStatusAndTimelineLive": true,
+    "newStandaloneNamesAbsent": true,
+    "actualMissingNames": [
+      "sam_get_report",
+      "sam_memory_status",
+      "sam_recall_memory",
+      "sam_list_notifications",
+      "sam_save_owner_decision",
+      "sam_poll_notifications",
+      "sam_acknowledge_notification"
+    ],
+    "requiredExternalAction": "App manager refreshes Sam Mcp Reder actions in workspace app settings; keep existing connection and scope."
+  },
+  "notificationsPlatform": {
+    "availableEventSources": [
+      "Gmail",
+      "Slack",
+      "GitHub"
+    ],
+    "samEventSourceAvailable": false,
+    "activepiecesFlow": "iOKQTpGgH2u33CFln6XoC",
+    "activepiecesMeaning": "unchanged hourly heartbeat only",
+    "chatGptPushProved": false,
+    "newScheduleCreated": false,
+    "existingScheduledPollingAvailability": "Platform supports scheduled chat polling, but no SAM-result task was added or modified in this continuation."
+  },
+  "browser": {
+    "observedBuild": "62ccbdbb94e080f22425f64396c894270ee551aa",
+    "authRequired": true,
+    "authenticatedSessionAvailable": false,
+    "authenticatedTraversalProved": false,
+    "secretChanged": false,
+    "ccShell": "UNAVAILABLE_ON_EXISTING_FREE_PLAN; no upgrade performed",
+    "nativeStoreVsBrowser": "Native same-principal operations and public HTTP auth gates are separate from authenticated CC browser/API traversal."
+  },
+  "logs": {
+    "start": "2026-10-28T01:55:42Z",
+    "end": "2026-10-28T01:59:41.130246049Z",
+    "filter": "WORK_TICK_FAILED|STARTUP_FAILED|SCOPED_NOTIFICATION_PROJECTION_FAILED|RUNTIME_STAGE_FAILED",
+    "matches": 0,
+    "limit": 30,
+    "meaning": "No matching error in bounded filtered sample, not a comprehensive no-error claim or historical MCP diagnosis."
+  },
+  "sourceVerification": {
+    "typescriptFilesChecked": 246,
+    "mismatches": 0
+  },
+  "invariants": {
+    "mainUntouched": true,
+    "pr86DraftUnmerged": true,
+    "newResources": 0,
+    "newSubscriptions": 0,
+    "newModels": 0,
+    "externalMessages": 0,
+    "pricesInventoryPurchasesChanged": false,
+    "rlsOrGrantsChanged": false,
+    "testServiceRemainedSuspended": true,
+    "blueprintBranchUnchanged": "delivery/sam-production-binding-20261028",
+    "blueprintCommitUnchanged": "9b212547fec4b27796f3aed25d97a39dab7a770d"
+  },
+  "deliveryStatus": "PUBLISHED_SCOPED_RESULT_READY; standalone tool snapshot refresh and authenticated UI acceptance remain external/unverified; no general readiness claim"
+}

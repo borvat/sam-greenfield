@@ -1,0 +1,13 @@
+{
+  "repository": "sam-greenfield",
+  "pass": true,
+  "head": "67e0b9ed08e519a336c54d8bae576466542e3a0f",
+  "freshness": "CURRENT",
+  "engineering_status": "complete",
+  "last_event_id": "ordinary-sam-greenfield-resume-20261027",
+  "audit": "VALID lessons=0, verified=0",
+  "brief": "No verified lessons match. UNKNOWN is not PASS.",
+  "sentinel_sha256": "25ff9adc41da047ee0b37cf4c80cfb220cd13627178deb3918048741b16eec9d",
+  "note": "# Delivery checkpoint\n\nPassing source tests establishes results for the tested source. A Draft PR makes the change available for review. Application deployment and delivery require separate verification.\n",
+  "limits": "Disposable ordinary-task acceptance only; not deployed application or production readiness."
+}

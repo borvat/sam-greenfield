@@ -4,6 +4,7 @@ export type ToolRisk="READ"|"GREEN"|"YELLOW"|"RED";
 export interface ChatGPTToolContext{
   actor:string;
   systemOwner:boolean;
+  legalEntityId?:string;
 }
 
 export interface ChatGPTToolDefinition{

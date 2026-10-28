@@ -1,0 +1,211 @@
+{
+  "repository": "borvat/sam-greenfield",
+  "commit": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "tree": "159de07f40d1da723e4e452990607c6722b98060",
+  "files": [
+    {
+      "path": ".agents/agent_assets_metadata.toml",
+      "git_blob": "81eddbaa5cba027abeb90f7c50ab18d9fba5ddea"
+    },
+    {
+      "path": ".agents/memory/MEMORY.md",
+      "git_blob": "8f76edfe6ad601a02353d764df489055e42b90f5"
+    },
+    {
+      "path": ".agents/memory/autonomy-evidence.md",
+      "git_blob": "0f989d323d205aea2edbc23aff714adc770fd197"
+    },
+    {
+      "path": ".agents/memory/credential-inspection.md",
+      "git_blob": "55b45457b1ecebed7e7f58c1323bc157170712fd"
+    },
+    {
+      "path": ".agents/memory/data-release-consent.md",
+      "git_blob": "5348a96eba5d238860cbd94c8994794b96da4363"
+    },
+    {
+      "path": ".agents/memory/database-candidate-consent.md",
+      "git_blob": "441ce8beb9846394abb1750ebe580553b9b974aa"
+    },
+    {
+      "path": ".agents/memory/development-database-identity.md",
+      "git_blob": "3d090da82c58a24155f8ccbb1512d31267507527"
+    },
+    {
+      "path": ".agents/memory/github-write-proof.md",
+      "git_blob": "6741bfedb61e6f2a637abef006e2c5a7b4bedfa8"
+    },
+    {
+      "path": ".agents/memory/interaction-architecture.md",
+      "git_blob": "367cc84f4cf85ec963178d2815048c3d1d8622de"
+    },
+    {
+      "path": ".agents/memory/managed-ai-availability.md",
+      "git_blob": "98c8efacbcdf0a2942a35875cf68f214ba6c66a9"
+    },
+    {
+      "path": ".agents/memory/one-shot-inference-evidence.md",
+      "git_blob": "1bb3c6663abf1b33851a1d7269f176b25def234b"
+    },
+    {
+      "path": ".agents/memory/pilot-budget-boundary.md",
+      "git_blob": "98711a7d8db0ab27891344b7d11e2cfba848c114"
+    },
+    {
+      "path": ".agents/memory/release-environment-behavior.md",
+      "git_blob": "1c0b3339776b2db0fe9516113dfd92fb70c97775"
+    },
+    {
+      "path": ".agents/memory/release-readiness.md",
+      "git_blob": "ff699118e1ffe8a57fc1b3cf9dcc1ae738a5b4fe"
+    },
+    {
+      "path": ".agents/memory/rls-proof-boundaries.md",
+      "git_blob": "fb1984cdf6eb45824f7ebcf50f8c82d472953a64"
+    },
+    {
+      "path": "PHASE5_DOD_CHECKLIST.md",
+      "git_blob": "9046d34acd305d34e2ea58c782919c22debff326"
+    },
+    {
+      "path": "README.md",
+      "git_blob": "8db0d168811d62658f45de23403774df5d94f77b"
+    },
+    {
+      "path": "apps/brain/src/authorityGuard.ts",
+      "git_blob": "44e7cb1a24092e46cb5e59f85ee858bb5b37bef8"
+    },
+    {
+      "path": "apps/brain/src/contextAssembler.ts",
+      "git_blob": "2c8b8c13bb97ae5f465305b7c6236324ff2d0944"
+    },
+    {
+      "path": "apps/brain/src/executiveBrain.ts",
+      "git_blob": "689bd020040ecf56306cab41528bfcdbb162e6cc"
+    },
+    {
+      "path": "apps/brain/src/learning.ts",
+      "git_blob": "ebccbb9bcb966c717d9e4d5f684f753ba68ebe7d"
+    },
+    {
+      "path": "apps/brain/src/memory.ts",
+      "git_blob": "a86f9cd417ac0374b91464e74f27e7eb27a827e0"
+    },
+    {
+      "path": "apps/brain/src/worldModel.ts",
+      "git_blob": "e92a912b2e1e074e5fd33244fad08b081db9e8af"
+    },
+    {
+      "path": "apps/chatgpt-tools/src/actionTools.ts",
+      "git_blob": "e2f30818d8e48182d5c7940dee72160b4a472b6c"
+    },
+    {
+      "path": "apps/chatgpt-tools/src/coreReadTools.ts",
+      "git_blob": "768959a6530cfce10e3b7a9acc5df493bcd75969"
+    },
+    {
+      "path": "apps/development/src/autonomyBoundary.ts",
+      "git_blob": "f6dc1e9fbda9c02ab94ec922890d3b44b1525b7d"
+    },
+    {
+      "path": "apps/development/src/localCapabilities.ts",
+      "git_blob": "8773f90ea741ec554207e04b04b94a07ef40a2a9"
+    },
+    {
+      "path": "apps/development/src/planningPolicy.ts",
+      "git_blob": "1e79070dec73480c4aa281c214d5675350c56125"
+    },
+    {
+      "path": "apps/kernel/src/verification.ts",
+      "git_blob": "101c360a1d295fb047bf62782ee2c16f5beef417"
+    },
+    {
+      "path": "apps/production/src/bundle.ts",
+      "git_blob": "9a6e224613a633170b03d702e5d1288bd9555607"
+    },
+    {
+      "path": "apps/production/src/composition.ts",
+      "git_blob": "a6cdfae168bd4cb3f216ed93b7a2cac8f42bc846"
+    },
+    {
+      "path": "apps/production/src/defaultBundleModule.ts",
+      "git_blob": "d2899b1bdcd21d8eb1fad6d4fcedf80d0043cba0"
+    },
+    {
+      "path": "apps/production/src/learning.ts",
+      "git_blob": "fdd1ce44bc444be0bc32b376d3b82715acc14288"
+    },
+    {
+      "path": "apps/production/src/localReleaseBundleModule.ts",
+      "git_blob": "1c29e776503e91b06aa394625b62abcc3e3b7a7b"
+    },
+    {
+      "path": "apps/production/src/syntheticPilotBundleModule.ts",
+      "git_blob": "130aae02b32d058c1f147edc4cb1348d4438b2b6"
+    },
+    {
+      "path": "apps/production/src/syntheticPilotScope.ts",
+      "git_blob": "b4eb1d6e7d5d2b01d44684fd7d673a5501783e7a"
+    },
+    {
+      "path": "apps/production/src/types.ts",
+      "git_blob": "cfef6d574df1ca8a6721a355a8a7c94d4ffc34cf"
+    },
+    {
+      "path": "apps/runtime/src/developmentCompositionModule.ts",
+      "git_blob": "820cc1cdb1f36965341ac281ed15e548ce187a2f"
+    },
+    {
+      "path": "docs/PHASE5_SCOPE.md",
+      "git_blob": "c99ac99e3731a72a623a37548541540a807a073e"
+    },
+    {
+      "path": "docs/release/SECURITY.md",
+      "git_blob": "c13a4a63263268d645ac7ed8d253f8cf95509ef4"
+    },
+    {
+      "path": "package.json",
+      "git_blob": "fee957c1236bcc1ac0fc43f4840ede22289c48bd"
+    },
+    {
+      "path": "packages/db/migrations/00005_world_facts_memory.sql",
+      "git_blob": "34cc5bd68be2af2fab0be24ffeec87d7743f34a0"
+    },
+    {
+      "path": "packages/db/migrations/00006_policy_approvals_verification.sql",
+      "git_blob": "ba01b964906663858d310772a48eaf3c4788ad89"
+    },
+    {
+      "path": "packages/db/migrations/00008_rls_tenant_isolation_policies.sql",
+      "git_blob": "5844ad663da77c871c2dac69b9939d57f3d89564"
+    },
+    {
+      "path": "packages/db/migrations/00009_fix_rls_fail_closed.sql",
+      "git_blob": "d3c4f1d723ac2476cc710a5b0059445dd80c9a99"
+    },
+    {
+      "path": "packages/db/src/approvals.ts",
+      "git_blob": "bd4641b6b1ace29b5422c9b5937ee68783963628"
+    },
+    {
+      "path": "scripts/development/test.cjs",
+      "git_blob": "8cc440e565575a6542b66bf5d45615b6593cfbea"
+    },
+    {
+      "path": "tests/development/autonomy.ts",
+      "git_blob": "ff8b4c9c3326c8f7d0ad761cb4c2b45563cb698f"
+    },
+    {
+      "path": "tests/phase5/final_acceptance.ts",
+      "git_blob": "e151759c2f3faf3c28e9a497a96021695b2f2f68"
+    },
+    {
+      "path": "tests/phase5/verified_learning.ts",
+      "git_blob": "11c0aa9cf04383a45b8c0355b9914f7d62dc8ba0"
+    },
+    {
+      "path": "tests/phase9/production_wiring.ts",
+      "git_blob": "2f091e823aca325c17cb61cb346bbe33764f77bf"
+    }
+  ]
+}

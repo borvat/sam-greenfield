@@ -1,3 +1,7 @@
+import {readContinuitySidecar,readSavedReports} from './continuityReadSidecar';
+import {describeSavedReports} from '../../../packages/shared/src/savedReportSemantics';
+import {createReliabilityReadTools} from './reliabilityReadTools';
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import { captureHealthSnapshot } from "../../supervisor/src/health";
 import { loadActiveIncidents } from "../../supervisor/src/incidents";
 import { withTransaction } from "../../../packages/db/src/client";
@@ -31,19 +35,20 @@ function readTool(
 
 export function createCoreReadTools():RegisteredChatGPTTool[]{
   return [
-    readTool("sam_system_status","Get high-level SAM state counts.",async()=>{
+    ...createReliabilityReadTools(),
+    readTool("sam_system_status","Get high-level SAM state counts and bounded scoped internal continuity availability without executing work.",async(_,context)=>{
       const data=await one(`SELECT
         (SELECT COUNT(*)::int FROM goals WHERE state NOT IN ('COMPLETED','CANCELLED','FAILED')) AS active_goals,
         (SELECT COUNT(*)::int FROM work_queue WHERE status IN ('QUEUED','HANDBACK','LEASED','EXECUTING')) AS active_work,
         (SELECT COUNT(*)::int FROM approvals WHERE status='PENDING') AS pending_approvals,
         (SELECT COUNT(*)::int FROM side_effect_operations WHERE reconciliation_state='NEEDS_RECONCILIATION') AS unresolved_side_effects,
         (SELECT COUNT(*)::int FROM model_providers WHERE health='DOWN') AS down_model_providers`);
-      return {ok:true,data};
+      return {ok:true,data:{...data,...buildRevision(),continuity:await readContinuitySidecar(context)}};
     },objectSchema),
 
     readTool("sam_runtime_health","Get deterministic runtime health snapshot.",async()=>{
       const data=await withTransaction((client)=>captureHealthSnapshot(client));
-      return {ok:true,data};
+      return {ok:true,data:{...data,...buildRevision()}};
     },objectSchema),
 
     readTool("sam_pending_owner_decisions","List WAITING_OWNER goals and pending approvals.",async(args)=>{
@@ -94,10 +99,13 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
       additionalProperties:false
     }),
 
-    readTool("sam_get_goal_timeline","Get plans, work, executions and verifications for a goal.",async(args)=>{
+    readTool("sam_get_goal_timeline","Retrieve saved plans, work, executions, verifications, immutable reports and their original limits for a goal. No execution or new analysis.",async(args,context)=>{
       const goalId=String(args.goal_id??"");
       if(!goalId) return {ok:false,error:"goal_id is required"};
+      const savedReports=await readSavedReports(goalId);
       const data={
+        reportsAvailability:savedReports.availability,
+        retrieval:{executionPerformed:false,meaning:"SAVED_RESULTS_WITH_ORIGINAL_IDS_AND_HASHES",semanticValidation:"Historical narrative is not newly validated; preserve each report coverage and limitations."},
         goal:await one("SELECT * FROM goals WHERE id=$1",[goalId]),
         plans:await rows("SELECT * FROM plans WHERE goal_id=$1 ORDER BY version",[goalId]),
         work:await rows("SELECT * FROM work_queue WHERE goal_id=$1 ORDER BY queued_at,id",[goalId]),
@@ -105,10 +113,10 @@ export function createCoreReadTools():RegisteredChatGPTTool[]{
         verifications:await rows(`SELECT v.* FROM verifications v
           JOIN executions e ON e.id=v.execution_id
           WHERE e.goal_id=$1 ORDER BY v.checked_at,v.id`,[goalId]),
-        reports:await rows("SELECT * FROM goal_read_reviews WHERE goal_id=$1 ORDER BY round",[goalId]),
+        reports:savedReports.records,
         audit:await rows("SELECT * FROM audit_log WHERE goal_id=$1 ORDER BY timestamp,id",[goalId])
       };
-      return {ok:true,data};
+      return {ok:true,data:{...data,reportInterpretations:describeSavedReports(data.reports),continuity:await readContinuitySidecar(context,data.goal?.objective??'',goalId)}};
     },{
       type:"object",
       properties:{goal_id:{type:"string"}},

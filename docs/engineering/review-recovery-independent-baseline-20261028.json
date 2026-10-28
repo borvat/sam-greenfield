@@ -1,0 +1,41 @@
+{
+  "schema": "sam.independent_review_recovery_baseline.v1",
+  "observer": "independent_verifier",
+  "observed_date": "2026-10-28",
+  "methods": ["connected ChatGPT saved-goal read", "connected ChatGPT saved-timeline read", "connected ChatGPT notification read", "Render workspace/services/deploys read"],
+  "mutations_performed": false,
+  "new_source_reads": 0,
+  "new_model_calls": 0,
+  "baseline": {
+    "goal_id": "bc17c4ae-1163-41c9-96cc-f616d7e55e0b",
+    "state": "WAITING_EXTERNAL",
+    "completion_definition": "sam.read_report.v1",
+    "plan_id": "64764ac9-0b2e-4e94-a263-10132d7b4723",
+    "plans": 1,
+    "work_rows": 1,
+    "executions": 1,
+    "verifications": 1,
+    "execution_id": "54791ffa-2048-4c06-b5e7-8fe6757b6450",
+    "execution_hash": "705e51d6f2036e435ccd088ee3b8619eb94992fd153a6900a84b3d7ed8df17c2",
+    "verification_id": "bc50fde5-9589-4862-9ffd-1493cf6f3e19",
+    "verification_result": "VERIFIED",
+    "verification_reason": "CONTENT_MATCH",
+    "original_and_readback_hash": "be1bcd87574406665127d864c6f31dbdfb603ff14e10e34d3f9e7f7db5afb28e",
+    "historical_report_id": "3d91c824-74c0-4b35-90e2-e9be9f15afbd",
+    "historical_report_hash": "5faab92d3932034bec6faafa70960e46703a2c59b7413c15f345f88983c9dd8e",
+    "budget": {"attempts": 1, "callsUsed": 0, "retryable": false, "phase": "finished", "errorCode": "REVIEW_INPUT_BUDGET_EXCEEDED", "maxAttempts": 2},
+    "diagnostic": {"phase": "runtime", "beforeFirstReservation": false},
+    "notification": {"id": "3bef42f1-3209-4e8f-b149-df747e5d9042", "kind": "PROGRESS", "severity": "WARNING", "state": "WAITING_EXTERNAL", "requiredAction": "NONE", "report": null, "status": "UNROUTED", "readReceipt": null},
+    "notification_inconsistency_confirmed": true
+  },
+  "render": {
+    "workspace_id": "tea-db35rbflot8c739g8rhg",
+    "services": [
+      {"name": "sam-runtime", "id": "srv-db37vbvlk1mc739o0b70", "plan": "0.5c-512mb", "autoDeploy": "no", "suspended": false, "commit": "62ccbdbb94e080f22425f64396c894270ee551aa", "deploy": "dep-dbgld96gekts7388md80", "deploy_status": "live"},
+      {"name": "sam-command-center", "id": "srv-db37vbvlk1mc739o0b6g", "plan": "free", "autoDeploy": "no", "suspended": false, "commit": "1e4e21a773c88e2366915edd3bb2e307fddaa157", "deploy": "dep-dbgm8n5g1s2s73bp9k30", "deploy_status": "live"},
+      {"name": "sam-mcp", "id": "srv-db37vbvlk1mc739o0b7g", "plan": "free", "autoDeploy": "no", "suspended": false, "commit": "1e4e21a773c88e2366915edd3bb2e307fddaa157", "deploy": "dep-dbgm96k9v7es73arrs2g", "deploy_status": "live"},
+      {"name": "sam-isolated-test", "id": "srv-dbe27ics728c738tuoc0", "plan": "0.5c-512mb", "autoDeploy": "no", "suspended": true, "last_commit": "d8530ded08016af4d0225d2948d207e18dcd3b6a", "last_deploy": "dep-dbgove6c6qcc73c980jg", "suspended_at": "2026-10-28T06:06:06.368938Z"}
+    ]
+  },
+  "limits": ["No fresh source/API read, model invocation, recovery or goal submission performed", "No authenticated browser observation or native PostgreSQL query performed", "Render service/deploy metadata independently observed; workload health not inferred solely from deploy status", "Source and report hashes reported by saved records, not independently recomputed in this baseline"]
+}

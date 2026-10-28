@@ -1,0 +1,80 @@
+{
+  "schema": "sam.notification_amendment_independent_verification.v1",
+  "created_at": "2026-10-28T05:44:59.190Z",
+  "repository": "/workspace/scratch/66eecfb7baca/sam-greenfield",
+  "verdict": "PASS_SCOPED_LOCAL_VERIFICATION",
+  "pretest_snapshot": {
+    "aggregate_method": "sha256(compact sorted JSON mapping of file path to SHA-256)",
+    "head": "9005b02254c4f55d307b4ffbb38f832e45612b60",
+    "review_delta_sha256": "bb3c29672a8f1bae9e5dfb80797e52bd86261748cbd4581b5b97ebc1e7704819",
+    "source_aggregate_sha256": "cb1bbee020c0a6f4f23597443705ce4f422086d4b4f0635313fb73e03c7e8f3a",
+    "source_sha256": {
+      "deploy/reliability-test/notificationEligibility.test.ts": "77b739a463883c07af187ed295c63368fa3a8804b926e96a111402256b4bb8fa",
+      "deploy/reliability-test/ownerAcceptance.ts": "6af470707527421612bfa18c88767503b9d28777a9ca99eb7a03fa69205eb466",
+      "deploy/reliability-test/ownerAcceptanceOperator.ts": "9ed4d845b07890500d10d9f0a3c424fc228a4b6a76abe0a3982c2d74ad78fb4d"
+    },
+    "status": [
+      " M _bmad-output/plan-isolated-ui-acceptance-20261028.md",
+      " M deploy/reliability-test/ownerAcceptance.ts",
+      " M deploy/reliability-test/ownerAcceptanceOperator.ts",
+      "?? deploy/reliability-test/notificationEligibility.test.ts",
+      "?? docs/engineering/assets/",
+      "?? docs/engineering/isolated-ui-memory-acceptance-20261028.json"
+    ]
+  },
+  "posttest_snapshot": {
+    "head": "9005b02254c4f55d307b4ffbb38f832e45612b60",
+    "source_sha256": {
+      "deploy/reliability-test/notificationEligibility.test.ts": "77b739a463883c07af187ed295c63368fa3a8804b926e96a111402256b4bb8fa",
+      "deploy/reliability-test/ownerAcceptance.ts": "6af470707527421612bfa18c88767503b9d28777a9ca99eb7a03fa69205eb466",
+      "deploy/reliability-test/ownerAcceptanceOperator.ts": "9ed4d845b07890500d10d9f0a3c424fc228a4b6a76abe0a3982c2d74ad78fb4d"
+    }
+  },
+  "source_unchanged_through_checks": true,
+  "commands": [
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test deploy/reliability-test/notificationEligibility.test.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "./node_modules/.bin/tsc --noEmit --target ES2023 --module ESNext --moduleResolution Bundler --lib ES2023,DOM,DOM.Iterable --types node --esModuleInterop --strict --skipLibCheck deploy/reliability-test/entry.ts deploy/reliability-test/persistentBinding.ts deploy/reliability-test/memorySentinel.ts deploy/reliability-test/startup.test.ts deploy/reliability-test/ownerAcceptance.ts deploy/reliability-test/ownerAcceptanceOperator.ts deploy/reliability-test/ownerAcceptance.test.ts deploy/reliability-test/notificationEligibility.test.ts",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "review_matrix": [
+    "Fallback requires exact company 2796e0d9-1701-4e53-a7ac-d198c0e44c01, G000001 business identity, exact startup objective, owner_command domain, NEW state, GREEN authority, null parent/current plan.",
+    "Fallback excludes direct plans, work_queue and executions for the goal; unrelated-goal associations do not exclude eligible fixture.",
+    "Synthetic evaluation enrollment is required. Changed identity, scope, authority, enrollment and all direct execution associations refuse before notification insert.",
+    "Seed rechecks eligibility after inspection. Discovery refuses zero or multiple eligible goals and returns only bounded provenance.",
+    "Existing enrolled evaluation-trial branch remains valid. Notification exactness conflicts are refused and repeated eligible seed deduplicates one labelled UNROUTED fixture.",
+    "Inspection CLI mode uses BEGIN READ ONLY; non-seed modes require no goal argument; missing required SELECT permission fails before notification insertion."
+  ],
+  "findings": [],
+  "boundaries": {
+    "only_notification_suite_executed": true,
+    "completed_memory_suite_rerun": false,
+    "browser_work": false,
+    "native_database_work": false,
+    "remote_or_live_service_access": false,
+    "secret_access": false,
+    "source_edits": false,
+    "new_tests_added_by_verifier": false,
+    "local_synthetic_database_only": true
+  },
+  "limitations": [
+    "Local PGlite tests and TypeScript compilation do not establish deployed operator eligibility, real restricted-role permissions, notification seeding, or rendered browser acknowledgement/retry.",
+    "Service suspension at 2026-10-28T05:34:52.476392Z was independently confirmed in earlier closeout; no service operation or status reread performed in this local task."
+  ]
+}

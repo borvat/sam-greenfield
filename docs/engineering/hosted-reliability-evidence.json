@@ -1,0 +1,100 @@
+{
+  "service": "srv-dbe27ics728c738tuoc0",
+  "firstDeploy": "dep-dbgjmi08v5cc73fs5be0",
+  "firstRevision": "929593ff14c5ad33479a69826b394154d17fbab3",
+  "firstInstance": "srv-dbe27ics728c738tuoc0-55b5ff5fb7-g4jp4",
+  "leaseExpiresAt": "2026-10-28T01:00:25.521Z",
+  "ready": {
+    "ready": true,
+    "services": [
+      200,
+      200,
+      200
+    ],
+    "mode": "SYNTHETIC_PERSISTENT_READ_ONLY",
+    "modelCalls": 0
+  },
+  "httpGates": {
+    "goalsUnauthorized": 401,
+    "mcpUnauthorized": 401,
+    "foreignOrigin": 403,
+    "writeDenied": 405
+  },
+  "mcpReadOnlyTools": [
+    "sam_get_goal",
+    "sam_get_goal_timeline",
+    "sam_get_report",
+    "sam_list_goals",
+    "sam_list_notifications",
+    "sam_memory_status",
+    "sam_recall_memory"
+  ],
+  "writeToolsDenied": [
+    "sam_submit_goal",
+    "sam_continue_read_review"
+  ],
+  "memory": {
+    "id": "91f50960-3004-4833-86a0-1c9b00dcaf25",
+    "hash": "00c73718b3d192f7aec140245092115c6758747b2f9f13f52d22722a8a308ae6",
+    "nonce": "reliability_20261028proof001",
+    "company": "2796e0d9-1701-4e53-a7ac-d198c0e44c01",
+    "status": "OBSERVED",
+    "createdAt": "2026-10-28T00:03:45.811Z",
+    "mcpRecallVerified": true,
+    "ownerApproved": false,
+    "synthetic": true,
+    "replacementReadId": "91f50960-3004-4833-86a0-1c9b00dcaf25",
+    "replacementReadHash": "00c73718b3d192f7aec140245092115c6758747b2f9f13f52d22722a8a308ae6",
+    "replacementMcpRecallVerified": true,
+    "replacementCreatedAt": "2026-10-28T00:03:45.811Z",
+    "source": "operator_synthetic_sentinel:reliability_20261028proof001",
+    "confidence": 0,
+    "supportCount": 1,
+    "lastConfirmedAt": "2026-10-28T00:03:45.811Z"
+  },
+  "existingSyntheticReports": 3,
+  "immutableReportReplay": {
+    "id": "b901c6c3-473f-4ab0-a25c-900205d9144d",
+    "goal": "c4ca8ce3-eecc-46fe-88b9-5a587a6e6a61",
+    "hash": "09dd65715597f890ae1855b5bac7abb3b3c3f77539a8a09c8b7faa636550d974",
+    "identical": true,
+    "executionPerformed": false
+  },
+  "foreignProductionReportHidden": true,
+  "containerReplacementVerified": true,
+  "productionChanged": false,
+  "modelCalls": 0,
+  "replacementDeploy": "dep-dbgjpu88v5cc73fsg410",
+  "replacementRevision": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+  "replacementInstance": "srv-dbe27ics728c738tuoc0-6bc877c9fc-q97ck",
+  "replacementReady": {
+    "ready": true,
+    "services": [
+      200,
+      200,
+      200
+    ],
+    "mode": "SYNTHETIC_PERSISTENT_READ_ONLY",
+    "modelCalls": 0
+  },
+  "readOnlyUiBrowserVerified": true,
+  "postReplacementAcceptance": {
+    "passed": true,
+    "revision": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+    "runtimeRevisionMatched": true,
+    "mcpRevisionMatched": true,
+    "commandCenterRevisionMatched": true,
+    "readOnlyUi": true,
+    "unauthenticated": 401,
+    "directCommandCenterPost": 405,
+    "reportReplayIdentical": true,
+    "executionPerformed": false,
+    "modelCalls": 0
+  },
+  "maintenanceErrors": {
+    "searchedCode": "WORK_TICK_FAILED",
+    "start": "2026-10-28T00:02:50Z",
+    "end": "2026-10-28T00:10:20.874411657Z",
+    "matched": 0
+  }
+}

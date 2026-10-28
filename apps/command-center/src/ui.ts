@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 export const commandCenterHtml=`<!doctype html>
 <html lang="en">
 <head>
@@ -12,14 +13,14 @@ export const commandCenterHtml=`<!doctype html>
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
 </style>
 </head>
-<body>
+<body><small>Build ${buildRevision().revision??"UNKNOWN"}</small>
 <div class="shell">
   <div class="top"><div class="brand"><h1>SAM Executive Command Center</h1><p>Owner view of goals, execution, verification and finance.</p></div><div class="badge" id="status">Connecting…</div></div>
   <div class="card form" id="authPanel" style="margin-bottom:16px">
     <label for="bearerToken">Command Center bearer token</label>
-    <input id="bearerToken" type="password" autocomplete="off" placeholder="Enter your token from Replit Secrets"/>
+    <input id="bearerToken" type="password" autocomplete="off" placeholder="Enter the existing token for this Command Center service"/>
     <button class="btn" onclick="connect()">Connect</button>
-    <p class="muted">Authentication is required. The token is kept only in this browser session; never put it in a URL or chat.</p>
+    <p class="muted">Use the existing bearer token configured for this Command Center service. The token is kept only in this browser session; never put it in a URL or chat.</p>
     <div id="authError" class="err"></div>
   </div>
   <div class="grid" id="metrics"></div>
@@ -43,7 +44,27 @@ export const commandCenterHtml=`<!doctype html>
       <div class="card finance" style="margin-top:16px"><div class="section-title"><h2>Latest Finance Brief</h2></div><div id="finance">No brief yet.</div></div>
     </div>
   </div>
-  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><pre id="timeline">Select a goal.</pre></div>
+  <div class="main">
+    <section class="card form detail" aria-labelledby="owner-memory-title">
+      <h2 id="owner-memory-title">Approved owner memory</h2>
+      <label for="memory-query">Task to recall relevant decisions</label><input id="memory-query" placeholder="Prepare procurement quotations"/>
+      <button class="btn secondary" onclick="recallOwnerMemory()">Recall approved decisions</button><pre id="owner-memory-results">Enter a task to recall its approved decisions.</pre>
+      <div data-owner-mutation><label for="memory-statement">Owner decision</label><textarea id="memory-statement"></textarea>
+      <label for="memory-context">Task keyword (e.g. procurement)</label><input id="memory-context" placeholder="procurement"/>
+      <label for="memory-source">Source reference</label><input id="memory-source" value="command-center-owner-entry"/>
+      <label for="memory-date">Source date and time (UTC)</label><input id="memory-date" type="text" placeholder="2026-10-28T10:00:00.000Z"/>
+      <label><input id="memory-approved" type="checkbox" style="width:auto"/> I explicitly approve this decision for the current company.</label>
+      <p class="muted">Recalled only when the task contains the context keyword. Observations remain unapproved. Saved decisions never expand execution authority.</p>
+      <button class="btn" onclick="saveOwnerMemory()">Save approved owner decision</button><div id="memory-error" class="err" role="status"></div></div>
+    </section>
+    <section class="card detail" aria-labelledby="notifications-title">
+      <h2 id="notifications-title">Internal notifications</h2>
+      <p class="muted">Polling only. Stored internally and never a claim of ChatGPT push or external delivery. Enablement starts now and does not replay historical events.</p>
+      <button data-owner-mutation class="btn secondary" onclick="pollInternalNotifications()">Enable and poll internal notifications</button>
+      <div id="notifications-results">Connect to inspect internal notifications.</div><div id="notifications-error" class="err" role="status"></div>
+    </section>
+  </div>
+  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
 let token=sessionStorage.getItem("sam_cc_token")||"";
@@ -59,7 +80,18 @@ async function api(path,options={}){
   const headers={...(options.headers||{}),Authorization:"Bearer "+token};
   if(options.body) headers["Content-Type"]="application/json";
   const r=await fetch(path,{...options,headers});
-  if(r.status===401){sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;throw new Error("Unauthorized. Enter the correct bearer token.");}
+  if(r.status===401){
+    sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;
+    let body;try{body=await r.json()}catch{}
+    let message="Authentication was rejected. Check this Command Center service's existing authentication configuration.";
+    if(body&&body.error==="unauthorized"){
+      if(body.reason==="missing_authorization")message="Authentication rejected: the service received no Authorization header.";
+      if(body.reason==="invalid_bearer_scheme")message="Authentication rejected: the service did not receive the required Bearer scheme.";
+      if(body.reason==="bearer_rejected")message="Authentication rejected: the service rejected the Bearer credential. Confirm the existing token configured for this Command Center service.";
+    }
+    if(typeof body?.request_id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(body.request_id))message+=" Request ID: "+body.request_id;
+    throw new Error(message);
+  }
   const body=await r.json();
   if(!r.ok) throw new Error(body.error||"Request failed");
   return body;
@@ -79,10 +111,11 @@ async function refresh(){
     document.getElementById("goals").innerHTML=goals.data.map(g=>'<div class="goal" data-goal-id="'+escapeHtml(g.id)+'"><div class="row"><strong>'+escapeHtml(g.business_id+" · "+g.domain)+'</strong><span class="state">'+escapeHtml(g.state)+'</span></div><div style="margin-top:6px">'+escapeHtml(g.objective)+'</div><div class="muted">Priority '+g.priority+' · '+escapeHtml(g.authority_ceiling||"")+'</div></div>').join("")||'<div class="muted">No goals.</div>';
     document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
+    await refreshInternalNotifications();
   }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2)}catch(e){document.getElementById("timeline").textContent=e.message}}
+async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);const result=document.getElementById("report-result");result.textContent="";for(const r of x.data.reports||[]){const pre=document.createElement("pre");pre.textContent=JSON.stringify({reportId:r.id,hash:r.report_hash,summary:r.decision.summary,coverage:r.decision.report?.analysisCoverage||r.decision.coverage,limitations:r.decision.limitations||r.decision.report?.limitations,waitDiagnostics:r.decision.runtimeReview,semanticValidation:r.decision.report?.semanticPolicy||(r.decision.diagnostic?.schema==="sam.legacy_read_diagnostic.v1"?"DETERMINISTIC_BOUNDED_DIAGNOSTIC":"HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED"),retrieval:"SAVED_RESULT_ONLY_NO_EXECUTION"},null,2);result.appendChild(pre)}for(const a of x.data.audit||[]){if(a.action==="READ_REVIEW_DIAGNOSTIC"){const pre=document.createElement("pre");pre.textContent=JSON.stringify({waitDiagnostics:a.after_ref},null,2);result.appendChild(pre)}}}catch(e){document.getElementById("timeline").textContent=e.message}}
 async function createGoal(){
   const error=document.getElementById("formError");error.textContent="";
   try{
@@ -94,6 +127,31 @@ async function createGoal(){
     await refresh();await timeline(x.data.id);
   }catch(e){error.textContent=e.message}
 }
+let ownerDecisionKey=null;
+async function recallOwnerMemory(){
+  try{const x=await api('/api/owner-memory?query='+encodeURIComponent(document.getElementById('memory-query').value));document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);document.getElementById('memory-error').textContent='';}
+  catch(e){document.getElementById('memory-error').textContent=e.message;}
+}
+async function saveOwnerMemory(){
+  try{
+    if(!document.getElementById('memory-approved').checked)throw Error('Explicit owner approval is required.');
+    if(!ownerDecisionKey)ownerDecisionKey=crypto.randomUUID();
+    const body={statement:document.getElementById('memory-statement').value,context_key:document.getElementById('memory-context').value,source:document.getElementById('memory-source').value,source_timestamp:document.getElementById('memory-date').value,idempotency_key:ownerDecisionKey,approved:true};
+    const x=await api('/api/owner-memory',{method:'POST',body:JSON.stringify(body)});document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);ownerDecisionKey=null;document.getElementById('memory-statement').value='';document.getElementById('memory-approved').checked=false;document.getElementById('memory-error').textContent='Saved with explicit approval, source and date.';
+  }catch(e){document.getElementById('memory-error').textContent=e.message;}
+}
+function renderInternalNotifications(data){
+  const target=document.getElementById('notifications-results');target.textContent='';
+  const visible=(data.records||[]).filter(item=>item.status!=='SUPPRESSED');
+  const meaning=document.createElement('p');meaning.textContent='Internal polling only; no external delivery. '+(visible.length?'':'No visible notifications.');target.appendChild(meaning);
+  for(const item of visible){
+    const card=document.createElement('div'),pre=document.createElement('pre');pre.textContent=JSON.stringify({id:item.id,title:item.title,body:item.body,status:item.status,readReceipt:item.readReceipt},null,2);card.appendChild(pre);
+    if(!item.readReceipt&&(document.body.dataset.readOnly!=="true"||document.body.dataset.isolatedNotification===item.id)){const button=document.createElement('button');button.className='btn secondary';button.textContent='Mark read internally';button.onclick=()=>acknowledgeInternalNotification(item.id);card.appendChild(button);}target.appendChild(card);
+  }
+}
+async function refreshInternalNotifications(){try{const x=await api('/api/notifications');renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
+async function pollInternalNotifications(){try{const x=await api('/api/notifications/poll',{method:'POST',body:'{}'});renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='Internal notifications enabled from this first explicit poll. No historical replay or external delivery.';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
+async function acknowledgeInternalNotification(id){try{await api('/api/notifications/'+encodeURIComponent(id)+'/ack',{method:'POST',body:'{}'});await refreshInternalNotifications();}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
 refresh();setInterval(refresh,15000);
 </script>
 </body></html>`;

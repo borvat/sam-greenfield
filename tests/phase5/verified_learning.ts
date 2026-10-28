@@ -12,10 +12,10 @@ async function one(sql:string,params:any[]=[]){
   return r.rows[0];
 }
 
-async function createGoal(state="PLANNING"){
+async function createGoal(state="PLANNING",existingLegalEntityId?:string){
   return withTransaction(async(client)=>{
     const org=await client.query("INSERT INTO organizations(name) VALUES($1) RETURNING id",[`P5-${Date.now()}-${Math.random()}`]);
-    const le=await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,$2) RETURNING id",[org.rows[0].id,`P5LE-${Date.now()}-${Math.random()}`]);
+    const le=existingLegalEntityId?{rows:[{id:existingLegalEntityId}]}:await client.query("INSERT INTO legal_entities(org_id,name) VALUES($1,$2) RETURNING id",[org.rows[0].id,`P5LE-${Date.now()}-${Math.random()}`]);
     const g=await client.query(
       "INSERT INTO goals(business_id,company_scope,objective,state,authority_ceiling) VALUES($1,$2,$3,$4,'GREEN') RETURNING id",
       [`P5G-${Date.now()}-${Math.floor(Math.random()*1e9)}`,le.rows[0].id,"Verified learning proof",state]
@@ -70,8 +70,7 @@ async function main(){
   });
   assert.ok(fact1);
 
-  const goal2=await createGoal();
-  await pool.query('UPDATE goals SET company_scope=$2 WHERE id=$1',[goal2.goalId,goal1.legalEntityId]);
+  const goal2=await createGoal("PLANNING",goal1.legalEntityId);
   const exec2=await verifiedExecution(goal2.goalId,"p5_observe_b","worker-b",20);
   const fact2=await learnVerifiedWorldFact({
     executionId:exec2,

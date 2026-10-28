@@ -7,6 +7,13 @@ export async function transaction<T>(db:any,fn:(client:any)=>Promise<T>):Promise
 }
 const labels={COMPLETED:'اكتملت المهمة',FAILED:'تعذّرت المهمة',APPROVAL:'المهمة تحتاج قرارك',PROGRESS:'تحديث مهم للمهمة'};
 
+async function suppressObsoleteGoalNotifications(client:any,companyId:string|null=null){
+ await client.query(`UPDATE owner_notifications n SET status='SUPPRESSED',last_error_code='GOAL_STATE_CHANGED',updated_at=now()
+  FROM goals g WHERE n.goal_id=g.id AND ($1::uuid IS NULL OR (n.legal_entity_id=$1 AND g.company_scope=$1))
+   AND n.kind IN ('APPROVAL','PROGRESS') AND n.body->>'state'<>g.state
+   AND n.status IN ('UNROUTED','PENDING','RETRY') AND n.body->>'requiredAction' IS DISTINCT FROM 'REVIEW_OBSERVATION'`,[companyId]);
+}
+
 export async function projectOwnerNotifications(db:any=pool){
  if(!notificationsEnabled())return {enabled:false,created:0};
  return transaction(db,async c=>{
@@ -14,9 +21,7 @@ export async function projectOwnerNotifications(db:any=pool){
   const lock=await c.query("SELECT pg_try_advisory_xact_lock(hashtext('sam-owner-notifications')) AS locked");
   if(!lock.rows[0].locked)return {enabled:true,created:0,busy:true};
   if(!(await c.query("SELECT id FROM notification_settings WHERE id='owner'")).rowCount)throw new Error("NOTIFICATION_OPERATOR_ENABLEMENT_REQUIRED");
-  await c.query(`UPDATE owner_notifications n SET status='SUPPRESSED',last_error_code='GOAL_STATE_CHANGED',updated_at=now()
-    FROM goals g WHERE n.goal_id=g.id AND n.kind IN ('APPROVAL','PROGRESS') AND n.body->>'state'<>g.state
-      AND n.status IN ('UNROUTED','PENDING','RETRY') AND n.body->>'requiredAction' IS DISTINCT FROM 'REVIEW_OBSERVATION'`);
+  await suppressObsoleteGoalNotifications(c);
   const events=await c.query(`SELECT o.* FROM outbox_events o
     WHERE o.created_at >= (SELECT enabled_at FROM notification_settings WHERE id='owner')
       AND o.aggregate_type='goal' AND o.event_type='GOAL_STATE_CHANGED'
@@ -24,46 +29,7 @@ export async function projectOwnerNotifications(db:any=pool){
     ORDER BY o.created_at,o.id LIMIT 100`);
   let created=0;
   for(const event of events.rows){
-   const goal=(await c.query('SELECT * FROM goals WHERE id=$1',[event.aggregate_id])).rows[0];
-   const state=event.payload?.to;
-   const kind=state==='COMPLETED'?'COMPLETED':state==='FAILED'?'FAILED':state==='WAITING_OWNER'?'APPROVAL':
-     ['WAITING_EXTERNAL','BLOCKED'].includes(state)?'PROGRESS':null;
-   let notificationId:string|null=null;
-   // Old requests for approval must not notify after the task has already resumed.
-   if(goal?.company_scope && kind && goal.state===state && !(goal.domain==='sam_perception'&&kind==='COMPLETED')){
-    const report=kind==='COMPLETED'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
-      WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='complete'
-        AND ($3::text IS NULL OR report_hash=$3) ORDER BY round DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id,event.payload?.report_hash??null])).rows[0]:null;
-    const verified=await c.query(`SELECT e.id,v.result FROM executions e
-      LEFT JOIN LATERAL(SELECT result FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) v ON true
-      WHERE e.goal_id=$1 ORDER BY e.started_at,e.id`,[goal.id]);
-    const failedWork=(await c.query(`SELECT capability_id,wake_reason,attempt FROM work_queue
-      WHERE goal_id=$1 AND status='FAILED' ORDER BY queued_at,id LIMIT 10`,[goal.id])).rows;
-    const approvals=kind==='APPROVAL'?(await c.query(`SELECT id,capability_id,expiry_at FROM approvals
-      WHERE goal_id=$1 AND legal_entity_id=$2 AND status='PENDING' AND expiry_at>now() ORDER BY created_at,id LIMIT 10`,[goal.id,goal.company_scope])).rows:[];
-    const attempts=Number(goal.replan_attempts??0);
-    const summary=kind==='COMPLETED'&&report?String(report.decision.summary).slice(0,1800):
-      kind==='COMPLETED'?'اكتملت المهمة بحسب سجل الحالة؛ راجع التنفيذ والأدلة. لا يوجد تقرير نهائي موحّد مرتبط بهذا الإشعار.':
-      kind==='FAILED'?'توقفت المهمة دون اكتمال. راجع سبب الانتقال ومحاولات التنفيذ في سجل المهمة.':
-      kind==='APPROVAL'?'توقفت المهمة بانتظار قرارك. راجع الطلب والتفاصيل قبل الموافقة.':'تحتاج المهمة متابعة بسبب عائق أو اعتماد خارجي.';
-    const body={schema:'sam.owner_notification.v1',businessId:goal.business_id,goalId:goal.id,state,
-      summary,reasonCode:reasonCode(event.payload?.reason),reason:reasonLabel(event.payload?.reason),replans:attempts,
-      failedAttempts:failedWork.map((r:any)=>({capabilityId:r.capability_id,reasonCode:reasonCode(r.wake_reason),attempt:Number(r.attempt)})),
-      verifiedExecutions:verified.rows.filter((r:any)=>r.result==='VERIFIED').length,
-      totalExecutions:verified.rows.length,requiredAction:kind==='APPROVAL'?'REVIEW_OWNER_DECISION':kind==='FAILED'?'REVIEW_FAILURE':'NONE',
-      approvalRequests:approvals,report:report?{id:report.id,hash:report.report_hash}:null,
-      evidenceExecutionIds:verified.rows.filter((r:any)=>r.result==='VERIFIED').map((r:any)=>r.id),
-      eventAt:event.created_at,deliveryMeaning:'UNROUTED means stored internally, not sent to the owner'};
-    const inserted=await c.query(`INSERT INTO owner_notifications
-      (legal_entity_id,goal_id,source_event_id,dedup_key,kind,severity,title,body)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb) ON CONFLICT(dedup_key) DO NOTHING RETURNING id`,
-      [goal.company_scope,goal.id,event.id,'event:'+event.id,kind,kind==='APPROVAL'?'URGENT':kind==='COMPLETED'?'INFO':'WARNING',
-       `${labels[kind]} — ${goal.business_id}`,JSON.stringify(body)]);
-    notificationId=inserted.rows[0]?.id??(await c.query('SELECT id FROM owner_notifications WHERE dedup_key=$1',['event:'+event.id])).rows[0]?.id;
-    if(inserted.rowCount)created++;
-   }
-   await c.query(`INSERT INTO notification_event_receipts(event_id,notification_id,disposition)
-     VALUES($1,$2,$3) ON CONFLICT(event_id) DO NOTHING`,[event.id,notificationId,notificationId?'CREATED':'SKIPPED']);
+   if(await projectGoalNotificationEvent(c,event))created++;
   }
   // Perception uses the existing event fabric, not the Outbox delivery receipt.
   // Correlate the exact latest verified execution and company before owner review.
@@ -114,6 +80,55 @@ export async function projectOwnerNotifications(db:any=pool){
   return {enabled:true,created};
  });
 }
+async function projectGoalNotificationEvent(c:any,event:any,companyId?:string){
+   const goal=(await c.query('SELECT * FROM goals WHERE id=$1',[event.aggregate_id])).rows[0];
+   if(companyId&&goal?.company_scope!==companyId)return false;
+   let created=0;
+   const state=event.payload?.to;
+   const kind=state==='COMPLETED'?'COMPLETED':state==='FAILED'?'FAILED':state==='WAITING_OWNER'?'APPROVAL':
+     ['WAITING_EXTERNAL','BLOCKED'].includes(state)?'PROGRESS':null;
+   let notificationId:string|null=null;
+   // Old requests for approval must not notify after the task has already resumed.
+   if(goal?.company_scope && kind && goal.state===state && !(goal.domain==='sam_perception'&&kind==='COMPLETED')){
+    const report=kind==='COMPLETED'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
+      WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='complete'
+        AND ($3::text IS NULL OR report_hash=$3) ORDER BY round DESC,coalesce((decision->'runtimeReview'->>'attempts')::int,0) DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id,event.payload?.report_hash??null])).rows[0]:
+     kind==='PROGRESS'&&goal.completion_definition==='sam.read_report.v1'?(await c.query(`SELECT id,report_hash,decision FROM goal_read_reviews
+      WHERE goal_id=$1 AND plan_id=$2 AND decision->>'status'='blocked'
+      ORDER BY revision DESC,created_at DESC,id DESC LIMIT 1`,[goal.id,goal.current_plan_id])).rows[0]:null;
+    const verified=await c.query(`SELECT e.id,v.result FROM executions e
+      LEFT JOIN LATERAL(SELECT result FROM verifications WHERE execution_id=e.id ORDER BY checked_at DESC,id DESC LIMIT 1) v ON true
+      WHERE e.goal_id=$1 ORDER BY e.started_at,e.id`,[goal.id]);
+    const failedWork=(await c.query(`SELECT capability_id,wake_reason,attempt FROM work_queue
+      WHERE goal_id=$1 AND status='FAILED' ORDER BY queued_at,id LIMIT 10`,[goal.id])).rows;
+    const approvals=kind==='APPROVAL'?(await c.query(`SELECT id,capability_id,expiry_at FROM approvals
+      WHERE goal_id=$1 AND legal_entity_id=$2 AND status='PENDING' AND expiry_at>now() ORDER BY created_at,id LIMIT 10`,[goal.id,goal.company_scope])).rows:[];
+    const attempts=Number(goal.replan_attempts??0);
+    const summary=kind==='COMPLETED'&&report?String(report.decision.summary).slice(0,1800):
+      kind==='COMPLETED'?'اكتملت المهمة بحسب سجل الحالة؛ راجع التنفيذ والأدلة. لا يوجد تقرير نهائي موحّد مرتبط بهذا الإشعار.':
+      kind==='FAILED'?'توقفت المهمة دون اكتمال. راجع سبب الانتقال ومحاولات التنفيذ في سجل المهمة.':
+      kind==='APPROVAL'?'توقفت المهمة بانتظار قرارك. راجع الطلب والتفاصيل قبل الموافقة.':'تحتاج المهمة متابعة بسبب عائق أو اعتماد خارجي.';
+    const body={schema:'sam.owner_notification.v1',businessId:goal.business_id,goalId:goal.id,state,
+      summary,reasonCode:reasonCode(event.payload?.reason),reason:reasonLabel(event.payload?.reason),replans:attempts,
+      failedAttempts:failedWork.map((r:any)=>({capabilityId:r.capability_id,reasonCode:reasonCode(r.wake_reason),attempt:Number(r.attempt)})),
+      verifiedExecutions:verified.rows.filter((r:any)=>r.result==='VERIFIED').length,
+      totalExecutions:verified.rows.length,requiredAction:kind==='APPROVAL'?'REVIEW_OWNER_DECISION':kind==='FAILED'?'REVIEW_FAILURE':kind==='PROGRESS'?(goal.completion_definition==='sam.read_report.v1'?'INSPECT_REVIEW_DIAGNOSTICS_AND_BUDGET_THEN_OWNER_CONTINUE_IF_ELIGIBLE':'REVIEW_WAITING_DEPENDENCY'):'NONE',
+      approvalRequests:approvals,report:report?{id:report.id,hash:report.report_hash}:null,
+      evidenceExecutionIds:verified.rows.filter((r:any)=>r.result==='VERIFIED').map((r:any)=>r.id),
+      eventAt:event.created_at,deliveryMeaning:'UNROUTED means stored internally, not sent to the owner'};
+    const inserted=await c.query(`INSERT INTO owner_notifications
+      (legal_entity_id,goal_id,source_event_id,dedup_key,kind,severity,title,body)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb) ON CONFLICT(dedup_key) DO NOTHING RETURNING id`,
+      [goal.company_scope,goal.id,event.id,'event:'+event.id,kind,kind==='APPROVAL'?'URGENT':kind==='COMPLETED'?'INFO':'WARNING',
+       `${labels[kind]} — ${goal.business_id}`,JSON.stringify(body)]);
+    notificationId=inserted.rows[0]?.id??(await c.query('SELECT id FROM owner_notifications WHERE dedup_key=$1',['event:'+event.id])).rows[0]?.id;
+    if(inserted.rowCount)created++;
+   }
+   await c.query(`INSERT INTO notification_event_receipts(event_id,notification_id,disposition)
+     VALUES($1,$2,$3) ON CONFLICT(event_id) DO NOTHING`,[event.id,notificationId,notificationId?'CREATED':'SKIPPED']);
+   return created>0;
+}
+
 function reasonCode(value:unknown){
  // Never copy arbitrary provider error bodies, secrets or model text into alerts.
  const known=new Set(['WORK_EXECUTION_FAILED','PLANNING_FAILED','READ_ONLY_NOT_FOUND_REPLAN',
@@ -138,4 +153,76 @@ function reasonLabel(value:unknown){
   objective_review_runtime_failed:'تعذّر اعتماد التقرير النهائي.'
  };
  return typeof value==='string'&&labels[value]?labels[value]:'راجع تفاصيل الحدث والتنفيذ في سجل المهمة.';
+}
+
+/** Durable owner read receipts use the existing append-only tenant audit log.
+ * Caller owns the transaction. Reading never changes delivery status/read_at. */
+export async function acknowledgeOwnerNotification(client:any,context:import('../../../packages/shared/src/ownerScope').OwnerContext,notificationId:string){
+ const {authorizedCompany,uuidPattern}=await import('../../../packages/shared/src/ownerScope');
+ const company=await authorizedCompany(client,context);
+ if(typeof notificationId!=='string'||!uuidPattern.test(notificationId))throw Error('NOTIFICATION_ID_INVALID');
+ const visible=(await client.query('SELECT id FROM owner_notifications WHERE id=$1 AND legal_entity_id=$2',[notificationId,company])).rows[0];
+ if(!visible)return null;
+ const {sha256Hex}=await import('../../../packages/shared/src/stableJson');
+ await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',['notification-read:'+sha256Hex({company,actor:context.actor,notificationId})]);
+ let receipt=(await client.query(`SELECT id,timestamp FROM audit_log WHERE action='OWNER_NOTIFICATION_READ'
+  AND entity_type='legal_entity' AND entity_id=$1 AND actor=$2 AND after_ref->>'notificationId'=$3 ORDER BY timestamp,id LIMIT 1`,[company,context.actor,notificationId])).rows[0];
+ if(!receipt)receipt=(await client.query(`INSERT INTO audit_log(actor,action,entity_type,entity_id,after_ref,source,authority_class,result)
+  VALUES($1,'OWNER_NOTIFICATION_READ','legal_entity',$2,$3::jsonb,'internal_notification_poll','GREEN','READ') RETURNING id,timestamp`,[context.actor,company,JSON.stringify({schema:'sam.notification_read_receipt.v1',notificationId})])).rows[0];
+ return {notificationId,receipt,delivery:'POLLING_ONLY',pushPerformed:false};
+}
+
+export async function listOwnerNotifications(client:any,context:import('../../../packages/shared/src/ownerScope').OwnerContext,limit=50){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ const company=await authorizedCompany(client,context);
+ if(!Number.isInteger(limit)||limit<1||limit>200)throw Error('INVALID_LIMIT');
+ const access=(await client.query(`SELECT relation IS NOT NULL AS present,
+  CASE WHEN relation IS NULL THEN false ELSE has_table_privilege(current_user,relation,'SELECT') END AS allowed
+  FROM (SELECT to_regclass('audit_log') AS relation) access`)).rows[0];
+ const records=(await client.query("SELECT * FROM owner_notifications WHERE legal_entity_id=$1 AND status<>'SUPPRESSED' ORDER BY created_at DESC,id DESC LIMIT $2",[company,limit])).rows;
+ const receipts=access?.allowed?(await client.query(`SELECT DISTINCT ON (after_ref->>'notificationId') id,timestamp,after_ref->>'notificationId' AS notification_id
+  FROM audit_log WHERE action='OWNER_NOTIFICATION_READ' AND entity_type='legal_entity' AND entity_id=$1 AND actor=$2
+  AND after_ref->>'notificationId'=ANY($3::text[]) ORDER BY after_ref->>'notificationId',timestamp,id`,[company,context.actor,records.map((r:any)=>r.id)])).rows:[];
+ return {availability:'AVAILABLE',delivery:'POLLING_ONLY',pushPerformed:false,unroutedMeaning:'Stored internally; not sent to ChatGPT or owner',readReceiptAvailability:access?.allowed?'APPEND_ONLY_AUDIT':'UNAVAILABLE',records:records.map((r:any)=>({...r,readReceipt:receipts.find((x:any)=>x.notification_id===r.id)??null}))};
+}
+
+/** Company-local opt-in lives in the existing append-only audit log. */
+export async function ownerContinuityActivation(client:any,companyId:string){
+ const access=(await client.query("SELECT to_regclass('audit_log') IS NOT NULL AS present")).rows[0];
+ if(!access?.present)return null;
+ return (await client.query(`SELECT id,timestamp FROM audit_log WHERE action='OWNER_CONTINUITY_ENABLED'
+  AND entity_type='legal_entity' AND entity_id=$1 AND after_ref->>'schema'='sam.owner_continuity.v1'
+  ORDER BY timestamp,id LIMIT 1`,[companyId])).rows[0]??null;
+}
+async function projectScopedEvents(client:any,companyId:string,enabledAt:string){
+ await suppressObsoleteGoalNotifications(client,companyId);
+ const events=(await client.query(`SELECT o.* FROM outbox_events o JOIN goals g ON g.id=o.aggregate_id
+  WHERE g.company_scope=$1 AND o.created_at >= $2::timestamptz AND o.aggregate_type='goal' AND o.event_type='GOAL_STATE_CHANGED'
+  AND NOT EXISTS(SELECT 1 FROM notification_event_receipts r WHERE r.event_id=o.id)
+  ORDER BY o.created_at,o.id LIMIT 100`,[companyId,enabledAt])).rows;
+ let created=0;for(const event of events)if(await projectGoalNotificationEvent(client,event,companyId))created++;
+ return created;
+}
+/** Explicit authenticated owner action. No historical replay or global feature activation. */
+export async function pollScopedOwnerNotifications(client:any,context:import('../../../packages/shared/src/ownerScope').OwnerContext){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ const company=await authorizedCompany(client,context);
+ await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',['owner-continuity:'+company]);
+ let activation=await ownerContinuityActivation(client,company);
+ if(!activation)activation=(await client.query(`INSERT INTO audit_log(actor,action,entity_type,entity_id,after_ref,source,authority_class,result)
+  VALUES($1,'OWNER_CONTINUITY_ENABLED','legal_entity',$2,'{"schema":"sam.owner_continuity.v1","delivery":"POLLING_ONLY","historicalReplay":false}'::jsonb,'explicit_owner_poll','GREEN','ENABLED') RETURNING id,timestamp`,[context.actor,company])).rows[0];
+ const created=await projectScopedEvents(client,company,activation.timestamp);
+ return {...await listOwnerNotifications(client,{...context,legalEntityId:company}),enabled:true,activation,created};
+}
+/** Ordinary production hook: inert until the narrow flag AND explicit activation exist. */
+export async function runScopedOwnerNotificationTick(db:any=pool){
+ if(process.env.SAM_OWNER_CONTINUITY_ENABLED!=='true')return {enabled:false,created:0};
+ try{return await transaction(db,async client=>{
+  const company=(await client.query('SELECT current_legal_entity_id() AS entity')).rows[0]?.entity;
+  const activation=company?await ownerContinuityActivation(client,company):null;
+  if(!activation)return {enabled:false,created:0};
+  const lock=await client.query('SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked',['owner-continuity:'+company]);
+  if(!lock.rows[0].locked)return {enabled:true,created:0,busy:true};
+  return {enabled:true,created:await projectScopedEvents(client,company,activation.timestamp),delivery:'POLLING_ONLY',pushPerformed:false};
+ })}catch{return {enabled:false,created:0,errorCode:'SCOPED_NOTIFICATION_PROJECTION_FAILED'}}
 }

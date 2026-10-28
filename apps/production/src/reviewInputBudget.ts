@@ -13,3 +13,19 @@ export function assertReviewInputBudget(input:unknown){
  if(bytes>REVIEW_INPUT_BYTES)throw Error('REVIEW_INPUT_BUDGET_EXCEEDED');
  return bytes;
 }
+
+/** Remove documentation only at JSON Schema positions; property names and const/enum data stay intact. */
+export function reviewCatalogProjection(descriptors:any[]){
+ const annotations=new Set(['description','title','examples','$comment']);
+ const maps=new Set(['properties','patternProperties','$defs','definitions','dependentSchemas']);
+ const schemas=new Set(['items','additionalItems','additionalProperties','unevaluatedItems','unevaluatedProperties','contains','propertyNames','not','if','then','else','contentSchema']);
+ const lists=new Set(['allOf','anyOf','oneOf','prefixItems']);
+ function schema(value:any):any{
+  if(!value||typeof value!=='object'||Array.isArray(value))return value;
+  return Object.fromEntries(Object.entries(value).filter(([k])=>!annotations.has(k)).map(([k,v]:[string,any])=>[
+   k,maps.has(k)&&v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([name,child])=>[name,schema(child)])):
+    schemas.has(k)?(Array.isArray(v)?v.map(schema):schema(v)):lists.has(k)&&Array.isArray(v)?v.map(schema):v
+  ]));
+ }
+ return descriptors.map(({parameters,...descriptor})=>({...descriptor,parameters:schema(parameters)}));
+}

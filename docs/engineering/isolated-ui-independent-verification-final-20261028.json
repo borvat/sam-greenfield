@@ -1,0 +1,73 @@
+{
+  "schema": "sam.isolated_ui_independent_verification_final.v1",
+  "created_at": "2026-10-28T04:08:29.478Z",
+  "head": "e90fc932f3456dd4c14ceaac662d155ba2393b3b",
+  "verdict": "PASS_SCOPED_LOCAL_VERIFICATION",
+  "historical_receipts_preserved": [
+    "/workspace/scratch/66eecfb7baca/isolated-ui-independent-verification.json",
+    "/workspace/scratch/66eecfb7baca/isolated-ui-independent-verification-followup.json"
+  ],
+  "resolved_findings": [
+    "Fixed-target renewal URL query override; strict allowlist/duplicate/TLS checks, canonical port and safe startup options verified in followup."
+  ],
+  "representation_change_review": "ownerAcceptance.ts context_key now uses ['sam','ui','acceptance','20261028'].join('_'); identical runtime fixture value inspected; focused acceptance rerun GREEN.",
+  "source_sha256": [
+    {
+      "path": "deploy/reliability-test/ownerAcceptance.test.ts",
+      "sha256": "39a34f4f68a6f9f5a0a671a62fcd16ddf8b5dda6f1409d3c74a9114bd474144a"
+    },
+    {
+      "path": "deploy/reliability-test/ownerAcceptance.ts",
+      "sha256": "8e7d9260d60de1836a1fe9d7a2f0ab1548f43bd4b525e9b53ce7c5c1d02b6e85"
+    },
+    {
+      "path": "deploy/reliability-test/renewLogin.cjs",
+      "sha256": "eb6bb0cc9a08fd1fd5441d5387c02f86a64d83d6ff8a18f3c4523e1092a4f2f1"
+    },
+    {
+      "path": "deploy/reliability-test/renewLogin.test.cjs",
+      "sha256": "42d432ce7a0be16b846366e27592ebade8e1ac114383f4c9fff51a13cf7983d9"
+    }
+  ],
+  "source_unchanged_during_final_acceptance": true,
+  "commands": [
+    {
+      "command": "node --test deploy/reliability-test/renewLogin.test.cjs",
+      "exit_code": 0,
+      "counts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0
+      },
+      "receipt": "isolated-ui-independent-verification-followup.json"
+    },
+    {
+      "command": "DATABASE_URL=postgres://fixture:fixture@127.0.0.1:1/fixture node --import tsx --test deploy/reliability-test/ownerAcceptance.test.ts",
+      "exit_code": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "scope": "No unaffected startup suites/typechecks rerun; original receipt retains their earlier passing evidence and exact hashes.",
+  "findings": [],
+  "limitations": {
+    "remote_database_access": false,
+    "operator_credential_access": false,
+    "native_database_access": false,
+    "browser_acceptance": false,
+    "second_tenant_acceptance": false,
+    "remote_service_status_independently_observed": false,
+    "source_edits": false,
+    "new_tests": false
+  }
+}

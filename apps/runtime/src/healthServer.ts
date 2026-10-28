@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import { createServer,type Server } from "node:http";
 import type { ReadinessGate } from "./readiness";
 import {timingSafeEqual} from "node:crypto";
@@ -13,7 +14,7 @@ export function createHealthServer(gate:ReadinessGate,metrics?:()=>unknown):Serv
     if(req.url==="/livez"){
       res.setHeader("content-type","application/json");
       res.statusCode=200;
-      res.end(JSON.stringify({status:"alive"}));
+      res.end(JSON.stringify({status:"alive",...buildRevision()}));
       return;
     }
 
@@ -26,7 +27,8 @@ export function createHealthServer(gate:ReadinessGate,metrics?:()=>unknown):Serv
         started:state.started,
         recovering:state.recovering,
         shuttingDown:state.shuttingDown,
-        recoveredAt:state.recoveredAt
+        recoveredAt:state.recoveredAt,
+        ...buildRevision()
       }));
       return;
     }

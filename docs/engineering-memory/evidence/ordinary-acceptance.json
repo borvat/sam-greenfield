@@ -1,0 +1,19 @@
+{
+  "outcome": "complete-local",
+  "original_skill": "bmad-original:bmad-build",
+  "route": "oneshot-resume",
+  "review": "quick: no findings",
+  "archive_event": "ordinary-sam-greenfield-resume-20261027",
+  "resume_freshness": "CURRENT",
+  "engineering_status": "complete",
+  "deployment": "unverified",
+  "test_applicability": "historical after plan/evidence creation",
+  "head": "67e0b9ed08e519a336c54d8bae576466542e3a0f",
+  "branch": "acceptance/ordinary-sam-greenfield",
+  "unfinished_work_sha256": "25ff9adc41da047ee0b37cf4c80cfb220cd13627178deb3918048741b16eec9d",
+  "candidate_added": false,
+  "commits": 0,
+  "remote_operations": 0,
+  "persistence": "LOCAL_ONLY / shared persistence pending",
+  "command_receipts": 44
+}

@@ -53,7 +53,7 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
  const connection={query:async(q:string,args?:any[])=>{const r=await query(q,args);return {...r,rowCount:r.rows.length};},release(){}};const sql={connect:async()=>connection};
  const bundle:any={catalog:{planningDescriptors:()=>descriptors},raw:{}};
  try{
-  await db.query<any>("INSERT INTO goals(id,state,completion_definition,current_plan_id,objective,updated_at) VALUES($1,'VERIFYING','sam.read_report.v1',$2,'Read the source',now())",[id,plan]);
+  await db.query<any>("INSERT INTO goals(id,state,completion_definition,current_plan_id,objective,updated_at) VALUES($1,'VERIFYING','sam.read_report.v1',$2,'ابحث في البريد عن المورد المحدد',now())",[id,plan]);
   await db.query<any>("INSERT INTO plans(id,goal_id,version) VALUES($1,$2,1)",[plan,id]);
   await db.query<any>("INSERT INTO executions(id,goal_id,plan_id,capability_id,params,result,actor) VALUES($1,$2,$3,$4,$5,$6,'communications@1.0.0')",[execution,id,plan,source.capabilityId,source.params,{content:[{type:"text",text:source.text}]}]);
   await db.query<any>("INSERT INTO verifications(execution_id,result) VALUES($1,'VERIFIED')",[execution]);
@@ -94,5 +94,16 @@ test("isolated PostgreSQL: observation commits next plan, final report gates com
   assert.equal((await reviewNextReadGoal(bundle,sql,async(input:any)=>{if(input.proposedReport){rejectedCritiques++;return {accepted:false,missing:["Original comparison is absent"]};}return final;})).status,"blocked");
   assert.equal(rejectedCritiques,1);
   assert.equal((await db.query<any>("SELECT state FROM goals")).rows[0].state,"WAITING_EXTERNAL");
+  // Explicit saved plans are validated even with research mode off. Failure
+  // before reservation must persist a safe diagnostic without model access.
+  await db.query<any>('DELETE FROM goal_read_reviews WHERE plan_id=$1',[g.current_plan_id]);
+  await db.query<any>("DELETE FROM audit_log WHERE action='READ_REVIEW_BUDGET' AND after_ref->>'planId'=$1",[g.current_plan_id]);
+  await db.query<any>("UPDATE plans SET goal_assumptions='{\"research_plan\":{}}' WHERE id=$1",[plan]);
+  await db.query<any>("UPDATE goals SET state='VERIFYING'");let preflightCalls=0;
+  assert.equal((await reviewNextReadGoal(bundle,sql,async()=>{preflightCalls++;throw Error('must not call')})).status,'blocked');
+  assert.equal(preflightCalls,0);assert.equal(await readReviewBudget(connection,id,g.current_plan_id),undefined);
+  const diagnostic=(await db.query<any>("SELECT after_ref FROM audit_log WHERE action='READ_REVIEW_DIAGNOSTIC' ORDER BY timestamp DESC,id DESC LIMIT 1")).rows[0].after_ref;
+  assert.equal(diagnostic.phase,'preflight');assert.equal(diagnostic.beforeFirstReservation,true);assert.equal(diagnostic.code,'RESEARCH_QUESTIONS_INVALID');assert.match(diagnostic.nextAction,/INSPECT_CONFIGURATION/);
+
  }finally{await db.close()}
 });

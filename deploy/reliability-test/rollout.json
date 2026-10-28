@@ -1,0 +1,32 @@
+{
+  "status": "BOUNDED_TEST_VERIFIED_SUSPENDED_AFTER_LEASE",
+  "targetServiceId": "srv-dbe27ics728c738tuoc0",
+  "targetWorkspaceId": "tea-db35rbflot8c739g8rhg",
+  "branch": "repair/sam-operational-reliability-20261028",
+  "dockerfilePath": "./deploy/reliability-test/Dockerfile",
+  "healthCheckPath": "/readyz",
+  "autoDeploy": false,
+  "additionalEnvironment": {
+    "SAM_RELIABILITY_TEST_ENABLED": "1"
+  },
+  "existingSecretFiles": [
+    "sam-restricted-connection.json"
+  ],
+  "existingTokenEnvironmentName": "SAM_TEST_BEARER_TOKEN",
+  "requiresExplicitDecision": [],
+  "storageAdmission": "Existing fixed tenant, non-owner role and previously reviewed profiles; current login lease must already be valid for 5 to 60 minutes. No automatic renewal or privilege expansion.",
+  "models": "NO_MODEL_OR_EXTERNAL_ADAPTER",
+  "analysisAdmission": "CLOSED",
+  "hermesPolicyCreditUsed": 0,
+  "newResources": 0,
+  "newBudget": 0,
+  "productionChanges": false,
+  "containerPersistence": "VERIFIED_ONE_ACTUAL_RENDER_CONTAINER_REPLACEMENT",
+  "deployedCommit": "f859fda054f0d367c983e131feee6e6ddd7ae861",
+  "deployId": "dep-dbgjpu88v5cc73fsg410",
+  "loginLeaseExpiresAt": "2026-10-28T01:00:25.521Z",
+  "approval": "OWNER_APPROVED_EXISTING_SERVICE_AND_ONE_60_MINUTE_EXISTING_ROLE_RENEWAL",
+  "serviceSuspendedAfterLease": true,
+  "postgresDataRetained": true,
+  "productionPromotionEvidence": "docs/engineering/production-promotion-evidence.json"
+}

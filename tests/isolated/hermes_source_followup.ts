@@ -1,3 +1,4 @@
+import {aggregateForHermes,validateInterpretation,ANALYSIS_SEMANTIC_POLICY} from '../../apps/production/src/hermesDataAnalysis';
 /** Real SAM handler/SQL/execution/verification/readback; all model HTTP is synthetic. */
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
@@ -202,17 +203,17 @@ async function completeLocally(privateTimeline?:string,syntheticOptions:{sourceR
   const timeline=await f.surface.invoke('sam_get_goal_timeline',{goal_id:admission.goalId},owner);assert.equal(timeline.ok,true);
   const data=timeline.data as any;assert.equal(data.goal.state,'COMPLETED');assert.equal(data.work.length,1);assert.equal(data.executions.length,1);assert.equal(data.verifications.length,1);assert.equal(data.reports.length,1);
   const saved=data.reports[0];assert.match(saved.id,/^[a-f0-9-]{36}$/);assert.equal(saved.report_hash,sha256Hex(saved.decision));assert.equal(saved.decision.status,'complete');
-  const expectedInterpretation={...JSON.parse(answer),classification:'MODEL_INFERENCE',observations:JSON.parse(answer).observations.map((o:any)=>({...o,value:f.sourceReport.totals.netOrdered}))};
-  const expectedReport={source:f.sourceReport,sourceExecutionId:f.binding.sourceExecutionId,sourceHash:f.binding.sourceHash,sourceReuse:f.binding,hermesRunId:'run_synthetic_followup',interpretation:expectedInterpretation,
+  const expectedInterpretation=validateInterpretation(answer,aggregateForHermes(f.sourceReport));
+  const expectedReport={source:f.sourceReport,sourceExecutionId:f.binding.sourceExecutionId,sourceHash:f.binding.sourceHash,sourceReuse:f.binding,hermesRunId:'run_synthetic_followup',semanticPolicy:ANALYSIS_SEMANTIC_POLICY,interpretation:expectedInterpretation,
    analysisCoverage:{sourceProducts:f.sourceReport.products.length,sentProducts:Math.min(30,f.sourceReport.products.length),subset:f.sourceReport.products.length>30},
-   limitations:[...f.sourceReport.limitations,'تفسير Hermes استنتاج نموذجي؛ الأرقام المعروضة مصدرها حساب SAM والتحقق من المصدر.']};
+   limitations:[...f.sourceReport.limitations,'Reference selection only; all displayed statements are derived from verified source by SAM. Free-form narrative is unavailable. Price sums do not establish currency, tax treatment, profit or a causal shipping explanation.']};
   assert.deepEqual(saved.decision.report,expectedReport,'Readback must contain the complete exact source and expected synthetic interpretation');
   assert.deepEqual(saved.decision.sourceReuse,f.binding);assert.deepEqual(saved.decision.report.sourceReuse,f.binding);
   assert.equal(saved.decision.report.sourceExecutionId,f.binding.sourceExecutionId);assert.equal(saved.decision.report.sourceHash,f.binding.sourceHash);
-  assert.equal(saved.decision.report.interpretation.summary,JSON.parse(answer).summary);assert.equal(saved.decision.report.interpretation.classification,'MODEL_INFERENCE');
+  assert.equal(saved.decision.report.interpretation.summary,expectedInterpretation.summary);assert.equal(saved.decision.report.interpretation.classification,'SOURCE_DERIVED');
   assert.equal(saved.decision.verificationId,verification.verificationId);assert.equal(saved.decision.executionId,recorded.executionId);
   const v=data.verifications[0];
-  assert.deepEqual(saved.decision,{status:'complete',summary:JSON.parse(answer).summary,classification:'MODEL_INFERENCE',sourceReuse:f.binding,executionId:recorded.executionId,verificationId:v.id,report:expectedReport});
+  assert.deepEqual(saved.decision,{status:'complete',summary:expectedInterpretation.summary,classification:'SOURCE_DERIVED',sourceReuse:f.binding,executionId:recorded.executionId,verificationId:v.id,report:expectedReport});
   const receipt=data.work[0].handoff.hermes;
   assert.equal(receipt.taskHash,sha256Hex({task_id:data.work[0].id,goal_id:admission.goalId,agent_role:'data_analyst',instructions:input.instructions,allowed_tools:[],repository_scope:[],execution_budget:{max_cost_usd:0.15,max_concurrency:1},timeout:120000,created_at:new Date(data.work[0].created_at).toISOString()}));
   assert.ok(f.queries.some(sql=>/FOR SHARE OF p,w/.test(sql)),'Final report transaction must issue plan/work share locks');
@@ -358,10 +359,10 @@ async function rejectCandidateWithoutSuccess(candidate:string){
 
 test('follow-up: real adapter rejects unsupported contextual and non-scalar refs independently of prose',async()=>{
  for(const reference of ['analysisCoverage','analysisCoverage.sentProducts','totals','products.0'])
-  await rejectCandidateWithoutSuccess(JSON.stringify({...JSON.parse(answer),observations:[{reference,comment:'الكمية لا تتضمن أثر المرتجعات'}]}));
+  await rejectCandidateWithoutSuccess(JSON.stringify({...JSON.parse(answer),references:[reference]}));
 });
 
-test('follow-up: real adapter rejects empty and whitespace-only prose independently of supported refs',async()=>{
+test('follow-up: real adapter rejects arbitrary summary/comment fields, including empty and whitespace prose',async()=>{
  for(const text of ['', ' \n\t\u00a0']){
   await rejectCandidateWithoutSuccess(JSON.stringify({...JSON.parse(answer),summary:text}));
   await rejectCandidateWithoutSuccess(JSON.stringify({...JSON.parse(answer),observations:[{reference:'totals.netOrdered',comment:text}]}));

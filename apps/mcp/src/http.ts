@@ -1,3 +1,4 @@
+import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import {handleGoogleOauth} from './googleOauth';
 import type {SamGoogleConnection} from '../../production/src/samGoogleConnection';
 import type {InternalOAuthServer} from './internalOAuth';
@@ -81,7 +82,7 @@ export async function startMcpHttpServer(options:McpHttpServerOptions):Promise<{
     if(req.method==="GET"&&req.url==="/livez"){
       res.statusCode=200;
       res.setHeader("content-type","application/json");
-      res.end(JSON.stringify({status:"alive"}));
+      res.end(JSON.stringify({status:"alive",...buildRevision()}));
       return;
     }
 

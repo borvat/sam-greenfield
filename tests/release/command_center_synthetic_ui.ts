@@ -14,6 +14,7 @@ const originalConnect=pool.connect;
   query:async(text:string)=>{
     queries.push(text);
     if(text.startsWith("SELECT * FROM goals"))return {rowCount:1,rows:[{id:entity}]};
+    if(text.includes("to_regclass('goal_read_reviews')"))return {rowCount:1,rows:[{present:false,allowed:false}]};
     return {rowCount:0,rows:[]};
   },
   release(){}
@@ -53,6 +54,27 @@ async function main(){
         assert(html.includes("SYNTHETIC PILOT · CONNECTED"));
       }else assert(html.includes("<option>YELLOW</option>"));
     }
+    const oldReadOnly=process.env.SAM_COMMAND_CENTER_READ_ONLY;
+    try{
+      process.env.SAM_COMMAND_CENTER_READ_ONLY="1";
+      const html=await (await fetch(root)).text();
+      assert(html.includes('data-read-only="true"'));
+      assert(html.includes('role="status">Read-only mode'));
+      assert(html.includes('<div class="card form" hidden aria-hidden="true">'));
+      assert(html.includes('if(document.body.dataset.readOnly==="true")return;'));
+      assert(html.includes('READ ONLY · CONNECTED'));
+      assert(html.includes('id="authPanel"'));assert(html.includes('id="report-result"'));assert(html.includes('Build '));
+      const readsBefore=queries.length;
+      assert.equal((await fetch(root+"/api/goals",{method:"POST",body:"invalid JSON"})).status,401);
+      const blocked=await fetch(root+"/api/goals",{method:"POST",headers:{Authorization:`Bearer ${fakeToken}`},body:"invalid JSON"});
+      assert.equal(blocked.status,405);assert.equal(blocked.headers.get("allow"),"GET");
+      assert.equal((await blocked.json()).error,"command_center_read_only");assert.equal(queries.length,readsBefore);
+      process.env.SAM_COMMAND_CENTER_READ_ONLY="0";
+      const normal=await (await fetch(root)).text();
+      assert(!normal.includes('data-read-only="true"'));assert(!normal.includes('role="status">Read-only mode'));
+      assert(normal.includes('<div class="card form">'));assert(normal.includes('onclick="createGoal()"'));
+      assert.equal((await fetch(root+"/api/goals",{method:"POST",headers:{Authorization:`Bearer ${fakeToken}`},body:"invalid JSON"})).status,400);
+    }finally{if(oldReadOnly===undefined)delete process.env.SAM_COMMAND_CENTER_READ_ONLY;else process.env.SAM_COMMAND_CENTER_READ_ONLY=oldReadOnly;}
     const before=queries.length;
     assert.equal((await fetch(root+"/api/finance/latest")).status,401);
     const finance=await (await fetch(root+"/api/finance/latest",{headers:{Authorization:`Bearer ${fakeToken}`}})).json();
@@ -62,7 +84,7 @@ async function main(){
     await commandCenterGoalTimeline(entity,entity);
     assert(!queries.some(sql=>/\b(approvals|side_effect_operations)\b/.test(sql)));
   }finally{await http.close();}
-  console.log("PASS SYNTHETIC_RELEASE_UI: validated marker, no provider key, original defaults, GREEN scope, required contract, authenticated disabled finance, restricted read SQL; no DB/provider calls.");
+  console.log("PASS SYNTHETIC_RELEASE_UI: validated marker, no provider key, original defaults, read-only banner/creation denial, GREEN scope, required contract, authenticated disabled finance, restricted read SQL; no DB/provider calls.");
 }
 main().catch(()=>{console.error("FAIL SYNTHETIC_RELEASE_UI");process.exitCode=1;})
   .finally(async()=>{pool.connect=originalConnect;await pool.end();});

@@ -10,7 +10,7 @@ export function buildSamMcpServer(input:{
 }):McpServer{
   const server=new McpServer({
     name:"sam-executive",
-    version:"1.0.2"
+    version:"1.0.3"
   });
   const invoke=async(name:string,args:Record<string,unknown>)=>{
     const result=await input.surface.invoke(name,args,{actor:input.actor,systemOwner:true});
@@ -38,7 +38,7 @@ export function buildSamMcpServer(input:{
         annotations:{
           readOnlyHint:definition.risk==="READ",
           destructiveHint:definition.risk==="RED",
-          idempotentHint:definition.risk==="READ"||Boolean(input.syntheticOnly)
+          idempotentHint:definition.risk==="READ"||["sam_save_owner_decision","sam_acknowledge_notification","sam_poll_notifications"].includes(definition.name)||Boolean(input.syntheticOnly)
         }
       },
       async(args)=>invoke(definition.name,(args??{}) as Record<string,unknown>)

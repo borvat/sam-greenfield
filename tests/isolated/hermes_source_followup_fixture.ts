@@ -22,7 +22,7 @@ const SOURCE_EXECUTION='a0000000-0000-4000-8000-000000000014',SOURCE_VERIFICATIO
 export const SOURCE_CONTRACT='00000000-0000-4000-8000-000000000016',ANALYST_CONTRACT='00000000-0000-4000-8000-000000000017';
 const RESERVATION='00000000-0000-4000-8000-000000000018';
 export const owner={actor:'synthetic-system-owner',systemOwner:true};
-export const answer=JSON.stringify({summary:'قراءة المصدر المحفوظ مع مراعاة البيانات المجهولة',observations:[{reference:'totals.netOrdered',comment:'الكمية لا تتضمن أثر المرتجعات'}]});
+export const answer=JSON.stringify({version:'sam.analysis_selection.v2',references:['totals.netOrdered']});
 export function originalPlanHash(plan:any){return sha256Hex({goal_id:plan.goal_id,version:Number(plan.version),assumptions:plan.goal_assumptions??{},constraints:plan.constraints??{},dependencies:plan.dependencies??{},steps:plan.steps});}
 export function originalExecutionHash(execution:any){return sha256Hex({queue_id:execution.queue_id,goal_id:execution.goal_id,plan_id:execution.plan_id,plan_hash:execution.plan_hash,capability_id:execution.capability_id,
  params:execution.params??{},result:execution.result,evidence:execution.evidence,fencing_token:Number(execution.fencing_token),operation_key_ref:execution.operation_key_ref??null});}
@@ -79,6 +79,7 @@ export async function followupFixture(privateTimeline?:string,candidate:string=a
  ALTER TABLE verification_contracts ADD COLUMN description text,ADD COLUMN created_at timestamptz DEFAULT now(),ADD COLUMN capability_pattern text;
  ALTER TABLE model_calls ADD COLUMN model_version text,ADD COLUMN legal_entity_id uuid;`);
  await sql.exec(await readFile(new URL('../../packages/db/integration-migrations/00101_goal_read_reviews.sql',import.meta.url),'utf8'));
+ await sql.exec(await readFile(new URL('../../packages/db/integration-migrations/00106_read_review_revisions.sql',import.meta.url),'utf8'));
  const migration=await readFile(new URL('../../packages/db/migrations/00004_outbox_and_side_effect.sql',import.meta.url),'utf8');
  await sql.exec(migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION acquire_lease')));
  const queries:string[]=[],wire:any[]=[];

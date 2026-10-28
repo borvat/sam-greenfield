@@ -1,0 +1,164 @@
+{
+  "schema": "sam.isolated_ui_notification_acceptance.v1",
+  "observedDate": "2026-10-28",
+  "result": "PASS_ACTUAL_AUTHENTICATED_BROWSER",
+  "revision": "d8530ded08016af4d0225d2948d207e18dcd3b6a",
+  "reviewedNotificationCodeRevision": "6d84f8ca6ad00b89c25bc63f45a5b8756d7bae76",
+  "testedSource": {
+    "content_sha256": "bd28d910489ec1fd8233c8a84363022405a976de3aac6b106689dcb1d1808b9b",
+    "head": "d8530ded08016af4d0225d2948d207e18dcd3b6a"
+  },
+  "service": {
+    "id": "srv-dbe27ics728c738tuoc0",
+    "workspace": "tea-db35rbflot8c739g8rhg",
+    "plan": "0.5c-512mb",
+    "autoDeploy": false
+  },
+  "renewal": {
+    "role": "sam_eval_runtime_20261024",
+    "expiresAt": "2026-10-28T06:30:38.669Z",
+    "privilegeFingerprint": "8029e700c1331a67b4423deda3ac4068a481db1b539908d51406ca5fbbee8225",
+    "grantsChanged": false,
+    "rlsChanged": false,
+    "passwordChanged": false,
+    "source": "owner-safe-helper-receipt"
+  },
+  "window": {
+    "explicitOwnerConsentMinutes": 8,
+    "absoluteStopDeadline": "2026-10-28T06:09:25.524Z",
+    "resumeAt": "2026-10-28T06:01:28.264873Z",
+    "deployId": "dep-dbgove6c6qcc73c980jg",
+    "liveAt": "2026-10-28T06:03:27.639205Z",
+    "suspendAt": "2026-10-28T06:06:06.368938Z",
+    "finalStatus": "suspended",
+    "activeSeconds": 278.104065,
+    "independentlyConfirmedSuspended": true
+  },
+  "browser": {
+    "readiness": {
+      "ready": true,
+      "revision": "d8530ded08016af4d0225d2948d207e18dcd3b6a",
+      "services": [
+        200,
+        200,
+        200
+      ],
+      "uiAcceptanceEnabled": true,
+      "applicationLeaseMaxMinutes": 30,
+      "modelCalls": 0
+    },
+    "authentication": "Existing secure session reconnected; actual READ ONLY · CONNECTED, no credential inspection or new token entry",
+    "before": {
+      "id": "a1829450-3810-4aac-8af3-4e0331ff0186",
+      "label": "TEST DATA ONLY — SAM UI acceptance notification",
+      "status": "UNROUTED",
+      "readReceipt": null
+    },
+    "firstButtonClick": "Actual Mark read internally clicked; genuine CC handler committed; reviewed gateway deliberately withheld first successful reply once",
+    "afterFirstReply": "Rendered disclosed synthetic committed-response-withheld message; same button remained visible",
+    "secondButtonClick": "Same exact Mark read internally button and notification ID; no reload or API/DB acknowledgement substitute",
+    "after": {
+      "id": "a1829450-3810-4aac-8af3-4e0331ff0186",
+      "status": "UNROUTED",
+      "readReceipt": {
+        "id": "f0d1b181-4bd5-4b74-8328-41511ac70225",
+        "timestamp": "2026-10-28T06:05:15.765Z",
+        "notification_id": "a1829450-3810-4aac-8af3-4e0331ff0186"
+      }
+    },
+    "deliveryMeaning": "Internal polling/read receipt only; UNROUTED never means external delivery; no push"
+  },
+  "nativeAdjunct": {
+    "channel": "Reviewed explicit restricted-role CLI; not browser proof",
+    "inspectionMode": "BEGIN READ ONLY --inspect-notification-goal",
+    "goal": {
+      "id": "f49dedc9-f35b-4396-aa1e-c163152a69c7",
+      "company_scope": "2796e0d9-1701-4e53-a7ac-d198c0e44c01",
+      "business_id": "G000001",
+      "objective": "Read-only synthetic startup check. Execution remains disabled.",
+      "domain": "owner_command",
+      "state": "NEW",
+      "authority_ceiling": "GREEN",
+      "parent_goal_id": null,
+      "current_plan_id": null
+    },
+    "eligibility": "EXACT_SYNTHETIC_STARTUP_GOAL; exact pinned tuple and no associated plans/work/executions",
+    "seed": "Explicit reviewed --seed-notification against observed UUID only; no goal/trial/enrollment/grant creation",
+    "beforeAck": {
+      "memoryCount": 1,
+      "save_audits": 1,
+      "read_receipts": 0
+    },
+    "afterRetryReadOnlyVerify": {
+      "memoryCount": 1,
+      "save_audits": 1,
+      "read_receipts": 1,
+      "notificationStatus": "UNROUTED",
+      "modelCalls": 0,
+      "pushPerformed": false
+    },
+    "preservedMemoryId": "e7beb6ae-ea5c-496b-9567-d84041ffd5fd",
+    "memorySaveRepeated": false
+  },
+  "productionAfterAck": {
+    "channel": "Actual discovered ChatGPT sam_list_notifications({limit:5}), read-only",
+    "ok": true,
+    "availability": "AVAILABLE",
+    "delivery": "POLLING_ONLY",
+    "pushPerformed": false,
+    "records": [
+      {
+        "id": "e0283121-947e-47b9-94e7-8be1aae16299",
+        "status": "UNROUTED",
+        "readReceipt": null
+      }
+    ],
+    "syntheticTestNotificationVisible": false
+  },
+  "productionRevisions": [
+    {
+      "name": "CC",
+      "status": "live",
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "deploy": "dep-dbgm8n5g1s2s73bp9k30"
+    },
+    {
+      "name": "MCP",
+      "status": "live",
+      "revision": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "deploy": "dep-dbgm96k9v7es73arrs2g"
+    },
+    {
+      "name": "Runtime",
+      "status": "live",
+      "revision": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "deploy": "dep-dbgld96gekts7388md80"
+    }
+  ],
+  "independentEvidenceBoundary": "Verifier independently confirmed Render revision/plan/resume/suspend timing; actual browser interactions and restricted CLI counters are root-observed, then independently reviewed from saved evidence.",
+  "sideEffects": {
+    "businessNotificationAcknowledged": false,
+    "businessDataChanged": false,
+    "newGoalOrTenant": false,
+    "grantsRlsOrPasswordsChanged": false,
+    "modelsHermes": false,
+    "mailReadOrRecovery": false,
+    "externalSendOrPush": false,
+    "productionDeployment": false
+  },
+  "screenshots": [
+    {
+      "path": "docs/engineering/assets/isolated-ui-notification-withheld-20261028.jpg",
+      "sha256": "1d684f5273311438b14b4158ebc4b7b65bc78c22b473d754da72ac9c9238647e"
+    },
+    {
+      "path": "docs/engineering/assets/isolated-ui-notification-receipt-20261028.jpg",
+      "sha256": "86d288e4220987ee87375962ede8ffe6731043753a80b533b92f28fcbc6c51a6"
+    }
+  ],
+  "limits": [
+    "No ChatGPT push is supported/proven; working path is internal UI polling and discovered ChatGPT reads.",
+    "No second-company authenticated browser session/switch was tested; scope exclusion used wrong task in isolated UI and production ChatGPT reads.",
+    "Earlier transient MCP errors remain preserved with unknown root cause; successful retries do not establish permanent absence of transient failures."
+  ]
+}
