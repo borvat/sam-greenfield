@@ -8,52 +8,63 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
 ```json
 {
   "event": {
-    "blockers": [
-      "Actual synthetic notification acknowledgement remains unrun; expired existing-role credential renewal needs owner secure authentication and prior8min activation approval has ended."
-    ],
+    "blockers": [],
     "deployment": {
       "evidence": [
-        "docs/engineering/isolated-ui-memory-acceptance-20261028.json"
+        "docs/engineering/isolated-ui-notification-acceptance-20261028.json",
+        "docs/engineering/notification-live-independent-closeout-20261028.json"
       ],
-      "identity": "isolated9005b022 LIVE05:29:55Z then SUSPENDED05:34:52Z; new6d84f8c source NOT deployed",
+      "identity": "ProductionCC/MCP1e4e21a+Runtime62ccbdb LIVE unchanged; isolatedd8530ded LIVE06:03:27Z thenSUSPENDED06:06:06Z",
       "status": "observed"
     },
     "evidence": [
+      "docs/engineering/isolated-ui-acceptance-final-20261028.md",
+      "docs/engineering/isolated-ui-notification-acceptance-20261028.json",
+      "docs/engineering/notification-live-independent-closeout-20261028.json",
       "docs/engineering/isolated-ui-memory-acceptance-20261028.json",
-      "docs/engineering/notification-amendment-independent-verification-final-20261028.json",
-      "docs/engineering/isolated-ui-notification-continuation-20261028.md",
       "docs/engineering/completion-progress.md"
     ],
-    "id": "sam-ui-memory-pass-notification-prepared-20261028",
+    "id": "sam-ui-connection-acceptance-complete-20261028",
     "next_steps": [
-      "Obtain one fresh bounded activation decision and secure existing-operator renewal of the expired role; same existing plan/service only. Never inspect or transmit credentials in chat.",
-      "Deploy prepared notification-only source, run read-only --inspect-notification-goal then exactUUID seed, actual browser synthetic Mark read/retry and --verify one receipt; suspend on completion/failure/deadline.",
-      "Preserve passed memory fixture e7beb6ae-ea5c-496b-9567-d84041ffd5fd and do not save/retest it with a fresh key."
+      "No owner action remains for this completed acceptance scope. Keep isolated service suspended and preserve labelled fixtures/audits; do not rerun memory, completed goals, mail collection or model analysis.",
+      "Use discovered ChatGPT saved-report/memory/notification reads and existing production Command Center; internal polling is not external delivery. Historical transient MCP failures retain unknowncause and are a separate focused reliability followup if requested."
     ],
-    "recorded_at": "2026-10-28T05:50:33Z",
+    "recorded_at": "2026-10-28T06:17:29Z",
     "schema_version": 1,
     "source": {
-      "content_sha256": "bd28d910489ec1fd8233c8a84363022405a976de3aac6b106689dcb1d1808b9b",
-      "head": "6d84f8ca6ad00b89c25bc63f45a5b8756d7bae76"
+      "content_sha256": "b4f34d30af59804011e76db062bdc686e23e28961c4139a0be8c30a5a99cb801",
+      "head": "b72ef09b5ac9afa437084bd83835a2fe264ab808"
     },
-    "status": "blocked",
-    "summary": "Actual authenticated isolated UI memory save/exact retry/relevant recall/wrong-context exclusion PASS, one native row/audit. Production ChatGPT recall excludes test note. Notification fixture overconstraint corrected, independently reviewed and7 notification-only checks pass; source published6d84f8c, not deployed. Test service independently confirmed suspended within8min. Existing role expired; only actual synthetic notification button/receipt remains pending fresh explicit window and secure existing-role renewal.",
+    "status": "complete",
+    "summary": "Scoped SAM UI/ChatGPT acceptance closed. Actual discovered read tools and previously authenticated saved-report reads retained; isolated browser owner-memory save/recall/exclusion/exact retry and synthetic notification button acknowledgement/retry PASS, one memory/saveaudit/readreceipt. Independent lifecycle and saved-evidence review confirmed final suspension after4m38s on sameplan. Production1e4e21a CC/MCP and62ccbdb Runtime unchanged. Final report/evidence publishedb72ef09. This is scoped acceptance, not a general readiness or ChatGPT push claim.",
     "tests": [
       {
         "evidence": [
           "docs/engineering/isolated-ui-memory-acceptance-20261028.json"
         ],
-        "name": "Actual authenticated isolated browser memory save/exact retry/relevant and wrong-task recall, with native counts as adjunct only",
+        "name": "Actual isolated authenticated browser owner-memory save/exact retry/context recall and exclusion",
         "scope": "historical",
         "source": {
           "content_sha256": "aaabed9d8bc8fcaa1c2a81a1ade298dd91c621a0e4ce5db0c95facb1ceed502c",
           "head": "9005b02254c4f55d307b4ffbb38f832e45612b60"
         },
         "status": "pass"
+      },
+      {
+        "evidence": [
+          "docs/engineering/isolated-ui-notification-acceptance-20261028.json"
+        ],
+        "name": "Actual isolated authenticated browser synthetic notification display/button acknowledgement/retry; native counts adjunct only",
+        "scope": "historical",
+        "source": {
+          "content_sha256": "bd28d910489ec1fd8233c8a84363022405a976de3aac6b106689dcb1d1808b9b",
+          "head": "d8530ded08016af4d0225d2948d207e18dcd3b6a"
+        },
+        "status": "pass"
       }
     ]
   },
-  "event_digest": "34194d4d54870ff7a917dee84a71013494a503991bb463e9a545978b7783b039",
+  "event_digest": "8cd562c8e7c4936e2822b3c810f4666a1c4fb00b851b9a5fed6cea7f84359cc2",
   "schema_version": 1
 }
 ```
