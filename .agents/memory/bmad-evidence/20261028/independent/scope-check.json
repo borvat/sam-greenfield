@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "/workspace/scratch/c261a0b3e58a/final-evidence/sam/independent/check_scope.py"
+  ],
+  "cwd": "/workspace/scratch/c261a0b3e58a/sam-final",
+  "pid": 5,
+  "start_utc": "2026-10-27T22:55:24.489630+00:00",
+  "end_utc": "2026-10-27T22:55:24.524598+00:00",
+  "exit_code": 0,
+  "stdout": "{\n  \"activation\": \"PASS: original renderer once, policy then audit then brief; zero approved/no guidance\",\n  \"manifest\": \"/workspace/scratch/c261a0b3e58a/sam-final/_bmad/render/bmad-build/sam-final-a492d6b961ea/4ce3878288680765f791/manifest.json\",\n  \"base\": \"b55da2761e8fd1de3833be55f03d4fdd268cd0a3\",\n  \"base_tree\": \"159de07f40d1da723e4e452990607c6722b98060\",\n  \"authenticated_snapshot_files_hash_checked\": 51,\n  \"scope_integrity_runtime_migration_dependency_files_unchanged\": 31,\n  \"materialized_original_files_unchanged_excluding_authorized_memory_index\": 50,\n  \"helper_only_ledger_path_changed\": true,\n  \"normalized_helper_origin_blob\": \"a16204a51da6619f7634e32dbbdf151152ce11e1\",\n  \"ledger_bytes\": 0,\n  \"phase5_native_sql_tests\": \"NOT_RUN\"\n}\n",
+  "stderr": ""
+}

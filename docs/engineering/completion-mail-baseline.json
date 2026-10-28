@@ -1,0 +1,233 @@
+{
+  "goal": {
+    "id": "53424b11-c854-40e4-a264-14af2b7d33b0",
+    "business_id": "G-566baa67-5d93-4195-a1d0-18c1649154bf-000013",
+    "owner_id": null,
+    "company_scope": "73aa81c6-3a23-4369-9408-8bea0956d399",
+    "domain": "chatgpt_goal_submission",
+    "objective": "متابعة تصحيحية محدودة للهدف الأصلي e86e2d37-49f3-421a-b966-96e5cd10cf94 (G-566baa67-5d93-4195-a1d0-18c1649154bf-000006)، وليست إعادة تنفيذ آلية لتقريره الكامل. الخلل المثبت: FAILED بسبب PLANNING_DEADLINE_EXCEEDED في المحاولة الثالثة (30 ثانية)، دون خطة محفوظة أو قراءة Gmail أو تنفيذ أو تحقق أو تقرير. الأدلة: sam_get_goal_timeline للهدف الأصلي، planning_attempts=3، plans/work/executions/verifications/reports فارغة؛ sam_google_connection_status: configured=true, authorizationStored=true, discoveredReadTools=7 لكن liveReadVerified=false. المطلوب فقط اختبار تصحيحي صغير لقراءة بيانات بريد موجودة مسبقاً بالفترة التاريخية الثابتة [2026-10-26T03:38:48.430Z, 2026-10-27T03:38:48.430Z) باستخدام google_mcp_search_gmail_messages المسجل GREEN sideEffect=false: بحث SENT وبحث الوارد، صفحة أولى لكل اتجاه وبحد أقصى 100 معرف لكل صفحة، دون قراءة محتوى الرسائل أو أسمائها أو بيانات العملاء ودون إرسال أو كتابة أو تغيير حالة أو إعدادات. سجّل هل نجحت القراءة، عدد المعرفات الفريدة في كل صفحة، ووجود next_page_token؛ لا تقدّم هذه الأعداد كإجمالي نهائي إذا بقي ترقيم صفحات أو كانت التغطية غير مثبتة. معيار النجاح: دليل تنفيذ مستقل ومتحقق لقراءتين فعليتين أو تصريح واضح بمانع القراءة، وتقرير تشخيصي قصير بحدود التغطية وبلا بيانات شخصية؛ لا تدّع اكتمال الهدف الأصلي ولا تعاود تشغيله، ولا تستخدم Hermes ولا أي مزوّد public_free للبيانات الداخلية. استعمل القدرات الحالية فقط؛ لا تغييرات ولا إرسال خارجي ولا كلفة جديدة، وأوقف العمل إذا احتاج موافقة أو صلاحية أو أثر جانبي.",
+    "state": "WAITING_EXTERNAL",
+    "priority": 0,
+    "created_at": "2026-10-27T20:59:59.847Z",
+    "updated_at": "2026-10-27T21:00:18.255Z",
+    "next_wake_at": null,
+    "current_plan_id": "c3a09dab-968f-4e44-9a25-39db8d2278f6",
+    "world_model_version": null,
+    "authority_ceiling": "GREEN",
+    "parent_goal_id": null,
+    "completion_definition": "sam.read_report.v1",
+    "replan_attempts": 0,
+    "replan_reason": null,
+    "planning_attempts": 0,
+    "last_planning_at": "2026-10-27T21:00:09.407Z",
+    "planning_retry_at": null,
+    "planning_failure": null
+  },
+  "plans": [
+    {
+      "id": "c3a09dab-968f-4e44-9a25-39db8d2278f6",
+      "goal_id": "53424b11-c854-40e4-a264-14af2b7d33b0",
+      "version": 1,
+      "goal_assumptions": {
+        "objective_scope": "Limited corrective test only: two read-only Gmail searches over the fixed historical window; not a re-execution of the original goal and not a completion claim.",
+        "time_window_utc": "[2026-10-26T03:38:48.430Z, 2026-10-27T03:38:48.430Z) converted to Unix seconds as after:1792985928 before:1793072328 (exclusive upper bound).",
+        "search_semantics": "Gmail after:/before: operators are interpreted in UTC seconds but may apply day-level granularity on the server; therefore boundary coverage of the fixed window may be approximate and must be reported as a coverage caveat, not as exact-window proof.",
+        "capability_status": "google_mcp_search_gmail_messages is registered GREEN with sideEffect=false and is the only capability used; google connection reports configured=true, authorizationStored=true, liveReadVerified=false, so live-read success is unknown until these two calls return.",
+        "read_only_semantics": "Metadata/identifier listing only; no message content, subjects, sender names, or customer data are retrieved or persisted; include_headers stays false.",
+        "pagination_semantics": "Only the first page per direction is requested (page_size=100); presence of next_page_token must be recorded and the returned identifiers must NOT be presented as a final total."
+      },
+      "constraints": {
+        "no_cost": "No new cost, no additional quotas beyond two paginated search calls.",
+        "approval_gate": "Stop immediately and report a blocker if authorization, scope, or any side-effect approval is required, or if the tool returns an auth/permission error.",
+        "no_side_effects": "No send, write, label change, settings change, draft creation, or external transmission.",
+        "reporting_limits": "Report per-page: read success (true/false), unique identifier count, next_page_token presence; explicitly qualify counts as page-level, not exhaustive, and include no personal data.",
+        "no_content_access": "No reading of message bodies, subjects, sender identities, or customer data; identifiers and pagination flags only.",
+        "no_provider_escalation": "No Hermes and no public_free provider for internal data.",
+        "no_goal_completion_claim": "Must not assert original goal e86e2d37-49f3-421a-b966-96e5cd10cf94 / G-566baa67-5d93-4195-a1d0-18c1649154bf-000006 is complete or retried in full."
+      },
+      "dependencies": {},
+      "steps": [
+        {
+          "index": 0,
+          "due_at": null,
+          "params": {
+            "query": "in:sent after:1792985928 before:1793072328",
+            "page_size": 100,
+            "include_headers": false
+          },
+          "priority": 0,
+          "step_key": "sent_search",
+          "depends_on": [],
+          "result_refs": {},
+          "capability_id": "google_mcp_search_gmail_messages",
+          "idempotency_key": null,
+          "operation_key_ref": null
+        },
+        {
+          "index": 1,
+          "due_at": null,
+          "params": {
+            "query": "in:inbox after:1792985928 before:1793072328",
+            "page_size": 100,
+            "include_headers": false
+          },
+          "priority": 0,
+          "step_key": "inbox_search",
+          "depends_on": [],
+          "result_refs": {},
+          "capability_id": "google_mcp_search_gmail_messages",
+          "idempotency_key": null,
+          "operation_key_ref": null
+        }
+      ],
+      "plan_hash": "f6c4878b6a2d4b3739a5c5a325d0f800474809d20908d354977301976e3a6c6c",
+      "created_at": "2026-10-27T21:00:09.371Z"
+    }
+  ],
+  "work": [
+    {
+      "id": "157d4dba-dfda-4d4a-a849-fad3a279d3cf",
+      "status": "EXECUTED",
+      "capability_id": "google_mcp_search_gmail_messages",
+      "params": {
+        "query": "in:inbox after:1792985928 before:1793072328",
+        "page_size": 100,
+        "include_headers": false
+      },
+      "plan_id": "c3a09dab-968f-4e44-9a25-39db8d2278f6"
+    },
+    {
+      "id": "d5c4316f-df79-4af3-84ec-486a27644263",
+      "status": "EXECUTED",
+      "capability_id": "google_mcp_search_gmail_messages",
+      "params": {
+        "query": "in:sent after:1792985928 before:1793072328",
+        "page_size": 100,
+        "include_headers": false
+      },
+      "plan_id": "c3a09dab-968f-4e44-9a25-39db8d2278f6"
+    }
+  ],
+  "executions": [
+    {
+      "id": "3c7ad839-f5e4-4fc6-bbab-db6380e77cf6",
+      "queue_id": "157d4dba-dfda-4d4a-a849-fad3a279d3cf",
+      "goal_id": "53424b11-c854-40e4-a264-14af2b7d33b0",
+      "plan_id": "c3a09dab-968f-4e44-9a25-39db8d2278f6",
+      "plan_hash": "f6c4878b6a2d4b3739a5c5a325d0f800474809d20908d354977301976e3a6c6c",
+      "execution_hash": "a36ce9a874aea2584d2046cc81e5e86ce0b2a57c6efcb49730271b0a615c05e3",
+      "capability_id": "google_mcp_search_gmail_messages",
+      "params": {
+        "query": "in:inbox after:1792985928 before:1793072328",
+        "page_size": 100,
+        "include_headers": false
+      },
+      "evidence": {
+        "artifacts": [],
+        "transport": "mcp",
+        "remoteTool": "search_gmail_messages",
+        "resultHash": "f9d063a402ca99ff51461a72f8e146eaba18d96252f1bbf464458e5bf35769b4",
+        "sideEffect": false,
+        "side_effect": false,
+        "responseHash": "f9d063a402ca99ff51461a72f8e146eaba18d96252f1bbf464458e5bf35769b4",
+        "tool_capability": "google_mcp_search_gmail_messages",
+        "specialist_agent_id": "communications",
+        "verificationVersion": 2,
+        "specialist_agent_version": "1.0.0"
+      },
+      "fencing_token": "2",
+      "operation_key_ref": null,
+      "actor": "communications@1.0.0",
+      "started_at": "2026-10-27T21:00:11.898Z",
+      "finished_at": "2026-10-27T21:00:11.898Z",
+      "status": "EXECUTED",
+      "resultShape": [
+        "_meta",
+        "content",
+        "isError",
+        "structuredContent"
+      ],
+      "structuredKeys": [
+        "result"
+      ]
+    },
+    {
+      "id": "22dc2c79-cc63-46a5-b562-9101c8406dea",
+      "queue_id": "d5c4316f-df79-4af3-84ec-486a27644263",
+      "goal_id": "53424b11-c854-40e4-a264-14af2b7d33b0",
+      "plan_id": "c3a09dab-968f-4e44-9a25-39db8d2278f6",
+      "plan_hash": "f6c4878b6a2d4b3739a5c5a325d0f800474809d20908d354977301976e3a6c6c",
+      "execution_hash": "93997478f5f47f8268ae0fd394cd4bb5ec8955eb30773541022c292f54d8a81d",
+      "capability_id": "google_mcp_search_gmail_messages",
+      "params": {
+        "query": "in:sent after:1792985928 before:1793072328",
+        "page_size": 100,
+        "include_headers": false
+      },
+      "evidence": {
+        "artifacts": [],
+        "transport": "mcp",
+        "remoteTool": "search_gmail_messages",
+        "resultHash": "0bfb3d64ca7bfba4be6719fea73a920b23a3034573ce4189fbc8387e931152c3",
+        "sideEffect": false,
+        "side_effect": false,
+        "responseHash": "0bfb3d64ca7bfba4be6719fea73a920b23a3034573ce4189fbc8387e931152c3",
+        "tool_capability": "google_mcp_search_gmail_messages",
+        "specialist_agent_id": "communications",
+        "verificationVersion": 2,
+        "specialist_agent_version": "1.0.0"
+      },
+      "fencing_token": "2",
+      "operation_key_ref": null,
+      "actor": "communications@1.0.0",
+      "started_at": "2026-10-27T21:00:16.220Z",
+      "finished_at": "2026-10-27T21:00:16.220Z",
+      "status": "EXECUTED",
+      "resultShape": [
+        "_meta",
+        "content",
+        "isError",
+        "structuredContent"
+      ],
+      "structuredKeys": [
+        "result"
+      ]
+    }
+  ],
+  "verifications": [
+    {
+      "id": "23f25ce6-025e-4be7-b44b-28a0f6059b09",
+      "execution_id": "3c7ad839-f5e4-4fc6-bbab-db6380e77cf6",
+      "verifier": "sam-google-independent-readback",
+      "method": "api_readback",
+      "contract_id": "4e86baa8-4056-4104-a148-f946078c12b8",
+      "independent_evidence": {
+        "method": "fresh_mcp_readback",
+        "readback": true,
+        "responseHash": "f9d063a402ca99ff51461a72f8e146eaba18d96252f1bbf464458e5bf35769b4"
+      },
+      "result": "VERIFIED",
+      "checked_at": "2026-10-27T21:00:13.756Z",
+      "plan_hash": "f6c4878b6a2d4b3739a5c5a325d0f800474809d20908d354977301976e3a6c6c",
+      "execution_hash": "a36ce9a874aea2584d2046cc81e5e86ce0b2a57c6efcb49730271b0a615c05e3",
+      "operation_key_ref": null
+    },
+    {
+      "id": "4a2231d0-e819-46e4-8201-4ae1921a68aa",
+      "execution_id": "22dc2c79-cc63-46a5-b562-9101c8406dea",
+      "verifier": "sam-google-independent-readback",
+      "method": "api_readback",
+      "contract_id": "4e86baa8-4056-4104-a148-f946078c12b8",
+      "independent_evidence": {
+        "method": "fresh_mcp_readback",
+        "readback": true,
+        "responseHash": "0bfb3d64ca7bfba4be6719fea73a920b23a3034573ce4189fbc8387e931152c3"
+      },
+      "result": "VERIFIED",
+      "checked_at": "2026-10-27T21:00:17.450Z",
+      "plan_hash": "f6c4878b6a2d4b3739a5c5a325d0f800474809d20908d354977301976e3a6c6c",
+      "execution_hash": "93997478f5f47f8268ae0fd394cd4bb5ec8955eb30773541022c292f54d8a81d",
+      "operation_key_ref": null
+    }
+  ]
+}

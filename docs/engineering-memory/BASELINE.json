@@ -1,0 +1,11 @@
+{
+  "repository": "borvat/sam-greenfield",
+  "base_branch": "main",
+  "base_head": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "base_tree": "159de07f40d1da723e4e452990607c6722b98060",
+  "recovered_preparation": "/workspace/scratch/c261a0b3e58a/sam-publish.json",
+  "recovered_files": 26,
+  "operational_memory": "existing PostgreSQL Phase5 retained; no runtime/db/permission modification",
+  "engineering_ledger": "empty; no approved SAM lessons imported",
+  "acceptance": "new engineering source/checks only; SAM live goal/deployment/operational-memory acceptance remains unverified"
+}
