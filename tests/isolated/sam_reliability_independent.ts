@@ -106,3 +106,33 @@ test('independent Gmail: validator preserves source limits and appends inbox/pag
  const repeated=validateReadReview(inbox,[source],'Inspect bounded inbox results',[]);assert.equal(repeated.limitations.filter(x=>x.includes('inbox-only')).length,1);
  const page=validateReadReview(decision(),[{...source,params:{query:'supplier'}}],'Inspect returned messages',[]);assert.ok(page.limitations.some(x=>x.includes('returned page/messages')));
 });
+
+test('independent local HTTP: staging MCP exposes seven reads, denies auth/origin/write calls and replays an exact report',async()=>{
+ const [{Client,StreamableHTTPClientTransport},{startMcpHttpServer},{createCoreReadTools},{ChatGPTToolRegistry}]=await Promise.all([
+  import('@modelcontextprotocol/client'),import('../../apps/mcp/src/http'),import('../../apps/chatgpt-tools/src/coreReadTools'),import('../../apps/chatgpt-tools/src/registry')]);
+ const names=['sam_list_goals','sam_get_goal','sam_get_goal_timeline','sam_get_report','sam_memory_status','sam_recall_memory','sam_list_notifications'];
+ const items=createCoreReadTools().filter(x=>names.includes(x.definition.name));assert.equal(items.length,7);assert.ok(items.every(x=>x.definition.risk==='READ'));
+ const connect=pool.connect,oldNode=process.env.NODE_ENV,oldSafe=process.env.SAM_DEVELOPMENT_SAFE_MODE;
+ process.env.NODE_ENV='development';process.env.SAM_DEVELOPMENT_SAFE_MODE='1';
+ const reportId='77777777-7777-4777-8777-777777777777',report={id:reportId,report_hash:'synthetic-original-hash',decision:{summary:'Synthetic immutable report',report:{semanticPolicy:'sam.source_derived_semantics.v2'}}};let reportReads=0;
+ (pool as any).connect=async()=>({release(){},query:async(sql:string,args?:any[])=>{
+  if(sql.includes('SELECT current_org_id()'))return {rowCount:1,rows:[{org:O,entity:A}]};
+  if(sql.startsWith('SELECT id FROM legal_entities')){assert.deepEqual(args,[A,O]);return {rowCount:1,rows:[{id:A}]};}
+  if(sql.includes('SELECT r.* FROM goal_read_reviews')){assert.deepEqual(args,[reportId,A]);reportReads++;return {rowCount:1,rows:[structuredClone(report)]};}
+  if(['BEGIN','COMMIT','ROLLBACK'].includes(sql))return {rowCount:0,rows:[]};
+  throw Error('Independent local HTTP fixture forbids unexpected SQL');
+ }});
+ const surface=new ChatGPTToolRegistry(items.map(x=>({...x,handler:(args:any,ctx:any)=>x.handler(args,{...ctx,legalEntityId:A})})),{redactedErrors:true});
+ const server=await startMcpHttpServer({surface,actor:'independent-staging-owner',port:0,host:'127.0.0.1',bearerToken:'synthetic-local-token',allowedHosts:'127.0.0.1',allowedOrigins:'https://synthetic.invalid'});
+ const port=(server.server.address() as any).port,url=new URL(`http://127.0.0.1:${port}/mcp`),client=new Client({name:'independent-staging-test',version:'1'},{versionNegotiation:{mode:'auto'}});
+ try{
+  assert.equal((await fetch(url,{method:'POST'})).status,401);
+  assert.equal((await fetch(url,{method:'POST',headers:{Authorization:'Bearer synthetic-local-token',Origin:'https://wrong.invalid'}})).status,403);
+  await client.connect(new StreamableHTTPClientTransport(url,{requestInit:{headers:{Authorization:'Bearer synthetic-local-token'}}}));
+  const catalog=await client.listTools();assert.deepEqual(catalog.tools.map(x=>x.name).sort(),names.toSorted());assert.ok(catalog.tools.every(x=>x.annotations?.readOnlyHint===true));
+  const first=await client.callTool({name:'sam_get_report',arguments:{report_id:reportId}}),second=await client.callTool({name:'sam_get_report',arguments:{report_id:reportId}});
+  assert.deepEqual(first,second);const result=JSON.parse((first.content as any)[0].text);assert.equal(result.ok,true);assert.deepEqual(result.data.report,report);assert.equal(result.data.executionPerformed,false);assert.equal(reportReads,2);
+  for(const name of ['sam_submit_goal','sam_continue_read_review']){const refused=await client.callTool({name,arguments:{}});assert.equal(refused.isError,true);assert.equal(JSON.parse((refused.content as any)[0].text).error,'Tool is not permitted.');}
+  assert.equal(reportReads,2);
+ }finally{await client.close();await server.close();pool.connect=connect;for(const [k,v]of Object.entries({NODE_ENV:oldNode,SAM_DEVELOPMENT_SAFE_MODE:oldSafe})){if(v===undefined)delete process.env[k];else process.env[k]=v;}}
+});

@@ -61,6 +61,14 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('"LIVE"','"SYNTHETIC PILOT · CONNECTED"')
             .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
         }
+        if(process.env.SAM_COMMAND_CENTER_READ_ONLY==="1"){
+          scopedHtml=scopedHtml
+            .replace('<body','<body data-read-only="true"')
+            .replace('<div class="shell">','<div class="shell"><div class="card" role="status">Read-only mode · وضع القراءة فقط. Goal creation is disabled; goals, reports and wait diagnostics remain available.</div>')
+            .replace('<div class="card form">','<div class="card form" hidden aria-hidden="true">')
+            .replace('async function createGoal(){','async function createGoal(){\n  if(document.body.dataset.readOnly==="true")return;')
+            .replace('document.body.dataset.developmentSafe?','document.body.dataset.readOnly?"READ ONLY · CONNECTED":document.body.dataset.developmentSafe?');
+        }
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }
@@ -101,6 +109,9 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
         json(res,200,{ok:true,data:await commandCenterLatestFinanceBrief(options.legalEntityId)});return;
       }
       if(req.method==="POST"&&req.url==="/api/goals"){
+        if(process.env.SAM_COMMAND_CENTER_READ_ONLY==="1"){
+          res.setHeader("allow","GET");json(res,405,{error:"command_center_read_only"});return;
+        }
         const body=await readJson(req);
         if(autonomyEnabled()&&Object.keys(body).some(k=>!["objective","domain","priority","authority_ceiling"].includes(k)))throw new Error("AUTONOMY_INTAKE_FIELDS");
         const data=await createOwnerGoal(options.legalEntityId,{

@@ -41,3 +41,26 @@ These are **local synthetic, stub, PGlite and local HTTP results**. The Gmail te
 No live service, model, business database, paid resource or external write was used by this verifier. No native PostgreSQL role deployment, real Google/provider operation, real browser layout, container build/replacement or hosted persistence was proved. Startup principal/profile tests use SQL-response stubs; PGlite RLS/ACL tests do not replace hosted admission evidence. Public staging surfaces are read-only, while the selected maintenance composition still performs isolated kernel/supervisor maintenance.
 
 Root separately reported that the hosted test role `sam_eval_runtime_20261024` expired at `2026-10-26T23:09:02.511Z` and knowledge is feature-disabled. Those are deployment blockers reported by root, not native checks independently performed here. All final local checks above pass; hosted acceptance remains outstanding.
+
+## 2026-10-28 native acceptance plan and additional local check
+
+The owner renewed the existing restricted role, and root reported an expiry of `2026-10-28T01:00:25.521Z`. This supersedes the previous expired-role blocker; this verifier did not handle its credentials or perform renewal. Local `9f2ef44a856e0710abd5b5a75890b82fbfd68e3b` and deployed target `929593ff14c5ad33479a69826b394154d17fbab3` have identical tree `5dde779836452470033f2f65e45b312070de13ce` before this additional test/report update.
+
+One additional meaningful check was added to the independent test file, exercising the actual MCP HTTP server and SDK with synthetic database responses:
+
+```sh
+DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test --test-name-pattern='staging MCP exposes' tests/isolated/sam_reliability_independent.ts
+npm run typecheck
+```
+
+Result: **1 test, 1 passed, 0 failed, 0 skipped**, exit 0, 1.120 seconds; fresh typecheck exit 0. The check verifies the seven-tool read allowlist, read-only annotations, missing bearer 401, foreign Origin 403, exact scoped report replay, and denial of submit/continuation tools without any source/model call. This is local HTTP plus SQL-response stubs, not hosted evidence.
+
+Root's native acceptance sequence, with this verifier reviewing forwarded sanitized output only:
+
+1. Require `/readyz` 200, exact target revision, `services:[200,200,200]`, mode `SYNTHETIC_PERSISTENT_READ_ONLY`, zero model calls, and false live-reasoning/container-replacement flags. Match the UI Build revision. Root forwarded exactly this readiness result for deploy `dep-dbgjmi08v5cc73fs5be0`, LIVE at `00:03:01Z`, plus maintenance-only logs with planning/capability execution/external adapters disabled. **Root-observed startup/readiness passed; this verifier did not make the hosted request.**
+2. Check unauthenticated `/api/goals` and `/mcp` return 401, foreign Origin returns 403, and public POST `/api/goals` returns 405. List exactly `sam_list_goals`, `sam_get_goal`, `sam_get_goal_timeline`, `sam_get_report`, `sam_memory_status`, `sam_recall_memory`, `sam_list_notifications`; all have read-only annotations. Submit and continuation calls must be denied.
+3. Read one preexisting synthetic report twice by ID: identical decision/report hash, no new execution. Missing or RLS-hidden IDs must return null with `NOT_FOUND_OR_NOT_VISIBLE_UNDER_CURRENT_RLS`; authorized-read errors must not be described as absent records.
+4. Inspect memory status and recall: engineering remains `SEPARATE_GIT_SYSTEM`; execution knowledge and notifications are intentionally `FEATURE_DISABLED` because startup strips integration flags. Operational memory must retain its company, statement, source, timestamps and approval status. Notifications must say `POLLING_ONLY` and `pushPerformed:false`.
+5. Root alone handles the separately authorized synthetic sentinel. Compare its exact ID/hash/created timestamp before and after an independently evidenced container replacement. Same-process readback proves only readback; a code flag remaining `containerReplacementValidated:false` is expected and must not be promoted into persistence evidence. Retain the distinct container/deploy/boot identity alongside the matching row evidence.
+
+The database role must still have more than five and no more than sixty minutes remaining at startup. Its monotonic lease includes import time and stops the staging process before expiry; no automatic renewal is permitted. A readiness array `[503,200,200]` points to runtime/dependency readiness; `[200,200,503]` points to Command Center database/entity-ACTIVE readiness. A 401/403 is an auth/host/origin failure before data access. `SCOPED_READ_UNAVAILABLE` is an unavailable read, not an empty result. No hosted report, memory or container persistence result beyond the forwarded startup output has yet been verified here.
