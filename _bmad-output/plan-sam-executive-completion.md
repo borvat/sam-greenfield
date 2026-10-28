@@ -60,7 +60,7 @@ Never add resources, subscriptions, budget, grants/RLS relaxation, owner applica
 - [x] Surface worker: integrate MCP/CC saved-result limits, memory and notification polling/receipt path; test auth, dedup and no false delivery.
 - [x] Root: investigate actual ChatGPT discovery/automation and existing secure Render access; record baseline counters/current service identities; no repeated acceptance unrelated to changes.
 - [x] Independent reviewers/verifier: inspect full delta, run affected suite/typecheck and adversarial isolation tests; resolve actionable findings without weakening checks.
-- [ ] Root: publish reviewed branch, stage MCP/CC then Runtime as justified, verify exact LIVE revisions and perform bounded diagnostic recovery and synthetic scoped acceptance within existing role. Keep rollback ready and stop outside authorization.
+- [x] Root: publish reviewed branch, stage MCP/CC then Runtime as justified, verify exact LIVE revisions and perform bounded diagnostic recovery and synthetic scoped acceptance within existing role. Keep rollback ready and stop outside authorization.
 
 **Acceptance Criteria:**
 - Given existing connection, when requesting saved analysis, then original report and limits return with identical hash and zero new calls/executions/reports.
@@ -70,6 +70,8 @@ Never add resources, subscriptions, budget, grants/RLS relaxation, owner applica
 - Given reviewed application, when existing three services become LIVE, then UI/API/connected reads prove the deployed revision and actual behavior; unavailable auth/discovery is an explicit remaining limit.
 
 ## Implementation Notes
+
+Final delivery observation: application62ccbdbb94e080f22425f64396c894270ee551aa LIVE on existing three services. Native synthetic rollback acceptance passed, original mail diagnostic recovered idempotently with one report3ccab2cc-ed84-4534-9c17-70c9271b5e06/hash6e6d9abe3e11f1fc92653f952d283987ba409d5c2240a47e8c3a6ef59adad97e; independent connected baseline comparison preserved all prior source arrays. Model29/cost-field0.75/budget9 unchanged. Owner memory save/recall path is available without broad knowledge activation, no arbitrary business records seeded. One real internal UNROUTED notification remains unread; no push claim. Standalone tool discovery needs external app Refresh; authenticated browser traversal remains unavailable, so no general-readiness declaration. See single progress record and three completion evidence documents.
 
 Intake: report v3 read fully; PR86 unchanged Draft/open at baseline; three services still f859fda; isolated test suspended. Existing connected system_status succeeded. New tool names absent in this session registry. Two read-only workers established bounded deterministic mail evidence and owner-memory route without RLS expansion. Root coordinates a single plan; workers may not independently deploy or alter budgets.
 
