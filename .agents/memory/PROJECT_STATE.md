@@ -9,55 +9,46 @@ Modules: runtime, MCP dispatcher, Tool Gateway, verifier, provider budget/reserv
 {
   "event": {
     "blockers": [
-      "No active authorized isolated UI scope: business-bound session, existing test service suspended; synthetic write/dedup/isolation and receipt checks not run.",
-      "New standalone ChatGPT action names remain absent; no Refresh operation exposed."
+      "Existing test login expired; app role cannot renew; existing operator credential must be entered through hidden Render terminal, not chat."
     ],
     "deployment": {
-      "evidence": [
-        "docs/engineering/cc-auth-diagnosis-20261028.json",
-        "docs/engineering/cc-authenticated-ui-acceptance-20261028.json"
-      ],
-      "identity": "CC/MCP:1e4e21a773c88e2366915edd3bb2e307fddaa157:dep-dbgm8n5g1s2s73bp9k30,dep-dbgm96k9v7es73arrs2g;Runtime:62ccbdbb94e080f22425f64396c894270ee551aa:dep-dbgld96gekts7388md80",
-      "status": "observed"
+      "status": "unverified"
     },
     "evidence": [
-      "docs/engineering/cc-auth-diagnosis-20261028.json",
-      "docs/engineering/cc-auth-diagnosis-20261028.md",
-      "docs/engineering/cc-authenticated-ui-acceptance-20261028.json",
-      "docs/engineering/cc-auth-independent-verification-20261028.json",
-      "docs/engineering/completion-progress.md"
+      "docs/engineering/isolated-ui-acceptance-20261028.md",
+      "docs/engineering/chatgpt-discovery-acceptance-20261028.json",
+      "docs/engineering/isolated-ui-independent-verification-final-20261028.json",
+      "docs/engineering/isolated-ui-secret-scan-20261028.json"
     ],
-    "id": "sam-auth-diagnosis-ui-final-20261028",
+    "id": "sam-isolated-ui-prepared-discovery-20261028",
     "next_steps": [
-      "Use current authenticated CC session for saved reports and scoped reads; no repeated login needed.",
-      "To close UI synthetic writes/receipt, provide an existing active authorized isolated test scope; do not write into business company or revive expired test lease.",
-      "Connection manager Refresh Sam Mcp Reder actions; keep existing cached timeline/status until actual standalone read-tool discovery succeeds.",
-      "Keep Runtime62 because its redeploy was rejected as avoidable/unaffected; do not bypass or claim uniform revisions."
+      "Start pinned hidden-TTY operator preparation and request one secure authentication handoff; never expose credentials.",
+      "After confirmed auth, parent renews existing login30min, resumes same test service, performs exact synthetic browser tests and suspends by absolute30min deadline."
     ],
-    "recorded_at": "2026-10-28T03:14:02Z",
+    "recorded_at": "2026-10-28T04:14:04Z",
     "schema_version": 1,
     "source": {
-      "content_sha256": "b25e15de0126bbe4a023ae8299b1a4aab39e671ca390af4037ba50994050a21e",
-      "head": "1e4e21a773c88e2366915edd3bb2e307fddaa157"
+      "content_sha256": "9069846043e488fe0382f814238f93b2a2886853dcf96ed17a1d15b642515175",
+      "head": "d5f79c9ee1c096d31d59aa9d7beb0141eb8f7d0e"
     },
     "status": "partial",
-    "summary": "Scoped original BMAD auth diagnostics/guidance fix reviewed independently and verified locally (5 new +4 selected regressions, typecheck/diff0, final six-file scan0). CC and MCP LIVE1e4; unaffected Runtime remains62 after automatic-review rejection, no workaround. Live classifications and browser transport request-ID correlation passed. Secure owner browser login then succeeded; actual UI original historical/mail reports and limits, empty approved-memory read and unread UNROUTED/internal-only notice passed. Historical401 cause UNKNOWN. Isolated memory write/dedup/isolation and synthetic receipt UI remain blocked; no business fixtures or real receipts. Candidate lesson only, verified lessons0.",
+    "summary": "Actual ChatGPT new-tool discovery/invocation closed. Independently reviewed bounded isolated UI candidate published to PR86 at d5f79c9; not deployed. Existing test service suspended, expired test role unchanged; pinned reviewed renewal helper staged without auth/renewal. Actual isolated browser writes remain pending secure existing-operator authentication.",
     "tests": [
       {
         "evidence": [
-          "docs/engineering/cc-auth-independent-verification-20261028.json"
+          "docs/engineering/isolated-ui-independent-verification-20261028.json"
         ],
-        "name": "Focused local auth5/5 + selected CC4/4, typecheck0 and diffcheck0",
+        "name": "Independent initial startup4/default-read-only2/typechecks; final delta verification recorded separately by exact file hashes",
         "scope": "historical",
         "source": {
-          "content_sha256": "f62a93ffae1d625bd79d3f7daac74a80d248063b91bd6a5d3436d7767e4407b3",
-          "head": "7dfe995159bfcb8038c981530f3e34b9a3e5b7c9"
+          "content_sha256": "bd40018bb2dc02bbda4d725981d68ddbb2032a19bdcfddeda7545e9390e96a33",
+          "head": "e90fc932f3456dd4c14ceaac662d155ba2393b3b"
         },
         "status": "pass"
       }
     ]
   },
-  "event_digest": "34f0cadab3d5119ad1d98fd3591b952b73f061a8a971e9ec3d1e66a20ad4ccfd",
+  "event_digest": "6dd19c257901c5da98ac0a20bec4075b856534423a3a3911e075c5b0c97a53e5",
   "schema_version": 1
 }
 ```

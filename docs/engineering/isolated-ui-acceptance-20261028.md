@@ -38,3 +38,11 @@ Only existing operator sam_trial_postgres_user can use the bounded renewal path.
 7. Suspend on finish/failure/deadline, verify Render suspended status and archive observed result. Internal UNROUTED is not external delivery. No push project/resources introduced.
 
 From ChatGPT request saved report by ID, memory status/recall, or internal notification list; these tools are actually callable now. From production UI use existing authenticated report/owner-memory/notification panels; isolated writes remain pending this controlled window.
+
+## Published preparation / secure handoff checkpoint
+
+Candidate d5f79c9ee1c096d31d59aa9d7beb0141eb8f7d0e published to the existing PR86 branch with expected-head lease; remote readback confirms Draft/open/unmerged. Published tree4fef5fd615c16cc6397e69a7cbc7eb8210253e71 exactly matches local reviewed tree. This is published source, NOT a deployed test release.
+
+Pinned operator helper from that exact public commit was fetched into the existing authenticated Runtime shell and SHA-256 checked against the reviewed file before staging /tmp/sam-ui-renewLogin-d5f79c9.cjs. Render visibly returned PINNED_RENEWAL_HELPER_STAGED_NO_AUTH_NO_RENEWAL. No credential prompt or connection/renewal yet. Next root action after recording this checkpoint: explicit --prepare-renewal hidden TTY prompt, then one authentication handoff; service remains SUSPENDED, window not started. The prompt does not authorize any grant/password/RLS change. Existing secure operator credential must be entered only there, never in chat.
+
+Final full-deliverable scan:17 files; one unchanged historical public-flag false positive identically reproduced on baseline, no new secret findings/suppressions. Native/browser lifetime and actual isolated write acceptance remain pending.
