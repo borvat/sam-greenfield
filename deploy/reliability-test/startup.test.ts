@@ -8,10 +8,11 @@ const {createStorageLease}=createRequire(import.meta.url)('./storageLease.cjs');
 test('synthetic staging environment cannot inherit provider credentials, billing or old live flags',()=>{
  const env=applicationEnvironment({PATH:'/usr/bin',RENDER_GIT_COMMIT:'a'.repeat(40),DEEPSEEK_API_KEY:'fixture',
   DATABASE_URL:'postgres://wrong',SAM_HERMES_DATA_ANALYSIS_ENABLED:'1',SAM_HERMES_PROBE_ENABLED:'1',
-  SAM_HERMES_CODING_PROBE_ENABLED:'1',SAM_INTEGRATION_ENABLED:'1',SAM_PRODUCTION_BUNDLE_MODULE:'wrong'},
+  SAM_HERMES_CODING_PROBE_ENABLED:'1',SAM_INTEGRATION_ENABLED:'1',SAM_PRODUCTION_BUNDLE_MODULE:'wrong',SAM_UI_ACCEPTANCE_ENABLED:'1'},
   {connectionString:'postgres://restricted-fixture',entity:'synthetic-entity'});
  assert.equal(env.DATABASE_URL,'postgres://restricted-fixture');assert.equal(env.SAM_COMMAND_CENTER_READ_ONLY,'1');
  assert.equal(env.RENDER_GIT_COMMIT,'a'.repeat(40));
+ assert.equal('SAM_UI_ACCEPTANCE_ENABLED' in env,false);
  for(const k of Object.keys(env))assert.doesNotMatch(k,/API_KEY|HERMES|BUNDLE|INTEGRATION_ENABLED/);
  assert.equal(applicationEnvironment({RENDER_GIT_COMMIT:'untrusted text'},{connectionString:'fixture',entity:'fixture'}).RENDER_GIT_COMMIT,undefined);
 });

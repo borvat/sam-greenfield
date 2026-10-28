@@ -29,12 +29,21 @@ export interface CommandCenterHttpOptions{
   bearerToken?:string;
   allowedHosts?:string;
   allowedOrigins?:string;
+  /** Supplied only by the privately admitted isolated test entry. */
+  isolatedAcceptance?:{
+    notificationId:string;
+    memoryFixture:{statement:string;context_key:string;source:string};
+    assertMutation(req:IncomingMessage,body:unknown):void;
+  };
 }
 
 export async function startCommandCenterHttpServer(options:CommandCenterHttpOptions):Promise<{server:Server;close():Promise<void>}>{
   const hosts=new Set(csv(options.allowedHosts).map(x=>x.toLowerCase()));
   const origins=new Set(csv(options.allowedOrigins));
   const token=options.bearerToken??"";
+  const acceptance=options.isolatedAcceptance;
+  const acceptanceSafe=()=>process.env.NODE_ENV!=="production"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"&&process.env.SAM_COMMAND_CENTER_READ_ONLY==="1";
+  if(acceptance&&(!acceptanceSafe()||!token))throw Error('ISOLATED_ACCEPTANCE_SAFE_READ_ONLY_REQUIRED');
 
   const server=createServer(async(req,res)=>{
     try{
@@ -79,6 +88,18 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('async function createGoal(){','async function createGoal(){\n  if(document.body.dataset.readOnly==="true")return;')
             .replace('document.body.dataset.developmentSafe?','document.body.dataset.readOnly?"READ ONLY · CONNECTED":document.body.dataset.developmentSafe?');
         }
+        if(acceptance&&acceptanceSafe()){
+          const escape=(s:string)=>s.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+          scopedHtml=scopedHtml
+            .replace('<body',`<body data-isolated-notification="${escape(acceptance.notificationId)}"`)
+            .replace('<div data-owner-mutation hidden>','<div data-owner-mutation>')
+            .replace('<textarea id="memory-statement"></textarea>',`<textarea id="memory-statement" readonly>${escape(acceptance.memoryFixture.statement)}</textarea>`)
+            .replace('<input id="memory-context" placeholder="procurement"/>',`<input id="memory-context" readonly value="${escape(acceptance.memoryFixture.context_key)}"/>`)
+            .replace('<input id="memory-source" value="command-center-owner-entry"/>',`<input id="memory-source" readonly value="${escape(acceptance.memoryFixture.source)}"/>`)
+            .replace('<input id="memory-date" type="text"',`<input id="memory-date" readonly value="${new Date().toISOString()}" type="text"`)
+            .replace('refresh();setInterval(refresh,15000);','refresh();')
+            .replace('Read-only mode · وضع القراءة فقط.','Read-only mode with exact synthetic fixture save/read acknowledgement only · وضع القراءة فقط.');
+        }
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }
@@ -100,18 +121,24 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       const notificationAck=req.url?.match(/^\/api\/notifications\/([0-9a-fA-F-]+)\/ack$/);
       if(ownerMemory.pathname==='/api/owner-memory'||ownerMemory.pathname==='/api/notifications'||req.url==='/api/notifications/poll'||notificationAck){
         if(!token){rejectAuthentication(req,res,true);return;}
-        if(req.method==='POST'&&process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){res.setHeader('allow','GET');json(res,405,{error:'command_center_read_only'});return;}
+        let acceptanceBody:any;
+        if(req.method==='POST'&&process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){
+          if(!acceptance||!acceptanceSafe()||!(req.url==='/api/owner-memory'||req.url===`/api/notifications/${acceptance.notificationId}/ack`)){
+            res.setHeader('allow','GET');json(res,405,{error:'command_center_read_only'});return;
+          }
+          acceptanceBody=await readJson(req);acceptance.assertMutation(req,acceptanceBody);
+        }
         if(req.method==='GET'&&ownerMemory.pathname==='/api/owner-memory'){
           json(res,200,{ok:true,data:await commandCenterOwnerMemory(options.legalEntityId,ownerMemory.searchParams.get('query')??'')});return;
         }
         if(req.method==='POST'&&req.url==='/api/owner-memory'){
-          json(res,201,{ok:true,data:await commandCenterSaveOwnerDecision(options.legalEntityId,await readJson(req))});return;
+          json(res,201,{ok:true,data:await commandCenterSaveOwnerDecision(options.legalEntityId,acceptanceBody??await readJson(req))});return;
         }
         if(req.method==='GET'&&req.url==='/api/notifications'){
           json(res,200,{ok:true,data:await commandCenterNotifications(options.legalEntityId,'list')});return;
         }
         if(req.method==='POST'&&(req.url==='/api/notifications/poll'||notificationAck)){
-          const body=await readJson(req);if(Object.keys(body).length)throw Error('NOTIFICATION_ARGUMENTS_NOT_ALLOWED');
+          const body=acceptanceBody??await readJson(req);if(Object.keys(body).length)throw Error('NOTIFICATION_ARGUMENTS_NOT_ALLOWED');
           const data=await commandCenterNotifications(options.legalEntityId,notificationAck?'ack':'poll',notificationAck?.[1]);
           json(res,data===null?404:200,{ok:data!==null,data});return;
         }

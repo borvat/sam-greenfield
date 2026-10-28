@@ -146,7 +146,7 @@ function renderInternalNotifications(data){
   const meaning=document.createElement('p');meaning.textContent='Internal polling only; no external delivery. '+(visible.length?'':'No visible notifications.');target.appendChild(meaning);
   for(const item of visible){
     const card=document.createElement('div'),pre=document.createElement('pre');pre.textContent=JSON.stringify({id:item.id,title:item.title,body:item.body,status:item.status,readReceipt:item.readReceipt},null,2);card.appendChild(pre);
-    if(!item.readReceipt&&document.body.dataset.readOnly!=="true"){const button=document.createElement('button');button.className='btn secondary';button.textContent='Mark read internally';button.onclick=()=>acknowledgeInternalNotification(item.id);card.appendChild(button);}target.appendChild(card);
+    if(!item.readReceipt&&(document.body.dataset.readOnly!=="true"||document.body.dataset.isolatedNotification===item.id)){const button=document.createElement('button');button.className='btn secondary';button.textContent='Mark read internally';button.onclick=()=>acknowledgeInternalNotification(item.id);card.appendChild(button);}target.appendChild(card);
   }
 }
 async function refreshInternalNotifications(){try{const x=await api('/api/notifications');renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
