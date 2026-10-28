@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "repository": "borvat/sam-greenfield",
+  "pr": 87,
+  "decision": "READY FOR OWNER APPROVAL",
+  "meaning": "Technical recommendation only; no owner authorization, formal GitHub approval, main/master merge or operational delivery.",
+  "reviewed_parent_head": "f6b580d0075fe22835d3f7769f0ca855aab03a9e",
+  "current_base_branch": "main",
+  "current_base_head": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "head_and_base_unchanged_since_prior_final_readback": true,
+  "initial_full_pr_changed_files": [
+    {
+      "path": ".agents/memory/MEMORY.md",
+      "status": "modified",
+      "git_blob": "29ae93545777c4e483c982439022e9fe3761db21",
+      "sha256": "add278e35d545d3ac29aa4e3050b14362b27e84e9002c2f1455bdc1482b91702"
+    },
+    {
+      "path": ".agents/memory/PROJECT_HISTORY.md",
+      "status": "added",
+      "git_blob": "c54192f465c550bb9717ecaf41f9cb3a6ffac8b0",
+      "sha256": "b7defb739ca97c6840ce72ec4d58fa75d414356d39845ebf708f02068c3d218f"
+    },
+    {
+      "path": ".agents/memory/PROJECT_STATE.md",
+      "status": "added",
+      "git_blob": "852a9e00578a5d595de07645d5fe037bd4a60eb2",
+      "sha256": "eed47ab7c93e5be65128bef4373021e7943650cc2d53fa94d4a62184975c4018"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/FINAL-REVIEW.md",
+      "status": "added",
+      "git_blob": "cf4c0f4ab28bd4302d0c568029a360b0a7ef6dd2",
+      "sha256": "5af19a59c4f3c6439ae8e8883464f48710df0a7910a82b91d963a5f6a1b68f31"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/authenticated-source-hashes.json",
+      "status": "added",
+      "git_blob": "f6f455a68f7ca5696626b7d9c5ee44ef3582cd0a",
+      "sha256": "9c1158a82c89d34722415cbeb4c7af25f7b9cb86753c320f87708557613e5912"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/audit.json",
+      "status": "added",
+      "git_blob": "78dadd30d99feec84db7bdf5cc6f598618204949",
+      "sha256": "f5465cc1d48a3069ed054aef919e0ce9b4fc58b10c174e10ce75a2ddac95a4ee"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/brief.json",
+      "status": "added",
+      "git_blob": "bf3ca02cfc1104546024adaa3a5e728d86cb4f78",
+      "sha256": "2fd47017d50e17f355b2803441445ac513afa3f3655a56d7c9ff85f15bb9ae4a"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/check_scope.py",
+      "status": "added",
+      "git_blob": "16f86357fc93b4438a50d1b3f8a23daaf6a59502",
+      "sha256": "70215ea47965510ae05786614f0f6ee469d4be07fbbfb04f18e5e392264a8f29"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/diff-check.json",
+      "status": "added",
+      "git_blob": "54959ebc26c20eb138fb57e606262289fe6d98dd",
+      "sha256": "4be9a337262b620b66de3a052e2f4cd099ea190ecc501293a8b68942704f24c6"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/functional-tests.json",
+      "status": "added",
+      "git_blob": "b83648b6362af68b75c6a5226e5b15545975471b",
+      "sha256": "17a8ce8e5818597fa44c25a54a78a10fb9594d6bb88a9842f2bdef7785e36278"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/persistent-policy.json",
+      "status": "added",
+      "git_blob": "d8f20b4683dba333c796e8d40e686593a6778050",
+      "sha256": "d7147500a162bda8a4cfe1d9ff68d568566bd8ee08a299ad810c9a9e2179bfbb"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/renderer.json",
+      "status": "added",
+      "git_blob": "f0b942e02124d1ae1374a3df37434d93f1820b34",
+      "sha256": "05099288693b9f82e37d635e00f18af2bad1153922c938f346158ea1d42209c6"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/scope-check.json",
+      "status": "added",
+      "git_blob": "a71166bf496bd2cff9e07f3f54f53bb9343c655c",
+      "sha256": "5dd978827a9e9aec3cde50595a8972e2b654a2703044cd99df0e207c41152615"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/independent/verdict.md",
+      "status": "added",
+      "git_blob": "aab0db0623d55eec41255346cea6309a4edf8ee5",
+      "sha256": "7a01def6f4f9b10ec3323e296c2b259926a2eb72cba2152e0e75689e813170e3"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/phase5-inspection.md",
+      "status": "added",
+      "git_blob": "87498ed581193089a0c905df32c30a9bedc11f61",
+      "sha256": "764d5300b8d48a27bbaeb1168eaea4c30adbcbabf785ea936127850992ba1389"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/root-original-render.json",
+      "status": "added",
+      "git_blob": "3c6dd45a6039bf7e1f2cc1540947e027c6daca92",
+      "sha256": "4690300e60ee87b522fcd369b8ddcb0d69422046f6d575c95834ff9211147079"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/scope-integrity.json",
+      "status": "added",
+      "git_blob": "90b9c3f026fc8c95fa4bc38e1d7149fdcfa89bb6",
+      "sha256": "f7b84aa14345af0a3de0484df15bc3c77098d27b5870c66dc5de030f9080d0f5"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/setup.json",
+      "status": "added",
+      "git_blob": "978ee457727fa9da46ece964b916c1b2d3cc91c5",
+      "sha256": "5a0a7b028386fd0a5fc2547b98a82245aa0d591221ee96c80ef0a1818f909fc4"
+    },
+    {
+      "path": ".agents/memory/bmad-evidence/20261028/source-checkout.json",
+      "status": "added",
+      "git_blob": "a75db15b8c1cfa2353c5543ffaa422ffafbdc67e",
+      "sha256": "1f40c8623ee005261ba8c4fd37479bc399252b82015df699ab757c000820a620"
+    },
+    {
+      "path": ".agents/memory/engineering-acceptance-20261028.md",
+      "status": "added",
+      "git_blob": "5eeaeaf6a447e89f6297806a655f9d35da8389d4",
+      "sha256": "631efc36ffbb29a589cac16f193b4000456c5538d8e985eb98016d305b4b6485"
+    },
+    {
+      "path": ".agents/memory/engineering-learning.md",
+      "status": "added",
+      "git_blob": "b35aa4f00d1a96c20db77750f1a56e20008c77aa",
+      "sha256": "b98af094f3dd25a45ffd7a80fce7a9eeacd396649bd4ffd68b5e92dca28100ce"
+    },
+    {
+      "path": ".agents/memory/engineering-lessons.jsonl",
+      "status": "added",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".project-memory.json",
+      "status": "added",
+      "git_blob": "c288c571116fc29952ae03af25aad888491320e4",
+      "sha256": "72bce7429c69c6ad94f40b8c7333f19d35334d15f5b7de0f7c4961e87c5b56b3"
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "added",
+      "git_blob": "bd84f501fb35cc3484fd6ebc106d5d2d75ed027c",
+      "sha256": "3e41ca3725af3c11b0b1b2795c82cb4061e2d3522686eda0b8de2e35e5d12f93"
+    },
+    {
+      "path": "_bmad/.gitignore",
+      "status": "added",
+      "git_blob": "8e2ae8701128c7193d595e261fbd2a3653b3e22f",
+      "sha256": "540a7345f681c787db3e01ba8ca2127940b5f4bfc4e6f4da60c7d5c3b2c5d054"
+    },
+    {
+      "path": "_bmad/config.toml",
+      "status": "added",
+      "git_blob": "b5dc71f2ac0e9dc8cc7ede3c7d1a43040c6ca01b",
+      "sha256": "cf62e34a8bdc1cc97946e223067ccef07f0206b540f8aa6ed9aec8e33fb6fbcf"
+    },
+    {
+      "path": "_bmad/custom/.gitignore",
+      "status": "added",
+      "git_blob": "42d7bc633210ae45f75aa6ed63e2cb7d6dc016ee",
+      "sha256": "973b03a33f142c22cf9b65be285bebadd85790b6b55be04637d2f8c716f58fab"
+    },
+    {
+      "path": "_bmad/custom/bmad-build.toml",
+      "status": "added",
+      "git_blob": "ee6b9c0cdb8be57cc1934116a41421e4e7617df2",
+      "sha256": "800d675c13cf7215c87d1a777eff4cfd2359559c539e8c2bf25f995e29114f0f"
+    },
+    {
+      "path": "docs/engineering-memory/BASELINE.json",
+      "status": "added",
+      "git_blob": "905fbf6e7ff50d51c6330ac82995661e8e6c67b7",
+      "sha256": "9e4806d7beb7f27137e12e6d8c120704ba96ac64efbb804267d0392d8a4e779d"
+    },
+    {
+      "path": "docs/engineering-memory/FINAL-ACCEPTANCE-20261028.md",
+      "status": "added",
+      "git_blob": "4220da3b4a60cfd1ee75f3df83e4ebe4e37684cc",
+      "sha256": "8e32f82006ffdb8748ad62fbe8404159be0cb0be6e356d3c4917a8d0700d42ed"
+    },
+    {
+      "path": "docs/engineering-memory/POLICY.md",
+      "status": "added",
+      "git_blob": "18b4dae4b324e3f2001339940caf1e493aa28983",
+      "sha256": "5baf9d572e85fcde6436f5683241e18358a3badaa170b5606dcf56a36b989511"
+    },
+    {
+      "path": "docs/engineering-memory/README.md",
+      "status": "added",
+      "git_blob": "55d94dbec6aaffe5427440608f411099615818b3",
+      "sha256": "27e4348faa6233b9e792f8e55bd121040406d0b15eee2727cabb75c897abae0b"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/adoption-quick-review-20261028.json",
+      "status": "added",
+      "git_blob": "4e9f328ee63291c73bc010d8d27c0306d534b434",
+      "sha256": "da34f8af09820f7793077efc1d0b43b0d195491f6a323f5faf68da2be78ca591"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/adoption-review-20261028.json",
+      "status": "added",
+      "git_blob": "6d005815eab50ae052aaef0fa8b5bcfeccb860a8",
+      "sha256": "37870499294c7bc1d6cdc5ece889fa0c8901abf36abf36084db97d9826803ccc"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/final-status.json",
+      "status": "added",
+      "git_blob": "64aaa700c700053c6585819d455e7c3d765917ad",
+      "sha256": "0424f2d4a36861c1d1b45793507a2ea7534791b4d121214d6beb8532a213d101"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/normal-adoption-acceptance-20261028.json",
+      "status": "added",
+      "git_blob": "e707dcfccfc0f39fcc7264e83c2a81c6dab93697",
+      "sha256": "8697c2bd9ed40ce4b34df9d016911054078666aca09cee13f344a4568e2b2a8e"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/ordinary-acceptance.json",
+      "status": "added",
+      "git_blob": "50c728a543d5efa2ea7995f20f77d66ea888f8b4",
+      "sha256": "da4f2fda05dab470c011d2bf94bbaeaf703279d00e8c61c290b1aac4866fec2a"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/parent-ordinary-readback.json",
+      "status": "added",
+      "git_blob": "646f96426de556be43cb5c33b6b761183b1267b1",
+      "sha256": "d40fac9de7c77a0714634437e06e46de18b56949a7fc5b46d26aac4f7abebb6f"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/repository-checks.json",
+      "status": "added",
+      "git_blob": "04f1818f91971e6b5ef3cedb09f9d9fa8b17882c",
+      "sha256": "87d92c6803ce335751489d416ec4048db18baa2b350f99097b36ab2a74a7ebc9"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/reviewed-helper.json",
+      "status": "added",
+      "git_blob": "961bf1271991d722b7cdfbf787d92acb330b0760",
+      "sha256": "a9414f8b8ff25ea122281aaf746e869009356aedfd4d9852dcbb17959e7d9a52"
+    },
+    {
+      "path": "docs/engineering-memory/evidence/shared-persistence-20261028.json",
+      "status": "added",
+      "git_blob": "44bfbbdf19b4ac8e2786e41a428d6e7053b1276c",
+      "sha256": "a59059597e0103c184249c006a89281af0984be782fa454c10484ae478c5208e"
+    },
+    {
+      "path": "tests/agent_learning/test_engineering_learning.py",
+      "status": "added",
+      "git_blob": "6c7ca3af17a7b5be39ba72c2d583802de0e1c945",
+      "sha256": "a2bc4d7225817e81cf16992d8990ef5045b335158b504df316a53d1d3fd1b13c"
+    },
+    {
+      "path": "tests/project_memory/test_memory.py",
+      "status": "added",
+      "git_blob": "de7ce369fa4c325b94ddd015e0dd17f5daf9d9cc",
+      "sha256": "0dfe9e2441a50d9568e040e2e6490dca8a4c25167251b015b81fe7707b37093f"
+    },
+    {
+      "path": "tools/agent_learning.py",
+      "status": "added",
+      "git_blob": "af24afe51deb9ff90f64364adca784aa2d5783b9",
+      "sha256": "cdb3153df9215a142e1c1d13480748505fb771343fe8c4104626e2894604e13e"
+    },
+    {
+      "path": "tools/project_memory.py",
+      "status": "added",
+      "git_blob": "cee5ec731045a290f5a7a2b555afb9f7c1e231b3",
+      "sha256": "ac42c9c53dbafc43ebefcb65a4b79c40421369527318e6e610140bd285796911"
+    }
+  ],
+  "initial_changed_file_count": 45,
+  "scope": "Engineering-memory adapters and evidence only",
+  "base_ancestor_and_clean_github_mergeability": true,
+  "independent_review": {
+    "reviewer": "sam_final_review",
+    "changed_blobs_independently_authenticated": 45,
+    "result": "No blocking runtime or security findings",
+    "historical_receipts": "Prior evidence retains original source identities; it is not a new application/runtime PASS.",
+    "operational_unchanged": "All45 initial changed files inspected; no apps/packages/migrations/provider budgets, goal logic or PostgreSQL operational-memory source changed. Archive remains local engineering metadata."
+  },
+  "security": {
+    "credentials_or_personal_records_observed": false,
+    "fixture_email_matches": "Synthetic reserved-domain test addresses only",
+    "other_pattern_triage": "Local task paths and policy terminology are not credential literals; no values or raw traces copied into this report.",
+    "application_dependency_workflow_permission_files_changed": false,
+    "unnecessary_service_or_cost_added": false,
+    "candidate_auto_activation_or_promotion": false,
+    "operational_sam_memory_or_goal_state_changed": false
+  },
+  "github_controls": {
+    "checks": 0,
+    "statuses": 0,
+    "formal_reviews": 0,
+    "ci_pass_claim": false,
+    "target_protected": true,
+    "listed_required_status_contexts": [],
+    "detailed_protection_read": "403 integration cannot access details; owner must respect any formal rules shown by GitHub"
+  },
+  "rollback": {
+    "recommended_merge_strategy": "Standard merge commit; repository permits it. No merge performed.",
+    "action_after_separately_authorized_merge": "Create a reviewed development-branch revert of the actual merge commit using parent1; preserve earlier application work and evidence. No force/reset.",
+    "known_premerge_base": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3"
+  },
+  "order": "No cross-repository merge dependency. Owner may follow requested priority SAM, Brain, My Agent, Smart, Public Pages.",
+  "archive_boundary": "Neither raw nor redacted ZIP uploaded or reopened. Existing non-sensitive summaries and reference hash suffice.",
+  "reference_redacted_sha256": "fa9152342893bf3dab36a52d2763e4c79ff4c4831ba6966a387dfd7a208aceb8",
+  "reference_redaction_commit": "15c00fa8cec23133928fa422b0a9460fea908f7e",
+  "tests": {
+    "current_read_audit_brief": "PASS; real ledger empty and candidates inactive",
+    "python_socket_and_nonlocal_process_denial": [
+      {
+        "command": "resume",
+        "exit_code": 0,
+        "socket_attempts": 0,
+        "denied_process_attempts": 0,
+        "local_git_commands": 10
+      },
+      {
+        "command": "audit",
+        "exit_code": 0,
+        "socket_attempts": 0,
+        "denied_process_attempts": 0,
+        "local_git_commands": 0
+      },
+      {
+        "command": "brief",
+        "exit_code": 0,
+        "socket_attempts": 0,
+        "denied_process_attempts": 0,
+        "local_git_commands": 0
+      }
+    ],
+    "scope_limit": "Dynamic Python socket and subprocess denial for current helper read paths; not an OS-wide malicious-code sandbox or setup/network claim.",
+    "helper_sha256": "ac42c9c53dbafc43ebefcb65a4b79c40421369527318e6e610140bd285796911",
+    "helper_test_sha256": "0dfe9e2441a50d9568e040e2e6490dca8a4c25167251b015b81fe7707b37093f",
+    "prior_regressions_reused": 28,
+    "prior_independent_scenarios_reused": 14,
+    "reuse_reason": "Exact unchanged helper/test code and compatible conditions; historical source identities preserved. No repetition of full suites.",
+    "original_activation_wiring": "Existing verified original setup/render evidence retained with unchanged customization/helper identities."
+  },
+  "sam_acceptance": {
+    "pass": true,
+    "baseline": "f6b580d0075fe22835d3f7769f0ca855aab03a9e",
+    "local_result_head": "560fd9bbec8e683abc416d1bb640e1505411c245",
+    "activation_before_plan": true,
+    "focused_test_pass": true,
+    "focused_test_count": 1,
+    "candidate_nonempty_fixture_excluded": true,
+    "fresh_process_result_recovered": true,
+    "helper_tests_and_application_unchanged": true,
+    "ledger_empty": true,
+    "historical_tests_retained": true,
+    "changed_local_task_paths": [
+      ".agents/memory/PROJECT_HISTORY.md",
+      ".agents/memory/PROJECT_STATE.md",
+      "_bmad-output/plan-sam-unapproved-guidance-verification.md",
+      "docs/engineering-memory/evidence/ordinary-sam-unapproved-guidance-20261028.json"
+    ],
+    "setup_limits": [
+      "Explicit original setup status read public upstream version metadata; no blanket no-network session claim.",
+      "Mandated original renderer reported two local uv packages installed; no application dependency changed.",
+      "No application/provider/database/model endpoint or deployment called; helper read probes independently denied Python sockets and non-local processes."
+    ],
+    "source_scope": "Isolated ordinary verification task; only plan, bounded receipt and engineering state/history changed; no synthetic candidate imported.",
+    "sanitized_test_evidence": "docs/engineering-memory/evidence/owner-acceptance-sam-test-20261028.json",
+    "exact_tested_source": {
+      "content_sha256": "518116534f5b2d5d4c6d417f39b146ded5ca44e9cd4764585289f85b242cff9c",
+      "head": "f6b580d0075fe22835d3f7769f0ca855aab03a9e"
+    },
+    "exact_test_command": [
+      "python3",
+      "-B",
+      "tests/agent_learning/test_engineering_learning.py",
+      "EngineeringLearningTests.test_fresh_cli_excludes_candidate_and_preserves_approved_bytes",
+      "-v"
+    ]
+  }
+}

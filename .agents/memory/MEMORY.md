@@ -11,3 +11,5 @@
 - [Database candidate consent](database-candidate-consent.md) — Replit-managed DB is now preferred if compatible; provisioning, secret use and spending still need separate consent.
 - [Interaction architecture](interaction-architecture.md) — ChatGPT via existing MCP is the sole conversation surface; keep Replit SAM and GitHub, without a separate app chat.
 - [Release environment tooling](release-environment-behavior.md) — published metadata and RLS schema-restore quirks; distinguish wizard drafts from effective configuration.
+- [Engineering learning](engineering-learning.md) — project-only reviewed engineering ledger; historical notes remain references, candidates stay inactive, and an empty approved seed is not task-quality PASS.
+- [Project state](PROJECT_STATE.md) — source-bound engineering resume; read via project_memory.py to check freshness.

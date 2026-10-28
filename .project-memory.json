@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "state_path": ".agents/memory/PROJECT_STATE.md",
+  "history_path": ".agents/memory/PROJECT_HISTORY.md"
+}

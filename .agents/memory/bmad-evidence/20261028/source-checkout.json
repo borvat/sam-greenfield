@@ -1,0 +1,10 @@
+{
+  "method": "Authenticated API exact sparse Git checkout",
+  "head": "b55da2761e8fd1de3833be55f03d4fdd268cd0a3",
+  "tree": "159de07f40d1da723e4e452990607c6722b98060",
+  "materialized": 51,
+  "tracked": 389,
+  "hashes_match": true,
+  "utc": "2026-10-27T22:46:12.486143+00:00",
+  "status": ""
+}

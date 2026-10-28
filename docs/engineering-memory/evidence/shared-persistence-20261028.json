@@ -1,0 +1,22 @@
+{
+  "name": "sam-greenfield",
+  "repository": "borvat/sam-greenfield",
+  "branch": "feature/bmad-unified-memory-20261028",
+  "head": "b73c614864c29be2dc79819dafe294e869a7f316",
+  "expected_head": "b73c614864c29be2dc79819dafe294e869a7f316",
+  "tree": "5e8959c878cf3d46cb4a16ae14dfd0ce767762fe",
+  "pr": "https://github.com/borvat/sam-greenfield/pull/87",
+  "pr_number": 87,
+  "draft": true,
+  "merged": false,
+  "state": "open",
+  "base_branch": "main",
+  "verified_paths": 40,
+  "failed_paths": [],
+  "pass": true,
+  "verified_utc": "2026-10-27T23:52:21.711931+00:00",
+  "authorization": "Owner explicitly approved reviewed payloads, isolated branch upload and Draft PRs; no merge/deployment.",
+  "scope": "Authenticated initial publication readback of all reviewed changed blobs and open Draft PR. This receipt precedes the following evidence/state-only commit.",
+  "code_helper_sha256": "ac42c9c53dbafc43ebefcb65a4b79c40421369527318e6e610140bd285796911",
+  "test_limits": "Existing independent frozen-helper and disposable ordinary-session evidence remains source/hash-bound and historical; no tests on a different commit or live application are inferred."
+}
