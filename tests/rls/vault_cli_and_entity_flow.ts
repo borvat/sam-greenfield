@@ -67,6 +67,10 @@ async function main(){
   r=io();assert.equal(await runVaultCli(["list","--entity",e1],r.o,vault,"o"),0);
   assert(r.lines.some(l=>l.includes("bol")&&l.includes("ACTIVE"))&&!r.all().includes(SECRET));
   r=io();assert.equal(await runVaultCli(["rotate-keys"],r.o,vault,"o"),0);
+  assert(/shredded revoked: \d+/.test(r.all()));
+  r=io();assert.equal(await runVaultCli(["shred-revoked","--older-than-days","x"],r.o,vault,"o"),1);
+  r=io();assert.equal(await runVaultCli(["shred-revoked","--older-than-days","3650"],r.o,vault,"o"),0);
+  assert(/shredded: 0/.test(r.all()),"nothing is 10 years old");
   r=io();assert.equal(await runVaultCli(["revoke","--entity",e1,"--provider","bol"],r.o,vault,"o"),0);
   r=io();assert.equal(await runVaultCli(["check","--entity",e1,"--provider","bol"],r.o,vault,"o"),2);
   r=io();assert.equal(await runVaultCli(["bogus"],r.o,vault,"o"),64);

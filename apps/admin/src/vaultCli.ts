@@ -21,7 +21,8 @@ const USAGE=`usage:
   vault check  --entity <uuid> --provider <p> [--name default]     decrypt and validate; prints field names only
   vault list   [--entity <uuid>]                                    metadata only
   vault revoke --entity <uuid> --provider <p> [--name default]
-  vault rotate-keys                                                 re-encrypt ACTIVE secrets under the active master key`;
+  vault rotate-keys                                                 re-encrypt ACTIVE secrets under the active master key, then shred REVOKED rows under old keys
+  vault shred-revoked [--older-than-days N]                         irreversibly empty the secret material of REVOKED rows`;
 
 function parse(argv:string[]):{cmd:string;flags:Map<string,string|true>}{
   const [cmd="",...rest]=argv;const flags=new Map<string,string|true>();
@@ -53,14 +54,24 @@ export async function runVaultCli(argv:string[],io:CliIo,vault:CredentialVault,a
     if(cmd==="list"){
       const rows=await vault.list(flags.has("entity")?str("entity"):undefined);
       if(!rows.length)io.out("(no credentials)");
-      for(const r of rows)io.out([r.legalEntityId,r.provider,r.name,`v${r.secretVersion}`,`key${r.keyVersion}`,r.status,r.createdAt.toISOString(),r.createdBy].join("\t"));
+      for(const r of rows)io.out([r.legalEntityId,r.provider,r.name,`v${r.secretVersion}`,`key${r.keyVersion}`,r.shredded?"REVOKED+SHREDDED":r.status,r.createdAt.toISOString(),r.createdBy].join("\t"));
       return 0;
     }
     if(cmd==="rotate-keys"){
       const r=await vault.rotateKeys(actor);
-      io.out(`re-encrypted: ${r.rotated}`);
+      io.out(`re-encrypted: ${r.rotated}  shredded revoked: ${r.shredded}`);
       for(const f of r.failed)io.err(`FAILED ${f.legalEntityId} ${f.provider}/${f.name}: ${f.code}`);
       return r.failed.length?3:0;
+    }
+    if(cmd==="shred-revoked"){
+      const raw=flags.get("older-than-days");
+      let days:number|undefined;
+      if(raw!==undefined){
+        if(typeof raw!=="string"||!/^\d{1,5}$/.test(raw))throw new Error("--older-than-days must be a non-negative integer");
+        days=Number(raw);
+      }
+      io.out(`shredded: ${await vault.shredRevoked(actor,{olderThanDays:days})}`);
+      return 0;
     }
     if(cmd==="put"){
       const p=provider(),spec=PROVIDER_FIELDS[p],allowed=new Set([...spec.required,...spec.optional]);

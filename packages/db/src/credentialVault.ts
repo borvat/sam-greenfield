@@ -181,20 +181,22 @@ export class CredentialVault{
 
   // Metadata only (never ciphertext or plaintext); for operators and diagnostics.
   async list(legalEntityId?:string):Promise<Array<{legalEntityId:string;provider:string;name:string;
-    secretVersion:number;keyVersion:number;status:string;createdAt:Date;createdBy:string}>>{
+    secretVersion:number;keyVersion:number;status:string;shredded:boolean;createdAt:Date;createdBy:string}>>{
     if(legalEntityId&&!UUID.test(legalEntityId))throw new VaultError("VAULT_ENTITY_INVALID");
     const r=await this.db.query(
-      `SELECT legal_entity_id,provider,name,secret_version,key_version,status,created_at,created_by
+      `SELECT legal_entity_id,provider,name,secret_version,key_version,status,(shredded_at IS NOT NULL) AS shredded,created_at,created_by
          FROM credential_vault WHERE ($1::uuid IS NULL OR legal_entity_id=$1::uuid)
         ORDER BY legal_entity_id,provider,name,secret_version`,[legalEntityId??null]);
     return r.rows.map(x=>({legalEntityId:x.legal_entity_id,provider:x.provider,name:x.name,
-      secretVersion:x.secret_version,keyVersion:x.key_version,status:x.status,createdAt:x.created_at,createdBy:x.created_by}));
+      secretVersion:x.secret_version,keyVersion:x.key_version,status:x.status,shredded:x.shredded,createdAt:x.created_at,createdBy:x.created_by}));
   }
 
   // Re-encrypts every ACTIVE secret under the keyring's active key version.
   // Run after adding a new key and before dropping the old one. One undecryptable
   // row never blocks the rest: it is reported in `failed` and left untouched.
-  async rotateKeys(actor:string):Promise<{rotated:number;failed:Array<VaultRef&{code:string}>}>{
+  // Afterwards REVOKED rows still under another key version are crypto-shredded too, so once
+  // `failed` is empty no ciphertext under an old master key remains and that key can be retired.
+  async rotateKeys(actor:string):Promise<{rotated:number;shredded:number;failed:Array<VaultRef&{code:string}>}>{
     const rows=(await this.db.query(
       `SELECT legal_entity_id,provider,name FROM credential_vault
         WHERE status='ACTIVE' AND key_version<>$1`,[this.keyring.activeVersion])).rows;
@@ -209,7 +211,24 @@ export class CredentialVault{
         failed.push({...ref,code:e instanceof VaultError?e.code:"VAULT_ROTATION_FAILED"});
       }
     }
-    return {rotated,failed};
+    const shredded=await this.shredRevoked(actor,{otherThanKeyVersion:this.keyring.activeVersion});
+    return {rotated,shredded,failed};
+  }
+
+  // Irreversibly empties the secret material of REVOKED rows (the rows and their history stay).
+  // Filters: only rows not under `otherThanKeyVersion`, and/or revoked more than `olderThanDays` ago.
+  async shredRevoked(actor:string,f:{otherThanKeyVersion?:number;olderThanDays?:number}={}):Promise<number>{
+    if(!actor?.trim())throw new VaultError("VAULT_ACTOR_REQUIRED");
+    if(f.olderThanDays!==undefined&&(!Number.isInteger(f.olderThanDays)||f.olderThanDays<0))throw new VaultError("VAULT_ARGUMENT_INVALID");
+    const client=await this.db.connect();
+    try{
+      await client.query("BEGIN");
+      const r=await client.query("SELECT vault_shred_revoked($1::int,$2::int) AS id",[f.otherThanKeyVersion??null,f.olderThanDays??null]);
+      for(const row of r.rows)await this.audit(client,actor,"CREDENTIAL_SHREDDED",row.id);
+      await client.query("COMMIT");
+      return r.rows.length;
+    }catch(e){await client.query("ROLLBACK").catch(()=>{});throw e;}
+    finally{client.release();}
   }
 
   private decryptRow(ref:VaultRef,row:any):SecretFields{
