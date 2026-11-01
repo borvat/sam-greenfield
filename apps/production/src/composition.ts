@@ -1,3 +1,5 @@
+import {runExecutiveReportTick} from '../../notifications/src/executiveRuntime';
+import type {ExecutiveDeliveryAdapter} from '../../notifications/src/executiveReports';
 import {runScopedOwnerNotificationTick} from '../../notifications/src/center';
 import {recordWorkFailure} from "../../kernel/src/failures";
 import {reviewNextReadGoal} from './readGoalReview';
@@ -26,6 +28,7 @@ export function createProductionComposition(input:{
   planning?:Pick<Parameters<typeof planNextNewGoal>[1]&{},'goalId'|'gatewayForGoal'>;
   excludeDelegatedSpecialistPlanning?:boolean;
   specialistAdvancers?:Parameters<typeof runCatalogSpecialistTick>[0]['advancers'];
+  executiveDeliveryAdapter?:ExecutiveDeliveryAdapter;
   operationalTick?:()=>Promise<unknown>;
   executeTool?:(work:import('../../kernel/src/workerRuntime').ClaimedWork,execute:import('../../kernel/src/workerRuntime').CapabilityExecutor)=>ReturnType<import('../../kernel/src/workerRuntime').CapabilityExecutor>;
   authorizeWork?:(work:import('../../kernel/src/workerRuntime').ClaimedWork)=>Promise<void>;
@@ -82,8 +85,9 @@ export function createProductionComposition(input:{
       const review=input.readReportReview?await attempt("review",()=>reviewNextReadGoal(input.bundle)):null;
       const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
+      const executiveReports=await attempt('executiveReports',()=>runExecutiveReportTick(input.executiveDeliveryAdapter));
       const ownerNotifications=await runScopedOwnerNotificationTick();
-      return {ownerNotifications,events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
+      return {executiveReports,ownerNotifications,events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
     }
   };
 }

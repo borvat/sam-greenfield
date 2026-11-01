@@ -1,0 +1,57 @@
+{
+  "observed_at": "2026-11-01T19:39:27.077136+00:00",
+  "scope": "Render current SAM database; authenticated browser UI plus connected resource inventory. No backup content, credentials or signed download URLs retained.",
+  "database_id": "dpg-db37k3rbc2fs73csjung-a",
+  "database_status": "available",
+  "postgres_version": "15",
+  "authentication": "Succeeded; fresh signed-in Recovery page shows Sams workspace and exact database. No owner authentication action remains.",
+  "recovery_url": "https://dashboard.render.com/d/dpg-db37k3rbc2fs73csjung-a/recovery",
+  "export": {
+    "requested": true,
+    "completed_ui_download_available": true,
+    "filename": "2026-11-01T19:34Z.dir.tar.gz",
+    "created_utc": "2026-11-01T19:34:00Z",
+    "ui_created_local": "November 1, 2026 at 10:34 PM",
+    "retention_ui": "at least7days",
+    "downloaded": false,
+    "checksum": null,
+    "contents_integrity_verified": false,
+    "restored": false
+  },
+  "pitr": {
+    "window_ui": "past3days",
+    "latest_time_ui_observed": "2026-11-01 22:24:34 UTC+03:00",
+    "restore_dialog": "new database name sam-trial-postgres-copy; copy existing settings or customize",
+    "start_recovery_clicked": false
+  },
+  "isolated_target": {
+    "safe_native_target_proven": false,
+    "only_other_connected_database": "surooh-wms-evidence-synthetic-20261022, different project/freePG16; not used or authorized as SAM restore destination",
+    "existing_sam_isolated_test": "suspended app service points to SAME SAM production database with synthetic schema; not a restore target",
+    "workspace": "no postgres/initdb/pg_restore/docker binaries; existing isolatedSQLtest usesPGlite, insufficient for Render archive/native restore",
+    "new_resource_created": false
+  },
+  "rollback": {
+    "source_and_sql": "previous independent7focused tests preserved, not repeated",
+    "dependency_command": "npm ci --omit=dev",
+    "runtime_candidate_local": "2d4d32e286ff71307417f7375985b85214c7a2e6",
+    "surfaces_candidate_local": "0f056d36f98413b7590a405294693c0b5fc18885",
+    "dependency_exit_both": 0,
+    "node": "v24.22.1",
+    "npm": "11.9.0",
+    "tsx": "4.23.15",
+    "npm_reported_both": "115packages in2s",
+    "lockfile_sha256_before_after": "59a8b7944ef6da4e93b602dbacd231e62ceffdb5b46124538308dd670c9f1156",
+    "hermes_source_sha256_unchanged": "59c7a6f103f5eee5e46e72cb333c13041e37865ccbb6f233e982a7b2a7cd4457",
+    "worktrees_clean": true,
+    "production_entrypoints_started": false,
+    "native_or_service_drill_proven": false
+  },
+  "release_safe": false,
+  "production_migration_or_deployment": false,
+  "remaining_gate": "No authorized existing native isolated restoration destination. Built-inPITR creates a new database; do not start under no-new-cost authorization. Current completed export is not a restored/integrity-proven backup. Native service rollback drill remains required.",
+  "alternatives": [
+    "Owner-provided existing private nativePostgreSQL15 sandbox with authorized operator access, sufficient storage and no application/provider connectivity; no credentials in chat.",
+    "Separately approve a specifically priced temporary Render recovery database after exact plan/cost review; current task does not approve that expense."
+  ]
+}

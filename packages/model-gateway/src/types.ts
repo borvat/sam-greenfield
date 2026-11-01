@@ -2,6 +2,8 @@ export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTR
 
 export interface ModelTask {
   signal?:AbortSignal;
+  /** Server-owned queue binding for actual model-ledger attribution. */
+  ledgerQueueId?:string;
   /** Fail closed: only explicitly synthetic adapters with usage-limit support. */
   boundedSynthetic?: {
     maxInputTokens: number;

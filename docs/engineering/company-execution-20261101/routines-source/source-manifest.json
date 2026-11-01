@@ -1,0 +1,27 @@
+{
+  "baselineHead": "01e712ed5a7689a7186c8675c2b50e9bfac76753",
+  "environment": "ISOLATED_SOURCE_ONLY",
+  "files": {
+    "apps/agents/src/company.ts": "1b0e7ed15213dd184145e45f5abe0c5f5ec40ef4173abe14fefe722bd4d34d0d",
+    "apps/agents/src/companyPerformance.ts": "c97ae97670bfe40680d2a061f57dc6b63328db2a1208bd1e8ab5cb469029061b",
+    "apps/agents/src/companySkills.ts": "2fcb72d17cd649c6e773d25575e20288557e8bc016232f2bad8c9704e897e818",
+    "apps/command-center/src/companyOfficeUi.ts": "96f0149924d3a749e199b91aee0c8621bfa7566f76caabbec63d6071a1f3aabc",
+    "apps/command-center/src/http.ts": "ae9cc49c417bfd2f6cd46e0666878567c265e34b18ae2df29c2d281987064dbf",
+    "apps/command-center/src/store.ts": "6276fe43e63cbd3b1616fc05279e750aff2f0908df796c9959e50532587ebfda",
+    "apps/notifications/src/executiveReports.ts": "f30f15c93a07530cca80fd273ad95ac141ace30195549b4762c6d79932d2d2b2",
+    "apps/notifications/src/executiveRuntime.ts": "bd5ce56d59227cc8ffaa27c3a42d53e72f0e84230a37c17519b7f0c310b059d0",
+    "tests/isolated/command_center_company_gate.ts": "18a26b3d5b45045c4e45b2818623f245e3cd1bf59e2abe04c5ae45c1d0281864",
+    "tests/isolated/company_office_ui.ts": "991353fe51b88441d1908d3121a2925fad4474a34d802829658e8e21937f72a8",
+    "tests/isolated/company_staff.ts": "07d1c48cb27a6509ce4c1ba357c04241d0c61085a73a358b937671029153fcb9",
+    "tests/isolated/executive_reports.ts": "5aa520c08f984fc50fa683646bc2dfcd38bf93dcc9d3a7b9c8616cb4b41a9187"
+  },
+  "verification": {
+    "combinedAffectedTests": 8,
+    "finalNarrowAffectedTests": 2,
+    "typecheck": "PASS",
+    "diffCheck": "PASS",
+    "independentReview": "PENDING",
+    "independentVerification": "PENDING",
+    "liveDelivery": "UNCONFIGURED_AND_UNPROVED"
+  }
+}

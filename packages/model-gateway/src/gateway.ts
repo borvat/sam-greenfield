@@ -78,6 +78,7 @@ export class ModelGateway {
         if(bounded?.note)await bounded.note({kind:'ADAPTER_MISSING',providerId:candidate.providerId,model:candidate.model});
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
+          queueId:task.ledgerQueueId,
           provider: candidate.providerId,
           model: candidate.model,
           reasonSelected: candidate.reason,
@@ -123,6 +124,7 @@ export class ModelGateway {
         if(bounded?.finishAttempt){finished=true;await bounded.finishAttempt(ticket,{status:'success',result});}
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
+          queueId:task.ledgerQueueId,
           provider: candidate.providerId,
           model: result.model,
           modelVersion: result.modelVersion,
@@ -142,6 +144,7 @@ export class ModelGateway {
         if(bounded?.finishAttempt&&!finished){finished=true;await bounded.finishAttempt(ticket,{status:'failure'});}
         await withTransaction((client) => recordModelCall(client, {
           task: task.task,
+          queueId:task.ledgerQueueId,
           provider: candidate.providerId,
           model: candidate.model,
           reasonSelected: candidate.reason,

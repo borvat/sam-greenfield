@@ -1,0 +1,62 @@
+{
+  "started_at": "2026-11-01T19:37:39.120058+00:00",
+  "test_finished_at": "2026-11-01T19:37:44.705384+00:00",
+  "finished_at": "2026-11-01T19:37:50.066128+00:00",
+  "command": "DATABASE_URL=postgresql://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test tests/isolated/executive_reports.ts tests/isolated/company_staff.ts tests/isolated/company_office_ui.ts tests/isolated/command_center_company_gate.ts",
+  "exit_code": 0,
+  "manifest_sha256": "0376287be09daf51484dccb1c716a5e249360188f3a95c92a13fb6f67fda3a9a",
+  "before_hashes": {
+    "apps/agents/src/company.ts": "1b0e7ed15213dd184145e45f5abe0c5f5ec40ef4173abe14fefe722bd4d34d0d",
+    "apps/agents/src/companyPerformance.ts": "c97ae97670bfe40680d2a061f57dc6b63328db2a1208bd1e8ab5cb469029061b",
+    "apps/agents/src/companySkills.ts": "2fcb72d17cd649c6e773d25575e20288557e8bc016232f2bad8c9704e897e818",
+    "apps/command-center/src/companyOfficeUi.ts": "96f0149924d3a749e199b91aee0c8621bfa7566f76caabbec63d6071a1f3aabc",
+    "apps/command-center/src/http.ts": "ae9cc49c417bfd2f6cd46e0666878567c265e34b18ae2df29c2d281987064dbf",
+    "apps/command-center/src/store.ts": "6276fe43e63cbd3b1616fc05279e750aff2f0908df796c9959e50532587ebfda",
+    "apps/notifications/src/executiveReports.ts": "f30f15c93a07530cca80fd273ad95ac141ace30195549b4762c6d79932d2d2b2",
+    "apps/notifications/src/executiveRuntime.ts": "bd5ce56d59227cc8ffaa27c3a42d53e72f0e84230a37c17519b7f0c310b059d0",
+    "tests/isolated/command_center_company_gate.ts": "18a26b3d5b45045c4e45b2818623f245e3cd1bf59e2abe04c5ae45c1d0281864",
+    "tests/isolated/company_office_ui.ts": "991353fe51b88441d1908d3121a2925fad4474a34d802829658e8e21937f72a8",
+    "tests/isolated/company_staff.ts": "07d1c48cb27a6509ce4c1ba357c04241d0c61085a73a358b937671029153fcb9",
+    "tests/isolated/executive_reports.ts": "5aa520c08f984fc50fa683646bc2dfcd38bf93dcc9d3a7b9c8616cb4b41a9187",
+    "packages/db/integration-migrations/00107_executive_reports.sql": "4afb1cd913489fb83dd7568a415b2b52ba930f84b830e3d1eda6b47055a401c0"
+  },
+  "after_hashes": {
+    "apps/agents/src/company.ts": "1b0e7ed15213dd184145e45f5abe0c5f5ec40ef4173abe14fefe722bd4d34d0d",
+    "apps/agents/src/companyPerformance.ts": "c97ae97670bfe40680d2a061f57dc6b63328db2a1208bd1e8ab5cb469029061b",
+    "apps/agents/src/companySkills.ts": "2fcb72d17cd649c6e773d25575e20288557e8bc016232f2bad8c9704e897e818",
+    "apps/command-center/src/companyOfficeUi.ts": "96f0149924d3a749e199b91aee0c8621bfa7566f76caabbec63d6071a1f3aabc",
+    "apps/command-center/src/http.ts": "ae9cc49c417bfd2f6cd46e0666878567c265e34b18ae2df29c2d281987064dbf",
+    "apps/command-center/src/store.ts": "6276fe43e63cbd3b1616fc05279e750aff2f0908df796c9959e50532587ebfda",
+    "apps/notifications/src/executiveReports.ts": "f30f15c93a07530cca80fd273ad95ac141ace30195549b4762c6d79932d2d2b2",
+    "apps/notifications/src/executiveRuntime.ts": "bd5ce56d59227cc8ffaa27c3a42d53e72f0e84230a37c17519b7f0c310b059d0",
+    "tests/isolated/command_center_company_gate.ts": "18a26b3d5b45045c4e45b2818623f245e3cd1bf59e2abe04c5ae45c1d0281864",
+    "tests/isolated/company_office_ui.ts": "991353fe51b88441d1908d3121a2925fad4474a34d802829658e8e21937f72a8",
+    "tests/isolated/company_staff.ts": "07d1c48cb27a6509ce4c1ba357c04241d0c61085a73a358b937671029153fcb9",
+    "tests/isolated/executive_reports.ts": "5aa520c08f984fc50fa683646bc2dfcd38bf93dcc9d3a7b9c8616cb4b41a9187",
+    "packages/db/integration-migrations/00107_executive_reports.sql": "4afb1cd913489fb83dd7568a415b2b52ba930f84b830e3d1eda6b47055a401c0"
+  },
+  "source_changed_during_run": false,
+  "manifest_matches_before": {
+    "apps/agents/src/company.ts": true,
+    "apps/agents/src/companyPerformance.ts": true,
+    "apps/agents/src/companySkills.ts": true,
+    "apps/command-center/src/companyOfficeUi.ts": true,
+    "apps/command-center/src/http.ts": true,
+    "apps/command-center/src/store.ts": true,
+    "apps/notifications/src/executiveReports.ts": true,
+    "apps/notifications/src/executiveRuntime.ts": true,
+    "tests/isolated/command_center_company_gate.ts": true,
+    "tests/isolated/company_office_ui.ts": true,
+    "tests/isolated/company_staff.ts": true,
+    "tests/isolated/executive_reports.ts": true
+  },
+  "stdout": "\u2714 company drafts fail closed when disabled and reject every mutation in read-only mode before DB access (133.628845ms)\n\u2714 existing office UI is opt-in, authenticated, evidence linked, RTL and stale-safe without HTML injection (23.544282ms)\n\u2714 15 immutable role contracts map existing owners without expanding authority, and rank fails closed (4.507951ms)\n{\"event\":\"command_center_auth_rejected\",\"method\":\"GET\",\"reason\":\"missing_authorization\",\"request_id\":\"cbceb911-8c06-4d50-9787-b5bf34fcd78a\"}\n\u2714 persisted office, actual ledger links, independent verification, scoped memory and pinned skills (2441.288877ms)\n\u2714 local calendar defaults, boundary, latest missed run, DST fold and gap (123.334004ms)\n\u2714 persistent snapshots are deduplicated across repeated/concurrent ticks, preserve evidence and tenant scope (1983.19944ms)\n\u2714 delivery fencing, safe retries, ambiguity, tampering and restart never blindly replay (1500.231398ms)\n\u2714 runtime is inert by default, blocks absent adapter, and records timeout as ambiguous with no resend (1281.775775ms)\n\u2139 tests 8\n\u2139 suites 0\n\u2139 pass 8\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 5512.216977\n",
+  "stderr": "",
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exit_code": 0,
+    "stdout": "\n> typecheck\n> tsc --noEmit\n\n",
+    "stderr": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n"
+  },
+  "scope": "Independent affected routines/staff/office source check; PGlite disposable schemas, synthetic DOM/API and in-process adapters; no native multi-connection concurrency, provider call, real delivery, production database or backup/restore acceptance. Old PR86/rollback suites not repeated."
+}

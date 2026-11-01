@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-11-01T18:54:18.731360+00:00",
+  "scope": "Phase A baseline and original BMAD activation; not live product acceptance",
+  "source": "2ad20d267e629909087ff3befa4e6ad216b31494",
+  "bmad": {
+    "version": "6.13.0-next",
+    "setupStatus": "repaired",
+    "current": true,
+    "activation": "render_skill.py returned original Build New Preview Workflow",
+    "route": "full",
+    "routineApprovals": "preauthorized by owner latest instruction"
+  },
+  "priorTests": {
+    "sourceFileHashesMatched": 18,
+    "testsRerun": false,
+    "evidence": "pr86-source-reuse.json"
+  },
+  "independentReview": {
+    "role": "independent_reviewer",
+    "scope": "PR86 source baseline",
+    "newConfirmedDefects": 0,
+    "nativeAndLiveAcceptance": "not established"
+  },
+  "localNativePrerequisites": {
+    "postgres": false,
+    "initdb": false,
+    "pg_ctl": false,
+    "psql": false,
+    "docker": false,
+    "aptAttempt": "failed before package installation: setgroups/seteuid not permitted",
+    "bypassAttempted": false
+  },
+  "liveGate": {
+    "productionDeployAuthorized": false,
+    "productionDdlAuthorized": false,
+    "newCostAuthorized": false,
+    "existingGoalRecovered": false,
+    "newMultispecialistGoalExecuted": false
+  },
+  "constraints": [
+    "Do not rerun unchanged successful source suites",
+    "Do not use embedded lock stubs as native proof",
+    "Do not call old live continue_review before release gate"
+  ]
+}

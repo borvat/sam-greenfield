@@ -180,3 +180,52 @@ export async function commandCenterNotifications(legalEntityId:string,action:'li
   return listOwnerNotifications(client,commandCenterOwner(legalEntityId));
  });
 }
+
+export async function commandCenterOffice(legalEntityId:string){
+ const {companyStaffSnapshot}=await import('../../agents/src/company');
+ return withTransaction(c=>companyStaffSnapshot(c,commandCenterOwner(legalEntityId)));
+}
+export async function commandCenterStaffMemory(legalEntityId:string,profile:string,query:string){
+ const {companyProfileMemory}=await import('../../agents/src/company');
+ return withTransaction(c=>companyProfileMemory(c,commandCenterOwner(legalEntityId),profile,query));
+}
+export async function commandCenterExecutiveReports(legalEntityId:string){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ return withTransaction(async c=>{
+  const company=await authorizedCompany(c,commandCenterOwner(legalEntityId));
+  const ready=(await c.query("SELECT to_regclass('executive_reports') IS NOT NULL ready")).rows[0].ready;
+  if(!ready)return {availability:'MIGRATION_REQUIRED',records:[]};
+  const settings=(await c.query('SELECT * FROM executive_report_settings WHERE legal_entity_id=$1',[company])).rows[0]??{enabled:false,timezone:'Asia/Damascus',daily_time:'08:00',weekly_time:'08:00',weekly_day:0};
+  const records=(await c.query('SELECT * FROM executive_reports WHERE legal_entity_id=$1 ORDER BY generated_at DESC,id DESC LIMIT 30',[company])).rows;
+  return {availability:'AVAILABLE',settings,records,deliveryMeaning:'Only CONFIRMED with a durable receipt proves confirmed delivery; ACCEPTED is transport acceptance only'};
+ });
+}
+export async function commandCenterConfigureReports(legalEntityId:string,body:any){
+ const allowed=['timezone','daily_time','weekly_time','weekly_day','enabled','approved','channel','recipientRef'];
+ if(Object.keys(body).some(k=>!allowed.includes(k)))throw Error('REPORT_SETTINGS_FIELDS_INVALID');
+ const {configureExecutiveReports}=await import('../../notifications/src/executiveReports');
+ return withTransaction(c=>configureExecutiveReports(c,commandCenterOwner(legalEntityId),body));
+}
+export async function commandCenterSkills(legalEntityId:string,action:string,body:any={}){
+ const {authorizedCompany}=await import('../../../packages/shared/src/ownerScope');
+ const {proposeCompanySkill,reviewCompanySkill,adoptCompanySkill,replaceCompanySkillSource}=await import('../../agents/src/companySkills');
+ const fields:Record<string,string[]>={propose:['profileId','sourceUrl','commit','hash','rollbackRef'],review:['id','hash','checks','evidence'],adopt:['id','hash','approved'],replace:['id','commit','hash'],list:[]};
+ if(!fields[action]||Object.keys(body).some(k=>!fields[action].includes(k)))throw Error('SKILL_FIELDS_INVALID');
+ const context=commandCenterOwner(legalEntityId);
+ return withTransaction(async c=>{
+  if(action==='propose')return proposeCompanySkill(c,context,body);
+  if(action==='review')return reviewCompanySkill(c,context,body);
+  if(action==='adopt')return adoptCompanySkill(c,context,body);
+  if(action==='replace')return replaceCompanySkillSource(c,context,body);
+  const company=await authorizedCompany(c,context);
+  const ready=(await c.query("SELECT to_regclass('company_skill_proposals') IS NOT NULL ready")).rows[0].ready;
+  return {availability:ready?'AVAILABLE':'MIGRATION_REQUIRED',records:ready?(await c.query('SELECT * FROM company_skill_proposals WHERE legal_entity_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100',[company])).rows:[]};
+ });
+}
+
+export async function commandCenterAssessPerformance(legalEntityId:string,body:any){
+ const allowed=['profileId','sourceHash','approved','completeCostCoverage','authorityBreaches','evidenceRefs'];
+ if(Object.keys(body).some(k=>!allowed.includes(k)))throw Error('PERFORMANCE_FIELDS_INVALID');
+ const {assessCompanyPerformance}=await import('../../agents/src/companyPerformance');
+ return withTransaction(c=>assessCompanyPerformance(c,commandCenterOwner(legalEntityId),body));
+}

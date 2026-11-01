@@ -1,3 +1,4 @@
+import {companyOfficeHtml,companyOfficeScript} from './companyOfficeUi';
 import {buildRevision} from '../../../packages/shared/src/buildRevision';
 export const commandCenterHtml=`<!doctype html>
 <html lang="en">
@@ -10,6 +11,7 @@ export const commandCenterHtml=`<!doctype html>
 *{box-sizing:border-box}body{margin:0}.shell{max-width:1400px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand h1{margin:0;font-size:26px}.brand p{margin:5px 0;color:#6b7280}.badge{padding:8px 12px;border-radius:999px;background:#111827;color:white;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.metric .n{font-size:28px;font-weight:700}.metric .l{font-size:12px;color:#6b7280;margin-top:4px}
 .main{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:16px;margin:0}.goal{padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:9px;cursor:pointer}.goal:hover{border-color:#9ca3af}.row{display:flex;justify-content:space-between;gap:10px}.muted{color:#6b7280;font-size:12px}.state{font-size:11px;padding:4px 8px;border-radius:999px;background:#f3f4f6}.btn{border:0;background:#111827;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111827}.form input,.form textarea,.form select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;margin:6px 0 10px;background:white}.form textarea{min-height:105px;resize:vertical}.detail pre{white-space:pre-wrap;overflow:auto;background:#111827;color:#e5e7eb;padding:12px;border-radius:10px;font-size:11px;max-height:420px}.finance{line-height:1.55}.err{color:#b91c1c;font-size:12px}
+.company-office{margin-top:16px}.office-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}.office-person{min-width:0;border-top:1px solid #e5e7eb;padding-top:12px;overflow-wrap:anywhere}.office-person h3{font-size:18px}.company-office p,.company-office li{font-size:14px;line-height:1.65}.company-office button,.company-office select,.company-office summary{min-height:44px}.company-office summary{cursor:pointer;padding:10px 0}.company-office button{margin:8px 0}.company-office pre{direction:ltr;text-align:left}.company-office :focus-visible{outline:3px solid #2563eb;outline-offset:3px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
 </style>
 </head>
@@ -24,6 +26,7 @@ export const commandCenterHtml=`<!doctype html>
     <div id="authError" class="err"></div>
   </div>
   <div class="grid" id="metrics"></div>
+  ${companyOfficeHtml}
   <div class="main">
     <div class="card">
       <div class="section-title"><h2>Active Goals</h2><button class="btn secondary" onclick="refresh()">Refresh</button></div>
@@ -112,6 +115,7 @@ async function refresh(){
     document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
     await refreshInternalNotifications();
+    await refreshCompanyOffice();
   }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -152,6 +156,7 @@ function renderInternalNotifications(data){
 async function refreshInternalNotifications(){try{const x=await api('/api/notifications');renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
 async function pollInternalNotifications(){try{const x=await api('/api/notifications/poll',{method:'POST',body:'{}'});renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='Internal notifications enabled from this first explicit poll. No historical replay or external delivery.';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
 async function acknowledgeInternalNotification(id){try{await api('/api/notifications/'+encodeURIComponent(id)+'/ack',{method:'POST',body:'{}'});await refreshInternalNotifications();}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
+${companyOfficeScript}
 refresh();setInterval(refresh,15000);
 </script>
 </body></html>`;

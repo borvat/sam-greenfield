@@ -1,0 +1,8 @@
+{
+  "reviewer": "independent_reviewer",
+  "verdict": "no new blocking source findings",
+  "manifest": "source-manifest.json",
+  "files": 12,
+  "tests_rerun_by_reviewer": false,
+  "scope": "source review only; no native/live/backup/delivery acceptance"
+}

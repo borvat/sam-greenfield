@@ -1,0 +1,96 @@
+{
+  "scope": "existing PR86 tested files only, no tests rerun",
+  "checks": [
+    {
+      "path": "apps/production/src/readGoalReview.ts",
+      "sha256": "cab2e8e631a50e855c369565e49d49aead33eebc70064a7bda088717a0c6ea34",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/production/src/reviewInputBudget.ts",
+      "sha256": "4ad7ecb5ecc366e7858c1151813f71f680caf70a1267e7f2ea95303b2d800b4e",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/production/src/readReviewContinuation.ts",
+      "sha256": "1126f0a5167eacfce4bbd714e159a877842abca05a9d0f99e3e1a626f680f740",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/kernel/src/readReviewBudget.ts",
+      "sha256": "5b034c05ac17c36af0f629e23fd8e917a616796e10c693899a4462013c9343a2",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/kernel/src/continuation.ts",
+      "sha256": "3f2c58360f443eb122427613cb3ec485d7d7707bbb32f6ecf8c8fa22585539f9",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/notifications/src/center.ts",
+      "sha256": "747bf9a9df3733dd5fb656bc0ba7b2f8577a5991c3624127564eaaafe160ef59",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/chatgpt-tools/src/reliabilityReadTools.ts",
+      "sha256": "57b63a6b289edb2332e5d2d2c98e4307351390bd19b50c1e1699326239bc0250",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/chatgpt-tools/src/continuityReadSidecar.ts",
+      "sha256": "490908bf0d88eded70fa12fdfed7c7835b5211a78a04a6492a9d53994a3cc289",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "packages/db/src/integrationProfile.ts",
+      "sha256": "d3a9132910825df63c89bfe9c26865462ba96bb25586b6fb6f2be8d0cfa9845c",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "packages/shared/src/savedReportSemantics.ts",
+      "sha256": "bc25f187de7c8e06dd967827601a39af7149ad42a2080c025a7c874732cb518b",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "packages/db/integration-migrations/00106_read_review_revisions.sql",
+      "sha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "tests/core/reviewReliability.ts",
+      "sha256": "f673fe96125d64969699329ab812352d4c661eec53738f202e92e2dd6c39e3fe",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "tests/isolated/review_reliability_pglite.ts",
+      "sha256": "0d1c568602be09a3daf5cf60ed8d236509a48ac6a8734d5a2a71fc5988e9e450",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "scripts/release/review-revision-operator.cjs",
+      "sha256": "a57c9a9920334b5fa1e95be216a35bc2be6fcda7eda1313c508d6edc74981e68",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "tests/isolated/review_revision_operator.cjs",
+      "sha256": "d7ede0b985f416c4c9d899cb143a4690627e1bd816b2ac6a6a42970cd2bd53d4",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "apps/production/src/hermesSourceFollowup.ts",
+      "sha256": "6f4fc7d2d2b0dad32cde6910df3db664160ca09f34875cad1355c015369ed66f",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "tests/isolated/hermes_source_followup_fixture.ts",
+      "sha256": "088790487296d67f2d4460a7d310624e26563cf79510112888a226742e957eb5",
+      "matches_prior_test_source": true
+    },
+    {
+      "path": "tests/isolated/hermes_report_revision_sql.ts",
+      "sha256": "4c9571b861f8cd11567cc5d99164365650751c376ea30b3896c03d9d0c81f341",
+      "matches_prior_test_source": true
+    }
+  ],
+  "all_match": true
+}
