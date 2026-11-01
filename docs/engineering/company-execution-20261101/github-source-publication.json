@@ -31,5 +31,13 @@
     "scope": "full changed files relative to remote8a08 and deployed baselines, not fullhistory",
     "runtime_and_surfaces_findings": 0,
     "evidence_onefinding": "PROJECT_HISTORY.md line52 identical to existingremote8a08; genericAPIkey rule matched chained evidence hash fields, manually triaged falsepositive. No scanner exclusion or broadbaseline added."
+  },
+  "company_source_checkpoint": {
+    "local_sha": "461b31aa7c224978fb524c779ccfdd90a422062b",
+    "remote_sha": "927afe4e0e06e79f09ab51acdba9de7342cfe3e3",
+    "tree": "1ee08492b0dc3ebc6f8b6ca4758a011db1d92633",
+    "parent": "2ad20d267e629909087ff3befa4e6ad216b31494",
+    "remote_tree_and_parent_readback": "exact",
+    "scope": "reviewed source saved on isolated branch; defaultoff and liveacceptance gates open"
   }
 }

@@ -22,7 +22,24 @@
     "window_ui": "past3days",
     "latest_time_ui_observed": "2026-11-01 22:24:34 UTC+03:00",
     "restore_dialog": "new database name sam-trial-postgres-copy; copy existing settings or customize",
-    "start_recovery_clicked": false
+    "start_recovery_clicked": false,
+    "customize_recovery_cost_observation": {
+      "observer": "Root; official authenticated Render Customize Recovery New Postgres form",
+      "url": "https://dashboard.render.com/d/dpg-db37k3rbc2fs73csjung-a/recovery/new/database/",
+      "observed_date_utc": "2026-11-01",
+      "compute_plans_expanded": 23,
+      "free_compute_plan_offered": false,
+      "cheapest_compute_plan": "0.1 CPU / 256 MB",
+      "compute_usd_per_month": 6.0,
+      "storage_gb": 1,
+      "storage_usd_per_month": 0.3,
+      "displayed_total_usd_per_month": 6.3,
+      "billing_ui": "Prorated by the second",
+      "cancel_clicked": true,
+      "create_database_clicked": false,
+      "new_database_created": false,
+      "restoration_completed": false
+    }
   },
   "isolated_target": {
     "safe_native_target_proven": false,
@@ -49,9 +66,9 @@
   },
   "release_safe": false,
   "production_migration_or_deployment": false,
-  "remaining_gate": "No authorized existing native isolated restoration destination. Built-inPITR creates a new database; do not start under no-new-cost authorization. Current completed export is not a restored/integrity-proven backup. Native service rollback drill remains required.",
+  "remaining_gate": "No authorized existing native isolated restoration destination. Built-in PITR creates a new database; the authenticated Customize Recovery form offered no free plan among all 23 expanded compute plans. Cheapest displayed configuration: 0.1 CPU / 256 MB compute $6/month plus 1 GB storage $0.30/month, total $6.30/month, prorated by the second. Cancel was clicked; Create Database was not clicked. No expense or new resource is authorized. The UI-completed export has not been downloaded, integrity-verified or restored. Native service rollback drill remains required.",
   "alternatives": [
     "Owner-provided existing private nativePostgreSQL15 sandbox with authorized operator access, sufficient storage and no application/provider connectivity; no credentials in chat.",
-    "Separately approve a specifically priced temporary Render recovery database after exact plan/cost review; current task does not approve that expense."
+    "Separately approve the specifically reviewed temporary Render recovery configuration: 0.1 CPU / 256 MB compute $6/month plus 1 GB storage $0.30/month, displayed total $6.30/month prorated by the second, with a bounded lifetime and cleanup decision. Current task does not authorize this expense or creating the database; recheck the form before any approved creation."
   ]
 }

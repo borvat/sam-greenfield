@@ -82,7 +82,7 @@ Original BMAD6.13.0-next setup repaired ignored runtime and render_skill activat
 
 ## Review Triage Log
 
-2026-11-01 follow-up: owner explicitly authorizes publication of reviewed, secret-scanned isolated branches. This supersedes historical no-push notes; no main merge, production feature deployment, added cost or financial authority follows. Official Render browser authentication succeeded. Current complete-logical-export download became available at19:34UTC; archive contents/checksum/restoration remain unverified. PITR dialog creates a new database. No authorized existing native restoration target was found, so only production release remains stopped.
+2026-11-01 follow-up: owner explicitly authorizes publication of reviewed, secret-scanned isolated branches. This supersedes historical no-push notes; no main merge, production feature deployment, added cost or financial authority follows. Official Render browser authentication succeeded. Current UI-completed export download became available at19:34UTC; archive contents/checksum/restoration remain unverified. PITR dialog creates a new database. No authorized existing native restoration target was found, so only production release remains stopped.
 
 Routines/levels/skills source slice:12 files independently reviewed with no new blocking findings;8 affected tests and typecheck independently pass. Exact file hashes and scope are in routines-source/source-manifest.json and independent-verification.json. All activation flags remain off; real delivery and native/live acceptance remain open.
 
