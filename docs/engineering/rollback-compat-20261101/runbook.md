@@ -1,6 +1,6 @@
 # Pinned application rollback candidates
 
-Prepared locally only. Forward remains exact `8a08e6163516f30f37c65313134170744330c4f4`; its source is unchanged. No branch was pushed, merged or deployed. Retain additive00106 and every immutable report/audit record. Never redeploy the unpatched baseline after00106: its Hermes report save reproduces SQLSTATE42P10.
+Source checkpoint on 2026-11-01, before authenticated publication: candidates were prepared locally and no branch had yet been pushed, merged or deployed. Forward remains exact `8a08e6163516f30f37c65313134170744330c4f4`; its source is unchanged. The dated publication update below records subsequent isolated branch publication. Retain additive00106 and every immutable report/audit record. Never redeploy the unpatched baseline after00106: its Hermes report save reproduces SQLSTATE42P10.
 
 | Service | Captured baseline | Minimal compatible fallback |
 |---|---|---|
@@ -24,3 +24,15 @@ DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import 
 The unreachable synthetic pool URL only permits importing the existing fixture; all queries are routed to PGlite. Dependencies reuse the existing locked sam-company node_modules via temporary links, with no installation or modifications to that worktree.
 
 Before any production mutation, parent must obtain recoverable current backup, independently review/verify these pins, validate native rollback under the existing restricted role and production service configuration, and complete the authorized release gate. No native role/RLS/concurrency, current backup/restore, service build/deploy/health or real report delivery has been demonstrated here. Preserve existing services/plans/environment and autoDeployoff; do not roll back schema or business history. Parent owns backup access, secret scan, publication and final evidence-linked archive.
+# Authenticated publication and operational gate update
+
+2026-11-01: reviewed source is now saved on isolated GitHub branches. The connector generated new commit metadata; exact trees and baseline parents were read back. Use the **remote** identities below when referring to published source. Original local identities in older receipts remain historical tested-source pins.
+
+- Runtime: remote `53d37468807f79ae1ef27fa4de9221b35b684488`, tree `9cb7c3708b816c62c25fceb626d688e0317cb095`, parent `62ccbdbb94e080f22425f64396c894270ee551aa`; local tested `2d4d32e286ff71307417f7375985b85214c7a2e6`.
+- Command Center/MCP: remote `2bdb33821ab913770e5f80860c21cf6501509a95`, tree `9c6e9b9dabbb68ae83db0fd054b6a6c143f3edfa`, parent `1e4e21a773c88e2366915edd3bb2e307fddaa157`; local tested `0f056d36f98413b7590a405294693c0b5fc18885`.
+
+Both exact local candidates passed actual `npm ci --omit=dev` on Node24.22.1/npm11.9.0, preserving lockfile and source hashes. This closes dependency preparation only. Neither production entrypoint was started; no native report replay/service rollback was performed. Keep migration00106 additive during application rollback; do not attempt schema reversal or restoration over current production data.
+
+Official Render login now succeeds. A current export `2026-11-01T19:34Z.dir.tar.gz` completed in the Recovery UI; it was not downloaded, checksum-verified or restored. PITR supports the last3days but creates a **new database**. Existing `sam-isolated-test` uses the production database with a synthetic schema and is not a restore destination; the other connected database belongs to WMS and is outside this task. No safe authorized existing native restoration target is evidenced. Do not click Start Recovery or deploy until that gate and native/service rollback acceptance close. See backup-recovery-observation.json and github-source-publication.json; historical statements above are superseded only where this dated update states new evidence.
+
+Authenticated Customize Recovery cost observation (2026-11-01): root expanded all 23 compute plans in the official New Postgres recovery form at https://dashboard.render.com/d/dpg-db37k3rbc2fs73csjung-a/recovery/new/database/. No free plan was offered. The cheapest displayed configuration was 0.1 CPU / 256 MB compute at $6/month plus 1 GB storage at $0.30/month, displayed total **$6.30/month**, billed prorated by the second. Root clicked Cancel; Create Database was not clicked. No database was created or restoration completed. The specific paid alternative requires separate approval of that configuration, bounded lifetime and cleanup; current no-new-database/no-cost authority does not cover it. Recheck the displayed price before any approved creation.
