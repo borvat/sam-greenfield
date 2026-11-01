@@ -78,6 +78,8 @@ jobs:
         run: npx tsx tests/rls/vault_cli_and_entity_flow.ts
       - name: Review hardening regression
         run: npx tsx tests/rls/review_hardening.ts
+      - name: Residual risks regression
+        run: npx tsx tests/rls/residual_risks.ts
       - name: MCP dispatcher under the narrowed sam_mcp role
         run: npx tsx tests/rls/mcp_dispatch.ts
       - name: Entity-scoped credentials (no database)

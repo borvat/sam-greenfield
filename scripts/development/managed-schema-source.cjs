@@ -7,7 +7,7 @@ const crypto=require("node:crypto");
 const directory=path.resolve(__dirname,"../../packages/db/migrations");
 function prepare(){
   const files=fs.readdirSync(directory).filter(x=>/^\d{5}_[a-z0-9_]+\.sql$/.test(x)).sort();
-  if(files.length!==13)throw new Error("MANAGED_SOURCE_MIGRATION_REVIEW_REQUIRED");
+  if(files.length!==14)throw new Error("MANAGED_SOURCE_MIGRATION_REVIEW_REQUIRED");
   const migrations=files.map(filename=>{
     const sql=fs.readFileSync(path.join(directory,filename),"utf8");
     return {filename,sql,sha256:crypto.createHash("sha256").update(sql).digest("hex")};

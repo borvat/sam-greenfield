@@ -71,7 +71,7 @@ GRANT USAGE ON SCHEMA public TO sam_runtime_worker, sam_tenant_app, sam_credenti
 GRANT SELECT, INSERT, UPDATE ON
   goals, work_queue, outbox_events, side_effect_operations, inbox_events,
   world_facts, memory_records, model_calls, model_providers,
-  verification_contracts, approvals, business_id_sequences
+  verification_contracts, approvals
   TO sam_runtime_worker;
 GRANT SELECT, INSERT ON audit_log, plans, executions, verifications, event_fabric_events
   TO sam_runtime_worker;
@@ -99,13 +99,18 @@ GRANT SELECT ON goals, plans, work_queue, executions, verifications, side_effect
   legal_entities TO sam_mcp_bridge;
 GRANT INSERT ON goals, approvals, plans, work_queue, audit_log, outbox_events TO sam_mcp_bridge;
 GRANT UPDATE (state, updated_at, current_plan_id) ON goals TO sam_mcp_bridge;
-GRANT SELECT, INSERT, UPDATE ON business_id_sequences TO sam_mcp_bridge;
 
--- Tenant role: reads what the owner surfaces display; writes only goals, the
--- append-only audit log and the shared id counters.
+-- Business ids: the counter table is closed to every SAM role. next_business_id() is
+-- SECURITY DEFINER (migration 00014) and only serves entity type 'goal' to these roles.
+REVOKE ALL ON FUNCTION next_business_id(TEXT, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION next_business_id(TEXT, UUID)
+  TO sam_runtime_worker, sam_tenant_app, sam_mcp_bridge;
+
+-- Tenant role: reads what the owner surfaces display; writes only goals and the
+-- append-only audit log.
 GRANT SELECT ON
   organizations, legal_entities, users, financial_documents, plans, work_queue,
   executions, verifications, side_effect_operations, approvals
   TO sam_tenant_app;
-GRANT SELECT, INSERT, UPDATE ON goals, business_id_sequences TO sam_tenant_app;
+GRANT SELECT, INSERT, UPDATE ON goals TO sam_tenant_app;
 GRANT SELECT, INSERT ON audit_log TO sam_tenant_app;

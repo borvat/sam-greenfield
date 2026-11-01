@@ -131,7 +131,7 @@ async function main(){
       await denied(workerPool.query("UPDATE credential_vault SET created_by='x'"));
       // owner-level tampering is blocked by the trigger too
       await denied(admin.query("UPDATE credential_vault SET ciphertext='\\x0000'::bytea WHERE legal_entity_id=$1",[e1]),/immutable/);
-      await denied(admin.query("UPDATE credential_vault SET status='ACTIVE',revoked_at=NULL,revoked_by=NULL WHERE status='REVOKED' AND legal_entity_id=$1",[e1]),/reactivated|immutable/);
+      await denied(admin.query("UPDATE credential_vault SET status='ACTIVE',revoked_at=NULL,revoked_by=NULL WHERE status='REVOKED' AND legal_entity_id=$1",[e1]),/final|reactivated|immutable/);
 
       // ---- nobody else can read the vault: MCP bridge and Command Center
       await denied(mcpPool.query("SELECT * FROM credential_vault"));
