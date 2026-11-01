@@ -90,10 +90,11 @@ def main():
   need(r.returncode==0,tag.upper()+'_FAILED_PRIVATE_DIAGNOSTICS');return r.stdout.decode().strip()
  identity=json.loads(execute("SELECT json_build_object('db',current_database(),'user',current_user,'session',session_user,'major',current_setting('server_version_num')::int/10000,'bypass',(SELECT rolbypassrls OR rolsuper FROM pg_roles WHERE rolname=current_user));",'identity'))
  need(identity=={'db':DB,'user':ADMIN,'session':ADMIN,'major':15,'bypass':False},'TARGET_IDENTITY_REFUSED')
- sql=['BEGIN;',"SET LOCAL lock_timeout='5s';",'SELECT pg_advisory_xact_lock(15112013);']
+ sql=['BEGIN;',"SET LOCAL lock_timeout='5s';",'SELECT pg_advisory_xact_lock(15112013);',
+  "DO $safe_roles$ BEGIN IF (SELECT count(*) FROM pg_roles WHERE rolname IN ('sam_trial_postgres_user','sam_runtime_app','sam_mcp_app','sam_eval_runtime_20261024')) <> 4 OR EXISTS (SELECT 1 FROM pg_roles WHERE rolname IN ('sam_trial_postgres_user','sam_runtime_app','sam_mcp_app','sam_eval_runtime_20261024') AND (rolsuper OR rolbypassrls OR rolreplication OR rolcanlogin)) THEN RAISE EXCEPTION 'TARGET_PREEXISTING_ROLE_UNSAFE'; END IF; END $safe_roles$;"]
  for role in cat['roles']:
   name=role['rolname'];need(name in ROLES and not any(role[k] for k in ['rolsuper','rolbypassrls','rolreplication']),'UNSAFE_SOURCE_ROLE')
-  flags=['NOSUPERUSER','NOBYPASSRLS','NOREPLICATION','NOLOGIN',
+  flags=['NOLOGIN',
     'INHERIT' if role['rolinherit'] else 'NOINHERIT','CREATEROLE' if role['rolcreaterole'] else 'NOCREATEROLE',
     'CREATEDB' if role['rolcreatedb'] else 'NOCREATEDB','CONNECTION LIMIT '+str(int(role['rolconnlimit']))]
   sql.append('ALTER ROLE '+qi(name)+' '+' '.join(flags)+(' VALID UNTIL '+lit(role['rolvaliduntil']) if role['rolvaliduntil'] else " VALID UNTIL 'infinity'")+';')
