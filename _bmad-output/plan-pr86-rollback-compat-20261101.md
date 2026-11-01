@@ -1,0 +1,32 @@
+---
+title: Restore PR86 application rollback compatibility across00106
+status: in-progress
+route: full
+route_source: auto
+risk: high
+baseline_revision: 8a08e6163516f30f37c65313134170744330c4f4
+context:
+  - '{project-root}/docs/engineering/review-recovery-progress-20261028.md'
+---
+<frozen-after-approval>
+## Intent
+Owner explicitly authorizes fixing the42P10 rollback root cause and independently testing real SQL in isolation; no production mutations until recoverable current backup and validated rollback pass. Keep forward release exact8a08e6163516f30f37c65313134170744330c4f4. Prepare separate pinned minimal rollback candidates derived from exact deployed runtime62ccbdbb94e080f22425f64396c894270ee551aa and surfaces1e4e21a773c88e2366915edd3bb2e307fddaa157. No company drafts, new DB/services/cost, main merge, grants/RLS/network/credentials changes or data deletion. User permits automatic routine progression and parallel independent staff development.
+## I/O matrix
+|Scenario|Expected|
+|pre00106 first insert/replay|Save once, same id/hash; no schema error|
+|post00106 first insert/replay|Save original revision1 once; preserve all rows|
+|existing revision1+revision2|Return original revision1 consistently; never overwrite or confuse revised hash|
+|changed report payload|Reject hash conflict as existing contract requires|
+|new then rollback application|Old-compatible candidate runs actual report path after migration; all hashes/revisions unchanged|
+|foreign company/mismatched provenance|Existing source binding and independent verification rejection retained|
+</frozen-after-approval>
+## Code Map
+apps/production/src/hermesSourceFollowup.ts:saveAcceptedFollowupReport: pair ON CONFLICT breaks after00106 drops unique; fallback SELECT currently unqualified for revision. Inspect every caller/old report read/write before patching. Existing8a08 has triple target; do not modify forward release identity.
+packages/db/integration-migrations/00101_goal_read_reviews.sql and00106_read_review_revisions.sql: actual SQL, unchanged.
+tests/isolated/hermes_report_revision_sql.ts and hermes_source_followup_fixture.ts: reuse only relevant fixture patterns, do not rerun prior suites unnecessarily.
+## Execution
+Implement minimal compatible Hermes save SQL for baseline snapshots, not schema rollback: use conflict behavior that works with old pair and new triple unique, deterministic original report retrieval when revision2 exists, original hash/provenance checks unchanged. Inspect whether untargeted ON CONFLICT DO NOTHING plus original-revision selection via to_jsonb(row) is adequate; avoid unnecessary schema detection/helper frameworks. Prepare exact baseline-to-candidate patches and clean non-main Git candidate branches if safe; never deploy/push. Use actual function/code extraction in isolated PGlite tests, not just approximate SQL. Test scenarios above, including multiple revisions and byte-identical history. Produce source hashes, minimal diff evidence, runbook mapping old SHA/new fallback SHA, and identify remaining native/service/backup limitations. Dependency installation may use existing sam-company node_modules via temporary link (same locked dependencies), no new dependency needed. Make no changes in sam-company; that is another agent's worktree.
+## Acceptance
+Given exact old source and real00101+00106, candidate report save must pass both schemas and replay while original old source reproduces42P10 only post00106. Given revision2, candidate returns original id or safely rejects content mismatch without altering either report. Given source identity change, existing guards still reject. Runtime and surface candidate diffs must contain only this repair, and hashes/main/worktree source not mixed. Passing isolated SQL is not native/RLS/backup/live acceptance. Report every remaining blocker.
+## Verification
+Focused new node:test/PGlite only, affected function typecheck where needed, diff-check, independent reviewer+verifier later. Do not repeat unrelated successful baseline suites. Do not install/run external code or models. Parent owns backup access, production release gate, secret scan and final archive.
