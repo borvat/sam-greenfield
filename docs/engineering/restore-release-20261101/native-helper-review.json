@@ -1,0 +1,13 @@
+{
+  "helper_sha256": "976aa845e10c5bf0d42beb62227200b604100f0398a2b7c9cdabad5d75f4f90d",
+  "reviewer": "independent_reviewer",
+  "approved_scope": "Exact temporary target only; strict native restore/loadCOPYcount proof. No sourcepermission/canonicalhash/service/release acceptance.",
+  "target_id": "dpg-dbjpqkutlv9c73dup8lg-a",
+  "deadline": "2026-11-02T20:13:07Z",
+  "review_fixes": [
+    "PSQLbackendCOPYcount verification without RLSweakening",
+    "Explicitpartialrole-stub failurestage",
+    "Twentyminutecleanupreserve and boundedtimeout"
+  ],
+  "production_action": false
+}
