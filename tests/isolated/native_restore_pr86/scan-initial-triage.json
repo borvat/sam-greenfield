@@ -1,0 +1,8 @@
+{
+  "initialExitCode": 1,
+  "findingCount": 42,
+  "individuallyVerifiedFileSHA256Values": 42,
+  "classification": "HASH_METADATA_FALSE_POSITIVES_ONLY",
+  "action": "Source pin metadata converted from path-keyed digest objects to explicit path/sha256 records; no scanner rules or exclusions changed.",
+  "otherFindings": 0
+}

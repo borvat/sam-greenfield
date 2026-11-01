@@ -1,0 +1,38 @@
+{
+  "status": "FROZEN_FOR_INDEPENDENT_REVIEW_NOT_EXECUTED",
+  "checks": {
+    "javascriptSyntax": "PASS: seven authored JS modules",
+    "pythonSyntax": "PASS AST only",
+    "offlineProcessRegistryTest": "1 PASS; two simple Node loop children, no SAM app",
+    "databaseConnections": 0,
+    "samApplicationProcessesStarted": 0,
+    "oldPGliteTestsRepeated": 0
+  },
+  "reviewPatches": [
+    "All user-schema local tables classified and SELECT-visible rows fingerprinted; relevant public queue/report/budget/reservation/memory sources mandatory; denials explicit, no owner-wide claim",
+    "Every phase/service child registered with awaited bounded SIGTERM/SIGKILL cleanup; offline regression PASS",
+    "Official exact Node24 + archive/binary/full dependency artifact byte integrity required, not metadata alone",
+    "Explicit reviewed exact-private-target encrypted-unverified TLS with pg_stat_ssl and compatibility flag; default verify-full preserved",
+    "Target-only transient existing sam_runtime_app LOGIN wrapper with exact operator role pin, in-memory password and finally NOLOGIN/PASSWORD NULL",
+    "Generated schema/two-UUID PGOPTIONS only; inherited options ignored; source guards unchanged"
+  ],
+  "files": {
+    "README.md": "d4895ada701c3f62b637ca7a44d659485eb27adfd4312781e7905ec83a9036c9",
+    "prepare.py": "0f7428be0de0cfddb034800fcd5a78578119824cad305bfff08051e72d4b083a",
+    "common.cjs": "20002c9fd325de1671539411fabb3e38e0d22f3656234574178fb8b6115a1917",
+    "native-child.mjs": "f5d5557f69d909a33d3eb6328dd53e710140005f003c9275baf2c5d832476358",
+    "run-native.cjs": "c92d37b76b567fec049cf757ad2ded418041bcd0c8bde6ae4be95fee606151bd",
+    "process-registry.cjs": "6ed179b1a50749f6aa29a136fb20511d08f0cb0badcbd9ba8f9903d154a0be05",
+    "process_registry_offline.test.cjs": "9cbee5d3366f7cb6be01a6616167637435ae8765ab9b4ea593bf49a47dc3b518",
+    "bootstrap-app-login.cjs": "09f71201009cb7e54541fb5927dca572e05ed2a91dcea3a2d3bb3422ea7be33a",
+    "link-dependencies.cjs": "f6abb94084ea4272595cf17206c70bc32a7e04719baed6ae5d6ff48021834a99",
+    "capture-host-artifacts.py": "c68c2c9fb32a136bfc8a5c4e2530f9bd3d69a1fab88fe43dae9227528d72d951",
+    "materialize-host-sources.py": "edddb5cb619f02f4548cffd8d95b4e1e4637a68861ac11179c37f865ed894184",
+    "config.example.json": "6839b0df1118b5a37db5def108988b24bf99c9b47e581f30e03f0a2c7003ff9d",
+    "existing-node-artifacts.example.json": "ff611fc01fb361c0ca4f7b7ff04932a2f2bb7509773a35a5ace82e935c9ddfc7",
+    "runtime-artifacts.example.json": "3710a4bf89d1554bfc47628293a5352ec709763d4cea4ded0b281772880f82a9",
+    "source-pins.json": "5552bc3b279ebd6d138a358928c9966baa84cc6cb710189b1c41e97a25beca5f",
+    "scan-initial-triage.json": "494913482a78704ae54481b2ea0177f6ab6084e1afa22525d7f0a648eca0e426",
+    "deliverable-files.json": "7787fb031fb5528b7a1572a272f0169f4256ca7ac3716d860d45887a1cbc7289"
+  }
+}

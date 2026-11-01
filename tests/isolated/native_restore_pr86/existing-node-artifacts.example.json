@@ -1,0 +1,9 @@
+{
+  "nodeVersion": "v24.22.1",
+  "nodeBinaryPath": "/tmp/sam-pr86-restore-2013/node-v24.22.1-linux-x64/bin/node",
+  "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+  "nodeArchivePath": "/tmp/sam-pr86-restore-2013/node-v24.22.1-linux-x64.tar.xz",
+  "nodeArchiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+  "nodeChecksumsPath": "/tmp/sam-pr86-restore-2013/SHASUMS256.txt",
+  "nodeChecksumsSha256": "fdfbffc969c0f604beff0124d409b33a43b53f5c681d6220f80023e0d6df9dc4"
+}
