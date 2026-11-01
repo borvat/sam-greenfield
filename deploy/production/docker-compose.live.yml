@@ -49,6 +49,9 @@ services:
       SAM_WORKER_DB_PASSWORD: ${SAM_WORKER_DB_PASSWORD:?SAM_WORKER_DB_PASSWORD is required}
       SAM_MCP_DB_PASSWORD: ${SAM_MCP_DB_PASSWORD:?SAM_MCP_DB_PASSWORD is required}
       SAM_COMMAND_CENTER_DB_PASSWORD: ${SAM_COMMAND_CENTER_DB_PASSWORD:?SAM_COMMAND_CENTER_DB_PASSWORD is required}
+      # Tenant binding for sam_command_center (migration 00015); not secrets.
+      SAM_ORG_ID: ${SAM_ORG_ID:?SAM_ORG_ID is required}
+      SAM_COMMAND_CENTER_LEGAL_ENTITY_ID: ${SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:?SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required}
     volumes:
       - sam_postgres:/var/lib/postgresql/data
     healthcheck:

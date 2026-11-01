@@ -25,6 +25,7 @@ async function main(){
   const org=randomUUID(),otherOrg=randomUUID(),e1=randomUUID();
   await admin.query("INSERT INTO organizations(id,name) VALUES ($1,$2),($3,$4)",[org,tag,otherOrg,tag+"o"]);
   await admin.query("INSERT INTO legal_entities(id,org_id,name) VALUES ($1,$2,$3)",[e1,org,tag]);
+  await admin.query("INSERT INTO sam_role_scope(role_name,org_id,legal_entity_id) VALUES ('sam_command_center',$1,$2) ON CONFLICT (role_name) DO UPDATE SET org_id=EXCLUDED.org_id,legal_entity_id=EXCLUDED.legal_entity_id",[org,e1]);
   const worker=new Pool(conn("sam_worker",pw.worker));
   const mcp=new Pool(conn("sam_mcp",pw.mcp));
   const cc=new Pool(conn("sam_command_center",pw.cc,`-c app.current_org_id=${org} -c app.current_legal_entity_id=${e1}`));
@@ -71,6 +72,7 @@ async function main(){
     await assertSamRoleIsolation(worker as any);
     console.log("PASS residual_risks");
   }finally{
+    await admin.query("DELETE FROM sam_role_scope WHERE role_name='sam_command_center'");
     await worker.end();await mcp.end();await cc.end();await admin.end();
   }
 }

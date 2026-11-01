@@ -21,6 +21,10 @@
 \getenv worker_pw SAM_WORKER_DB_PASSWORD
 \getenv mcp_pw SAM_MCP_DB_PASSWORD
 \getenv cc_pw SAM_COMMAND_CENTER_DB_PASSWORD
+\set bind_org ''
+\set bind_entity ''
+\getenv bind_org SAM_ORG_ID
+\getenv bind_entity SAM_COMMAND_CENTER_LEGAL_ENTITY_ID
 
 SELECT (:'worker_pw' = '' OR :'mcp_pw' = '' OR :'cc_pw' = ''
         OR :'worker_pw' = :'mcp_pw' OR :'worker_pw' = :'cc_pw' OR :'mcp_pw' = :'cc_pw') AS bad_passwords \gset
@@ -114,3 +118,15 @@ GRANT SELECT ON
   TO sam_tenant_app;
 GRANT SELECT, INSERT, UPDATE ON goals TO sam_tenant_app;
 GRANT SELECT, INSERT ON audit_log TO sam_tenant_app;
+
+-- Server-side tenant binding (migration 00015): pins sam_command_center to its organisation and
+-- legal entity so a session cannot widen its own scope with SET app.current_*. Without these
+-- two variables no binding is written and the production startup guard refuses the service.
+SELECT (:'bind_org' <> '' AND :'bind_entity' <> '') AS do_bind \gset
+\if :do_bind
+  INSERT INTO sam_role_scope(role_name, org_id, legal_entity_id)
+  VALUES ('sam_command_center', :'bind_org'::uuid, :'bind_entity'::uuid)
+  ON CONFLICT (role_name) DO UPDATE SET org_id = EXCLUDED.org_id, legal_entity_id = EXCLUDED.legal_entity_id;
+\else
+  DELETE FROM sam_role_scope WHERE role_name = 'sam_command_center';
+\endif
