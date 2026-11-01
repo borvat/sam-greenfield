@@ -29,6 +29,8 @@ export interface VerificationAdapter{
 }
 
 export interface ProductionBundle{
+  ownerReportEmailAdapter?:import("../../tools/src/gmailSendAdapter").GmailSendAdapter;
+  ownerReportEmail?:import("../../notifications/src/delivery").OwnerReportEmailBinding;
   capabilities:CapabilityDefinition[];
   toolDefinitions:ToolDefinition[];
   toolAdapters:ToolAdapter[];

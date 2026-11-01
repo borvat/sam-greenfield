@@ -1,3 +1,5 @@
+import {runOwnerReportEmailTick} from '../../notifications/src/delivery';
+import {GmailSendAdapter} from '../../tools/src/gmailSendAdapter';
 import {runScopedOwnerNotificationTick} from '../../notifications/src/center';
 import {recordWorkFailure} from "../../kernel/src/failures";
 import {reviewNextReadGoal} from './readGoalReview';
@@ -83,7 +85,12 @@ export function createProductionComposition(input:{
       const operational=input.operationalTick?await attempt("operational",input.operationalTick):null;
 
       const ownerNotifications=await runScopedOwnerNotificationTick();
-      return {ownerNotifications,events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
+      const binding=input.bundle.raw.ownerReportEmail;
+      const gmail=input.bundle.raw.ownerReportEmailAdapter;
+      const ownerReportEmail=await runOwnerReportEmailTick(
+        binding?.dataClassification===input.bundle.raw.dataClassification?binding:undefined,
+        gmail instanceof GmailSendAdapter?gmail:undefined);
+      return {ownerReportEmail,ownerNotifications,events,dependencyRecovery,recovery,reconciliation,planning,execution,verification,review,learning,operational};
     }
   };
 }

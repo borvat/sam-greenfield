@@ -1,0 +1,33 @@
+{
+  "scopeCheck": {
+    "schema": "sam.owner_email_scope_preflight.v1",
+    "checkedAt": "2026-11-01T23:29:33.196Z",
+    "oauthHttpStatus": 200,
+    "refreshAccepted": true,
+    "scopePresent": true,
+    "sendScope": false,
+    "sentReadScope": true,
+    "providerSendPerformed": false,
+    "configChanged": false
+  },
+  "privilegeCheck": {
+    "schema": "sam.owner_email_runtime_privileges.v1",
+    "checkedAt": "2026-11-01T23:30:10.315Z",
+    "role": "sam_runtime_app",
+    "can_update_delivery_channel": false,
+    "can_insert_attempt": false,
+    "attempts_rls": false,
+    "mutationPerformed": false
+  },
+  "ownerRecipient": "ceo@suroohholdings.com",
+  "activation": "NOT_PERFORMED",
+  "newProductionChanges": "REQUIRE_EXACT_OWNER_APPROVAL",
+  "ownerLogin": {
+    "status": "BLOCKED",
+    "secureCredentialEntry": "submitted",
+    "authenticatedDataView": "NOT_ESTABLISHED",
+    "visibleError": "Unexpected token s, stream timeout is not valid JSON",
+    "invalidCredentialProven": false
+  },
+  "externalEmailPerformed": false
+}
