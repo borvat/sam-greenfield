@@ -104,6 +104,23 @@ async function main(){
       const ring2only=VaultKeyring.fromEnv({SAM_VAULT_KEYS:`2:${k2}`,SAM_VAULT_ACTIVE_KEY_VERSION:"2"});
       assert.equal((await new CredentialVault(workerPool,ring2only,{cacheTtlMs:0}).get(ref))?.client_secret,"ROTATED-"+tag);
 
+      // ---- crypto-shredding: after rotation no REVOKED row keeps ciphertext under the old key
+      assert.ok(rot.shredded>=1,"revoked rows under the old key were shredded");
+      const sh=(await admin.query("SELECT status,key_version,shredded_at,octet_length(ciphertext) c,octet_length(wrapped_dek) w FROM credential_vault WHERE legal_entity_id=$1 AND provider='bol' ORDER BY secret_version",[e1])).rows;
+      const revokedOld=sh.filter(r=>r.status==="REVOKED"&&r.key_version===1);
+      assert.ok(revokedOld.length>=1&&revokedOld.every(r=>r.shredded_at&&r.c===0&&r.w===0),"old-key revoked rows are empty");
+      assert.ok(sh.some(r=>r.status==="ACTIVE"&&!r.shredded_at&&r.c>0),"active row untouched");
+      assert.ok(Number((await admin.query("SELECT count(*) c FROM audit_log WHERE action='CREDENTIAL_SHREDDED' AND source='credential_vault' AND actor='test'")).rows[0].c)>=1,"shredding is audited");
+      assert.equal(await v12.hasHistory(ref),true,"history survives shredding");
+      const fp=(await admin.query("SELECT has_function_privilege('sam_worker','vault_shred_revoked(integer,integer)','EXECUTE') w,has_function_privilege('sam_mcp','vault_shred_revoked(integer,integer)','EXECUTE') m,has_function_privilege('sam_command_center','vault_shred_revoked(integer,integer)','EXECUTE') c")).rows[0];
+      assert.deepEqual([fp.w,fp.m,fp.c],[true,false,false],"only the vault role may shred");
+      assert.equal(await v12.shredRevoked("test",{otherThanKeyVersion:2}),0,"idempotent");
+      // narrow permissions: only REVOKED -> empty is allowed; nothing else about material
+      await denied(admin.query("UPDATE credential_vault SET ciphertext=decode('0102','hex') WHERE id=(SELECT id FROM credential_vault WHERE legal_entity_id=$1 AND provider='bol' AND shredded_at IS NOT NULL LIMIT 1)",[e1]),/final|immutable|check constraint/);
+      await denied(admin.query("UPDATE credential_vault SET shredded_at=NULL WHERE legal_entity_id=$1 AND shredded_at IS NOT NULL",[e1]),/final|immutable|check constraint/);
+      await denied(admin.query("UPDATE credential_vault SET ciphertext=decode('','hex'),wrapped_dek=decode('','hex'),dek_tag=decode('','hex'),dek_nonce=decode('','hex'),nonce=decode('','hex'),auth_tag=decode('','hex'),shredded_at=now() WHERE legal_entity_id=$1 AND provider='bol' AND status='ACTIVE'",[e1]),/immutable|check constraint/);
+      await denied(workerPool.query("UPDATE credential_vault SET revoked_at=now() WHERE legal_entity_id=$1 AND status='REVOKED'",[e1]),/permission denied|final/);
+
       // ---- cache honours TTL and is invalidated on write/revoke
       let t=1000;
       const cached=new CredentialVault(workerPool,ring2only,{cacheTtlMs:100,now:()=>t});
@@ -130,7 +147,7 @@ async function main(){
       await denied(workerPool.query("UPDATE credential_vault SET ciphertext='\\x00'::bytea"));
       await denied(workerPool.query("UPDATE credential_vault SET created_by='x'"));
       // owner-level tampering is blocked by the trigger too
-      await denied(admin.query("UPDATE credential_vault SET ciphertext='\\x0000'::bytea WHERE legal_entity_id=$1",[e1]),/immutable/);
+      await denied(admin.query("UPDATE credential_vault SET ciphertext='\\x0000'::bytea WHERE legal_entity_id=$1",[e1]),/immutable|final/);
       await denied(admin.query("UPDATE credential_vault SET status='ACTIVE',revoked_at=NULL,revoked_by=NULL WHERE status='REVOKED' AND legal_entity_id=$1",[e1]),/final|reactivated|immutable/);
 
       // ---- nobody else can read the vault: MCP bridge and Command Center

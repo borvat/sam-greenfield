@@ -92,6 +92,10 @@ GRANT USAGE, SELECT ON SEQUENCE global_event_seq_seq TO sam_runtime_worker;
 -- UPDATE allowed is revocation.
 GRANT SELECT, INSERT ON credential_vault TO sam_credential_vault;
 GRANT UPDATE (status, revoked_by, revoked_at) ON credential_vault TO sam_credential_vault;
+-- Crypto-shredding of REVOKED rows (migration 00016) goes through a SECURITY DEFINER function;
+-- the vault role gets no UPDATE privilege on the secret-material columns.
+REVOKE ALL ON FUNCTION vault_shred_revoked(INTEGER, INTEGER) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION vault_shred_revoked(INTEGER, INTEGER) TO sam_credential_vault;
 GRANT SELECT ON legal_entities TO sam_credential_vault;
 
 -- MCP bridge (ChatGPT-facing): read-only on system tables; INSERT of goals and of PENDING
