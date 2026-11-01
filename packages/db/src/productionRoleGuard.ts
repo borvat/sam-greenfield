@@ -20,6 +20,7 @@ const SAM_GROUPS=["sam_runtime_worker","sam_tenant_app","sam_mcp_bridge"] as con
 // provision-roles.sql); other deployments are unaffected.
 //   * a login may belong to at most one of the three SAM groups (privileges are the
 //     union of memberships, so an overlap silently widens access);
+//   * a tenant login must be bound server-side to its organisation (migration 00015);
 //   * credential_vault must have row level security enabled;
 //   * only a member of sam_credential_vault may read the vault.
 export async function assertSamRoleIsolation(
@@ -32,6 +33,10 @@ export async function assertSamRoleIsolation(
     [SAM_GROUPS as unknown as string[]]);
   if(!m.rows.length)return;
   if(m.rows.length>1)throw new Error("RELEASE_ROLE_MEMBERSHIP_OVERLAP");
+  if(m.rows[0].rolname==="sam_tenant_app"){
+    const b=await db.query("SELECT sam_session_is_bound() AS bound");
+    if(!b.rows[0].bound)throw new Error("RELEASE_TENANT_BINDING_MISSING");
+  }
   const v=await db.query(
     `SELECT c.relrowsecurity AS rls,
             pg_catalog.has_table_privilege(current_user,c.oid,'SELECT') AS can_read,

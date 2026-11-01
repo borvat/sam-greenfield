@@ -18,7 +18,7 @@ const deterministic=spawnSync(
   {encoding:"utf8"}
 );
 assert.equal(deterministic.status,0,deterministic.stderr);
-assert.match(deterministic.stdout,/Total migrations: 14/);
+assert.match(deterministic.stdout,/Total migrations: 15/);
 assert.match(deterministic.stdout,/Deterministic check PASS/);
 
 const compose=file("deploy/production/docker-compose.live.yml");

@@ -80,6 +80,8 @@ jobs:
         run: npx tsx tests/rls/review_hardening.ts
       - name: Residual risks regression
         run: npx tsx tests/rls/residual_risks.ts
+      - name: Server-side tenant binding
+        run: npx tsx tests/rls/tenant_binding.ts
       - name: MCP dispatcher under the narrowed sam_mcp role
         run: npx tsx tests/rls/mcp_dispatch.ts
       - name: Entity-scoped credentials (no database)

@@ -10,8 +10,9 @@
 --   * The direct-table policies of 00011/00013 are dropped; privileges are removed in
 --     deploy/production/provision-roles.sql.
 
+DO $mig$ BEGIN EXECUTE format($f$
 CREATE OR REPLACE FUNCTION next_business_id(p_entity_type TEXT, p_org_scope_id UUID)
-RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, %1$I, pg_temp AS $body$
 DECLARE
   v_last BIGINT;
   v_next BIGINT;
@@ -33,7 +34,7 @@ BEGIN
     IF p_org_scope_id IS NOT NULL THEN
       v_ctx_org := NULLIF(pg_catalog.current_setting('app.current_org_id', true), '')::uuid;
       IF v_ctx_org IS NULL AND NULLIF(pg_catalog.current_setting('app.current_legal_entity_id', true), '') IS NOT NULL THEN
-        SELECT le.org_id INTO v_ctx_org FROM public.legal_entities le
+        SELECT le.org_id INTO v_ctx_org FROM legal_entities le
          WHERE le.id = NULLIF(pg_catalog.current_setting('app.current_legal_entity_id', true), '')::uuid;
       END IF;
       IF v_ctx_org IS DISTINCT FROM p_org_scope_id THEN
@@ -43,22 +44,22 @@ BEGIN
   END IF;
 
   IF p_org_scope_id IS NULL THEN
-    INSERT INTO public.business_id_sequences(entity_type, org_scope_id, last_number)
+    INSERT INTO business_id_sequences(entity_type, org_scope_id, last_number)
     VALUES (p_entity_type, NULL, 0)
     ON CONFLICT (entity_type) WHERE org_scope_id IS NULL DO NOTHING;
-    SELECT last_number INTO v_last FROM public.business_id_sequences
+    SELECT last_number INTO v_last FROM business_id_sequences
      WHERE entity_type = p_entity_type AND org_scope_id IS NULL FOR UPDATE;
     v_next := v_last + 1;
-    UPDATE public.business_id_sequences SET last_number = v_next, updated_at = now()
+    UPDATE business_id_sequences SET last_number = v_next, updated_at = now()
      WHERE entity_type = p_entity_type AND org_scope_id IS NULL;
   ELSE
-    INSERT INTO public.business_id_sequences(entity_type, org_scope_id, last_number)
+    INSERT INTO business_id_sequences(entity_type, org_scope_id, last_number)
     VALUES (p_entity_type, p_org_scope_id, 0)
     ON CONFLICT (entity_type, org_scope_id) DO NOTHING;
-    SELECT last_number INTO v_last FROM public.business_id_sequences
+    SELECT last_number INTO v_last FROM business_id_sequences
      WHERE entity_type = p_entity_type AND org_scope_id = p_org_scope_id FOR UPDATE;
     v_next := v_last + 1;
-    UPDATE public.business_id_sequences SET last_number = v_next, updated_at = now()
+    UPDATE business_id_sequences SET last_number = v_next, updated_at = now()
      WHERE entity_type = p_entity_type AND org_scope_id = p_org_scope_id;
   END IF;
 
@@ -72,7 +73,8 @@ BEGIN
   END;
   RETURN v_prefix || lpad(v_next::TEXT, 6, '0');
 END;
-$$;
+$body$;
+$f$, current_schema()); END $mig$;
 
 -- EXECUTE is restricted to the SAM roles in provision-roles.sql (self-hosted); managed and
 -- development roles keep the default so their existing owner/release logins still work.
