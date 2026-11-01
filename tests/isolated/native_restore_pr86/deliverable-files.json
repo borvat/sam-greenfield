@@ -1,0 +1,25 @@
+{
+  "classification": "AUTHORED_ONLY; no sources,node_modules,credentials,DB outputs",
+  "files": [
+    "README.md",
+    "native-run2-resume.md",
+    "prepare.py",
+    "common.cjs",
+    "native-child.mjs",
+    "run-native.cjs",
+    "process-registry.cjs",
+    "process_registry_offline.test.cjs",
+    "bootstrap-app-login.cjs",
+    "link-dependencies.cjs",
+    "capture-host-artifacts.py",
+    "materialize-host-sources.py",
+    "config.example.json",
+    "existing-node-artifacts.example.json",
+    "runtime-artifacts.example.json",
+    "source-pins.json",
+    "scan-initial-triage.json",
+    "deliverable-files.json",
+    "prep-manifest.json",
+    "secret-scan.json"
+  ]
+}

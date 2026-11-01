@@ -1,0 +1,51 @@
+{
+  "source_url": "https://ftp.postgresql.org/pub/source/v15.19/postgresql-15.19.tar.bz2",
+  "checksum_url": "https://ftp.postgresql.org/pub/source/v15.19/postgresql-15.19.tar.bz2.sha256",
+  "official_sha256": "e1a64a87a46b825b88c082e4518161a47aab53c45694964f8ba1df28f7859f89",
+  "observed_sha256": "e1a64a87a46b825b88c082e4518161a47aab53c45694964f8ba1df28f7859f89",
+  "checksum_result": "PASS",
+  "version": "15.19",
+  "scope": "Native PostgreSQL client tools only; no server startup or database calls",
+  "configure": "./postgresql-15.19/configure --prefix=/workspace/scratch/ca1213daa2e0/pg15-client-prep/install --without-readline --with-openssl",
+  "commands": [
+    "tar --no-same-owner -xjf postgresql-15.19.tar.bz2",
+    "make -C src/backend generated-headers",
+    "make -j2 -C src/interfaces/libpq",
+    "make -j2 -C src/bin/pg_dump",
+    "make -j2 -C src/bin/psql",
+    "make -C src/interfaces/libpq install",
+    "make -C src/bin/pg_dump install",
+    "make -C src/bin/psql install"
+  ],
+  "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "tools": {
+    "pg_restore": {
+      "path": "/workspace/scratch/ca1213daa2e0/pg15-client-prep/install/bin/pg_restore",
+      "sha256": "695e4b7f4052362948b777927117e85f045361763892417a32963801830a837a",
+      "version_output": "pg_restore (PostgreSQL) 15.19",
+      "version_exit": 0
+    },
+    "pg_dump": {
+      "path": "/workspace/scratch/ca1213daa2e0/pg15-client-prep/install/bin/pg_dump",
+      "sha256": "6d4600214870293a967d427408ee63271842f445384719f4ebcf466eb9b727fa",
+      "version_output": "pg_dump (PostgreSQL) 15.19",
+      "version_exit": 0
+    },
+    "psql": {
+      "path": "/workspace/scratch/ca1213daa2e0/pg15-client-prep/install/bin/psql",
+      "sha256": "9cc115b8a20da1d81605c64e23c529cb54fef42e237fdd1b80ea2f6927684fa4",
+      "version_output": "psql (PostgreSQL) 15.19",
+      "version_exit": 0
+    }
+  },
+  "prior_attempts": [
+    "Initial tar extraction tried restoring unmapped upstream file owners and failed; extraction repeated with --no-same-owner, retaining current local ownership. No sandbox permissions changed.",
+    "Initial direct parallel pg_dump target raced generated headers; explicitly built generated-headers first and completed clients successfully."
+  ],
+  "apt_invoked": false,
+  "system_service_created": false,
+  "database_connections": 0,
+  "customer_data_used": false,
+  "security_overrides": false,
+  "libpq_sha256": "47de87295bd615f8aad49535ca6223f3b6925aa1841429fde1895c8355900bc0"
+}

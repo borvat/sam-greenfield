@@ -1,0 +1,15 @@
+✔ 62ccbdb: exact old/candidate full function, 00101 (1901.126049ms)
+✔ 62ccbdb: exact old/candidate full function, 00101+00106 (1514.095986ms)
+✔ 1e4e21a: exact old/candidate full function, 00101 (1490.270487ms)
+✔ 1e4e21a: exact old/candidate full function, 00101+00106 (1673.038899ms)
+✔ new application report then rollback after 00106 preserves every history byte (1550.552054ms)
+✔ 62ccbdb: candidate first save before00106 then forward and rollback replay (1480.147938ms)
+✔ 1e4e21a: candidate first save before00106 then forward and rollback replay (1540.366081ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12072.498375

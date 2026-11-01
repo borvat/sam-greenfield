@@ -1,0 +1,36 @@
+{
+  "checker": {
+    "checker_source_sha256": "8f55b11cade51e39c1d5a968a42b9badf758e4a66a5a2253a2819ce9ae6cb01d",
+    "children_closed": true,
+    "customer_rows_read_by_checker": false,
+    "database_calls_by_checker": 0,
+    "fixture_state_sha256": "8ed31f87940fd194b75698df04c429a3444cdff9575c0c5dca2c723854468fe0",
+    "harness_manifest_sha256": "c928d82f6c79f7073bf87d10d3321f5db75ea74b2284d28ab31577dc202ddd3e",
+    "materialized_source_file_counts": {
+      "cc_mcp_fallback": 273,
+      "forward": 274,
+      "runtime_fallback": 273
+    },
+    "new_graceful_stops": 5,
+    "new_receipt_sha256": "36b83d45e06845f787d4feec7519ba55005fb301ec9e4be4ff74a173cbfdd490",
+    "new_service_starts": 5,
+    "new_successful_phases": 11,
+    "prior_receipt_sha256": "6cde74dda5eac90930d01d59b352ecac863fb11502729dab0a736af684249efc",
+    "prior_successful_phases": 10,
+    "remaining_app_sessions": 0,
+    "role_nologin_restored": true,
+    "role_visible_fingerprints_unchanged": true,
+    "runtime_gate_checks": 3,
+    "scope": "Pinned root-observed native synthetic process/report rehearsal; not a business goal, production deploy rollback, hidden-row equality or complete application acceptance.",
+    "source_and_saved_report_bindings_match": true,
+    "source_pins_sha256": "bceda6da20e8f33341b5a5efa38404e7e7ee0bacfd94722cc5142c9965179163",
+    "status": "PINNED_NATIVE_PHASE_AND_SERVICE_RECEIPTS_VERIFIED_OFFLINE"
+  },
+  "custody": {
+    "all_persisted_hashes_match": true,
+    "customer_rows_or_credentials_preserved": false,
+    "existing_persistent_disk_only": true,
+    "manifest_sha256": "33680a1ddaff6d650252a29e2c150d88562248b9741ca57cb7767913464f55ff",
+    "metadata_files": 21
+  }
+}

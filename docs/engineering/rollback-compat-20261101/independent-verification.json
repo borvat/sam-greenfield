@@ -1,0 +1,52 @@
+{
+  "started_at": "2026-11-01T19:17:55.710499+00:00",
+  "finished_at": "2026-11-01T19:18:09.917672+00:00",
+  "command": "DATABASE_URL=postgres://synthetic:synthetic@127.0.0.1:1/synthetic node --import tsx --test tests/isolated/hermes_rollback_compat_sql.ts",
+  "exit_code": 0,
+  "before_test_hash": "ef0257c88aba0fbc1b5b59086874636653e1f4b3cafaec5b2e24f883e880067d",
+  "after_test_hash": "ef0257c88aba0fbc1b5b59086874636653e1f4b3cafaec5b2e24f883e880067d",
+  "matches_source_evidence": true,
+  "source_evidence_sha256": "09e21f76281e33ecc1299099c03becae9870228857fc6a45ef7f56271fb6dc04",
+  "candidates": [
+    {
+      "service": "runtime",
+      "baseline": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "candidate": "2d4d32e286ff71307417f7375985b85214c7a2e6",
+      "parents": [
+        "62ccbdbb94e080f22425f64396c894270ee551aa"
+      ],
+      "exact_parent": true,
+      "changed_files": [
+        "apps/production/src/hermesSourceFollowup.ts"
+      ],
+      "only_report_module_changed": true,
+      "baseline_hash_matches": true,
+      "candidate_hash_matches": true,
+      "patch_hash_matches": true
+    },
+    {
+      "service": "surfaces",
+      "baseline": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "candidate": "0f056d36f98413b7590a405294693c0b5fc18885",
+      "parents": [
+        "1e4e21a773c88e2366915edd3bb2e307fddaa157"
+      ],
+      "exact_parent": true,
+      "changed_files": [
+        "apps/production/src/hermesSourceFollowup.ts"
+      ],
+      "only_report_module_changed": true,
+      "baseline_hash_matches": true,
+      "candidate_hash_matches": true,
+      "patch_hash_matches": true
+    }
+  ],
+  "migration_hash_matches": {
+    "packages/db/integration-migrations/00101_goal_read_reviews.sql": true,
+    "packages/db/integration-migrations/00106_read_review_revisions.sql": true
+  },
+  "stdout": "\u2714 62ccbdb: exact old/candidate full function, 00101 (2859.138548ms)\n\u2714 62ccbdb: exact old/candidate full function, 00101+00106 (1852.262977ms)\n\u2714 1e4e21a: exact old/candidate full function, 00101 (1725.805032ms)\n\u2714 1e4e21a: exact old/candidate full function, 00101+00106 (1775.407028ms)\n\u2714 new application report then rollback after 00106 preserves every history byte (1663.142304ms)\n\u2714 62ccbdb: candidate first save before00106 then forward and rollback replay (1570.532671ms)\n\u2714 1e4e21a: candidate first save before00106 then forward and rollback replay (1535.623345ms)\n\u2139 tests 7\n\u2139 suites 0\n\u2139 pass 7\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 14115.474878\n",
+  "stderr": "",
+  "limits": "Embedded PGlite only; no provider, production, native PostgreSQL, backup or restore proof; no old suites rerun",
+  "temporary_dependency_link_created": true
+}

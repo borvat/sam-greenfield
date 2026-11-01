@@ -1,0 +1,18 @@
+{
+  "nodeVersion": "v24.22.1",
+  "nodeBinaryPath": "/absolute/reviewed-node24/bin/node",
+  "nodeBinarySha256": "FILL_REVIEWED_EXTRACTED_BINARY_SHA256",
+  "nodeArchivePath": "/absolute/node-v24.22.1-linux-x64.tar.xz",
+  "nodeArchiveSha256": "FILL_OFFICIAL_ARCHIVE_SHA256",
+  "nodeChecksumsPath": "/absolute/official-node24-SHASUMS256.txt",
+  "nodeChecksumsSha256": "FILL_REVIEWED_OFFICIAL_CHECKSUM_FILE_SHA256",
+  "nodeChecksumSource": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+  "dependencyArchivePath": "/absolute/reviewed-exact-lock-node_modules.tar.gz",
+  "dependencyArchiveSha256": "FILL_REVIEWED_DEPENDENCY_ARTIFACT_SHA256",
+  "dependencyTreeManifestPath": "/absolute/reviewed-dependency-tree-manifest.json",
+  "dependencyTreeManifestSha256": "FILL_REVIEWED_TREE_MANIFEST_SHA256",
+  "dependencyRoot": "/absolute/unpacked-reviewed-node_modules",
+  "reviewReference": "FILL_INDEPENDENT_OFFICIAL_NODE_AND_EXACT_LOCK_DEPENDENCY_BUILD_REVIEW",
+  "installProvenancePath": "/absolute/exact-lock-install-provenance.json",
+  "installProvenanceSha256": "FILL_REVIEWED_INSTALL_EXIT_ZERO_PROVENANCE_SHA256"
+}

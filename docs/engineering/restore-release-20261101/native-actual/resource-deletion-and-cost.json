@@ -1,0 +1,33 @@
+{
+  "status": "DELETED_CONFIRMED",
+  "resource_id": "dpg-dbjpqkutlv9c73dup8lg-a",
+  "resource_name": "sam-restore-pr86-20261101-2013",
+  "created_at_utc": "2026-11-01T20:13:07.204593039Z",
+  "deletion_confirmed_at_utc": "2026-11-01T21:59:55Z",
+  "within_24_hours": true,
+  "provider_get_result": "404 NOT FOUND",
+  "provider_inventory_target_absent": true,
+  "ui_all_resources_search": "0 rows; No matching results",
+  "original_sam_database_available": true,
+  "billing_after_deletion": {
+    "resource_label": "Deleted",
+    "displayed_unbilled_usd": 0.02,
+    "final_invoice": false
+  },
+  "production_migration_or_deployment_performed": false,
+  "new_services_created": 0,
+  "only_one_temporary_postgres_created_and_deleted": true,
+  "main_private_customer_backup_and_connection_copies_removed": true,
+  "executor_temp_cleanup": {
+    "at_utc": "2026-11-01T22:04:25.471588Z",
+    "removed_directories": 7,
+    "raw_customer_copies_or_credentials_retained": false,
+    "metadata_only_evidence_retained": true,
+    "existing_hermes_configuration_changed": false
+  },
+  "screenshot_publication": {
+    "status": "WITHHELD_AUTOMATIC_APPROVAL_REVIEW",
+    "reason": "Dashboard image may expose private workspace/resource metadata; redacted textual evidence used instead.",
+    "owner_private_local_artifact": true
+  }
+}

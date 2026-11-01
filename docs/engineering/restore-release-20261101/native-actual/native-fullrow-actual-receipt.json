@@ -1,0 +1,33 @@
+{
+  "execution": {
+    "exit": 0,
+    "finished_at": "2026-11-01T21:07:50.366280+00:00",
+    "helper_sha256": "6b6bd83823503fe61d7bf038fb111e02eb9f6a48c6fb74103f1c64e9386d7b91",
+    "started_at": "2026-11-01T21:07:44.244421+00:00"
+  },
+  "summary": {
+    "all_sorted_native_copy_bytes_match_archive": true,
+    "application_or_provider_started": false,
+    "application_role_rls_acceptance_proven": false,
+    "archive_sha256": "b40ce0f831238bc060f49affdf5e8dcaf31670d2624b00d6d0053a3e43790a79",
+    "cleanup_reserve_seconds": 1200,
+    "database": "sam_restore_pr86_20261101_2013",
+    "dedicated_transaction_connection_closed": true,
+    "duplicate_rows_preserved": true,
+    "explicit_rollback_sent": true,
+    "fresh_postrollback_rls_policy_owner_acl_snapshot_equal": true,
+    "private_evidence_directory": "/tmp/sam-fullrow-proof-frf3ufsz",
+    "private_table_hashes_sha256": "b2a2d29db8fd7cecd4ba3f0e1c013bfeefbdf54c74467e65d170c744256c903a",
+    "production_connected": false,
+    "row_mutations_performed": false,
+    "rows": 11034,
+    "security_metadata_sha256": "cc166134854ddcc12f6c59f95cb7018cc75de6ad4eaaf304ba72da80f195e213",
+    "source_permission_fidelity_proven": false,
+    "status": "EXACT_NATIVE_COPY_ROW_BYTES_VERIFIED_ROLLBACK_ONLY",
+    "tables": 91,
+    "target": "dpg-dbjpqkutlv9c73dup8lg-a",
+    "temporary_rls_disable_transaction": true,
+    "tls_mode": "require",
+    "tls_server_identity_verified": false
+  }
+}

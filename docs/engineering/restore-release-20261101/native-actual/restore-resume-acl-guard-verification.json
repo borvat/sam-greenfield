@@ -1,0 +1,76 @@
+{
+  "scope": "Independent negative configuration guards only for reviewed resume-readonly and isolated ACL replay helpers. All inputs synthetic and deliberately invalid; no positive configuration executed.",
+  "started_at": "2026-11-01T20:51:19.199760+00:00",
+  "finished_at": "2026-11-01T20:51:19.228135+00:00",
+  "results": [
+    {
+      "file": "native_restore_resume.py",
+      "sha256_before": "524e76668b62ea4c2890cbe74263053b007f53161bd4fae10f22c226a8feb4f8",
+      "sha256_after": "524e76668b62ea4c2890cbe74263053b007f53161bd4fae10f22c226a8feb4f8",
+      "matches_exact_reviewed_sha": true,
+      "compile_only": "PASS",
+      "cases": [
+        {
+          "case": "production_host",
+          "expected_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+          "actual_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+          "status": "PASS"
+        },
+        {
+          "case": "extra_uri_options",
+          "expected_code": "TARGET_OPTIONS_REFUSED",
+          "actual_code": "TARGET_OPTIONS_REFUSED",
+          "status": "PASS"
+        },
+        {
+          "case": "sslmode_disabled",
+          "expected_code": "SSL_REQUIRED",
+          "actual_code": "SSL_REQUIRED",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "file": "native_acl_replay.py",
+      "sha256_before": "9d012a21f0d23a9fcfba72feee1924015760ac9eb1bdb08730565468f5be3af5",
+      "sha256_after": "9d012a21f0d23a9fcfba72feee1924015760ac9eb1bdb08730565468f5be3af5",
+      "matches_exact_reviewed_sha": true,
+      "compile_only": "PASS",
+      "cases": [
+        {
+          "case": "production_host",
+          "expected_code": "EXACT_TARGET_REQUIRED",
+          "actual_code": "EXACT_TARGET_REQUIRED",
+          "status": "PASS"
+        },
+        {
+          "case": "extra_uri_options",
+          "expected_code": "TARGET_OPTIONS_REFUSED",
+          "actual_code": "TARGET_OPTIONS_REFUSED",
+          "status": "PASS"
+        },
+        {
+          "case": "sslmode_disabled",
+          "expected_code": "SSL_REQUIRED",
+          "actual_code": "SSL_REQUIRED",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "counters": {
+    "tool_calls": 0,
+    "network_calls": 0,
+    "private_file_accesses": 0,
+    "private_directory_creates": 0
+  },
+  "database_connections": 0,
+  "source_customer_rows_read": false,
+  "real_credentials_used": false,
+  "actual_restore_or_acl_replay_executed": false,
+  "production_actions": false,
+  "limitations": [
+    "Tests establish only the specified invalid target/options/SSL cases fail before tools/network/private-file accesses.",
+    "They do not validate the already committed restore, statistical row-count corroboration, ACL equivalence, RLS or application readiness."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "reviewer": "independent_reviewer",
+  "scope": "New archive/provenance/isolation/financial checkpoint prose only; old rollback source and tests not repeated",
+  "verdict": "No blocking publication findings; no customer data, credentials or backup contents in deliverable",
+  "consistency": "Archive hashes agree; provenance hash and native binary hash match independent receipt",
+  "acceptance": "Archive readability only. Actual restore, native/service rollback and production delivery remain unproved. Strict7USD not waived;24h estimate not approved."
+}

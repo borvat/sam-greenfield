@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-11-01T19:59:28.574892+00:00",
+  "source": "Authorized current Render export2026-11-01T19:34Z.dir.tar.gz via authenticated browser download",
+  "file_bytes": 2769775,
+  "download_sha256": "b40ce0f831238bc060f49affdf5e8dcaf31670d2624b00d6d0053a3e43790a79",
+  "private_copy_sha256": "b40ce0f831238bc060f49affdf5e8dcaf31670d2624b00d6d0053a3e43790a79",
+  "sha256_match": true,
+  "tar_gzip_readable": true,
+  "tar_members": 95,
+  "uncompressed_member_bytes": 17260487,
+  "unsafe_paths_or_links": false,
+  "pg_directory_archives": 1,
+  "pg_restore_list_exit": 0,
+  "pg_restore_all_sections_to_devnull_exit": 0,
+  "data_restore_executed": false,
+  "customer_data_printed": false
+}

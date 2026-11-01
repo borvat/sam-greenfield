@@ -1,0 +1,48 @@
+{
+  "scope": "New migration helper negative guards only, plus offline reading of independent fullrow checker receipt; no positive target execution",
+  "started_at": "2026-11-01T21:17:24.621902+00:00",
+  "finished_at": "2026-11-01T21:17:24.622643+00:00",
+  "helper_sha256_before": "6a472ca27215c552f0eb88638b57773efaaf196921cc69f555de844ca1da8845",
+  "helper_sha256_after": "6a472ca27215c552f0eb88638b57773efaaf196921cc69f555de844ca1da8845",
+  "matches_reviewed_sha": true,
+  "compile_only": "PASS",
+  "embedded_migration_sha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+  "cases": [
+    {
+      "case": "production_source_host",
+      "expected_code": "EXACT_TARGET_REQUIRED",
+      "actual_code": "EXACT_TARGET_REQUIRED",
+      "status": "PASS"
+    },
+    {
+      "case": "extra_uri_options",
+      "expected_code": "TARGET_OPTIONS_REFUSED",
+      "actual_code": "TARGET_OPTIONS_REFUSED",
+      "status": "PASS"
+    },
+    {
+      "case": "sslmode_disabled",
+      "expected_code": "SSL_REQUIRED",
+      "actual_code": "SSL_REQUIRED",
+      "status": "PASS"
+    }
+  ],
+  "counters": {
+    "subprocess_calls": 0,
+    "network_calls": 0,
+    "filesystem_calls": 0
+  },
+  "database_connections": 0,
+  "customer_rows_read": false,
+  "migration_run": false,
+  "production_actions": false,
+  "independent_fullrow_checker_receipt": {
+    "sha256": "30284666d0737512412d5b73953bf1dbdbba5c32719415c0c3b1c2ca2ed0c3d0",
+    "checker_source_hash_matches": true,
+    "pinned_hash_file_and_execution_metadata_pass": true,
+    "tables": 91,
+    "rows": 11034,
+    "actual_checker_execution_witness": "root; not a direct target query by this verifier"
+  },
+  "limits": "Guard checks do not prove actual migration success. Fullrow checker verifies only pinned offline hash pairs and execution metadata, not application-role RLS or production readiness."
+}

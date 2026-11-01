@@ -1,0 +1,38 @@
+{
+  "forward": "8a08e6163516f30f37c65313134170744330c4f4",
+  "forwardSourceUnchanged": true,
+  "candidates": [
+    {
+      "service": "runtime",
+      "baseline": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "candidate": "2d4d32e286ff71307417f7375985b85214c7a2e6",
+      "baselineSourceSha256": "e617a25a94b7c99a9f64ef4de1de7ee1f9a699ae78585beff197f8e93c4001a3",
+      "candidateSourceSha256": "59c7a6f103f5eee5e46e72cb333c13041e37865ccbb6f233e982a7b2a7cd4457",
+      "stat": "apps/production/src/hermesSourceFollowup.ts | 4 ++--\n 1 file changed, 2 insertions(+), 2 deletions(-)",
+      "patchSha256": "139ee319d0d724525bc239c63c745426e7d885954d40e6187e4866450267c699",
+      "affectedFunctionTypecheck": "PASS",
+      "candidateWorktreeStatus": ""
+    },
+    {
+      "service": "surfaces",
+      "baseline": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "candidate": "0f056d36f98413b7590a405294693c0b5fc18885",
+      "baselineSourceSha256": "e617a25a94b7c99a9f64ef4de1de7ee1f9a699ae78585beff197f8e93c4001a3",
+      "candidateSourceSha256": "59c7a6f103f5eee5e46e72cb333c13041e37865ccbb6f233e982a7b2a7cd4457",
+      "stat": "apps/production/src/hermesSourceFollowup.ts | 4 ++--\n 1 file changed, 2 insertions(+), 2 deletions(-)",
+      "patchSha256": "139ee319d0d724525bc239c63c745426e7d885954d40e6187e4866450267c699",
+      "affectedFunctionTypecheck": "PASS",
+      "candidateWorktreeStatus": ""
+    }
+  ],
+  "migrations": {
+    "packages/db/integration-migrations/00101_goal_read_reviews.sql": "a118d796178147db17fa4839b20863dbd2191e41e951657571fc4c03cd3b008d",
+    "packages/db/integration-migrations/00106_read_review_revisions.sql": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2"
+  },
+  "testSourceSha256": "ef0257c88aba0fbc1b5b59086874636653e1f4b3cafaec5b2e24f883e880067d",
+  "limitations": [
+    "PGlite, not native PostgreSQL or RLS acceptance",
+    "No production, deploy, push, backup, native concurrency or real role test",
+    "Independent review and verification remain parent-owned gates"
+  ]
+}

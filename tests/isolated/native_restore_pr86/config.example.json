@@ -1,0 +1,21 @@
+{
+  "targetRenderId": "dpg-dbjpqkutlv9c73dup8lg-a",
+  "databaseName": "sam_restore_pr86_20261101_2013",
+  "hostname": "FILL_EXACT_RESTORE_HOST_ONLY",
+  "appRole": "fill_restricted_target_role",
+  "orgId": "FILL_FIXED_ORG_UUID",
+  "legalEntityId": "FILL_FIXED_COMPANY_UUID",
+  "foreignCompanyId": "FILL_DIFFERENT_UUID",
+  "runId": "FILL_NEW_SYNTHETIC_RUN_UUID",
+  "deadline": "2026-11-02T20:13:00.000Z",
+  "allowRuntimeBoot": false,
+  "allowNativeExecution": false,
+  "operatorReviewReference": "FILL_REVIEW_EVIDENCE_REFERENCE",
+  "tlsMode": "verify-full",
+  "privateNetworkTargetConfirmed": false,
+  "internalTlsReviewReference": "FILL_ONLY_IF_EXPLICIT_INTERNAL_ENCRYPTED_UNVERIFIED_MODE_IS_REVIEWED",
+  "allowAppStubLoginBootstrap": false,
+  "bootstrapReviewReference": "FILL_SEPARATE_TARGET_APP_STUB_LOGIN_REVIEW",
+  "restoredStubHasNoOriginalCredentials": false,
+  "operatorRole": "fill_exact_disposable_target_operator"
+}

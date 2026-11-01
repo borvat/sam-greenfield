@@ -1,0 +1,72 @@
+{
+  "status": "FROZEN_NATIVE_RUN2_REMAINDER_REVIEW_REQUIRED",
+  "checks": {
+    "javascriptSyntax": "PASS: seven authored JS modules",
+    "pythonSyntax": "PASS AST only",
+    "offlineProcessRegistryTest": "1 PASS; two simple Node loop children, no SAM app",
+    "databaseConnections": 0,
+    "samApplicationProcessesStarted": 0,
+    "oldPGliteTestsRepeated": 0
+  },
+  "reviewPatches": [
+    "All user-schema local tables classified and SELECT-visible rows fingerprinted; relevant public queue/report/budget/reservation/memory sources mandatory; denials explicit, no owner-wide claim",
+    "Every phase/service child registered with awaited bounded SIGTERM/SIGKILL cleanup; offline regression PASS",
+    "Official exact Node24 + archive/binary/full dependency artifact byte integrity required, not metadata alone",
+    "Explicit reviewed exact-private-target encrypted-unverified TLS with pg_stat_ssl and compatibility flag; default verify-full preserved",
+    "Target-only transient existing sam_runtime_app LOGIN wrapper with exact operator role pin, in-memory password and finally NOLOGIN/PASSWORD NULL",
+    "Generated schema/two-UUID PGOPTIONS only; inherited options ignored; source guards unchanged"
+  ],
+  "files": {
+    "README.md": "d4895ada701c3f62b637ca7a44d659485eb27adfd4312781e7905ec83a9036c9",
+    "native-run2-resume.md": "6b60f201b52045f377da020d5b0cf1332095b7faf61bd4b2ff04002718ae2a28",
+    "prepare.py": "c7f1d6971e5da318beab49b8d5f3a266fa8c51b58927fd2341d3f6a6631f3d50",
+    "common.cjs": "8e848cec6b52ecc091317441bc09a6f1a64b2269a105f44bfa89aa450f4ddb0f",
+    "native-child.mjs": "0edae577d316d581121744d039c4ff292b2f1df9f6f5dff31b050a8a7a1b3a8b",
+    "run-native.cjs": "6471d08a68ab57933e87c6c0a6213b2100f70ece91d459259723839d90ea167f",
+    "process-registry.cjs": "6ed179b1a50749f6aa29a136fb20511d08f0cb0badcbd9ba8f9903d154a0be05",
+    "process_registry_offline.test.cjs": "9cbee5d3366f7cb6be01a6616167637435ae8765ab9b4ea593bf49a47dc3b518",
+    "bootstrap-app-login.cjs": "0e745a2d5370ede3b4afa34031f2fc1653877d44826aa22caf984708c3862da7",
+    "link-dependencies.cjs": "f6abb94084ea4272595cf17206c70bc32a7e04719baed6ae5d6ff48021834a99",
+    "capture-host-artifacts.py": "c68c2c9fb32a136bfc8a5c4e2530f9bd3d69a1fab88fe43dae9227528d72d951",
+    "materialize-host-sources.py": "f163d78a51df273f9e1bbcc68955620168b015c686d6db16708fb7cd43177e75",
+    "config.example.json": "6839b0df1118b5a37db5def108988b24bf99c9b47e581f30e03f0a2c7003ff9d",
+    "existing-node-artifacts.example.json": "ff611fc01fb361c0ca4f7b7ff04932a2f2bb7509773a35a5ace82e935c9ddfc7",
+    "runtime-artifacts.example.json": "3710a4bf89d1554bfc47628293a5352ec709763d4cea4ded0b281772880f82a9",
+    "source-pins.json": "bceda6da20e8f33341b5a5efa38404e7e7ee0bacfd94722cc5142c9965179163",
+    "scan-initial-triage.json": "494913482a78704ae54481b2ea0177f6ab6084e1afa22525d7f0a648eca0e426",
+    "deliverable-files.json": "aaccb26233b65d2523ebada4b2eb71776c6bfd13833f142ee66c61f2bb8fb431"
+  },
+  "retryPatch": {
+    "affectedSourceFiles": [
+      "common.cjs",
+      "run-native.cjs",
+      "native-child.mjs"
+    ],
+    "fileDigest": "One global reusable1MiB buffer, synchronous open/read/hash/finally-close; all artifact/source/dependency file digests unchanged SHA256 semantics",
+    "serviceConcurrency": "Serial actual CC stop -> MCP stop -> optional gated Runtime stop, each with same auth/read/hash/restart/fingerprint checks",
+    "failureDiagnostics": "Native catch writes static bounded failure receipt; parent records it or static child exit/signal classification before throwing",
+    "checks": {
+      "threeAffectedJavascriptSyntax": "PASS",
+      "offlineDigest": "PASS empty+3MiB17byte files, full-read forbidden, same1MiBbuffer identity, close on read error",
+      "databaseConnections": 0,
+      "samApplicationBoots": 0,
+      "sqlTestsRepeated": 0
+    }
+  },
+  "run2Remainder": {
+    "stateSha256": "8ed31f87940fd194b75698df04c429a3444cdff9575c0c5dca2c723854468fe0",
+    "priorReceiptSha256": "6cde74dda5eac90930d01d59b352ecac863fb11502729dab0a736af684249efc",
+    "preservedSuccesses": "Ten native phases and CC round1; not rerun",
+    "remainingOrder": [
+      "Read-only fingerprint",
+      "MCP round1",
+      "CC round2",
+      "MCP round2",
+      "Runtime gate, Runtime-only two starts if allowed"
+    ],
+    "packagingRootCause": "Missing exact original scripts/release/mcp-oauth.cjs; runtime also requires synthetic-pilot.cjs. Recursive helper imports are Node builtins only.",
+    "offlineConstruction": "Exact full surface43tools PASS; HTTP constructor missing helper reproduced, same constructor PASS after original helper addition; zero query attempts/outbound blocked",
+    "primaryErrorPreserved": true,
+    "nativeDbCallsByPreparation": 0
+  }
+}

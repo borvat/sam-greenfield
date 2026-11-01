@@ -1,0 +1,24 @@
+{
+  "reviewer": "independent_reviewer",
+  "approved_scope": "Exact temporary target only; strict native restore/loadCOPYcount proof. No sourcepermission/canonicalhash/service/release acceptance.",
+  "target_id": "dpg-dbjpqkutlv9c73dup8lg-a",
+  "deadline": "2026-11-02T20:13:07Z",
+  "review_fixes": [
+    "PSQLbackendCOPYcount verification without RLSweakening",
+    "Explicitpartialrole-stub failurestage",
+    "Twentyminutecleanupreserve and boundedtimeout"
+  ],
+  "production_action": false,
+  "initial_helper_sha256": "976aa845e10c5bf0d42beb62227200b604100f0398a2b7c9cdabad5d75f4f90d",
+  "current_helpers": {
+    "restore_pr86_native.py": "d505fe40b3f19796d7cbd2f2e8c804446f5a74cf217b9c7eb175e75ac62af3c9",
+    "restore_pr86_resume.py": "524e76668b62ea4c2890cbe74263053b007f53161bd4fae10f22c226a8feb4f8",
+    "restore_pr86_acl.py": "9d012a21f0d23a9fcfba72feee1924015760ac9eb1bdb08730565468f5be3af5"
+  },
+  "narrow_followup_review": {
+    "restore_parser": "Fix exact COPYterminator/trailingblank counting; retainstdoutbeforeassert; source-only andNEVERrerunpopulatedtarget",
+    "resume": "ApprovedREADONLYcountercorroboration; originalCOPYtags/canonicalhash remainunavailable",
+    "acl": "ApprovedexacttargetsemanticACLreplay withdocumentedNOLOGIN/dbowner/extensionowner differences",
+    "source_roles_not_copied_passwords": true
+  }
+}
