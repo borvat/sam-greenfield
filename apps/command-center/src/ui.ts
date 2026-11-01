@@ -67,22 +67,31 @@ export const commandCenterHtml=`<!doctype html>
   <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
+let authGeneration=0,refreshGeneration=null;
 let token=sessionStorage.getItem("sam_cc_token")||"";
 async function connect(){
   const value=document.getElementById("bearerToken").value.trim();
   if(!value){document.getElementById("authError").textContent="Enter a bearer token.";return}
-  token=value;sessionStorage.setItem("sam_cc_token",token);
+  authGeneration++;token=value;sessionStorage.setItem("sam_cc_token",token);
   document.getElementById("bearerToken").value="";
   document.getElementById("authError").textContent="";
   await refresh();
 }
 async function api(path,options={}){
+  const generation=authGeneration,credential=token;
+  const current=()=>{if(generation!==authGeneration)throw Error("Outdated authentication response ignored.")};
   const headers={...(options.headers||{}),Authorization:"Bearer "+token};
   if(options.body) headers["Content-Type"]="application/json";
-  const r=await fetch(path,{...options,headers});
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+  try{
+  let r;
+  try{r=await fetch(path,{...options,headers,signal:controller.signal})}
+  catch{current();throw Error(controller.signal.aborted?"Service request timed out. Try again.":"Service unavailable. Try again.")}
+  current();
   if(r.status===401){
-    sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;
     let body;try{body=await r.json()}catch{}
+    current();
+    sessionStorage.removeItem("sam_cc_token");token="";document.getElementById("authPanel").hidden=false;
     let message="Authentication was rejected. Check this Command Center service's existing authentication configuration.";
     if(body&&body.error==="unauthorized"){
       if(body.reason==="missing_authorization")message="Authentication rejected: the service received no Authorization header.";
@@ -92,15 +101,26 @@ async function api(path,options={}){
     if(typeof body?.request_id==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(body.request_id))message+=" Request ID: "+body.request_id;
     throw new Error(message);
   }
-  const body=await r.json();
+  let body;
+  try{body=await r.json()}
+  catch{current();throw Error(controller.signal.aborted?"Service request timed out. Try again.":"Service returned an unavailable or invalid response. Try again.")}
+  current();
+  if(token!==credential)throw Error("Outdated authentication response ignored.");
   if(!r.ok) throw new Error(body.error||"Request failed");
   return body;
+  }finally{clearTimeout(timeout)}
 }
 function metric(label,value){return '<div class="card metric"><div class="n">'+Number(value||0)+'</div><div class="l">'+label+'</div></div>'}
-async function refresh(){
+async function refresh(){const generation=authGeneration;
   if(!token){document.getElementById("status").textContent="AUTH REQUIRED";document.getElementById("authPanel").hidden=false;return}
+  if(refreshGeneration===generation)return;
+  refreshGeneration=generation;
   try{
-    const [overview,goals,finance]=await Promise.all([api("/api/overview"),api("/api/goals"),api("/api/finance/latest")]);
+    const results=await Promise.allSettled([api("/api/overview"),api("/api/goals"),api("/api/finance/latest")]);
+    const failed=results.find(result=>result.status==='rejected');
+    if(failed)throw failed.reason;
+    const [overview,goals,finance]=results.map(result=>result.value);
+    if(generation!==authGeneration||!token)return;
     document.getElementById("authPanel").hidden=true;
     document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";
     const o=overview.data;
@@ -112,33 +132,34 @@ async function refresh(){
     document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
     await refreshInternalNotifications();
-  }catch(e){document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
+  }catch(e){if(generation!==authGeneration)return;document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
+  finally{if(refreshGeneration===generation)refreshGeneration=null}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function timeline(id){try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);const result=document.getElementById("report-result");result.textContent="";for(const r of x.data.reports||[]){const pre=document.createElement("pre");pre.textContent=JSON.stringify({reportId:r.id,hash:r.report_hash,summary:r.decision.summary,coverage:r.decision.report?.analysisCoverage||r.decision.coverage,limitations:r.decision.limitations||r.decision.report?.limitations,waitDiagnostics:r.decision.runtimeReview,semanticValidation:r.decision.report?.semanticPolicy||(r.decision.diagnostic?.schema==="sam.legacy_read_diagnostic.v1"?"DETERMINISTIC_BOUNDED_DIAGNOSTIC":"HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED"),retrieval:"SAVED_RESULT_ONLY_NO_EXECUTION"},null,2);result.appendChild(pre)}for(const a of x.data.audit||[]){if(a.action==="READ_REVIEW_DIAGNOSTIC"){const pre=document.createElement("pre");pre.textContent=JSON.stringify({waitDiagnostics:a.after_ref},null,2);result.appendChild(pre)}}}catch(e){document.getElementById("timeline").textContent=e.message}}
-async function createGoal(){
+async function timeline(id){const generation=authGeneration;try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");if(generation!==authGeneration)return;document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);const result=document.getElementById("report-result");result.textContent="";for(const r of x.data.reports||[]){const pre=document.createElement("pre");pre.textContent=JSON.stringify({reportId:r.id,hash:r.report_hash,summary:r.decision.summary,coverage:r.decision.report?.analysisCoverage||r.decision.coverage,limitations:r.decision.limitations||r.decision.report?.limitations,waitDiagnostics:r.decision.runtimeReview,semanticValidation:r.decision.report?.semanticPolicy||(r.decision.diagnostic?.schema==="sam.legacy_read_diagnostic.v1"?"DETERMINISTIC_BOUNDED_DIAGNOSTIC":"HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED"),retrieval:"SAVED_RESULT_ONLY_NO_EXECUTION"},null,2);result.appendChild(pre)}for(const a of x.data.audit||[]){if(a.action==="READ_REVIEW_DIAGNOSTIC"){const pre=document.createElement("pre");pre.textContent=JSON.stringify({waitDiagnostics:a.after_ref},null,2);result.appendChild(pre)}}}catch(e){if(generation!==authGeneration)return;document.getElementById("timeline").textContent=e.message}}
+async function createGoal(){const generation=authGeneration;
   const error=document.getElementById("formError");error.textContent="";
   try{
     const body={objective:document.getElementById("objective").value,domain:document.getElementById("domain").value,authority_ceiling:document.getElementById("authority").value,priority:Number(document.getElementById("priority").value)};
     const acceptance=document.getElementById("acceptance").value.trim();
     if(acceptance)body.acceptance_contract=JSON.parse(acceptance);
-    const x=await api("/api/goals",{method:"POST",body:JSON.stringify(body)});
+    const x=await api("/api/goals",{method:"POST",body:JSON.stringify(body)});if(generation!==authGeneration)return;
     document.getElementById("objective").value="";
-    await refresh();await timeline(x.data.id);
-  }catch(e){error.textContent=e.message}
+    await refresh();if(generation!==authGeneration)return;await timeline(x.data.id);
+  }catch(e){if(generation!==authGeneration)return;error.textContent=e.message}
 }
 let ownerDecisionKey=null;
-async function recallOwnerMemory(){
-  try{const x=await api('/api/owner-memory?query='+encodeURIComponent(document.getElementById('memory-query').value));document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);document.getElementById('memory-error').textContent='';}
-  catch(e){document.getElementById('memory-error').textContent=e.message;}
+async function recallOwnerMemory(){const generation=authGeneration;
+  try{const x=await api('/api/owner-memory?query='+encodeURIComponent(document.getElementById('memory-query').value));if(generation!==authGeneration)return;document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);document.getElementById('memory-error').textContent='';}
+  catch(e){if(generation!==authGeneration)return;document.getElementById('memory-error').textContent=e.message;}
 }
-async function saveOwnerMemory(){
+async function saveOwnerMemory(){const generation=authGeneration;
   try{
     if(!document.getElementById('memory-approved').checked)throw Error('Explicit owner approval is required.');
     if(!ownerDecisionKey)ownerDecisionKey=crypto.randomUUID();
     const body={statement:document.getElementById('memory-statement').value,context_key:document.getElementById('memory-context').value,source:document.getElementById('memory-source').value,source_timestamp:document.getElementById('memory-date').value,idempotency_key:ownerDecisionKey,approved:true};
-    const x=await api('/api/owner-memory',{method:'POST',body:JSON.stringify(body)});document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);ownerDecisionKey=null;document.getElementById('memory-statement').value='';document.getElementById('memory-approved').checked=false;document.getElementById('memory-error').textContent='Saved with explicit approval, source and date.';
-  }catch(e){document.getElementById('memory-error').textContent=e.message;}
+    const x=await api('/api/owner-memory',{method:'POST',body:JSON.stringify(body)});if(generation!==authGeneration)return;document.getElementById('owner-memory-results').textContent=JSON.stringify(x.data,null,2);ownerDecisionKey=null;document.getElementById('memory-statement').value='';document.getElementById('memory-approved').checked=false;document.getElementById('memory-error').textContent='Saved with explicit approval, source and date.';
+  }catch(e){if(generation!==authGeneration)return;document.getElementById('memory-error').textContent=e.message;}
 }
 function renderInternalNotifications(data){
   const target=document.getElementById('notifications-results');target.textContent='';
@@ -149,9 +170,9 @@ function renderInternalNotifications(data){
     if(!item.readReceipt&&(document.body.dataset.readOnly!=="true"||document.body.dataset.isolatedNotification===item.id)){const button=document.createElement('button');button.className='btn secondary';button.textContent='Mark read internally';button.onclick=()=>acknowledgeInternalNotification(item.id);card.appendChild(button);}target.appendChild(card);
   }
 }
-async function refreshInternalNotifications(){try{const x=await api('/api/notifications');renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
-async function pollInternalNotifications(){try{const x=await api('/api/notifications/poll',{method:'POST',body:'{}'});renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='Internal notifications enabled from this first explicit poll. No historical replay or external delivery.';}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
-async function acknowledgeInternalNotification(id){try{await api('/api/notifications/'+encodeURIComponent(id)+'/ack',{method:'POST',body:'{}'});await refreshInternalNotifications();}catch(e){document.getElementById('notifications-error').textContent=e.message;}}
+async function refreshInternalNotifications(){const generation=authGeneration;try{const x=await api('/api/notifications');if(generation!==authGeneration)return;renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='';}catch(e){if(generation!==authGeneration)return;document.getElementById('notifications-error').textContent=e.message;}}
+async function pollInternalNotifications(){const generation=authGeneration;try{const x=await api('/api/notifications/poll',{method:'POST',body:'{}'});if(generation!==authGeneration)return;renderInternalNotifications(x.data);document.getElementById('notifications-error').textContent='Internal notifications enabled from this first explicit poll. No historical replay or external delivery.';}catch(e){if(generation!==authGeneration)return;document.getElementById('notifications-error').textContent=e.message;}}
+async function acknowledgeInternalNotification(id){const generation=authGeneration;try{await api('/api/notifications/'+encodeURIComponent(id)+'/ack',{method:'POST',body:'{}'});if(generation!==authGeneration)return;await refreshInternalNotifications();}catch(e){if(generation!==authGeneration)return;document.getElementById('notifications-error').textContent=e.message;}}
 refresh();setInterval(refresh,15000);
 </script>
 </body></html>`;

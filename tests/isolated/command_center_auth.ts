@@ -59,11 +59,11 @@ test('routes that require a configured token retain denial and conservative diag
   assert.ok(!logs.join('').includes('synthetic-supplied'));
 });
 
-function uiHarness(reply:(path:string)=>Promise<any>){
+function uiHarness(reply:(path:string,options?:any)=>Promise<any>,timing?:{setTimeout:(fn:()=>void,ms:number)=>any;clearTimeout:(id:any)=>void}){
   const nodes=new Map<string,any>(),storage=new Map<string,string>();
   const node=(id:string)=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',innerHTML:'',hidden:false,children:[],appendChild(value:any){this.children.push(value)}});return nodes.get(id)};
   const requests:{path:string;options:any}[]=[];
-  const context=createContext({sessionStorage:{getItem:(key:string)=>storage.get(key)||'',setItem:(key:string,value:string)=>storage.set(key,value),removeItem:(key:string)=>storage.delete(key)},setInterval(){},document:{getElementById:node,querySelectorAll:()=>[],createElement:()=>({textContent:''}),body:{dataset:{}}},fetch:async(path:string,options:any)=>{requests.push({path,options});return reply(path)}});
+  const context=createContext({sessionStorage:{getItem:(key:string)=>storage.get(key)||'',setItem:(key:string,value:string)=>storage.set(key,value),removeItem:(key:string)=>storage.delete(key)},setInterval(){},AbortController,setTimeout:timing?.setTimeout??setTimeout,clearTimeout:timing?.clearTimeout??clearTimeout,document:{getElementById:node,querySelectorAll:()=>[],createElement:()=>({textContent:''}),body:{dataset:{}}},fetch:async(path:string,options:any)=>{requests.push({path,options});return reply(path,options)}});
   new Script(commandCenterHtml.match(/<script>([\s\S]*?)<\/script>/)![1]).runInContext(context);
   return {node,storage,requests,run:(code:string)=>new Script(code).runInContext(context)};
 }
@@ -106,4 +106,76 @@ test('successful connect retains existing UI success behavior with synthetic res
   ui.node('bearerToken').value=syntheticToken;await ui.run('connect()');
   assert.equal(ui.node('status').textContent,'LIVE');assert.equal(ui.node('authPanel').hidden,true);assert.equal(ui.node('bearerToken').value,'');
   assert.equal(ui.requests.at(-1)?.path,'/api/notifications');
+});
+
+for(const late of ['401','success','body401','network'] as const)test('new connect ignores stale '+late+' response and its UI side effects',async()=>{
+  const pending:{resolve:(value:any)=>void;reject:(error:Error)=>void}[]=[];
+  let oldBody:((value:any)=>void)|undefined;
+  const ui=uiHarness(()=>new Promise((resolve,reject)=>pending.push({resolve,reject})));
+  ui.node('bearerToken').value='synthetic-old';const old=ui.run('connect()');
+  if(late==='body401'){
+    pending[0].resolve({status:401,ok:false,json:()=>new Promise(resolve=>{oldBody=resolve})});
+    await new Promise(resolve=>setImmediate(resolve));
+  }
+  ui.node('bearerToken').value='synthetic-new';const fresh=ui.run('connect()');
+  const ok=(path:string)=>({status:200,ok:true,json:async()=>({data:path==='/api/goals'?[]:path==='/api/finance/latest'?null:path==='/api/notifications'?{records:[]}:{active_goals:2}})});
+  for(let i=3;i<6;i++)pending[i].resolve(ok(ui.requests[i].path));
+  await new Promise(resolve=>setImmediate(resolve));
+  pending[6].resolve(ok('/api/notifications'));await fresh;
+  for(let i=0;i<3;i++){
+    if(late==='network')pending[i].reject(Error('stale network failure'));
+    else pending[i].resolve(late==='success'?ok(ui.requests[i].path):{status:401,ok:false,json:async()=>({error:'unauthorized',reason:'bearer_rejected'})});
+  }
+  oldBody?.({error:'unauthorized',reason:'bearer_rejected'});await old;
+  assert.equal(ui.storage.get('sam_cc_token'),'synthetic-new');assert.equal(ui.node('authPanel').hidden,true);
+  assert.equal(ui.node('status').textContent,'LIVE');assert.equal(ui.node('authError').textContent,'');assert.equal(ui.node('formError').textContent,'');
+});
+
+test('non-JSON upstream and unavailable network errors are sanitized without clearing credentials',async()=>{
+ for(const mode of ['non-json','network']){
+  const ui=uiHarness(async()=>{
+   if(mode==='network')throw Error('synthetic-secret unavailable upstream details');
+   return {status:502,ok:false,json:async()=>{throw SyntaxError('Unexpected token s, stream timeout synthetic-secret')}};
+  });
+  ui.run('token="synthetic-current";sessionStorage.setItem("sam_cc_token",token)');
+  await assert.rejects(ui.run("api('/api/overview')"),(error:any)=>{
+   assert.match(error.message,mode==='network'?/Service unavailable/:/unavailable or invalid response/);
+   assert.doesNotMatch(error.message,/stream timeout|synthetic-secret|Unexpected token/);return true;
+  });
+  assert.equal(ui.storage.get('sam_cc_token'),'synthetic-current');
+ }
+});
+
+test('API fetch and body timeouts use a 15-second deadline with bounded diagnostics and timer cleanup',async()=>{
+ for(const phase of ['fetch','body']){
+  const timers:{fn:()=>void;ms:number}[]=[],cleared:any[]=[];
+  const ui=uiHarness(async(_path,options)=>{
+   const pending=()=>new Promise((_resolve,reject)=>options.signal.addEventListener('abort',()=>reject(Error('synthetic-secret timeout details')),{once:true}));
+   if(phase==='fetch')return pending();
+   return {status:200,ok:true,json:pending};
+  },{setTimeout(fn,ms){timers.push({fn,ms});return timers.length},clearTimeout(id){cleared.push(id)}});
+  ui.run('token="synthetic-current";sessionStorage.setItem("sam_cc_token",token)');
+  const request=ui.run("api('/api/overview')");await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(timers.length,1);assert.equal(timers[0].ms,15000);timers[0].fn();
+  await assert.rejects(request,(error:any)=>{assert.equal(error.message,'Service request timed out. Try again.');return true});
+  assert.deepEqual(cleared,[1]);assert.equal(ui.storage.get('sam_cc_token'),'synthetic-current');
+ }
+});
+
+test('refresh prevents overlapping batches until every request settles and a new connect can start independently',async()=>{
+ const pending:{resolve:(value:any)=>void;reject:(reason:Error)=>void}[]=[];
+ const ui=uiHarness(()=>new Promise((resolve,reject)=>pending.push({resolve,reject})));
+ ui.node('bearerToken').value='synthetic-old';const first=ui.run('connect()');
+ await ui.run('refresh()');assert.equal(ui.requests.length,3);
+ pending[0].reject(Error('synthetic-secret network'));await new Promise(resolve=>setImmediate(resolve));
+ await ui.run('refresh()');assert.equal(ui.requests.length,3,'early rejection keeps the still-running batch locked');
+ ui.node('bearerToken').value='synthetic-new';const fresh=ui.run('connect()');assert.equal(ui.requests.length,6);
+ const ok=(path:string)=>({status:200,ok:true,json:async()=>({data:path==='/api/goals'?[]:path==='/api/finance/latest'?null:path==='/api/notifications'?{records:[]}:{active_goals:2}})});
+ for(let i=3;i<6;i++)pending[i].resolve(ok(ui.requests[i].path));
+ await new Promise(resolve=>setImmediate(resolve));pending[6].resolve(ok('/api/notifications'));await fresh;
+ pending[1].resolve(ok('/api/goals'));pending[2].resolve(ok('/api/finance/latest'));await first;
+ assert.equal(ui.node('status').textContent,'LIVE');assert.equal(ui.node('authError').textContent,'');assert.equal(ui.storage.get('sam_cc_token'),'synthetic-new');
+ const again=ui.run('refresh()');assert.equal(ui.requests.length,10,'completed new generation releases its refresh lock');
+ for(let i=7;i<10;i++)pending[i].resolve(ok(ui.requests[i].path));
+ await new Promise(resolve=>setImmediate(resolve));pending[10].resolve(ok('/api/notifications'));await again;
 });

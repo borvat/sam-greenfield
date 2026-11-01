@@ -1,0 +1,53 @@
+{
+  "schema": "sam.independent_multigoal_metadata.v1",
+  "checkedAt": "2026-11-01T23:26:21.611Z",
+  "status": "PASS",
+  "goalId": "6751e9a4-cda5-465e-9f8a-611eeea582b7",
+  "state": "COMPLETED",
+  "planId": "f97561c5-ad8b-4473-a265-75a082f4dbf0",
+  "reportId": "939ea95c-6d02-478d-9a41-d5d3a04e139b",
+  "revision": 1,
+  "reportHash": "122c6c4be8134b7ffe4e6a64f36a95a47e54a614a009ffdda1dbf257b2fec5c4",
+  "recomputedReportHashMatches": true,
+  "distinctActors": 2,
+  "distinctQueueItems": 2,
+  "verifiedReferences": 2,
+  "executions": [
+    {
+      "executionId": "20d42958-4be2-4e14-b4c0-9300cb616588",
+      "queueId": "5d78d19c-31c3-40af-97d1-13ce4a82e156",
+      "capability": "google_mcp_search_gmail_messages",
+      "actor": "communications@1.0.0",
+      "workStatus": "EXECUTED",
+      "hasHandoffObject": true,
+      "verificationId": "602f35d3-13be-4170-ab95-b6af20c24e11",
+      "verifier": "sam-google-independent-readback",
+      "method": "api_readback",
+      "verificationResult": "VERIFIED",
+      "independentEvidenceHash": "00020c29afe7697f3d875d7ecce87be3ec4fa8045e2094ba20610ef7e7869a92",
+      "sourceHashBound": true
+    },
+    {
+      "executionId": "b7fca26a-40f1-449c-a565-5e8f549b6ea5",
+      "queueId": "88406d0e-d208-49fd-aa3c-ed8cec1a95db",
+      "capability": "bol_get_offer",
+      "actor": "marketplace@1.0.0",
+      "workStatus": "EXECUTED",
+      "hasHandoffObject": true,
+      "verificationId": "99bdf070-2c25-44bc-9fcf-1e7a8e61a28e",
+      "verifier": "bol-independent-api-readback",
+      "method": "api_readback",
+      "verificationResult": "VERIFIED",
+      "independentEvidenceHash": "ef60a135ee20f32b3f06c2d5f806765ab99c56def73023e8dffc55e21fd41f73",
+      "sourceHashBound": true
+    }
+  ],
+  "scope": "READ_ONLY_SAVED_METADATA_AND_INTERNAL_HASH_BINDINGS",
+  "limits": [
+    "No source contents exported",
+    "Persisted verification evidence is not a fresh independent provider readback by this checker",
+    "No owner UI login, email delivery, 15-staff operation or business-effect proof"
+  ],
+  "checkerSourceSha256": "d82c7e76e5ae65c94fa273ca160335413491879666ad481b36b12ca9c75f3c03",
+  "transport": "Existing Render Runtime official Shell; authenticated restricted application DB connection; READ ONLY transaction rolled back"
+}

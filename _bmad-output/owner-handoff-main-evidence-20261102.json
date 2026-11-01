@@ -1,0 +1,165 @@
+{
+  "scope": "Combined owner-handoff source readiness. Main code by owner_handoff_builder; restricted-role migration/provisioner/tests by rollback_implementer. All source is frozen for root review; production activation unapproved.",
+  "head": "8a08e6163516f30f37c65313134170744330c4f4",
+  "code_edits_paused": true,
+  "main_changed_paths": [
+    "apps/command-center/src/ui.ts",
+    "apps/notifications/src/delivery.ts",
+    "apps/production/src/composition.ts",
+    "apps/production/src/types.ts",
+    "apps/production/src/defaultBundleModule.ts",
+    "apps/production/src/ownerReportEmailBundle.ts",
+    "tests/isolated/command_center_auth.ts",
+    "tests/isolated/owner_report_delivery.ts"
+  ],
+  "documentation_paths": [
+    "_bmad-output/owner-handoff-source-readiness-20261102.md",
+    "_bmad-output/plan-owner-operational-handoff-20261102.md"
+  ],
+  "sha256": {
+    "apps/command-center/src/ui.ts": "a2eb3ddd05617467029bbb0b708c330946ff3cd87d213b75473114a304afee7e",
+    "apps/notifications/src/delivery.ts": "d666852630efe673cd01d9ab0a1959dd08393e146a8b9ca05ac3e1c1f681a76b",
+    "apps/production/src/composition.ts": "84ab4861a81b06a8f453daf0bf520163be97b3360919ec65a93a5e65fed6cde7",
+    "apps/production/src/types.ts": "63423fd41ee8263121ba75ee9f63634dd938011abc6cb27489205ff12d5eb857",
+    "apps/production/src/defaultBundleModule.ts": "cfcc0de49de0c302bde90fa2911656e6de973c9653902d6bbd25b65b80681239",
+    "apps/production/src/ownerReportEmailBundle.ts": "c92b0ab19f4a66722af83673b9c1359cbd4f581c0fefff401a42cd075ee9263b",
+    "tests/isolated/command_center_auth.ts": "b582667da3897bb2516abf7a4bf7815b0066f1a30cee61ccb56263c0cb100975",
+    "tests/isolated/owner_report_delivery.ts": "43e031e7fe539ebf825c085823d81e03d82b4972aee20d28a9dec82938ac3617",
+    "_bmad-output/owner-handoff-source-readiness-20261102.md": "3c145880785a48b66a12245ecf9ee9aa5f730a37f14512fd0b974731c5dea160",
+    "_bmad-output/plan-owner-operational-handoff-20261102.md": "50daf6120472e1242f3f07251eb85c116b071ef007b4154fcafed4a50a222ce5",
+    "packages/db/integration-migrations/00107_owner_notification_delivery_access.sql": "e540bf2a973e2fc053e4170992a5f67cfdc8785a579bb17a69e1c831acdcd6f9",
+    "packages/db/src/ownerNotificationDeliveryAccess.ts": "890054782fcc3e810793034ef4a43a2fe493c0ff5046301246cb3611c001edb5",
+    "packages/db/src/integrationProfile.ts": "e5c778b82f46b7df5c3f408c249b6f7155fd90ee0eeb514f3bcc221c6fecfc6a",
+    "tests/isolated/owner_notification_delivery_access.ts": "aedec2bc57779897d049107d4891337d112d87fe37f3d454c308b77682efd290"
+  },
+  "unchanged_shared_controls": {
+    "apps/brain/src/authorityGuard.ts": {
+      "sha256": "00de374c1e0168485a544eb2735f637ae709f96fe21e55361d7b4a8a0140c1fe",
+      "git_diff_exit": 0
+    },
+    "packages/db/src/approvals.ts": {
+      "sha256": "2aa666e9074eb59de74fd0370b124837a67966c82f1913fd9c12358c5e1eab21",
+      "git_diff_exit": 0
+    },
+    "apps/tools/src/gmailSendAdapter.ts": {
+      "sha256": "86124ad957f9badef146c91b25b82f0fbf9e0acbbb09d23a9b3a85b971be6c8b",
+      "git_diff_exit": 0
+    },
+    "packages/db/integration-migrations/00105_owner_notifications.sql": {
+      "sha256": "ac9e7661be5889149b5fabd05f79ac09d085418fce79fc8f63f0151c1ef1c122",
+      "git_diff_exit": 0
+    }
+  },
+  "verification": [
+    {
+      "command": "DATABASE_URL=postgresql://synthetic.invalid/unused node --import tsx --test tests/isolated/owner_report_delivery.ts",
+      "exit_code": 0,
+      "actual_final_output": "ℹ tests 21\nℹ suites 0\nℹ pass 21\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 23668.423519",
+      "scope": "Actual notification migration + worker SQL in disposable PGlite with injected synthetic providers; server factory actual default-module subprocess with isolated environment; generic YELLOW exact approvals unchanged. Does not establish restricted-role production privileges or real send consent/inbox delivery."
+    },
+    {
+      "command": "npm run typecheck",
+      "exit_code": 0,
+      "actual_output": "> typecheck\n> tsc --noEmit",
+      "warning": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "actual_output": ""
+    },
+    {
+      "command": "DATABASE_URL=postgresql://synthetic.invalid/unused node --import tsx --test --test-name-pattern='new connect|non-JSON upstream|API fetch|refresh prevents|connect emits|UI renders bounded' tests/isolated/command_center_auth.ts",
+      "exit_code": 0,
+      "actual_final_output": "ℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 297.030723",
+      "scope": "Changed UI final source: current401/diagnostic handling, four stale credential races, sanitized non-JSON/network failures, 15-second fetch+body deadlines/timer cleanup and refresh overlap lock with independent new connect."
+    },
+    {
+      "command": "DATABASE_URL=postgresql://synthetic.invalid/unused node --import tsx --test tests/isolated/owner_notification_delivery_access.ts",
+      "reported_by": "/root/rollback_implementer",
+      "reported_outcome": "4 tests PASS; targeted typecheck and diff check PASS. Main builder did not rerun unchanged suite. Exact output/duration requested from implementing agent.",
+      "scope": "Actual SQL/migration/provisioner and worker-style claim/finish columns under disposable PGlite SET ROLE sam_runtime_app, nonowner/non-BYPASSRLS; tenant/GUC/column/other-role negatives. Not native PostgreSQL, not production application, not full production worker or live Gmail."
+    },
+    {
+      "command": "python3 /root/.codex/skills/remote-skills/skill-6ae1554b66e081918468835147332c23/scripts/scan.py /workspace/scratch/ca1213daa2e0/owner-final-source-scan",
+      "exit_code": 0,
+      "actual_output": {
+        "status": "clean",
+        "count": 0,
+        "scope": "directory",
+        "findings": []
+      },
+      "scope_paths": [
+        "apps/command-center/src/ui.ts",
+        "apps/notifications/src/delivery.ts",
+        "apps/production/src/composition.ts",
+        "apps/production/src/types.ts",
+        "apps/production/src/defaultBundleModule.ts",
+        "apps/production/src/ownerReportEmailBundle.ts",
+        "tests/isolated/command_center_auth.ts",
+        "tests/isolated/owner_report_delivery.ts",
+        "packages/db/integration-migrations/00107_owner_notification_delivery_access.sql",
+        "packages/db/src/ownerNotificationDeliveryAccess.ts",
+        "packages/db/src/integrationProfile.ts",
+        "tests/isolated/owner_notification_delivery_access.ts"
+      ],
+      "limits": "Checksum-pinned Gitleaks; copied final 12 changed source/SQL/test files only, no history scan and no ignore/config files copied."
+    }
+  ],
+  "not_performed": [
+    "No production activation/deployment/DDL/grants",
+    "No real Gmail send or credential reads",
+    "No existing goal ceiling/authorityGuard/consumeApproval changes",
+    "No resources/merge/publication/business-record mutations",
+    "No unrelated passing suite reruns"
+  ],
+  "remaining": "Root independent security review, exact production migration/provisioning/code/config/Google send-consent approval, live Command Center/MCP upstream timeout diagnosis, independent current multi-specialist verification, actual owner inbox receipt and human acceptance remain separate. No source test marks a live gate PASS.",
+  "grant_slice_paths": [
+    "packages/db/integration-migrations/00107_owner_notification_delivery_access.sql",
+    "packages/db/src/ownerNotificationDeliveryAccess.ts",
+    "packages/db/src/integrationProfile.ts",
+    "tests/isolated/owner_notification_delivery_access.ts"
+  ],
+  "integration_manifest_count": 10,
+  "verification_notes": "Final npm run typecheck ran after P0 and grant-slice imports, exited 0; final git diff --check exited 0. Unchanged delivery suite 21/21 result retained without rerun; its four dependent source files retain the tested hashes. Grant tests attributed to their implementing agent.",
+  "root_reported_operational_context": {
+    "secure_browser_submission": "Current refresh showed Unexpected token s, stream timeout is not valid JSON; no new bearer_rejected log, not proof bad credential. P0 fixes sanitized diagnostics/deadline/backpressure only.",
+    "current_two_specialist_goal": "Root reported COMPLETED at 22:58:44.735Z with two distinct actors and report; independent native verification pending when documented.",
+    "attribution": "Root report, not independently exercised by this builder."
+  },
+  "final_operator": {
+    "operator_sha256": "fa663c4f602c03fddbf1bfe18131c61c6ef0d56c92f1155053ce3a88ed8f913a",
+    "source_bundle_sha256": "bba14977897a88198408b020d2731098b62b8f006967f340945543a8ca2021ad",
+    "scope": "SOURCE_ONLY_NOT_EXECUTED",
+    "verification": "Access5/5 and initial operator6/6; later raw-OR case1/1; partial-state plus new CLI denial2/2. Runs overlap, not additive suites. Strict affected TypeScript and node syntax checks PASS."
+  },
+  "final_reviews": {
+    "original_bmad_quick": "NO_FINDINGS",
+    "independent_security": "PASS_SOURCE_ONLY",
+    "independent_live_multigoal": "PASS_SAVED_METADATA_HASH_AND_VERIFICATION_BINDINGS",
+    "production_activation": "NOT_APPROVED_NOT_PERFORMED"
+  },
+  "final_file_sha256": {
+    "_bmad-output/owner-handoff-source-readiness-20261102.md": "6fde59c8f107e2f00b1c4eddc4f95b5d6ad2922d4e2377ff6b564cc31416a774",
+    "_bmad-output/plan-owner-operational-handoff-20261102.md": "b256f7447972ad6cb36cdce44518efe45769cfa333ba483016e7db3c85aa4458",
+    "apps/command-center/src/ui.ts": "a2eb3ddd05617467029bbb0b708c330946ff3cd87d213b75473114a304afee7e",
+    "apps/notifications/src/delivery.ts": "d666852630efe673cd01d9ab0a1959dd08393e146a8b9ca05ac3e1c1f681a76b",
+    "apps/production/src/composition.ts": "84ab4861a81b06a8f453daf0bf520163be97b3360919ec65a93a5e65fed6cde7",
+    "apps/production/src/defaultBundleModule.ts": "cfcc0de49de0c302bde90fa2911656e6de973c9653902d6bbd25b65b80681239",
+    "apps/production/src/ownerReportEmailBundle.ts": "c92b0ab19f4a66722af83673b9c1359cbd4f581c0fefff401a42cd075ee9263b",
+    "apps/production/src/types.ts": "63423fd41ee8263121ba75ee9f63634dd938011abc6cb27489205ff12d5eb857",
+    "docs/engineering/owner-handoff-20261102/RESULT.md": "71830e0bbc77c0e7e039552988149b2ca16a425b837b3f7f324c1cc68f9c4977",
+    "docs/engineering/owner-handoff-20261102/email-preflight-live.json": "1885254794027d579af51a9e8a435b79f103ad1b3fac3fae30a1c0ed18752615",
+    "docs/engineering/owner-handoff-20261102/independent-multigoal-check.mjs": "d82c7e76e5ae65c94fa273ca160335413491879666ad481b36b12ca9c75f3c03",
+    "docs/engineering/owner-handoff-20261102/multi-agent-live.json": "aa5990fc06f272affc4f936bd8036f5a3eeb1eef187e8216f53f78bb401a37fe",
+    "packages/db/integration-migrations/00107_owner_notification_delivery_access.sql": "e540bf2a973e2fc053e4170992a5f67cfdc8785a579bb17a69e1c831acdcd6f9",
+    "packages/db/src/integrationProfile.ts": "e5c778b82f46b7df5c3f408c249b6f7155fd90ee0eeb514f3bcc221c6fecfc6a",
+    "packages/db/src/ownerNotificationDeliveryAccess.ts": "3dc04a73dd85566d5e9e584ee2f1e681c76aa9b637b7f353fa32540073952264",
+    "scripts/release/owner-notification-delivery-operator.cjs": "fa663c4f602c03fddbf1bfe18131c61c6ef0d56c92f1155053ce3a88ed8f913a",
+    "tests/isolated/command_center_auth.ts": "b582667da3897bb2516abf7a4bf7815b0066f1a30cee61ccb56263c0cb100975",
+    "tests/isolated/owner_notification_delivery_access.ts": "c1a2d3d99e74feb82053ab77937819f5bfc3c5786f06f11cd33f697a66e1b815",
+    "tests/isolated/owner_notification_delivery_operator.cjs": "a2429e9eda000d158ecbfed79eadf6844bd4846ff12f9c8e2da37cd55191f2f2",
+    "tests/isolated/owner_report_delivery.ts": "43e031e7fe539ebf825c085823d81e03d82b4972aee20d28a9dec82938ac3617"
+  },
+  "old_hash_scope_note": "Earlier sha256 entries describe their recorded verification checkpoint. final_file_sha256 records final source files after the operator/search-path amendment; unchanged tests are reused only for matching source scope."
+}
