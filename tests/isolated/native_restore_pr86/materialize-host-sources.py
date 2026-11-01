@@ -9,7 +9,12 @@ try:
  receipt={'classification':'PINNED_SOURCE_HOST_PREPARATION','sources':{}}
  for name,pin in PINS['sources'].items():
   dest=HERE/'sources'/name
-  if dest.exists():raise RuntimeError('REFUSE_EXISTING_SOURCE_DIRECTORY')
+  supplement='--complete-missing-runtime-helpers' in sys.argv
+  if dest.exists() and not supplement:raise RuntimeError('REFUSE_EXISTING_SOURCE_DIRECTORY')
+  if supplement:
+   for row in pin['files']:
+    existing=dest/row['path']
+    if row['path'] not in ['scripts/release/mcp-oauth.cjs','scripts/release/synthetic-pilot.cjs'] and (not existing.is_file() or hashlib.sha256(existing.read_bytes()).hexdigest()!=row['sha256']):raise RuntimeError('EXISTING_SOURCE_HASH_MISMATCH')
   commit=pin['publishedCommit'];url=f'https://codeload.github.com/borvat/sam-greenfield/tar.gz/{commit}'
   with tempfile.NamedTemporaryFile(suffix='.tar.gz') as archive:
    total=0
@@ -25,8 +30,8 @@ try:
       if total>MAX:raise RuntimeError('SOURCE_ARCHIVE_BUDGET_EXCEEDED')
       archive.write(block)
     archive.flush();archivePath=pathlib.Path(archive.name)
-   dest.mkdir(parents=True)
-   expected={row['path']:row['sha256'] for row in pin['files']};seen=set();expanded=0
+   dest.mkdir(parents=True,exist_ok=supplement)
+   expected={row['path']:row['sha256'] for row in pin['files'] if not supplement or row['path'] in ['scripts/release/mcp-oauth.cjs','scripts/release/synthetic-pilot.cjs']};seen=set();expanded=0
    with tarfile.open(archivePath,'r:gz') as tar:
     for member in tar:
      expanded+=member.size
@@ -38,7 +43,11 @@ try:
      if relative in seen or not member.isfile() or member.size>10*1024*1024:raise RuntimeError('SOURCE_MEMBER_INVALID')
      payload=tar.extractfile(member).read()
      if hashlib.sha256(payload).hexdigest()!=expected[relative]:raise RuntimeError('SOURCE_MEMBER_HASH_MISMATCH')
-     target=dest/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(payload);seen.add(relative)
+     target=dest/relative;target.parent.mkdir(parents=True,exist_ok=True)
+     if target.exists():
+      if hashlib.sha256(target.read_bytes()).hexdigest()!=expected[relative]:raise RuntimeError('EXISTING_HELPER_HASH_MISMATCH')
+     else:target.write_bytes(payload)
+     seen.add(relative)
    if seen!=set(expected):raise RuntimeError('SOURCE_MEMBERS_MISSING')
    receipt['sources'][name]={'publishedCommit':commit,'originalCommit':pin['commit'],'reviewedEquivalentTree':pin['tree'],'materializedFiles':len(seen),'downloadBytes':total,'reusedArchive':len(sys.argv)>1,'archiveSha256':hashlib.sha256(archivePath.read_bytes()).hexdigest(),'sourceFileHashes':'ALL_MATCH'}
  (HERE/'host-source-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps({'status':'SOURCE_FILES_MATCH_PINNED_MANIFEST','dbConnections':0,'sources':receipt['sources']}))

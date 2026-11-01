@@ -1094,6 +1094,14 @@
         {
           "path": "vendor/bol-mcp-upstream/src/types.ts",
           "sha256": "3b957baf5c5ce14b2cd369ceb6b25454f1fa4ebf81aac5822df8ac6f0c74150e"
+        },
+        {
+          "path": "scripts/release/mcp-oauth.cjs",
+          "sha256": "a1961d59259945312329dd63a9f32f598fedae29b967c3665c01c1c5b3a86233"
+        },
+        {
+          "path": "scripts/release/synthetic-pilot.cjs",
+          "sha256": "23eec098f2ad462e132bd0fc46815370b1311ddd8a88fbbe0d100c3c0713014b"
         }
       ],
       "publishedCommit": "8a08e6163516f30f37c65313134170744330c4f4"
@@ -2185,6 +2193,14 @@
         {
           "path": "vendor/bol-mcp-upstream/src/types.ts",
           "sha256": "3b957baf5c5ce14b2cd369ceb6b25454f1fa4ebf81aac5822df8ac6f0c74150e"
+        },
+        {
+          "path": "scripts/release/mcp-oauth.cjs",
+          "sha256": "a1961d59259945312329dd63a9f32f598fedae29b967c3665c01c1c5b3a86233"
+        },
+        {
+          "path": "scripts/release/synthetic-pilot.cjs",
+          "sha256": "23eec098f2ad462e132bd0fc46815370b1311ddd8a88fbbe0d100c3c0713014b"
         }
       ],
       "publishedCommit": "53d37468807f79ae1ef27fa4de9221b35b684488"
@@ -3276,6 +3292,14 @@
         {
           "path": "vendor/bol-mcp-upstream/src/types.ts",
           "sha256": "3b957baf5c5ce14b2cd369ceb6b25454f1fa4ebf81aac5822df8ac6f0c74150e"
+        },
+        {
+          "path": "scripts/release/mcp-oauth.cjs",
+          "sha256": "a1961d59259945312329dd63a9f32f598fedae29b967c3665c01c1c5b3a86233"
+        },
+        {
+          "path": "scripts/release/synthetic-pilot.cjs",
+          "sha256": "23eec098f2ad462e132bd0fc46815370b1311ddd8a88fbbe0d100c3c0713014b"
         }
       ],
       "publishedCommit": "2bdb33821ab913770e5f80860c21cf6501509a95"

@@ -4,6 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),{createRequire}=require('n
 const registry=new ProcessRegistry();let interrupted=false;
 for(const signal of ['SIGTERM','SIGINT'])process.once(signal,()=>{interrupted=true;void registry.stopAll(60000,5000);});
 async function main(){
+ const remaining=process.argv.slice(4);if(remaining.length&&!(remaining.length===2&&remaining[0]==='--resume-native-run2'&&path.isAbsolute(remaining[1])))throw Error('ONLY_PINNED_NATIVE_RUN2_RESUME_SUPPORTED');
  const configPath=path.resolve(process.argv[2]||''),out=path.resolve(process.argv[3]||''),c=common.config(configPath),artifacts=common.verifyRuntimeArtifacts(true);
  if(c.appRole!=='sam_runtime_app'||c.allowAppStubLoginBootstrap!==true||c.restoredStubHasNoOriginalCredentials!==true||!c.bootstrapReviewReference||/^FILL/.test(c.bootstrapReviewReference)||process.env.SAM_NATIVE_BOOTSTRAP_APPROVAL!=='ENABLE_RESTORED_TARGET_APP_LOGIN_ONCE')throw Error('EXPLICIT_RESTORED_STUB_BOOTSTRAP_REVIEW_REQUIRED');
  if(!/^[a-z_][a-z0-9_]{0,62}$/.test(c.operatorRole||'')||c.operatorRole===c.appRole||/^fill/.test(c.operatorRole))throw Error('EXACT_TARGET_OPERATOR_ROLE_PIN_REQUIRED');
@@ -36,7 +37,7 @@ async function main(){
   await db.query(`ALTER ROLE sam_runtime_app LOGIN PASSWORD '${password}'`);enabled=true;receipt.enabledAt=new Date().toISOString();
   const app=new URL(url.href);app.username=c.appRole;app.password=password;
   const env={...common.baseEnvironment(app.href,c),SAM_NATIVE_APP_DATABASE_URL:app.href,SAM_NATIVE_DRILL_APPROVAL:'RUN_ISOLATED_NATIVE_SYNTHETIC_DRILL'};
-  const child=registry.spawn(process.execPath,[path.join(__dirname,'run-native.cjs'),configPath,path.join(out,'drill')],{cwd:__dirname,env,stdio:['ignore','pipe','pipe']},'armed-native-harness');child.stdout.on('data',()=>{});child.stderr.on('data',()=>{});
+  const child=registry.spawn(process.execPath,[path.join(__dirname,'run-native.cjs'),configPath,path.join(out,'drill'),...remaining],{cwd:__dirname,env,stdio:['ignore','pipe','pipe']},'armed-native-harness');child.stdout.on('data',()=>{});child.stderr.on('data',()=>{});
   try{const result=await registry.wait(child,15*60*1000);receipt.harnessProcess=result;if(result.exitCode!==0||result.signal)throw Error('NATIVE_HARNESS_BLOCKED_OR_FAILED');}
   finally{await registry.stop(child,60000,5000);}
   receipt.status='HARNESS_EXITED_ZERO; inspect native drill receipt for partial/blocked coverage';

@@ -2,6 +2,7 @@
   "classification": "AUTHORED_ONLY; no sources,node_modules,credentials,DB outputs",
   "files": [
     "README.md",
+    "native-run2-resume.md",
     "prepare.py",
     "common.cjs",
     "native-child.mjs",

@@ -1,6 +1,6 @@
 {
-  "status": "RESTORE_DATA_AND_ISOLATED_00106_PASS_OPERATIONAL_REHEARSAL_PENDING",
-  "captured_at_utc": "2026-11-01T21:27:00.171184+00:00",
+  "status": "RESTORE_AND_00106_PASS_NATIVE_SAVED_REPORT_COMPATIBILITY_PASS_CC1_PASS_MCP_REMAINDER_PENDING",
+  "captured_at_utc": "2026-11-01T21:43:15.639960+00:00",
   "resource": "dpg-dbjpqkutlv9c73dup8lg-a",
   "created_at_utc": "2026-11-01T20:13:07Z",
   "delete_by_utc": "2026-11-02T20:13:07Z",
@@ -17,6 +17,7 @@
     "native-migration-actual-receipt.json": "2e4f6cf6423dffca1976c162523ece65c30b88496d0b4e56d66efa7d9664b50d",
     "native-resume-actual-receipt.json": "48dec43af20b602f3f107669cf52cad7611e4edd1e38e8762975408853c3f0db",
     "native-runtime-artifacts-receipt.json": "0574bd00c74cd3a7761b6f8294a7a71fd0b8450febc9d859a9d926dc1d2d5c74",
+    "native-second-attempt-redacted.json": "c1b099c69ca9c9e9fe27e3fac9ce93e7dde80a10becdef59f508e79b0b9c3455",
     "restore-fullrow-guard-verification.json": "fda5f3942c1365faa4ee80d16e9d915963f102aec6e25a69ad75982459fdcd39",
     "restore-helper-guard-verification.json": "a75b070549aead08f0018bbc7af95dcfec8d8e0c785375cd117b0172f70e63a9",
     "restore-migration-guard-verification.json": "0d0074d2f475bb396809dab83b7744be155c37d3129501da7dbd269939be0f3c",
