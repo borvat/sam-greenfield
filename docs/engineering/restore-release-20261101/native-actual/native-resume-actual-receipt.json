@@ -1,0 +1,41 @@
+{
+  "resume": {
+    "archive_constraint_names_types_validation_match": true,
+    "archive_relation_owners_and_rls_flags_match": true,
+    "archive_rows_corrected": 11034,
+    "archive_sha256": "b40ce0f831238bc060f49affdf5e8dcaf31670d2624b00d6d0053a3e43790a79",
+    "archive_tables": 91,
+    "canonical_postrestore_row_hashes_proven": false,
+    "database": "sam_restore_pr86_20261101_2013",
+    "database_queries_read_only": true,
+    "evidence_scope": "n_tup_ins counters corroborate one fresh committed restore only under root-observed no prior data attempts, no resets and no subsequent writes; not live row counts or recovered COPY tags.",
+    "fresh_table_insert_counters_match": true,
+    "metadata_fingerprints": {
+      "constraints": "43eaffc9479e082ed7f62613e53017341c06d5b3583f73aa26a094aa1c10cbe7",
+      "indexes": "156cf911f913dd04923ff46b43d5a7ae0c6b9c66b38d5946fbeb1589fdcedf86",
+      "policies": "22e7275f2b52f41dbe67ea347434c925dd1cbefa66a3269163eba58e398e8217",
+      "relations": "4524a94da20a5e9865eaf6a0abbdddda5f5413812959059c1a41c7fc66f159e2",
+      "triggers": "62f68e6b516265bea01b7b2540a65367138b40bc83453ac22c73ea4d9b026fe1"
+    },
+    "observed_updates_deletes_zero": true,
+    "original_psql_copy_tags_available": false,
+    "original_psql_stdout_lost_before_failed_assertion": true,
+    "private_evidence_directory": "/tmp/sam-native-restore-ej859p8n",
+    "private_metadata_sha256": "bf6613820d105b7cd0b0690da3940a4c992130e8cac960a98326dd35cf29023e",
+    "production_connected": false,
+    "restore_or_drop_or_role_or_rls_mutations": false,
+    "source_permission_fidelity_proven": false,
+    "status": "RESTORE_RESUMPTION_READONLY_COUNTERS_MATCH",
+    "target": "dpg-dbjpqkutlv9c73dup8lg-a"
+  },
+  "stats_provenance": {
+    "database": "sam_restore_pr86_20261101_2013",
+    "function_owners": {
+      "postgres": 36,
+      "sam_trial_postgres_user": 11
+    },
+    "server_started": "2026-11-01T20:14:43.997204+00:00",
+    "stats_reset": null,
+    "track_counts": "on"
+  }
+}

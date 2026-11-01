@@ -1,0 +1,30 @@
+{
+  "execution": {
+    "exit": 0,
+    "finished_at": "2026-11-01T21:18:14.424375+00:00",
+    "helper_sha256": "6a472ca27215c552f0eb88638b57773efaaf196921cc69f555de844ca1da8845",
+    "started_at": "2026-11-01T21:18:12.757690+00:00"
+  },
+  "summary": {
+    "applications_started": false,
+    "cleanup_reserve_seconds": 1200,
+    "commit_acknowledged": true,
+    "database": "sam_restore_pr86_20261101_2013",
+    "integration_migration_ledger_updated": false,
+    "native_schema_semantics_asserted": true,
+    "original_report_rows_read": false,
+    "original_row_hashes_reverified": false,
+    "private_evidence_directory": "/tmp/sam-native-00106-1af6l4sq",
+    "production_connected": false,
+    "rls_acl_owner_security_unchanged": true,
+    "row_immutability_scope": "Pinned SQL contains schema-only revision DDL, including constraint replacement; counters unchanged. No hidden-row SELECT or fresh canonical-row assertion.",
+    "security_sha256": "e2e1e54822b3baaea5e3b468d4d5516eb448c929011a9956e430772de2cabb78",
+    "source_url": "https://raw.githubusercontent.com/borvat/sam-greenfield/8a08e6163516f30f37c65313134170744330c4f4/packages/db/integration-migrations/00106_read_review_revisions.sql",
+    "sql_sha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+    "status": "ISOLATED_PINNED_00106_COMMITTED",
+    "table_insert_update_delete_counters_unchanged": true,
+    "target": "dpg-dbjpqkutlv9c73dup8lg-a",
+    "tls_mode": "require",
+    "tls_server_identity_verified": false
+  }
+}

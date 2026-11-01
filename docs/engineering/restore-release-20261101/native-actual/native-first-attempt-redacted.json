@@ -1,0 +1,35 @@
+{
+  "bootstrap": {
+    "enabledAt": "2026-11-01T21:19:40.902Z",
+    "error": {
+      "code": "NATIVE_HARNESS_BLOCKED_OR_FAILED",
+      "sqlState": null
+    },
+    "processCleanup": {
+      "allRegisteredChildrenClosed": true,
+      "children": [
+        {
+          "escalated": false,
+          "exitCode": null,
+          "label": "armed-native-harness",
+          "pid": 393505,
+          "signal": "SIGKILL",
+          "spawnError": false
+        }
+      ]
+    },
+    "remainingAppSessions": 0,
+    "restoredStubNoLogin": true,
+    "scrubbedAt": "2026-11-01T21:19:43.152Z",
+    "status": "BLOCKED_OR_FAILED"
+  },
+  "drill_receipt_exists": false,
+  "execution": {
+    "exit": 1,
+    "finished_at": "2026-11-01T21:19:43.316513+00:00",
+    "production_changed": false,
+    "started_at": "2026-11-01T21:19:35.183616+00:00"
+  },
+  "phase_receipts_count": 0,
+  "production_changed": false
+}

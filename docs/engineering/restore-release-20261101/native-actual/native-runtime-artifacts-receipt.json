@@ -1,0 +1,32 @@
+{
+  "artifact_hashes": {
+    "dependencyArchiveSha256": "0e98d30c62b1e00b62151811223bffa94de8b6db43447f7d324b0fb466d822df",
+    "dependencyTreeManifestSha256": "0e180833c699185b7aacc3e3e9eda74218f0122c5ed200594d527d0c01e34b27",
+    "installProvenanceSha256": "0be88d3738b43ef10e9e1fa9b0ecaa00669806e0c2d8b7d634ddb886bbf3032f",
+    "nodeArchiveSha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+    "nodeBinarySha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "nodeChecksumsSha256": "fdfbffc969c0f604beff0124d409b33a43b53f5c681d6220f80023e0d6df9dc4",
+    "sourceLockSha256": "59a8b7944ef6da4e93b602dbacd231e62ceffdb5b46124538308dd670c9f1156"
+  },
+  "dependency_files": 3831,
+  "install": {
+    "exit": 0,
+    "finished_at": "2026-11-01T21:10:09.615715+00:00",
+    "lifecycle_scripts_run": false,
+    "lock_sha256": "59a8b7944ef6da4e93b602dbacd231e62ceffdb5b46124538308dd670c9f1156",
+    "node_version": "v24.22.1",
+    "source_commit": "8a08e6163516f30f37c65313134170744330c4f4",
+    "started_at": "2026-11-01T21:10:00.872467+00:00",
+    "status": "EXACT_LOCK_DEPENDENCY_INSTALL_PASS",
+    "workspaces_enabled": false
+  },
+  "node": {
+    "archive_bytes": 32026916,
+    "archive_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+    "binary_sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "checksums_sha256": "fdfbffc969c0f604beff0124d409b33a43b53f5c681d6220f80023e0d6df9dc4",
+    "source": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+    "status": "OFFICIAL_NODE24_ARCHIVE_VERIFIED",
+    "version": "v24.22.1"
+  }
+}

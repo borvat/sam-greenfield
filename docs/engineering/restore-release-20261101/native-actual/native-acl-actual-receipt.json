@@ -1,0 +1,39 @@
+{
+  "acl": {
+    "application_login_tested": false,
+    "column_acls_checked": 33,
+    "database": "sam_restore_pr86_20261101_2013",
+    "default_acls_source_count": 0,
+    "fixed_tenant_binding_derived_privately": true,
+    "intentional_differences": [
+      "All four source roles remain NOLOGIN; no production password copied.",
+      "36 provider-owned pgcrypto functions retain postgres owner/grantor unchanged; only source-extension-creator EXECUTE grantee maps to target administrator, readonly asserted, never mutated.",
+      "Managed extension raw ACLs intentionally differ in creator grantee; normalized context-specific mapping only.",
+      "Source database owner maps to target administrator; application-object owners remain source owner.",
+      "Target administrator retains restore-only source-owner membership; not part of source runtime memberships."
+    ],
+    "managed_pgcrypto_function_mutations": false,
+    "managed_pgcrypto_functions_readonly_asserted": 36,
+    "native_app_readiness_proven": false,
+    "objects_checked": 160,
+    "passwords_copied": false,
+    "private_evidence_directory": "/tmp/sam-acl-replay-dcgrvnex",
+    "production_connected": false,
+    "raw_source_acls_identical": false,
+    "rls_changed": false,
+    "source_catalog_sha256": "1dc27fdfedb9d4060628287587fa3afd20f8b8268d7559b41435d6a590187943",
+    "source_memberships_count": 0,
+    "source_role_settings_count": 0,
+    "sql_sha256": "b58a39679c8185e76c5804ef119b7220f9c71b82a0172468ee399328a525e4d0",
+    "status": "PINNED_ACL_SEMANTICS_REPLAYED",
+    "target": "dpg-dbjpqkutlv9c73dup8lg-a",
+    "temporary_restore_owner_membership_retained": true
+  },
+  "captured_at": "2026-11-01T21:04:58.861937+00:00",
+  "helper_sha256": "c85837560aa53bd044344b169c61589895168aab426fe8450fc3a432beec75eb",
+  "preceding_failed_transaction_postcheck": {
+    "source_owner_inherit": false,
+    "stub_roles": 4,
+    "unsafe_or_login": 0
+  }
+}

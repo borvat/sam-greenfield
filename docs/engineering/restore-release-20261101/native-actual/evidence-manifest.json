@@ -1,0 +1,25 @@
+{
+  "status": "RESTORE_DATA_AND_ISOLATED_00106_PASS_OPERATIONAL_REHEARSAL_PENDING",
+  "captured_at_utc": "2026-11-01T21:27:00.171184+00:00",
+  "resource": "dpg-dbjpqkutlv9c73dup8lg-a",
+  "created_at_utc": "2026-11-01T20:13:07Z",
+  "delete_by_utc": "2026-11-02T20:13:07Z",
+  "latest_displayed_unbilled_usd": 0.01,
+  "final_invoice": false,
+  "production_changed": false,
+  "pr97_isolated": true,
+  "customer_data_or_credentials_included": false,
+  "files": {
+    "native-acl-actual-receipt.json": "2bd775f288385de6cf1540338a277724e3a595095b9b486458e1a9928e2ade14",
+    "native-first-attempt-redacted.json": "c2b9696b03b5947a83d3948d73376c574361f62705be82de66ef147008426f6b",
+    "native-fullrow-actual-receipt.json": "335ae1e82bddce171084d1baf53c1377ba49b522191db052babb88a9f7fd2828",
+    "native-independent-fullrow-receipt.json": "30284666d0737512412d5b73953bf1dbdbba5c32719415c0c3b1c2ca2ed0c3d0",
+    "native-migration-actual-receipt.json": "2e4f6cf6423dffca1976c162523ece65c30b88496d0b4e56d66efa7d9664b50d",
+    "native-resume-actual-receipt.json": "48dec43af20b602f3f107669cf52cad7611e4edd1e38e8762975408853c3f0db",
+    "native-runtime-artifacts-receipt.json": "0574bd00c74cd3a7761b6f8294a7a71fd0b8450febc9d859a9d926dc1d2d5c74",
+    "restore-fullrow-guard-verification.json": "fda5f3942c1365faa4ee80d16e9d915963f102aec6e25a69ad75982459fdcd39",
+    "restore-helper-guard-verification.json": "a75b070549aead08f0018bbc7af95dcfec8d8e0c785375cd117b0172f70e63a9",
+    "restore-migration-guard-verification.json": "0d0074d2f475bb396809dab83b7744be155c37d3129501da7dbd269939be0f3c",
+    "restore-resume-acl-guard-verification.json": "c9c8b5da9a6dd7155301334ce1e42d3bdb08c0c3db42b4439866f4d27d3f5aa2"
+  }
+}

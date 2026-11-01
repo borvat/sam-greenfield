@@ -1,0 +1,52 @@
+{
+  "scope": "Independent negative guard execution only; all configurations synthetic and deliberately rejected before tools/network/private DB directory creation; no positive configuration executed",
+  "started_at": "2026-11-01T20:40:19.372430+00:00",
+  "finished_at": "2026-11-01T20:40:19.373065+00:00",
+  "helper_sha256_before": "976aa845e10c5bf0d42beb62227200b604100f0398a2b7c9cdabad5d75f4f90d",
+  "helper_sha256_after": "976aa845e10c5bf0d42beb62227200b604100f0398a2b7c9cdabad5d75f4f90d",
+  "matches_exact_reviewed_sha": true,
+  "compile_only": "PASS",
+  "cases": [
+    {
+      "case": "production_host",
+      "expected_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+      "actual_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+      "status": "PASS",
+      "stage": "PREWRITE"
+    },
+    {
+      "case": "unencrypted_target",
+      "expected_code": "ENCRYPTED_TARGET_REQUIRED",
+      "actual_code": "ENCRYPTED_TARGET_REQUIRED",
+      "status": "PASS",
+      "stage": "PREWRITE"
+    },
+    {
+      "case": "extra_pg_options",
+      "expected_code": "TARGET_URL_OPTIONS_REFUSED",
+      "actual_code": "TARGET_URL_OPTIONS_REFUSED",
+      "status": "PASS",
+      "stage": "PREWRITE"
+    },
+    {
+      "case": "http_archive",
+      "expected_code": "ARCHIVE_HTTPS_REQUIRED",
+      "actual_code": "ARCHIVE_HTTPS_REQUIRED",
+      "status": "PASS",
+      "stage": "PREWRITE"
+    }
+  ],
+  "counters": {
+    "tool_calls": 0,
+    "network_calls": 0,
+    "private_directory_creates": 0
+  },
+  "database_connections": 0,
+  "data_restore_executed": false,
+  "production_action": false,
+  "credentials_or_urls_in_receipt": false,
+  "limitations": [
+    "This proves the four specified invalid configurations fail closed; not a positive target identity or restore proof.",
+    "Actual isolated restore execution remains solely root-owned."
+  ]
+}

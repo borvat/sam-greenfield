@@ -1,0 +1,43 @@
+{
+  "scope": "Independent negative guards only for exact reviewed full-row proof helper; no positive configuration or database execution",
+  "started_at": "2026-11-01T21:07:49.178058+00:00",
+  "finished_at": "2026-11-01T21:07:49.178892+00:00",
+  "helper_sha256_before": "6b6bd83823503fe61d7bf038fb111e02eb9f6a48c6fb74103f1c64e9386d7b91",
+  "helper_sha256_after": "6b6bd83823503fe61d7bf038fb111e02eb9f6a48c6fb74103f1c64e9386d7b91",
+  "matches_reviewed_sha": true,
+  "compile_only": "PASS",
+  "cases": [
+    {
+      "case": "wrong_production_host",
+      "expected_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+      "actual_code": "EXACT_ISOLATED_TARGET_REQUIRED",
+      "status": "PASS"
+    },
+    {
+      "case": "extra_uri_options",
+      "expected_code": "TARGET_OPTIONS_REFUSED",
+      "actual_code": "TARGET_OPTIONS_REFUSED",
+      "status": "PASS"
+    },
+    {
+      "case": "sslmode_disabled",
+      "expected_code": "SSL_REQUIRED",
+      "actual_code": "SSL_REQUIRED",
+      "status": "PASS"
+    }
+  ],
+  "counters": {
+    "tool_calls": 0,
+    "network_calls": 0,
+    "filesystem_calls": 0
+  },
+  "real_credentials_used": false,
+  "database_connections": 0,
+  "customer_rows_read": false,
+  "target_security_ddl_executed": false,
+  "production_actions": false,
+  "limitations": [
+    "Invalid target/options/SSL guards only; not actual full-row equality or rollback security restoration proof.",
+    "Actual rollback-only transaction safety and execution remain separately reviewed/root-owned."
+  ]
+}
