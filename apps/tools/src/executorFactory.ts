@@ -9,6 +9,7 @@ import {
 } from "../../kernel/src/sideEffects";
 import type { CapabilityCatalog } from "../../agents/src/capabilityCatalog";
 import type { ToolRegistry } from "../../../packages/tool-gateway/src/registry";
+import { runWithLegalEntity } from "../../../packages/credentials/src/entityContext";
 
 async function legalEntityForWork(queueId:string):Promise<string|null>{
   return withTransaction(async(client)=>{
@@ -46,11 +47,12 @@ export function createToolExecutors(input:{
       const operationKey=`tool:${work.queueId}:${capabilityId}:${requestHash}`;
 
       if(!tool.sideEffect){
-        const result=await input.tools.adapter(capabilityId).execute({
+        const readEntityId=await legalEntityForWork(work.queueId);
+        const result=await runWithLegalEntity(readEntityId,()=>input.tools.adapter(capabilityId).execute({
           capabilityId,
           params,
           idempotencyKey:operationKey
-        });
+        }));
         return {
           result:result.result,
           evidence:{
@@ -106,11 +108,11 @@ export function createToolExecutors(input:{
 
       await bindSideEffectToWorkAtomic(work.queueId,operationKey);
 
-      const result=await input.tools.adapter(capabilityId).execute({
+      const result=await runWithLegalEntity(legalEntityId,()=>input.tools.adapter(capabilityId).execute({
         capabilityId,
         params,
         idempotencyKey:operationKey
-      });
+      }));
 
       if(!result.providerReference){
         throw new Error("Side-effect tool must return providerReference");

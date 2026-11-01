@@ -7,7 +7,8 @@ import { DRIVE_VERIFICATION_CONTRACTS } from "../../production/src/driveBundle";
 import { EBOEKHOUDEN_VERIFICATION_CONTRACTS } from "../../production/src/eboekhoudenBundle";
 import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
-import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
+import { createFinanceOperationalTickFromEnv,createFinanceOperationalTickFromVault } from "../../production/src/financeOperationalLoop";
+import { sharedCredentialResolver } from "../../../packages/credentials/src/runtime";
 
 export default (async()=>{
 const config=loadRuntimeConfig();
@@ -34,6 +35,6 @@ if(hasFinance){
 return createProductionComposition({
   bundle,
   workerId:config.workerId,
-  operationalTick:createFinanceOperationalTickFromEnv()
+  operationalTick:(()=>{const r=sharedCredentialResolver();return r?createFinanceOperationalTickFromVault(r):createFinanceOperationalTickFromEnv();})()
 });
 })();

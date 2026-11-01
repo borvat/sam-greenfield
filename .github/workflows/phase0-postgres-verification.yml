@@ -74,3 +74,7 @@ jobs:
         run: npx tsx tests/rls/role_separation_isolation.ts
       - name: Credential vault
         run: npx tsx tests/rls/credential_vault.ts
+      - name: Vault CLI and entity-context kernel flow
+        run: npx tsx tests/rls/vault_cli_and_entity_flow.ts
+      - name: Entity-scoped credentials (no database)
+        run: npx tsx tests/credentials/entity_scoped_credentials.ts

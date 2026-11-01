@@ -3,6 +3,8 @@ import { GmailApiClient } from "../../../packages/gmail/src/client";
 import { GmailSendAdapter } from "../../tools/src/gmailSendAdapter";
 import { GmailSentVerificationAdapter } from "./gmailVerifier";
 import type { ProductionBundle } from "./types";
+import { entityScopedClient,entityField } from "../../../packages/credentials/src/scopedClient";
+import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 
 export function withGmailFromEnv(
   bundle:ProductionBundle,
@@ -28,7 +30,34 @@ export function withGmailFromEnv(
     userId:env.GMAIL_USER_ID?.trim()||"me",
     baseUrl:env.GMAIL_API_BASE_URL?.trim()||undefined
   });
+  return withGmailClient(bundle,client,env.GMAIL_FROM_EMAIL?.trim()||undefined);
+}
 
+// Multi-account: every send runs under the OAuth credentials and From address of the
+// goal's legal entity.
+export function withGmailFromVault(
+  bundle:ProductionBundle,
+  resolver:CredentialResolver,
+  env:NodeJS.ProcessEnv=process.env
+):ProductionBundle{
+  const client=entityScopedClient({resolver,provider:"gmail",build:f=>new GmailApiClient({
+    tokens:new GoogleRefreshTokenProvider({
+      clientId:f.client_id,
+      clientSecret:f.client_secret,
+      refreshToken:f.refresh_token,
+      tokenUrl:env.GOOGLE_OAUTH_TOKEN_URL?.trim()||undefined
+    }),
+    userId:f.user_id||env.GMAIL_USER_ID?.trim()||"me",
+    baseUrl:env.GMAIL_API_BASE_URL?.trim()||undefined
+  })});
+  return withGmailClient(bundle,client,()=>entityField(resolver,"gmail","from_email"));
+}
+
+function withGmailClient(
+  bundle:ProductionBundle,
+  client:GmailApiClient,
+  fromEmail:string|undefined|(()=>Promise<string|undefined>)
+):ProductionBundle{
   return {
     ...bundle,
     capabilities:[
@@ -50,7 +79,7 @@ export function withGmailFromEnv(
     ],
     toolAdapters:[
       ...bundle.toolAdapters,
-      new GmailSendAdapter(client,{fromEmail:env.GMAIL_FROM_EMAIL?.trim()||undefined})
+      new GmailSendAdapter(client,{fromEmail})
     ],
     verificationAdapters:[
       ...(bundle.verificationAdapters??[]),

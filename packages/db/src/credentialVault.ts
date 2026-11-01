@@ -162,6 +162,18 @@ export class CredentialVault{
     return r.rows.length>0;
   }
 
+  // Metadata only (never ciphertext or plaintext); for operators and diagnostics.
+  async list(legalEntityId?:string):Promise<Array<{legalEntityId:string;provider:string;name:string;
+    secretVersion:number;keyVersion:number;status:string;createdAt:Date;createdBy:string}>>{
+    if(legalEntityId&&!UUID.test(legalEntityId))throw new VaultError("VAULT_ENTITY_INVALID");
+    const r=await this.db.query(
+      `SELECT legal_entity_id,provider,name,secret_version,key_version,status,created_at,created_by
+         FROM credential_vault WHERE ($1::uuid IS NULL OR legal_entity_id=$1::uuid)
+        ORDER BY legal_entity_id,provider,name,secret_version`,[legalEntityId??null]);
+    return r.rows.map(x=>({legalEntityId:x.legal_entity_id,provider:x.provider,name:x.name,
+      secretVersion:x.secret_version,keyVersion:x.key_version,status:x.status,createdAt:x.created_at,createdBy:x.created_by}));
+  }
+
   // Re-encrypts every ACTIVE secret under the keyring's active key version.
   // Run after adding a new key and before dropping the old one. One undecryptable
   // row never blocks the rest: it is reported in `failed` and left untouched.

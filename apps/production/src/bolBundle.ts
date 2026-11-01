@@ -10,6 +10,8 @@ import {
   BolCompetingOffersAdapter
 } from "../../tools/src/bolReadAdapters";
 import type { ProductionBundle,VerificationAdapter } from "./types";
+import { entityScopedClient } from "../../../packages/credentials/src/scopedClient";
+import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 
 const CAPABILITIES=[
   "bol_list_orders",
@@ -91,13 +93,29 @@ export function withBolRetailerFromEnv(
     throw new Error("bol production wiring requires BOL_CLIENT_ID and BOL_CLIENT_SECRET");
   }
 
-  const client=new BolRetailerClient({
+  return withBolClient(bundle,new BolRetailerClient({
     clientId,
     clientSecret,
     tokenUrl:env.BOL_TOKEN_URL?.trim()||undefined,
     baseUrl:env.BOL_RETAILER_BASE_URL?.trim()||undefined
-  });
+  }));
+}
 
+// Multi-account: every call runs under the credentials of the goal's legal entity.
+export function withBolRetailerFromVault(
+  bundle:ProductionBundle,
+  resolver:CredentialResolver,
+  env:NodeJS.ProcessEnv=process.env
+):ProductionBundle{
+  return withBolClient(bundle,entityScopedClient({resolver,provider:"bol",build:f=>new BolRetailerClient({
+    clientId:f.client_id,
+    clientSecret:f.client_secret,
+    tokenUrl:env.BOL_TOKEN_URL?.trim()||undefined,
+    baseUrl:env.BOL_RETAILER_BASE_URL?.trim()||undefined
+  })}));
+}
+
+function withBolClient(bundle:ProductionBundle,client:BolRetailerClient):ProductionBundle{
   const adapters=[
     new BolOrdersAdapter(client),
     new BolReturnsAdapter(client),
