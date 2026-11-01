@@ -82,7 +82,7 @@ function validateSecret(secret:SecretFields):Buffer{
 export type VaultRef={legalEntityId:string;provider:string;name:string};
 
 export class CredentialVault{
-  private cache=new Map<string,{secret:SecretFields;expires:number}>();
+  private cache=new Map<string,{secret:SecretFields;version:number;expires:number}>();
   constructor(
     private readonly db:TxPool,
     private readonly keyring:VaultKeyring,
@@ -92,7 +92,7 @@ export class CredentialVault{
   private k(r:VaultRef){return `${r.legalEntityId}|${r.provider}|${r.name}`;}
 
   // Stores a new ACTIVE version and revokes the previous one atomically.
-  async put(ref:VaultRef&{secret:SecretFields;actor:string}):Promise<{id:string;secretVersion:number}>{
+  async put(ref:VaultRef&{secret:SecretFields;actor:string;expectedActiveVersion?:number|null}):Promise<{id:string;secretVersion:number}>{
     validateRef(ref.legalEntityId,ref.provider,ref.name);
     if(!ref.actor?.trim())throw new VaultError("VAULT_ACTOR_REQUIRED");
     const plaintext=validateSecret(ref.secret);
@@ -105,6 +105,9 @@ export class CredentialVault{
         `SELECT id,secret_version FROM credential_vault
           WHERE legal_entity_id=$1 AND provider=$2 AND name=$3 AND status='ACTIVE' FOR UPDATE`,
         [ref.legalEntityId,ref.provider,ref.name])).rows[0];
+      // Optimistic check: a rotation that read version N must not overwrite a newer one.
+      if(ref.expectedActiveVersion!==undefined&&(prev?.secret_version??null)!==ref.expectedActiveVersion)
+        throw new VaultError("VAULT_VERSION_CONFLICT");
       const max=(await client.query(
         `SELECT COALESCE(MAX(secret_version),0)::int v FROM credential_vault
           WHERE legal_entity_id=$1 AND provider=$2 AND name=$3`,
@@ -134,11 +137,15 @@ export class CredentialVault{
   }
 
   // Returns the ACTIVE secret or null. Every database read is audited; the
-  // in-process cache (default 5 min) only serves repeats within one process.
+  // in-process cache (default 30 s) only serves repeats within one process.
   async get(ref:VaultRef&{actor:string}):Promise<SecretFields|null>{
+    return (await this.getWithVersion(ref))?.secret??null;
+  }
+
+  async getWithVersion(ref:VaultRef&{actor:string}):Promise<{secret:SecretFields;secretVersion:number}|null>{
     validateRef(ref.legalEntityId,ref.provider,ref.name);
     const hit=this.cache.get(this.k(ref));
-    if(hit&&hit.expires>this.now())return hit.secret;
+    if(hit&&hit.expires>this.now())return {secret:hit.secret,secretVersion:hit.version};
     const row=(await this.db.query(
       `SELECT id,secret_version,key_version,dek_nonce,wrapped_dek,dek_tag,nonce,ciphertext,auth_tag
          FROM credential_vault
@@ -147,8 +154,8 @@ export class CredentialVault{
     if(!row)return null;
     const secret=this.decryptRow(ref,row);
     await this.audit(this.db,ref.actor,"CREDENTIAL_READ",row.id);
-    this.cache.set(this.k(ref),{secret,expires:this.now()+(this.opts.cacheTtlMs??300_000)});
-    return secret;
+    this.cache.set(this.k(ref),{secret,version:row.secret_version,expires:this.now()+(this.opts.cacheTtlMs??30_000)});
+    return {secret,secretVersion:row.secret_version};
   }
 
   async revoke(ref:VaultRef&{actor:string}):Promise<boolean>{
@@ -159,6 +166,16 @@ export class CredentialVault{
       [ref.legalEntityId,ref.provider,ref.name,ref.actor]);
     this.cache.delete(this.k(ref));
     if(r.rows[0])await this.audit(this.db,ref.actor,"CREDENTIAL_REVOKED",r.rows[0].id);
+    return r.rows.length>0;
+  }
+
+  // True when this slot has EVER held a vault secret (active or revoked). The resolver uses
+  // it so that revoking a secret can never re-enable an environment fallback.
+  async hasHistory(ref:VaultRef):Promise<boolean>{
+    validateRef(ref.legalEntityId,ref.provider,ref.name);
+    const r=await this.db.query(
+      "SELECT 1 FROM credential_vault WHERE legal_entity_id=$1 AND provider=$2 AND name=$3 LIMIT 1",
+      [ref.legalEntityId,ref.provider,ref.name]);
     return r.rows.length>0;
   }
 
@@ -186,8 +203,8 @@ export class CredentialVault{
       const ref={legalEntityId:r.legal_entity_id,provider:r.provider,name:r.name};
       try{
         this.cache.delete(this.k(ref));
-        const secret=await this.get({...ref,actor});
-        if(secret){await this.put({...ref,actor,secret});rotated++;}
+        const cur=await this.getWithVersion({...ref,actor});
+        if(cur){await this.put({...ref,actor,secret:cur.secret,expectedActiveVersion:cur.secretVersion});rotated++;}
       }catch(e){
         failed.push({...ref,code:e instanceof VaultError?e.code:"VAULT_ROTATION_FAILED"});
       }

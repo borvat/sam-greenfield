@@ -132,7 +132,7 @@ async function main(){
       // --- bridge role: union of both memberships, still no destructive rights
       assert.deepEqual(await inTx(mcp,{},()=>ids(mcp,mine)),await ids(admin,mine));
       await inTx(mcp,{},async()=>{await denied(mcp.query("DELETE FROM goals WHERE id=$1",[g.a1]));});
-      assert.equal((await inTx(mcp,{},()=>mcp.query("SELECT 1 FROM organizations"))).rowCount,0,"no tenant context => no organizations");
+      await denied(mcp.query("SELECT 1 FROM organizations"));
 
       // --- startup guard: the three production logins pass, owner/admin does not
       for(const c of [cc,worker,mcp])await assertReleaseDatabaseSafety(c);

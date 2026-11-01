@@ -3,7 +3,7 @@ import { GmailApiClient } from "../../../packages/gmail/src/client";
 import { GmailSendAdapter } from "../../tools/src/gmailSendAdapter";
 import { GmailSentVerificationAdapter } from "./gmailVerifier";
 import type { ProductionBundle } from "./types";
-import { entityScopedClient,entityField } from "../../../packages/credentials/src/scopedClient";
+import { entityScopedClient,entityField,withCredentialPreflight } from "../../../packages/credentials/src/scopedClient";
 import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 
 export function withGmailFromEnv(
@@ -50,13 +50,14 @@ export function withGmailFromVault(
     userId:f.user_id||env.GMAIL_USER_ID?.trim()||"me",
     baseUrl:env.GMAIL_API_BASE_URL?.trim()||undefined
   })});
-  return withGmailClient(bundle,client,()=>entityField(resolver,"gmail","from_email"));
+  return withGmailClient(bundle,client,()=>entityField(resolver,"gmail","from_email"),a=>withCredentialPreflight(a,resolver,"gmail"));
 }
 
 function withGmailClient(
   bundle:ProductionBundle,
   client:GmailApiClient,
-  fromEmail:string|undefined|(()=>Promise<string|undefined>)
+  fromEmail:string|undefined|(()=>Promise<string|undefined>),
+  decorate:(a:GmailSendAdapter)=>GmailSendAdapter=a=>a
 ):ProductionBundle{
   return {
     ...bundle,
@@ -79,7 +80,7 @@ function withGmailClient(
     ],
     toolAdapters:[
       ...bundle.toolAdapters,
-      new GmailSendAdapter(client,{fromEmail})
+      decorate(new GmailSendAdapter(client,{fromEmail}))
     ],
     verificationAdapters:[
       ...(bundle.verificationAdapters??[]),

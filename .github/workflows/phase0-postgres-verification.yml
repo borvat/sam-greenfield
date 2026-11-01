@@ -76,5 +76,9 @@ jobs:
         run: npx tsx tests/rls/credential_vault.ts
       - name: Vault CLI and entity-context kernel flow
         run: npx tsx tests/rls/vault_cli_and_entity_flow.ts
+      - name: Review hardening regression
+        run: npx tsx tests/rls/review_hardening.ts
+      - name: MCP dispatcher under the narrowed sam_mcp role
+        run: npx tsx tests/rls/mcp_dispatch.ts
       - name: Entity-scoped credentials (no database)
         run: npx tsx tests/credentials/entity_scoped_credentials.ts

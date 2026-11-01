@@ -16,8 +16,10 @@ import type {ProductionBundle} from "../../apps/production/src/types";
 const A=randomUUID(),B=randomUUID(),C=randomUUID();
 const store=new Map<string,Record<string,string>>();
 let vaultReads=0;
+const revoked=new Set<string>();
 const vault={async get(r:{legalEntityId:string;provider:string;name:string}){
-  vaultReads++;return store.get(`${r.legalEntityId}|${r.provider}`)??null;}} as unknown as CredentialVault;
+  vaultReads++;return store.get(`${r.legalEntityId}|${r.provider}`)??null;},
+  async hasHistory(r:{legalEntityId:string;provider:string}){return revoked.has(`${r.legalEntityId}|${r.provider}`);}} as unknown as CredentialVault;
 const key=(e:string,p:string)=>`${e}|${p}`;
 store.set(key(A,"bol"),{client_id:"bol-A",client_secret:"sec-A"});
 store.set(key(B,"bol"),{client_id:"bol-B",client_secret:"sec-B"});
@@ -119,6 +121,12 @@ async function main(){
   assert.equal(seen.bolBearer[n],"Bearer tok-env-id","named legacy entity falls back to env");
   await runWithLegalEntity(A,()=>lbol.execute(req("bol_list_orders")));
   assert.equal(seen.bolBearer.at(-1),"Bearer tok-bol-A2","vault takes precedence over env");
+
+  // --- revoking the legacy entity's vault secret must not re-enable the env account
+  store.set(key(C,"bol"),{client_id:"bol-C2",client_secret:"sec-C2"});
+  await runWithLegalEntity(C,()=>lbol.execute(req("bol_list_orders")));
+  store.delete(key(C,"bol"));revoked.add(key(C,"bol"));
+  await assert.rejects(()=>runWithLegalEntity(C,()=>lbol.execute(req("bol_list_orders"))),e=>code(e)==="CREDENTIAL_NOT_CONFIGURED","revoked slot must not fall back to env");
 
   // --- errors never carry secret values
   try{await runWithLegalEntity(D,()=>lbol.execute(req("bol_list_orders")));}

@@ -4,6 +4,20 @@ x-sam-env: &sam-env
   # DATABASE_URL below with their own non-owner, RLS-subject logins.
   DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
   SAM_PRODUCTION_BUNDLE_MODULE: /app/apps/production/src/defaultBundleModule.ts
+  EBOEKHOUDEN_SOURCE: SAM
+  # Pre-vault single-account credentials (BOL_*, GOOGLE_OAUTH_*, EBOEKHOUDEN_*, runtime worker only) apply ONLY to
+  # this one legal entity once the vault is enabled; every other entity needs its own vault secret.
+  SAM_LEGACY_CREDENTIAL_ENTITY_ID: ${SAM_LEGACY_CREDENTIAL_ENTITY_ID:-}
+  SAM_FINANCE_LEGAL_ENTITY_ID: ${SAM_FINANCE_LEGAL_ENTITY_ID:-}
+  SAM_FINANCE_LOOP_INTERVAL_MINUTES: ${SAM_FINANCE_LOOP_INTERVAL_MINUTES:-180}
+  SAM_FINANCE_LOOKBACK_DAYS: ${SAM_FINANCE_LOOKBACK_DAYS:-30}
+  SAM_FINANCE_MATERIAL_VARIANCE_COUNT: ${SAM_FINANCE_MATERIAL_VARIANCE_COUNT:-1}
+  SAM_FINANCE_MAX_PAGES: ${SAM_FINANCE_MAX_PAGES:-5}
+
+# Provider credentials and model keys. Merged into the runtime worker ONLY: the MCP bridge and the
+# Command Center never receive them (MCP runs with SAM_CREDENTIAL_MODE=manifest: capabilities are
+# registered, any credentialed call fails closed).
+x-sam-credential-env: &sam-credential-env
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   OPENAI_MODEL: ${OPENAI_MODEL:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -20,17 +34,8 @@ x-sam-env: &sam-env
   GOOGLE_OAUTH_REFRESH_TOKEN: ${GOOGLE_OAUTH_REFRESH_TOKEN:-}
   GMAIL_FROM_EMAIL: ${GMAIL_FROM_EMAIL:-}
   EBOEKHOUDEN_API_TOKEN: ${EBOEKHOUDEN_API_TOKEN:-}
-  EBOEKHOUDEN_SOURCE: SAM
   BOL_CLIENT_ID: ${BOL_CLIENT_ID:-}
   BOL_CLIENT_SECRET: ${BOL_CLIENT_SECRET:-}
-  # Pre-vault single-account credentials above (BOL_*, GOOGLE_OAUTH_*, EBOEKHOUDEN_*) apply ONLY to
-  # this one legal entity once the vault is enabled; every other entity needs its own vault secret.
-  SAM_LEGACY_CREDENTIAL_ENTITY_ID: ${SAM_LEGACY_CREDENTIAL_ENTITY_ID:-}
-  SAM_FINANCE_LEGAL_ENTITY_ID: ${SAM_FINANCE_LEGAL_ENTITY_ID:-}
-  SAM_FINANCE_LOOP_INTERVAL_MINUTES: ${SAM_FINANCE_LOOP_INTERVAL_MINUTES:-180}
-  SAM_FINANCE_LOOKBACK_DAYS: ${SAM_FINANCE_LOOKBACK_DAYS:-30}
-  SAM_FINANCE_MATERIAL_VARIANCE_COUNT: ${SAM_FINANCE_MATERIAL_VARIANCE_COUNT:-1}
-  SAM_FINANCE_MAX_PAGES: ${SAM_FINANCE_MAX_PAGES:-5}
 
 services:
   postgres:
@@ -72,7 +77,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      <<: *sam-env
+      <<: [*sam-env,*sam-credential-env]
       DATABASE_URL: postgres://sam_worker:${SAM_WORKER_DB_PASSWORD:?SAM_WORKER_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
       SAM_WORKER_ID: ${SAM_WORKER_ID:?SAM_WORKER_ID is required}
       # Credential vault master keys: runtime worker ONLY (never mcp / command center / database).
@@ -106,6 +111,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *sam-env
+      SAM_CREDENTIAL_MODE: manifest
       DATABASE_URL: postgres://sam_mcp:${SAM_MCP_DB_PASSWORD:?SAM_MCP_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
       SAM_MCP_PORT: 8081
       SAM_MCP_HOST: 0.0.0.0

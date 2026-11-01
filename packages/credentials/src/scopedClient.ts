@@ -40,3 +40,10 @@ export async function entityField(resolver:CredentialResolver,provider:Credentia
   currentLegalEntity();
   return (await resolver.resolve(provider))[field];
 }
+
+// Gives a side-effect adapter a preflight that proves the current entity has complete
+// credentials. The kernel runs it before consuming an approval, so a missing or broken
+// secret fails the step without burning the approval or stranding a side-effect record.
+export function withCredentialPreflight<T extends object>(adapter:T,resolver:CredentialResolver,provider:CredentialProvider):T&{preflight():Promise<void>}{
+  return Object.assign(adapter,{async preflight(){await resolver.resolve(provider);}});
+}
