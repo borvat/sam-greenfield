@@ -51,6 +51,19 @@ def validate_download_url(value):
     except ValueError: return
     raise Refused('ARCHIVE_LITERAL_ADDRESS_FORBIDDEN')
 
+def archive_row_count(path,compressed=False):
+    count=0;terminated=False
+    with (gzip.open(path,'rb') if compressed else open(path,'rb')) as f:
+        for line in f:
+            if terminated:
+                require(line.strip()==b'', 'ARCHIVE_NONBLANK_COPY_TRAILER')
+            elif line in (b'\\.\n',b'\\.\r\n'):
+                terminated=True
+            else:
+                count+=1
+    require(terminated,'ARCHIVE_COPY_TERMINATOR_MISSING')
+    return count
+
 def main():
     global STAGE
     os.umask(0o077)
@@ -124,7 +137,7 @@ def main():
     directory=tocs[0].parent
     listing=run('pg_restore',['--list',str(directory)],tag='archive-list')
     (private/'toc.private.txt').write_text(listing)
-    schema=run('pg_restore',['--schema-only',str(directory)],tag='archive-schema')
+    schema=run('pg_restore',['--schema-only','--file=-',str(directory)],tag='archive-schema')
     (private/'schema.private.sql').write_text(schema)
     forbidden=[r'\bCREATE\s+(?:FOREIGN\s+DATA\s+WRAPPER|SERVER|FOREIGN\s+TABLE|SUBSCRIPTION|USER\s+MAPPING)\b',
                r'\bALTER\s+SYSTEM\b',r'\bCOPY\b[^;]*\bPROGRAM\b',r'\b(?:dblink|postgres_fdw|pg_net|http_get|http_post)\b',
@@ -143,11 +156,7 @@ def main():
         plain=directory/(oid+'.dat');compressed=directory/(oid+'.dat.gz')
         require(plain.is_file()!=compressed.is_file(),'ARCHIVE_TABLE_DATA_FILE_MISSING_OR_AMBIGUOUS')
         dat=plain if plain.is_file() else compressed
-        count=0
-        with (open(dat,'rb') if dat==plain else gzip.open(dat,'rb')) as f:
-            for line in f:
-                if line not in (b'\\.\n',b'\\.\r\n'):count+=1
-        expected[(ns,table)]=count
+        expected[(ns,table)]=archive_row_count(dat,dat==compressed)
     require(len(expected)==91,'ARCHIVE_TABLE_DATA_COUNT_CHANGED')
 
     restore_sql=private/'restore.private.sql'
@@ -171,11 +180,12 @@ def main():
     STAGE='ROLE_STUBS_CREATED_RESTORE_FAILED'
     restore=run('psql',['-X','-w','-A','-t','--set=ON_ERROR_STOP=1','--single-transaction','--file='+str(restore_sql)],tag='strict-restore')
     STAGE='RESTORE_COMPLETED_COMPARISON_PENDING'
+    (private/'restore.private.stdout').write_text(restore)
     native_copy_counts=[int(x) for x in re.findall(r'^COPY (\d+)\r?$',restore,re.M)]
+    (private/'native-copy-counts.private.json').write_text(json.dumps(native_copy_counts))
     require(len(native_copy_counts)==len(copy_order),'RESTORE_COPY_COMMAND_TAG_COUNT_MISMATCH')
     require(all(n==expected[key] for key,n in zip(copy_order,native_copy_counts)),'RESTORED_ARCHIVE_COPY_COUNT_MISMATCH')
     (private/'copy-counts.private.json').write_text(json.dumps([{'schema':key[0],'table':key[1],'archive_rows':expected[key],'native_copy_rows':n} for key,n in zip(copy_order,native_copy_counts)]))
-    (private/'restore.private.stdout').write_text(restore)
     snapshots={};counts_match=True;stable=None
     if identity['admin_bypass']:
         for (ns,table),expected_count in sorted(expected.items()):
