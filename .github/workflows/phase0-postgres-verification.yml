@@ -6,6 +6,69 @@ on:
   workflow_dispatch:
 
 jobs:
+  static:
+    name: Typecheck and dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies from lockfile
+        run: npm ci --ignore-scripts
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Production dependency audit (fail on high or critical)
+        run: npm audit --omit=dev --audit-level=high
+
+  typescript-tests:
+    name: TypeScript phase tests (real PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/sam_greenfield
+      NODE_ENV: test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: sam_greenfield
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres -d sam_greenfield" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies from lockfile
+        run: npm ci --ignore-scripts
+      - name: Apply migrations
+        run: |
+          for f in packages/db/migrations/*.sql; do
+            echo "Applying $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+      - name: Run phase 1-21 TypeScript tests
+        run: |
+          failed=0
+          for t in $(ls tests/phase[1-9]/*.ts tests/phase[1-9][0-9]/*.ts | sort -V); do
+            echo "::group::$t"
+            if npx tsx "$t"; then
+              echo "PASS $t"
+            else
+              echo "::error file=$t::FAILED $t"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $failed
+
   test:
     runs-on: ubuntu-latest
     env:
