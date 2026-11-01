@@ -23,6 +23,9 @@ x-sam-env: &sam-env
   EBOEKHOUDEN_SOURCE: SAM
   BOL_CLIENT_ID: ${BOL_CLIENT_ID:-}
   BOL_CLIENT_SECRET: ${BOL_CLIENT_SECRET:-}
+  # Pre-vault single-account credentials above (BOL_*, GOOGLE_OAUTH_*, EBOEKHOUDEN_*) apply ONLY to
+  # this one legal entity once the vault is enabled; every other entity needs its own vault secret.
+  SAM_LEGACY_CREDENTIAL_ENTITY_ID: ${SAM_LEGACY_CREDENTIAL_ENTITY_ID:-}
   SAM_FINANCE_LEGAL_ENTITY_ID: ${SAM_FINANCE_LEGAL_ENTITY_ID:-}
   SAM_FINANCE_LOOP_INTERVAL_MINUTES: ${SAM_FINANCE_LOOP_INTERVAL_MINUTES:-180}
   SAM_FINANCE_LOOKBACK_DAYS: ${SAM_FINANCE_LOOKBACK_DAYS:-30}

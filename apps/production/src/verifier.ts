@@ -1,13 +1,14 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import { recordIndependentVerificationAtomic } from "../../kernel/src/verification";
 import type { ValidatedProductionBundle } from "./bundle";
+import { runWithLegalEntity } from "../../../packages/credentials/src/entityContext";
 
 export async function verifyNextExecution(
   bundle:ValidatedProductionBundle
 ):Promise<{processed:boolean;executionId?:string;verificationId?:string}>{
   const candidate=await withTransaction(async(client)=>{
     const res=await client.query(
-      `SELECT e.id,e.capability_id,e.params,e.evidence,e.operation_key_ref,
+      `SELECT e.id,e.capability_id,e.params,e.evidence,e.operation_key_ref,g.company_scope,
               vc.id AS contract_id,vc.verification_method,
               vc.required_evidence_fields,vc.independent_query_template
          FROM executions e
@@ -28,7 +29,7 @@ export async function verifyNextExecution(
   const verifier=bundle.verifiers.get(candidate.capability_id);
   if(!verifier) return {processed:false};
 
-  const outcome=await verifier.verify({
+  const outcome=await runWithLegalEntity(candidate.company_scope??null,()=>verifier.verify({
     execution:{
       id:candidate.id,
       capabilityId:candidate.capability_id,
@@ -42,7 +43,7 @@ export async function verifyNextExecution(
       requiredEvidenceFields:candidate.required_evidence_fields??{},
       independentQueryTemplate:candidate.independent_query_template??{}
     }
-  });
+  }));
 
   const verificationId=await recordIndependentVerificationAtomic({
     executionId:candidate.id,

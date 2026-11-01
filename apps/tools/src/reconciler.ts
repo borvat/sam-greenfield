@@ -1,5 +1,6 @@
 import { withTransaction } from "../../../packages/db/src/client";
 import type { ToolRegistry } from "../../../packages/tool-gateway/src/registry";
+import { runWithLegalEntity } from "../../../packages/credentials/src/entityContext";
 
 export async function reconcileOneSideEffectAtomic(input:{
   tools:ToolRegistry;
@@ -28,11 +29,11 @@ export async function reconcileOneSideEffectAtomic(input:{
     throw new Error(`Tool adapter ${op.capability_id} does not support reconciliation`);
   }
 
-  const result=await adapter.reconcile({
+  const result=await runWithLegalEntity<any>(op.legal_entity_id ?? null,()=>adapter.reconcile({
     capabilityId:op.capability_id,
     providerReference:op.provider_reference ?? null,
     idempotencyKey:op.idempotency_key ?? op.operation_key
-  });
+  }));
 
   if(result.result==="CONFIRMED"){
     await withTransaction(async(client)=>{

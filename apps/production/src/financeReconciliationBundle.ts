@@ -2,6 +2,8 @@ import {BolRetailerClient} from "../../../packages/bol/src/client";
 import {EBoekhoudenClient} from "../../../packages/eboekhouden/src/client";
 import {FinanceReconciliationPreviewAdapter,FinanceOutstandingSnapshotAdapter} from "../../tools/src/financeReadAdapters";
 import {reconcileExactReferences,outstandingSnapshot} from "../../finance/src/reconciliation";
+import { entityScopedClient } from "../../../packages/credentials/src/scopedClient";
+import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 import type {ProductionBundle,VerificationAdapter} from "./types";
 import type {VerificationContractSpec} from "./verificationContracts";
 
@@ -20,9 +22,26 @@ export function withFinanceReconciliationFromEnv(bundle:ProductionBundle,env:Nod
   if(!bId&&!bSecret&&!eToken) return bundle;
   if(!bId||!bSecret||!eToken) return bundle;
 
-  const bol=new BolRetailerClient({clientId:bId,clientSecret:bSecret,tokenUrl:env.BOL_TOKEN_URL?.trim()||undefined,baseUrl:env.BOL_RETAILER_BASE_URL?.trim()||undefined});
-  const accounting=new EBoekhoudenClient({apiToken:eToken,source:env.EBOEKHOUDEN_SOURCE?.trim()||"SAM",baseUrl:env.EBOEKHOUDEN_API_BASE_URL?.trim()||undefined});
+  return withFinanceClients(bundle,
+    new BolRetailerClient({clientId:bId,clientSecret:bSecret,tokenUrl:env.BOL_TOKEN_URL?.trim()||undefined,baseUrl:env.BOL_RETAILER_BASE_URL?.trim()||undefined}),
+    new EBoekhoudenClient({apiToken:eToken,source:env.EBOEKHOUDEN_SOURCE?.trim()||"SAM",baseUrl:env.EBOEKHOUDEN_API_BASE_URL?.trim()||undefined}));
+}
 
+// Multi-account: bol and e-Boekhouden are both resolved for the goal's legal entity.
+export function withFinanceReconciliationFromVault(bundle:ProductionBundle,resolver:CredentialResolver,env:NodeJS.ProcessEnv=process.env):ProductionBundle{
+  return withFinanceClients(bundle,scopedBolClient(resolver,env),scopedAccountingClient(resolver,env));
+}
+
+export function scopedBolClient(resolver:CredentialResolver,env:NodeJS.ProcessEnv=process.env):BolRetailerClient{
+  return entityScopedClient({resolver,provider:"bol",build:f=>new BolRetailerClient({clientId:f.client_id,clientSecret:f.client_secret,
+    tokenUrl:env.BOL_TOKEN_URL?.trim()||undefined,baseUrl:env.BOL_RETAILER_BASE_URL?.trim()||undefined})});
+}
+export function scopedAccountingClient(resolver:CredentialResolver,env:NodeJS.ProcessEnv=process.env):EBoekhoudenClient{
+  return entityScopedClient({resolver,provider:"eboekhouden",build:f=>new EBoekhoudenClient({apiToken:f.api_token,
+    source:f.source||env.EBOEKHOUDEN_SOURCE?.trim()||"SAM",baseUrl:env.EBOEKHOUDEN_API_BASE_URL?.trim()||undefined})});
+}
+
+function withFinanceClients(bundle:ProductionBundle,bol:BolRetailerClient,accounting:EBoekhoudenClient):ProductionBundle{
   const verifier=(capabilityId:typeof IDS[number]):VerificationAdapter=>({
     capabilityId,
     async verify(input){

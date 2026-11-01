@@ -7,11 +7,12 @@ export class GmailSendAdapter implements ReconciliableToolAdapter{
 
   constructor(
     private readonly client:GmailApiClient,
-    private readonly options:{fromEmail?:string}={}
+    private readonly options:{fromEmail?:string|(()=>Promise<string|undefined>)}={}
   ){}
 
   async execute(request:ToolExecutionRequest):Promise<ToolExecutionResult>{
     const params=request.params;
+    const fromEmail=typeof this.options.fromEmail==="function"?await this.options.fromEmail():this.options.fromEmail;
     const built=buildRawMessage({
       idempotencyKey:request.idempotencyKey,
       to:params.to,
@@ -19,7 +20,7 @@ export class GmailSendAdapter implements ReconciliableToolAdapter{
       bcc:params.bcc,
       subject:String(params.subject??""),
       text:String(params.text??""),
-      from:this.options.fromEmail,
+      from:fromEmail,
       replyTo:params.reply_to?String(params.reply_to):undefined
     });
 

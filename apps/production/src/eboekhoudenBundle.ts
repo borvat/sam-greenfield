@@ -6,6 +6,8 @@ import {
   EBoekhoudenRelationsAdapter
 } from "../../tools/src/eboekhoudenAdapters";
 import type { VerificationAdapter,ProductionBundle } from "./types";
+import { entityScopedClient } from "../../../packages/credentials/src/scopedClient";
+import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 
 const CAPABILITIES=[
   "eboekhouden_list_mutations",
@@ -55,12 +57,27 @@ export function withEBoekhoudenFromEnv(
   const apiToken=env.EBOEKHOUDEN_API_TOKEN?.trim();
   if(!apiToken) return bundle;
 
-  const client=new EBoekhoudenClient({
+  return withEBoekhoudenClient(bundle,new EBoekhoudenClient({
     apiToken,
     source:env.EBOEKHOUDEN_SOURCE?.trim()||"SAM",
     baseUrl:env.EBOEKHOUDEN_API_BASE_URL?.trim()||undefined
-  });
+  }));
+}
 
+// Multi-account: every call runs under the e-Boekhouden token of the goal's legal entity.
+export function withEBoekhoudenFromVault(
+  bundle:ProductionBundle,
+  resolver:CredentialResolver,
+  env:NodeJS.ProcessEnv=process.env
+):ProductionBundle{
+  return withEBoekhoudenClient(bundle,entityScopedClient({resolver,provider:"eboekhouden",build:f=>new EBoekhoudenClient({
+    apiToken:f.api_token,
+    source:f.source||env.EBOEKHOUDEN_SOURCE?.trim()||"SAM",
+    baseUrl:env.EBOEKHOUDEN_API_BASE_URL?.trim()||undefined
+  })}));
+}
+
+function withEBoekhoudenClient(bundle:ProductionBundle,client:EBoekhoudenClient):ProductionBundle{
   const adapters=[
     new EBoekhoudenMutationsAdapter(client),
     new EBoekhoudenOutstandingInvoicesAdapter(client),
