@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { loadRuntimeConfig } from "./config";
 import { startRuntimeService,type RuntimeComposition } from "./service";
 import { pool } from "../../../packages/db/src/client";
+import { assertProductionDatabaseRole } from "../../../packages/db/src/productionRoleGuard";
 
 async function loadComposition(path:string):Promise<RuntimeComposition>{
   if(!path) throw new Error("SAM_COMPOSITION_MODULE is required");
@@ -15,6 +16,7 @@ async function loadComposition(path:string):Promise<RuntimeComposition>{
 
 async function main(){
   const config=loadRuntimeConfig();
+  await assertProductionDatabaseRole();
   const composition=await loadComposition(config.compositionModule);
   const service=await startRuntimeService({
     port:config.port,

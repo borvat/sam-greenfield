@@ -1,5 +1,7 @@
 x-sam-env: &sam-env
   NODE_ENV: production
+  # Owner/admin login: used ONLY by the migrate job. Long-running services override
+  # DATABASE_URL below with their own non-owner, RLS-subject logins.
   DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
   SAM_PRODUCTION_BUNDLE_MODULE: /app/apps/production/src/defaultBundleModule.ts
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -35,6 +37,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      # Read by provision-roles.sql (psql \getenv) during deploy step 5.
+      SAM_WORKER_DB_PASSWORD: ${SAM_WORKER_DB_PASSWORD:?SAM_WORKER_DB_PASSWORD is required}
+      SAM_MCP_DB_PASSWORD: ${SAM_MCP_DB_PASSWORD:?SAM_MCP_DB_PASSWORD is required}
+      SAM_COMMAND_CENTER_DB_PASSWORD: ${SAM_COMMAND_CENTER_DB_PASSWORD:?SAM_COMMAND_CENTER_DB_PASSWORD is required}
     volumes:
       - sam_postgres:/var/lib/postgresql/data
     healthcheck:
@@ -64,6 +70,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *sam-env
+      DATABASE_URL: postgres://sam_worker:${SAM_WORKER_DB_PASSWORD:?SAM_WORKER_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
       SAM_WORKER_ID: ${SAM_WORKER_ID:?SAM_WORKER_ID is required}
       SAM_COMPOSITION_MODULE: /app/apps/runtime/src/productionCompositionModule.ts
       HOST: 0.0.0.0
@@ -93,6 +100,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *sam-env
+      DATABASE_URL: postgres://sam_mcp:${SAM_MCP_DB_PASSWORD:?SAM_MCP_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
       SAM_MCP_PORT: 8081
       SAM_MCP_HOST: 0.0.0.0
       SAM_MCP_ACTOR: chatgpt-mcp
@@ -121,6 +129,9 @@ services:
     restart: unless-stopped
     environment:
       <<: *sam-env
+      DATABASE_URL: postgres://sam_command_center:${SAM_COMMAND_CENTER_DB_PASSWORD:?SAM_COMMAND_CENTER_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
+      # Tenant context for row-level security (read by the app.current_* policies).
+      PGOPTIONS: -c app.current_org_id=${SAM_ORG_ID:?SAM_ORG_ID is required} -c app.current_legal_entity_id=${SAM_COMMAND_CENTER_LEGAL_ENTITY_ID:?SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required}
       SAM_COMMAND_CENTER_PORT: 8082
       SAM_COMMAND_CENTER_HOST: 0.0.0.0
       SAM_COMMAND_CENTER_BEARER_TOKEN: ${SAM_COMMAND_CENTER_BEARER_TOKEN:?SAM_COMMAND_CENTER_BEARER_TOKEN is required}
