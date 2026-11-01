@@ -12,22 +12,26 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 2
 fi
 
-echo "[1/7] Validate compose"
+echo "[1/8] Validate compose"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config >/dev/null
 
-echo "[2/7] Build application images"
+echo "[2/8] Build application images"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build --pull sam sam-mcp sam-command-center migrate
 
-echo "[3/7] Start database"
+echo "[3/8] Start database"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d postgres
 
-echo "[4/7] Apply migrations"
+echo "[4/8] Apply migrations"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm migrate
 
-echo "[5/7] Start SAM services"
+echo "[5/8] Provision least-privilege database roles"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres \
+  sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < deploy/production/provision-roles.sql
+
+echo "[6/8] Start SAM services"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d sam sam-mcp sam-command-center
 
-echo "[6/7] Wait for health"
+echo "[7/8] Wait for health"
 i=0
 while [ "$i" -lt 60 ]; do
   sam_id="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q sam)"
@@ -49,7 +53,7 @@ if [ "$i" -ge 60 ]; then
   exit 3
 fi
 
-echo "[7/7] Start TLS ingress"
+echo "[8/8] Start TLS ingress"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d caddy
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
 

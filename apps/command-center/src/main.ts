@@ -1,4 +1,5 @@
 import {pool} from "../../../packages/db/src/client";
+import {assertProductionDatabaseRole,assertTenantContextConsistent,safeStartupCode} from "../../../packages/db/src/productionRoleGuard";
 import {startCommandCenterHttpServer} from "./http";
 
 function positiveInt(name:string,value:string|undefined,fallback:number){
@@ -16,6 +17,8 @@ async function main(){
   if(production&&!allowedHosts)throw new Error("SAM_COMMAND_CENTER_ALLOWED_HOSTS is required in production");
   if(!legalEntityId)throw new Error("SAM_COMMAND_CENTER_LEGAL_ENTITY_ID is required");
 
+  await assertProductionDatabaseRole();
+  if(production)await assertTenantContextConsistent(pool,legalEntityId);
   const service=await startCommandCenterHttpServer({
     legalEntityId,
     port:positiveInt("SAM_COMMAND_CENTER_PORT",process.env.SAM_COMMAND_CENTER_PORT,8082),
@@ -35,4 +38,4 @@ async function main(){
   process.on("SIGTERM",()=>void stop("SIGTERM"));
   process.on("SIGINT",()=>void stop("SIGINT"));
 }
-main().catch(async err=>{process.stderr.write("SAM Command Center startup failed: details withheld\n");try{await pool.end()}catch{}process.exit(1)});
+main().catch(async err=>{const code=safeStartupCode(err);process.stderr.write(code?"SAM Command Center startup failed: "+code+"\n":"SAM Command Center startup failed: details withheld\n");try{await pool.end()}catch{}process.exit(1)});

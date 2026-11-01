@@ -39,3 +39,36 @@ jobs:
           python tests/phase0_postgres/real_postgres_test.py
           python tests/phase0_postgres/test_rls_tenant_isolation.py
           python tests/phase0_postgres/test_rls_fail_closed_security.py
+
+  rls-role-separation:
+    # Proves row-level security is enforced for the production application logins
+    # (migration 00011 + deploy/production/provision-roles.sql) using real LOGIN
+    # roles, not superusers and not SET ROLE.
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/sam_greenfield
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: sam_greenfield
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres -d sam_greenfield" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Apply migrations
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+          for f in packages/db/migrations/*.sql; do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f" >/dev/null
+          done
+      - name: Role separation and tenant isolation
+        run: npx tsx tests/rls/role_separation_isolation.ts

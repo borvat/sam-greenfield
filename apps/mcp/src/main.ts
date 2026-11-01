@@ -2,6 +2,7 @@ import { createChatGPTToolSurface } from "../../chatgpt-tools/src/surface";
 import { createKernelProductionDispatcher } from "../../production/src/dispatcher";
 import { loadProductionBundle } from "../../production/src/loadBundle";
 import { pool } from "../../../packages/db/src/client";
+import { assertProductionDatabaseRole,safeStartupCode } from "../../../packages/db/src/productionRoleGuard";
 import { startMcpHttpServer } from "./http";
 import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
 import {createReleaseReadSurface} from "./releaseReadSurface";
@@ -32,6 +33,7 @@ async function main(){
     throw new Error("SAM_MCP_ALLOWED_HOSTS is required in production");
   }
 
+  await assertProductionDatabaseRole();
   const releaseReadOnly=process.env.SAM_MCP_RELEASE_READ_ONLY==="1";
   if((releaseReadOnly||synthetic)&&bundlePath)throw new Error("RELEASE_MCP_DISPATCHER_FORBIDDEN");
   if(synthetic)await admitSyntheticMcpDatabase();
@@ -71,7 +73,8 @@ async function main(){
 }
 
 main().catch(async(err)=>{
-  process.stderr.write("SAM MCP startup failed: details withheld\n");
+  const code=safeStartupCode(err);
+  process.stderr.write(code?`SAM MCP startup failed: ${code}\n`:"SAM MCP startup failed: details withheld\n");
   try{await pool.end();}catch{}
   process.exit(1);
 });
