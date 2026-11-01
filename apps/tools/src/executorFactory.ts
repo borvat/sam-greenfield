@@ -64,6 +64,10 @@ export function createToolExecutors(input:{
       }
 
       const legalEntityId=await legalEntityForWork(work.queueId);
+      const adapterForPreflight=input.tools.adapter(capabilityId);
+      if(adapterForPreflight.preflight){
+        await runWithLegalEntity(legalEntityId,()=>adapterForPreflight.preflight!());
+      }
       const sideEffect=await beginSideEffectAtomic({
         operationKey,
         capabilityId,

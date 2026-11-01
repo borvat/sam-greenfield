@@ -1,7 +1,7 @@
 import type { ProductionBundle } from "./types";
 import { withStandardModelProvidersFromEnv } from "./standardModels";
 import { withGmailFromEnv,withGmailFromVault } from "./gmailBundle";
-import { withGoogleDriveFromEnv } from "./driveBundle";
+import { withGoogleDriveFromEnv,withGoogleDriveFromVault } from "./driveBundle";
 import { withEBoekhoudenFromEnv,withEBoekhoudenFromVault } from "./eboekhoudenBundle";
 import { withBolRetailerFromEnv,withBolRetailerFromVault } from "./bolBundle";
 import { withFinanceReconciliationFromEnv,withFinanceReconciliationFromVault } from "./financeReconciliationBundle";
@@ -20,7 +20,7 @@ bundle=withStandardModelProvidersFromEnv(bundle);
 const resolver=sharedCredentialResolver();
 if(resolver){
   bundle=withGmailFromVault(bundle,resolver);
-  bundle=withGoogleDriveFromEnv(bundle);
+  bundle=withGoogleDriveFromVault(bundle,resolver);
   bundle=withEBoekhoudenFromVault(bundle,resolver);
   bundle=withBolRetailerFromVault(bundle,resolver);
   bundle=withFinanceReconciliationFromVault(bundle,resolver);

@@ -11,7 +11,7 @@
 --
 -- Identities created:
 --   sam_worker          member of sam_runtime_worker + sam_credential_vault   runtime service
---   sam_mcp             member of both group roles     MCP bridge (reads + kernel-backed execution)
+--   sam_mcp             member of sam_mcp_bridge only   MCP bridge (reads; creates goals and PENDING approval requests)
 --   sam_command_center  member of sam_tenant_app       Command Center
 -- Group roles are NOLOGIN. All login roles are non-superuser, non-owner,
 -- NOBYPASSRLS, NOCREATEDB, NOCREATEROLE, NOREPLICATION.
@@ -33,6 +33,8 @@ SELECT 'CREATE ROLE sam_runtime_worker NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATED
   WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sam_runtime_worker') \gexec
 SELECT 'CREATE ROLE sam_credential_vault NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION'
   WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sam_credential_vault') \gexec
+SELECT 'CREATE ROLE sam_mcp_bridge NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION'
+  WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sam_mcp_bridge') \gexec
 SELECT 'CREATE ROLE sam_tenant_app NOLOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION'
   WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sam_tenant_app') \gexec
 
@@ -52,17 +54,17 @@ SELECT format('ALTER ROLE sam_command_center WITH LOGIN PASSWORD %L NOSUPERUSER 
 -- Exact memberships: revoke first so a changed script also removes stale grants.
 SELECT format('REVOKE %I FROM %I', g.rolname, m.rolname)
   FROM pg_auth_members am
-  JOIN pg_roles g ON g.oid = am.roleid AND g.rolname IN ('sam_runtime_worker', 'sam_tenant_app', 'sam_credential_vault')
+  JOIN pg_roles g ON g.oid = am.roleid AND g.rolname IN ('sam_runtime_worker', 'sam_tenant_app', 'sam_credential_vault', 'sam_mcp_bridge')
   JOIN pg_roles m ON m.oid = am.member AND m.rolname IN ('sam_worker', 'sam_mcp', 'sam_command_center') \gexec
 GRANT sam_runtime_worker, sam_credential_vault TO sam_worker;
-GRANT sam_runtime_worker, sam_tenant_app TO sam_mcp;
+GRANT sam_mcp_bridge TO sam_mcp;
 GRANT sam_tenant_app TO sam_command_center;
 
 -- Start from nothing, then grant exactly what the code paths need.
-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault;
-REVOKE ALL ON SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault;
-GRANT USAGE ON SCHEMA public TO sam_runtime_worker, sam_tenant_app, sam_credential_vault;
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault, sam_mcp_bridge;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault, sam_mcp_bridge;
+REVOKE ALL ON SCHEMA public FROM sam_runtime_worker, sam_tenant_app, sam_credential_vault, sam_mcp_bridge;
+GRANT USAGE ON SCHEMA public TO sam_runtime_worker, sam_tenant_app, sam_credential_vault, sam_mcp_bridge;
 
 -- System role: no DELETE, TRUNCATE, TRIGGER or REFERENCES anywhere, and no access
 -- to users, organizations or financial_documents.
@@ -87,6 +89,17 @@ GRANT USAGE, SELECT ON SEQUENCE global_event_seq_seq TO sam_runtime_worker;
 GRANT SELECT, INSERT ON credential_vault TO sam_credential_vault;
 GRANT UPDATE (status, revoked_by, revoked_at) ON credential_vault TO sam_credential_vault;
 GRANT SELECT ON legal_entities TO sam_credential_vault;
+
+-- MCP bridge (ChatGPT-facing): read-only on system tables; INSERT of goals and of PENDING
+-- approval requests (policy-enforced) and the minimal kernel writes of the ChatGPT-direct
+-- dispatcher. goals UPDATE is limited to state/updated_at/current_plan_id; no DELETE, no vault.
+GRANT SELECT ON goals, plans, work_queue, executions, verifications, side_effect_operations,
+  approvals, audit_log, outbox_events, event_fabric_events, inbox_events, world_facts,
+  memory_records, model_calls, model_providers, verification_contracts, policy_envelopes,
+  legal_entities TO sam_mcp_bridge;
+GRANT INSERT ON goals, approvals, plans, work_queue, audit_log, outbox_events TO sam_mcp_bridge;
+GRANT UPDATE (state, updated_at, current_plan_id) ON goals TO sam_mcp_bridge;
+GRANT SELECT, INSERT, UPDATE ON business_id_sequences TO sam_mcp_bridge;
 
 -- Tenant role: reads what the owner surfaces display; writes only goals, the
 -- append-only audit log and the shared id counters.

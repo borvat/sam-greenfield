@@ -21,6 +21,9 @@ export interface ToolExecutionResult {
 export interface ToolAdapter {
   capabilityId:string;
   execute(request:ToolExecutionRequest):Promise<ToolExecutionResult>;
+  // Optional. Called inside the goal's legal-entity context BEFORE any approval is consumed or
+  // side effect is recorded; throw here (e.g. credentials missing) to fail without burning anything.
+  preflight?():Promise<void>;
 }
 
 export interface ToolReconciliationResult {

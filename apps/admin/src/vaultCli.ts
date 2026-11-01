@@ -66,9 +66,10 @@ export async function runVaultCli(argv:string[],io:CliIo,vault:CredentialVault,a
       const p=provider(),spec=PROVIDER_FIELDS[p],allowed=new Set([...spec.required,...spec.optional]);
       let fields:Record<string,string>={};
       if(flags.has("json-stdin")){
-        const parsed=JSON.parse(await io.readStdin());
+        let parsed:unknown;
+        try{parsed=JSON.parse(await io.readStdin());}catch{throw new Error("stdin is not valid JSON");}
         if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error("stdin must be a JSON object");
-        fields=parsed;
+        fields=parsed as Record<string,string>;
       }else{
         if(!io.isInteractive)throw new Error("refusing to read secrets from a non-interactive stdin; use --json-stdin");
         for(const f of spec.required)fields[f]=(await io.readHidden(`${f}: `)).trim();

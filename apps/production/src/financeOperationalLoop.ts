@@ -55,8 +55,10 @@ export function createFinanceOperationalTickFromVault(resolver:CredentialResolve
         maxPages:Number(env.SAM_FINANCE_MAX_PAGES??5)
       }));
     }catch(e){
-      if(e instanceof CredentialError&&(e.code==="CREDENTIAL_NOT_CONFIGURED"||e.code==="CREDENTIAL_INCOMPLETE"))
+      if(e instanceof CredentialError&&(e.code==="CREDENTIAL_NOT_CONFIGURED"||e.code==="CREDENTIAL_INCOMPLETE")){
+        process.stderr.write(JSON.stringify({event:"FINANCE_LOOP_SKIPPED",code:e.code,legalEntityId})+"\n");
         return {skipped:e.code,legalEntityId};
+      }
       throw e;
     }
   };

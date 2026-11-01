@@ -3,6 +3,8 @@ import { GoogleDriveApiClient } from "../../../packages/google-drive/src/client"
 import { DriveGetMetadataAdapter,DriveSearchAdapter,DriveCreateFolderAdapter } from "../../tools/src/driveAdapters";
 import { DriveGetMetadataVerifier,DriveSearchVerifier,DriveCreateFolderVerifier } from "./driveVerifiers";
 import type { ProductionBundle } from "./types";
+import { entityScopedClient,withCredentialPreflight } from "../../../packages/credentials/src/scopedClient";
+import type { CredentialResolver } from "../../../packages/credentials/src/resolver";
 
 export const DRIVE_VERIFICATION_CONTRACTS=[
   {
@@ -51,7 +53,32 @@ export function withGoogleDriveFromEnv(
     tokens,
     baseUrl:env.GOOGLE_DRIVE_API_BASE_URL?.trim()||undefined
   });
+  return withDriveClient(bundle,client);
+}
 
+// Multi-account: every Drive call runs under the Google OAuth credentials of the goal's legal entity.
+export function withGoogleDriveFromVault(
+  bundle:ProductionBundle,
+  resolver:CredentialResolver,
+  env:NodeJS.ProcessEnv=process.env
+):ProductionBundle{
+  const client=entityScopedClient({resolver,provider:"drive",build:f=>new GoogleDriveApiClient({
+    tokens:new GoogleRefreshTokenProvider({
+      clientId:f.client_id,
+      clientSecret:f.client_secret,
+      refreshToken:f.refresh_token,
+      tokenUrl:env.GOOGLE_OAUTH_TOKEN_URL?.trim()||undefined
+    }),
+    baseUrl:env.GOOGLE_DRIVE_API_BASE_URL?.trim()||undefined
+  })});
+  return withDriveClient(bundle,client,a=>withCredentialPreflight(a,resolver,"drive"));
+}
+
+function withDriveClient(
+  bundle:ProductionBundle,
+  client:GoogleDriveApiClient,
+  decorate:<T extends object>(a:T)=>T=a=>a
+):ProductionBundle{
   return {
     ...bundle,
     capabilities:[
@@ -85,7 +112,7 @@ export function withGoogleDriveFromEnv(
       ...bundle.toolAdapters,
       new DriveGetMetadataAdapter(client),
       new DriveSearchAdapter(client),
-      new DriveCreateFolderAdapter(client)
+      decorate(new DriveCreateFolderAdapter(client))
     ],
     verificationAdapters:[
       ...(bundle.verificationAdapters??[]),
