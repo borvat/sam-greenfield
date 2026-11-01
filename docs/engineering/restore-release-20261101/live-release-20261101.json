@@ -1,0 +1,312 @@
+{
+  "schema": "sam.live_release_evidence.v1",
+  "recorded_at_utc": "2026-11-01T22:44:52.600450+00:00",
+  "classification": "REDACTED_RELEASE_METADATA_ONLY",
+  "overall_status": "RELEASE_PASS_BOUNDED_REAL_GOAL_PASS",
+  "evidence_source": "Coordinator-reported observations and independent verifier summary from the current root task; this document preparer performed no live operation or live recheck.",
+  "owner_authority": {
+    "status": "EXPLICIT_BRIDGE_EXCEPTION_APPROVED",
+    "source_type": "OWNER_MESSAGE",
+    "page_context_id": "d17e8f51-7c60-4c08-b097-c383fff22b67",
+    "approval_excerpt": "أوافق على استثناء النشر المؤقت المحدد في تقرير RESTORE PASS",
+    "owner_message_timestamp_utc": null,
+    "timestamp_limitation": "Precise owner-message timestamp was not supplied; no timestamp inferred.",
+    "approved_sequence": [
+      {
+        "action": "Temporary compatibility bridge on existing Runtime",
+        "source_commit": "53d37468807f79ae1ef27fa4de9221b35b684488"
+      },
+      {
+        "action": "Temporary compatibility bridge on existing Command Center and MCP",
+        "source_commit": "2bdb33821ab913770e5f80860c21cf6501509a95"
+      },
+      {
+        "action": "Apply only reviewed integration migration00106",
+        "sql_sha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2"
+      },
+      {
+        "action": "Final release on the same three existing services",
+        "source_commit": "8a08e6163516f30f37c65313134170744330c4f4"
+      }
+    ],
+    "not_extended_to": [
+      "main merge",
+      "PR97 deployment",
+      "new service or plan upgrade",
+      "new resource or model spending authority",
+      "unapproved external messaging",
+      "restoring an old backup over current business history"
+    ]
+  },
+  "compatibility_bridge_deployments": [
+    {
+      "service": "Runtime",
+      "service_id": "srv-db37vbvlk1mc739o0b70",
+      "source_commit": "53d37468807f79ae1ef27fa4de9221b35b684488",
+      "source_tree": "9cb7c3708b816c62c25fceb626d688e0317cb095",
+      "deploy_id": "dep-dbjrpmvlk1mc73a4dcqg",
+      "created_at_utc": "2026-11-01T22:27:39.272428Z",
+      "finished_at_utc": "2026-11-01T22:28:18.966528Z"
+    },
+    {
+      "service": "Command Center",
+      "service_id": "srv-db37vbvlk1mc739o0b6g",
+      "source_commit": "2bdb33821ab913770e5f80860c21cf6501509a95",
+      "source_tree": "9c6e9b9dabbb68ae83db0fd054b6a6c143f3edfa",
+      "deploy_id": "dep-dbjrq87lk1mc73a4f2k0",
+      "created_at_utc": "2026-11-01T22:28:48.488301Z",
+      "finished_at_utc": "2026-11-01T22:29:28.315205Z"
+    },
+    {
+      "service": "MCP",
+      "service_id": "srv-db37vbvlk1mc739o0b7g",
+      "source_commit": "2bdb33821ab913770e5f80860c21cf6501509a95",
+      "source_tree": "9c6e9b9dabbb68ae83db0fd054b6a6c143f3edfa",
+      "deploy_id": "dep-dbjrqjp42hec73dt9ebg",
+      "created_at_utc": "2026-11-01T22:29:35.933955Z",
+      "finished_at_utc": "2026-11-01T22:30:26.786785Z"
+    }
+  ],
+  "unpatched_instance_retirement": {
+    "status": "QUALIFIED_PROVIDER_SHELL_AND_BACKEND_OBSERVATIONS",
+    "observations": {
+      "provider_deactivation": "Coordinator observed provider-deactivated prior deployments.",
+      "runtime_shell_visible_instance_suffix": "hk5pm",
+      "runtime_shell_scope": "Only hk5pm was reported in the current Runtime shell observation; not a global process inventory.",
+      "database_backend_start_times_utc": [
+        "2026-11-01T22:28:08Z",
+        "2026-11-01T22:29:22Z"
+      ]
+    },
+    "graceful_shutdown_logs": "UNAVAILABLE",
+    "limitation": "These observations qualify retirement evidence; captured graceful shutdown of every previous worker/process is not established."
+  },
+  "production_migration_00106": {
+    "status": "APPLIED",
+    "receipt_type": "Actual existing one-shot operator receipt, reported by coordinator; distinct from the isolated restoration migration receipt.",
+    "sql_path": "packages/db/integration-migrations/00106_read_review_revisions.sql",
+    "sql_sha256": "b8a62b8b5de73dea82210965132523d27adfa3cf3d3ccc84bd9fa86f70826db2",
+    "grants_changed": false,
+    "rls_changed": false,
+    "credentials_changed": false,
+    "applied_at_utc": null,
+    "time_limitation": "No precise migration application timestamp supplied in this evidence handoff.",
+    "history_policy": "Retain additive revision schema and immutable original/revision history; do not roll back business history or reintroduce the old two-column unique constraint.",
+    "permission_fingerprint_sha256": "b0d72ed733e9709de5ac200aa195434cea911a66e3127756be129137a71f4311",
+    "fingerprint_meaning": "Unchanged ACL/RLS permission fingerprint reported by the operator; not a receipt-file hash."
+  },
+  "final_deployments": [
+    {
+      "service": "Runtime",
+      "service_id": "srv-db37vbvlk1mc739o0b70",
+      "deploy_id": "dep-dbjrtkfb9u1s73etejbg",
+      "source_commit": "8a08e6163516f30f37c65313134170744330c4f4",
+      "provider_status": "LIVE",
+      "live_reported_at_utc": "2026-11-01T22:36:39Z"
+    },
+    {
+      "service": "Command Center",
+      "service_id": "srv-db37vbvlk1mc739o0b6g",
+      "deploy_id": "dep-dbjrturbc2fs73dmvclg",
+      "source_commit": "8a08e6163516f30f37c65313134170744330c4f4",
+      "provider_status": "LIVE",
+      "live_reported_at_utc": "2026-11-01T22:37:18Z"
+    },
+    {
+      "service": "MCP",
+      "service_id": "srv-db37vbvlk1mc739o0b7g",
+      "deploy_id": "dep-dbjru7ff3r2c73cvo3h0",
+      "source_commit": "8a08e6163516f30f37c65313134170744330c4f4",
+      "provider_status": "LIVE",
+      "live_reported_at_utc": "2026-11-01T22:38:03.276057Z"
+    }
+  ],
+  "independent_final_http_verification": {
+    "status": "DEPLOYMENT_PASS",
+    "checked_at_utc": "2026-11-01T22:38:16.578Z",
+    "source": "Independent verifier summary supplied by coordinator",
+    "services": [
+      {
+        "service": "Runtime",
+        "path": "/readyz",
+        "http_status": 200,
+        "revision": "8a08e6163516f30f37c65313134170744330c4f4",
+        "state": "ready",
+        "recovered_at_utc": "2026-11-01T22:36:30.318Z"
+      },
+      {
+        "service": "Command Center",
+        "path": "/readyz",
+        "http_status": 200,
+        "revision": "8a08e6163516f30f37c65313134170744330c4f4",
+        "state": "ready"
+      },
+      {
+        "service": "MCP",
+        "path": "/livez",
+        "http_status": 200,
+        "revision": "8a08e6163516f30f37c65313134170744330c4f4",
+        "state": "alive"
+      }
+    ],
+    "meaning": "All three final service revisions and health endpoints matched exact approved8a08e61 at the stated check. This is not goal completion or owner delivery.",
+    "subsequent_acceptance_note": "The bounded same-goal automatic second review completed and authenticated owner MCP report retrieval passed; Command Center UI authentication remains rejected and external push is not proven."
+  },
+  "deterministic_health_tool_readback": {
+    "tool": "sam_runtime_health",
+    "observed_at_utc": "2026-11-01T22:38:16.313Z",
+    "reply_revision": "8a08e6163516f30f37c65313134170744330c4f4",
+    "metrics": {
+      "queuedReady": 0,
+      "expiredLeases": 0,
+      "staleActiveGoals": 0,
+      "staleVerifications": 0,
+      "oldPendingOutbox": 0,
+      "unresolvedSideEffects": 0,
+      "recentModelCalls": 0,
+      "recentModelFailures": 0
+    },
+    "excludedMetrics": [],
+    "revision_scope": "The tool reply revision is recorded separately from the actual Runtime /readyz revision proof; do not substitute MCP metadata for Runtime identity.",
+    "meaning": "Snapshot at the recorded time, before the subsequently requested review recovery; zero stale/backlog metrics are not real-goal acceptance."
+  },
+  "goal_acceptance": {
+    "overall_complete": false,
+    "original_review_recovery": {
+      "goal_id": "bc17c4ae-1163-41c9-96cc-f616d7e55e0b",
+      "tool": "sam_continue_review",
+      "status": "COMPLETED",
+      "final_report": {
+        "id": "97c433b0-61e2-4b47-9894-0cc6fb72ccd2",
+        "hash": "e9114ff35b6e9152112f06af095b20515ad0181d119bc044f64b6d265a29f6ca",
+        "revision": 2,
+        "supersedes_report_id": "3d91c824-74c0-4b35-90e2-e9be9f15afbd"
+      },
+      "original_report": {
+        "id": "3d91c824-74c0-4b35-90e2-e9be9f15afbd",
+        "hash": "5faab92d3932034bec6faafa70960e46703a2c59b7413c15f345f88983c9dd8e",
+        "unchanged": true
+      },
+      "independent_verification": {
+        "final_and_original_report_hashes_recomputed": true,
+        "source": "Independent verifier summary supplied by coordinator"
+      },
+      "separate_coordinator_identity_comparison": {
+        "method": "JSON.stringify before/after comparison performed by root, distinct from independent report-hash verification",
+        "plans_equal": true,
+        "work_equal": true,
+        "executions_equal": true,
+        "verifications_equal": true,
+        "original_report_equal": true
+      }
+    },
+    "new_real_read_only_business_goal": {
+      "goal_id": "c6c0455d-e718-4753-a76b-60daae7ad8af",
+      "submitted_at_utc": "2026-11-01T22:40:39.231Z",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-01T22:43:29.627Z",
+      "plan_id": "8a97777d-b09f-4628-ad37-f641980d630d",
+      "work_id": "fd1d72fc-6bb5-45ca-b8c1-877c780750fa",
+      "execution_id": "1b1335ae-34be-4c32-8f2e-5772cffe02dc",
+      "verification_id": "84acd4e3-cd53-4834-b13e-b6de86787c6f",
+      "fresh_bol_api_verification": {
+        "result": "VERIFIED",
+        "checked_at_utc": "2026-11-01T22:40:55.912Z"
+      },
+      "review_attempts": [
+        {
+          "attempt": 1,
+          "status": "REJECTED",
+          "reported_at_utc": "2026-11-01T22:42:00.512Z",
+          "error_code": "REVIEW_CRITIQUE_REJECTED",
+          "gateway_calls": 2,
+          "elapsed_ms": 63700,
+          "report_created": false
+        },
+        {
+          "attempt": 2,
+          "trigger": "NORMAL_EXISTING_BOUNDED_AUTOMATIC_RETRY",
+          "started_at_utc": "2026-11-01T22:42:31Z",
+          "status": "PASSED",
+          "completed_at_utc": "2026-11-01T22:43:29.627Z",
+          "error": null
+        }
+      ],
+      "final_report": {
+        "id": "22234432-f21e-4a82-b24d-faf32f3635bb",
+        "hash": "2739573a7bbba286e43df7f7c1c931632eb9245b3060ae33dee62eb2c55c9fb8",
+        "revision": 1
+      },
+      "unchanged_execution_chain_after_automatic_retry": {
+        "plan_count": 1,
+        "work_count": 1,
+        "execution_count": 1,
+        "verification_count": 1,
+        "same_ids_retained": true
+      },
+      "manual_retry_performed": false,
+      "evidence_source": "Independent verifier update reported by coordinator; first rejection remains historical evidence rather than being erased."
+    },
+    "published_multispecialist_cycle": "NOT_PROVED_BY_THIS_SINGLE_READ_ONLY_GOAL",
+    "updated_independent_release_assessment": "RETAIN_APPROVED_8A; CANCEL_UNSUBMITTED_ROLLBACK; BOUNDED_ACCEPTANCE_PASS",
+    "owner_authenticated_report_retrieval": {
+      "status": "PASS_AUTHENTICATED_MCP; COMMAND_CENTER_UI_BLOCKED",
+      "command_center_attempt": {
+        "result": "AUTHENTICATION_REJECTED",
+        "request_id": "90aca707-7ca2-473c-b7c0-067f0019be7e",
+        "retry_performed": false
+      },
+      "limitation": "Successful report retrieval through current owner/company-scoped MCP is distinct from rejected Command Center UI authentication; neither asserts external push."
+    },
+    "external_report_delivery": "NOT_PERFORMED_OR_PROVED",
+    "not_inferred": [
+      "Overall company acceptance complete",
+      "Real multi-specialist execution completed",
+      "Owner UI authenticated report retrieval succeeded",
+      "External owner push delivery succeeded"
+    ],
+    "overall_complete_meaning": "The15employee/company and authenticated Command Center UI acceptance are not complete. The release and bounded real-goal acceptance passed."
+  },
+  "document_scope": {
+    "contains_secrets": false,
+    "contains_customer_or_business_row_payloads": false,
+    "contains_images": false,
+    "prepared_in_repository": "sam-rollback",
+    "pushed_by_preparer": false,
+    "publication_authority": "Coordinator publishes only explicitly selected reviewed files."
+  },
+  "release_decision_after_business_goal": {
+    "status": "APPROVED_8A_RETAINED_BOUNDED_ACCEPTANCE_PASS; FULL_COMPANY_ACCEPTANCE_INCOMPLETE",
+    "owner_failure_rollback_condition": "Preserved; first rejection prompted consideration, but the normal bounded automatic second review completed before any rollback deploy was triggered.",
+    "rollback_deploy_triggered": false,
+    "observed_preparatory_actions_only": [
+      "Runtime SHA lookup dialog opened before any deploy click",
+      "Command Center dashboard viewed"
+    ],
+    "migration_00106_and_all_history_retained": true,
+    "database_backup_restored_over_production": false,
+    "latest_update_supersedes": "The earlier provisional rollback-in-progress interpretation is superseded: no rollback deployment was triggered.",
+    "runtime_compatible_fallback_pin": "53d37468807f79ae1ef27fa4de9221b35b684488",
+    "cc_mcp_compatible_fallback_pin": "2bdb33821ab913770e5f80860c21cf6501509a95"
+  },
+  "final_review": {
+    "updated_independent_assessment": "Keep approved8a; the same goal completed within its existing max2 review policy before any rollback deployment was submitted. Cancel the unsubmitted rollback dialog.",
+    "rollback_deployment_triggered": false,
+    "rollback_dialog_cancelled": true,
+    "final_release_retained": true,
+    "no_new_authorization_inferred": true
+  },
+  "owner_report_retrieval": {
+    "tool": "sam_get_report",
+    "report_id": "22234432-f21e-4a82-b24d-faf32f3635bb",
+    "report_hash": "2739573a7bbba286e43df7f7c1c931632eb9245b3060ae33dee62eb2c55c9fb8",
+    "visibility": "CURRENT_ROLE_RLS_VISIBLE_REPORTS",
+    "coordinator_authenticated_read": "PASS",
+    "independent_retrieval_and_recomputed_hash": "PASS",
+    "delivery_channel": "Current authorized owner ChatGPT session; result included in final response",
+    "external_push_performed": false,
+    "command_center_authenticated_ui": "BLOCKED_AUTHENTICATION_REJECTED",
+    "scope": "A real bounded single-specialist goal with planning, delegation, execution, independent readback, review and saved report. Not acceptance of15employees or multiple specialist execution."
+  },
+  "rollback_authority": "Existing owner conditional compatible rollback remains authorized for an unresolved release verification failure; no fresh general permission is required. No rollback deployment was triggered in this run."
+}
