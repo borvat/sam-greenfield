@@ -1,0 +1,63 @@
+{
+  "all_recorded_stops_graceful": true,
+  "all_runtime_gate_counts_zero": true,
+  "children_closed": true,
+  "classification": "NATIVE_SYNTHETIC_REHEARSAL_NOT_LIVE_BUSINESS_ACCEPTANCE",
+  "execution": {
+    "after_memory_events": "low 0\nhigh 0\nmax 21682\noom 3\noom_kill 3\noom_group_kill 0\nsock_throttled 15\n",
+    "before_memory_events": "low 0\nhigh 0\nmax 15083\noom 3\noom_kill 3\noom_group_kill 0\nsock_throttled 4\n",
+    "exit": 0,
+    "finished_at": "2026-11-01T21:46:22.332354+00:00",
+    "production_changed": false,
+    "started_at": "2026-11-01T21:44:19.764233+00:00"
+  },
+  "full_receipt_sha256": "36b83d45e06845f787d4feec7519ba55005fb301ec9e4be4ff74a173cbfdd490",
+  "graceful_stops_count": 5,
+  "inherited": {
+    "ccRound1": "SAVED_READ_AND_GRACEFUL_STOP_PINNED",
+    "classification": "PINNED_PRIOR_ACTUAL_RESULTS_NOT_RERUN",
+    "fixtureStateSha256": "8ed31f87940fd194b75698df04c429a3444cdff9575c0c5dca2c723854468fe0",
+    "receiptSha256": "6cde74dda5eac90930d01d59b352ecac863fb11502729dab0a736af684249efc",
+    "runId": "88572eb7-6eab-45d7-b8ca-c32396d3c825",
+    "successfulNativePhases": 10
+  },
+  "new_phase_count": 11,
+  "original_fingerprints_equal": true,
+  "production_changed": false,
+  "remaining_app_sessions": 0,
+  "role_nologin_restored": true,
+  "runtime_gate_checks": 3,
+  "service_starts": [
+    {
+      "main": true,
+      "read": "PASS_SAVED_ORIGINAL_ID_HASH",
+      "round": 1,
+      "service": "mcp"
+    },
+    {
+      "main": true,
+      "read": "PASS_SAVED_ORIGINAL_ID_HASH",
+      "round": 2,
+      "service": "command-center"
+    },
+    {
+      "main": true,
+      "read": "PASS_SAVED_ORIGINAL_ID_HASH",
+      "round": 2,
+      "service": "mcp"
+    },
+    {
+      "main": true,
+      "read": "ZERO_TICKS_ERRORS_AND_INFLIGHT",
+      "round": 1,
+      "service": "runtime"
+    },
+    {
+      "main": true,
+      "read": "ZERO_TICKS_ERRORS_AND_INFLIGHT",
+      "round": 2,
+      "service": "runtime"
+    }
+  ],
+  "status": "ROLE_SCOPED_NATIVE_SOURCE_AND_STARTUP_REHEARSAL_PASS"
+}
