@@ -1,3 +1,4 @@
+import {profileForCapability} from './company';
 import {leaseAttemptLimit,stopExhaustedLease} from '../../kernel/src/leaseBudget';
 import {prepareWorkParameters} from '../../kernel/src/dependencies';
 import { withTransaction } from "../../../packages/db/src/client";
@@ -62,6 +63,9 @@ export async function claimNextWorkForSpecialistAtomic(
     if (updated.rowCount !== 1) throw new Error("Specialist handoff persistence failed");
 
     const row = updated.rows[0];
+    if(process.env.SAM_COMPANY_ENABLED==='1')await client.query(
+      'UPDATE work_queue SET company_profile_id=COALESCE(company_profile_id,$2) WHERE id=$1 AND fencing_token=$3',
+      [queueId,profileForCapability(row.capability_id,agent.agentId),fencingToken]);
     const params=await prepareWorkParameters(client,queueId,row.params??{});
     if(!params)return null;
     return {

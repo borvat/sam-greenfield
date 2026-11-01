@@ -1,3 +1,4 @@
+import {commandCenterAssessPerformance,commandCenterOffice,commandCenterStaffMemory,commandCenterExecutiveReports,commandCenterConfigureReports,commandCenterSkills} from './store';
 import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import {randomUUID,timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
@@ -100,6 +101,7 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
             .replace('refresh();setInterval(refresh,15000);','refresh();')
             .replace('Read-only mode · وضع القراءة فقط.','Read-only mode with exact synthetic fixture save/read acknowledgement only · وضع القراءة فقط.');
         }
+        if(process.env.SAM_COMPANY_ENABLED==='1')scopedHtml=scopedHtml.replace('<body','<body data-company-enabled="true"');
         res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
         res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }
@@ -117,6 +119,23 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       if(origin&&origins.has(origin))res.setHeader("access-control-allow-origin",origin);
       res.setHeader("cache-control","no-store");
 
+      const companyUrl=new URL(req.url??'/',"http://local");
+      if(companyUrl.pathname.startsWith('/api/company/')){
+        if(process.env.SAM_COMPANY_ENABLED!=='1'){json(res,503,{error:'company_feature_disabled'});return;}
+        if(!token){rejectAuthentication(req,res,true);return;}
+        // The configured, authenticated company is the only tenant selector.
+        if([...companyUrl.searchParams.keys()].some(k=>!['profile','query'].includes(k)))throw Error('COMPANY_SCOPE_ARGUMENTS_DENIED');
+        if(req.method==='POST'&&process.env.SAM_COMMAND_CENTER_READ_ONLY==='1'){res.setHeader('allow','GET');json(res,405,{error:'command_center_read_only'});return;}
+        if(req.method==='GET'&&companyUrl.pathname==='/api/company/office'){json(res,200,{ok:true,data:await commandCenterOffice(options.legalEntityId)});return;}
+        if(req.method==='GET'&&companyUrl.pathname==='/api/company/memory'){json(res,200,{ok:true,data:await commandCenterStaffMemory(options.legalEntityId,companyUrl.searchParams.get('profile')??'',companyUrl.searchParams.get('query')??'')});return;}
+        if(req.method==='GET'&&companyUrl.pathname==='/api/company/reports'){json(res,200,{ok:true,data:await commandCenterExecutiveReports(options.legalEntityId)});return;}
+        if(req.method==='POST'&&companyUrl.pathname==='/api/company/performance/assess'){json(res,200,{ok:true,data:await commandCenterAssessPerformance(options.legalEntityId,await readJson(req))});return;}
+        if(req.method==='POST'&&companyUrl.pathname==='/api/company/reports/settings'){json(res,200,{ok:true,data:await commandCenterConfigureReports(options.legalEntityId,await readJson(req))});return;}
+        if(req.method==='GET'&&companyUrl.pathname==='/api/company/skills'){json(res,200,{ok:true,data:await commandCenterSkills(options.legalEntityId,'list')});return;}
+        const skillAction=companyUrl.pathname.match(/^\/api\/company\/skills\/(propose|review|adopt|replace)$/);
+        if(req.method==='POST'&&skillAction){json(res,200,{ok:true,data:await commandCenterSkills(options.legalEntityId,skillAction[1],await readJson(req))});return;}
+        json(res,404,{error:'not_found'});return;
+      }
       const ownerMemory=new URL(req.url??'/',"http://local");
       const notificationAck=req.url?.match(/^\/api\/notifications\/([0-9a-fA-F-]+)\/ack$/);
       if(ownerMemory.pathname==='/api/owner-memory'||ownerMemory.pathname==='/api/notifications'||req.url==='/api/notifications/poll'||notificationAck){

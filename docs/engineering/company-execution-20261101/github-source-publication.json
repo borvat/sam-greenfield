@@ -1,0 +1,43 @@
+{
+  "method": "authenticated GitHub connector; git CLI had no credential helper",
+  "identity_policy": "GitHub-generated commit metadata differs; trees and pinned parents read back exactly. Source hashes unchanged; no deploy acceptance.",
+  "candidates": [
+    {
+      "branch": "rollback/runtime-62ccbdb-compat-20261101",
+      "local_sha": "2d4d32e286ff71307417f7375985b85214c7a2e6",
+      "remote_sha": "53d37468807f79ae1ef27fa4de9221b35b684488",
+      "tree": "9cb7c3708b816c62c25fceb626d688e0317cb095",
+      "parent": "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "url": "https://github.com/borvat/sam-greenfield/commit/53d37468807f79ae1ef27fa4de9221b35b684488"
+    },
+    {
+      "branch": "rollback/surfaces-1e4e21a-compat-20261101",
+      "local_sha": "0f056d36f98413b7590a405294693c0b5fc18885",
+      "remote_sha": "2bdb33821ab913770e5f80860c21cf6501509a95",
+      "tree": "9c6e9b9dabbb68ae83db0fd054b6a6c143f3edfa",
+      "parent": "1e4e21a773c88e2366915edd3bb2e307fddaa157",
+      "url": "https://github.com/borvat/sam-greenfield/commit/2bdb33821ab913770e5f80860c21cf6501509a95"
+    },
+    {
+      "branch": "repair/sam-rollback-compat-20261101",
+      "local_sha": "aff41347779b5fb1e60c69167b603db5df9b848b",
+      "remote_sha": "f1e85becb0413460f351b17f6bdd39b8591c9bbf",
+      "tree": "099e9e46c629eb87255406275785d7275b232c5d",
+      "parent": "8a08e6163516f30f37c65313134170744330c4f4",
+      "url": "https://github.com/borvat/sam-greenfield/commit/f1e85becb0413460f351b17f6bdd39b8591c9bbf"
+    }
+  ],
+  "secret_scan": {
+    "scope": "full changed files relative to remote8a08 and deployed baselines, not fullhistory",
+    "runtime_and_surfaces_findings": 0,
+    "evidence_onefinding": "PROJECT_HISTORY.md line52 identical to existingremote8a08; genericAPIkey rule matched chained evidence hash fields, manually triaged falsepositive. No scanner exclusion or broadbaseline added."
+  },
+  "company_source_checkpoint": {
+    "local_sha": "461b31aa7c224978fb524c779ccfdd90a422062b",
+    "remote_sha": "927afe4e0e06e79f09ab51acdba9de7342cfe3e3",
+    "tree": "1ee08492b0dc3ebc6f8b6ca4758a011db1d92633",
+    "parent": "2ad20d267e629909087ff3befa4e6ad216b31494",
+    "remote_tree_and_parent_readback": "exact",
+    "scope": "reviewed source saved on isolated branch; defaultoff and liveacceptance gates open"
+  }
+}

@@ -213,7 +213,7 @@ export async function createSpecialistIntelligence(input:{configs:SpecialistConf
    const trialAgent=input.trial?.spec.agents[cfg.agentId];
    const maxInputTokens=Math.min(run.limits.maxInputTokens,input.trial?.spec.limits.maxInputTokens??Infinity,trialAgent?.maxInputTokens??Infinity);
    const maxOutputTokens=Math.min(run.limits.maxOutputTokens,input.trial?.spec.limits.maxOutputTokens??Infinity,trialAgent?.maxOutputTokens??Infinity);
-   const model=gateway.invoke({task:'specialist_reasoning',capability:'specialist_reasoning',dataClassification:'INTERNAL',input:payload,
+   const model=gateway.invoke({...(process.env.SAM_COMPANY_ENABLED==='1'?{ledgerQueueId:work.queueId}:{}),task:'specialist_reasoning',capability:'specialist_reasoning',dataClassification:'INTERNAL',input:payload,
     signal:controller.signal,maxCostUsd:run.limits.costUsd,boundedSynthetic:{maxInputTokens,maxOutputTokens,
      reserveAttempt:async a=>withTransaction(async c=>{await fence(c,work);return reserve(c,run,{models:1,tokens:a.tokens,costUsd:a.costUsd},'model',{...a,input:payload,maxInputTokens,maxOutputTokens});})}});
    const reply=await Promise.race([model,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('SPECIALIST_MODEL_TIMEOUT'));},timeout);})]);

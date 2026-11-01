@@ -1,0 +1,77 @@
+{
+  "schema": "sam.pr86.conditional-release-preflight.v1",
+  "observedAt": "2026-11-01T19:04:26.623338+00:00",
+  "status": "BLOCKED_PREDEPLOY",
+  "authorization": "Conditional exact00106 +8a08e6163516f30f37c65313134170744330c4f4; recoverable current backup and verified safe rollback required first",
+  "productionMutations": {
+    "migrationApplied": false,
+    "deployTriggered": false,
+    "backupCreated": false,
+    "resourcesCreated": false,
+    "secretsRead": false,
+    "grantsChanged": false
+  },
+  "backup": {
+    "status": "UNVERIFIED",
+    "databaseId": "dpg-db37k3rbc2fs73csjung-a",
+    "metadata": "available PG15, no actual export/PITR evidence exposed",
+    "currentAuthenticatedBackupArtifact": false,
+    "restoreRehearsal": false,
+    "localCliAuthenticated": false,
+    "readOnlyExternalSQLBlocked": true,
+    "oldSyntheticBackupProofInsufficient": true
+  },
+  "rollback": {
+    "status": "CONFIRMED_SQL_INCOMPATIBILITY",
+    "oldRefs": [
+      "62ccbdbb94e080f22425f64396c894270ee551aa",
+      "1e4e21a773c88e2366915edd3bb2e307fddaa157"
+    ],
+    "repairRef": "8a08e6163516f30f37c65313134170744330c4f4",
+    "path": "apps/production/src/hermesSourceFollowup.ts:96",
+    "oldConflictTarget": "goal_id,plan_id",
+    "newConflictTarget": "goal_id,plan_id,revision",
+    "migrationEffect": "00106 drops old pair unique constraint",
+    "expectedOldSqlstate": "42P10",
+    "buildArtifactRollbackEligibility": "UNVERIFIED",
+    "noDownMigrationOrDataDeletionAttempted": true
+  },
+  "isolatedProof": {
+    "command": "node tests/isolated/rollback_00106_preflight.cjs",
+    "exitCode": 0,
+    "result": "PASS_DETECTED_BLOCKER",
+    "scriptSha256": "c0b01b9e14e9e2a91be6557b99f5bd013f6f1563e55fb638d14133620c3b8f9a",
+    "oldInsertFailures": "42P10 for both actual pinned old SQL versions",
+    "repairInsert": "accepted",
+    "oldReportAndRevision2": "preserved",
+    "unsafePairConstraintReaddition": "23505 rejected",
+    "nativePgAdmission": false,
+    "productionData": false
+  },
+  "releaseSourceBoundary": "Exact8a08 source excludes WIP company files/hooks/00014/00107; WIP must never be built for this release",
+  "next": [
+    "Do not apply00106 or deploy until all owner conditions pass",
+    "Prepare and independently validate schema-compatible rollback design without deleting immutable report revisions",
+    "Obtain authenticated actual backup/recovery evidence plus permitted isolated restore proof",
+    "Only then run approved exact production release; no re-request of already granted conditional approval"
+  ],
+  "independentProof": {
+    "start": "2026-11-01T19:03:57.591527Z",
+    "finish": "2026-11-01T19:03:59.583177Z",
+    "exitCode": 0,
+    "stderr": "",
+    "result": "PASS_DETECTED_BLOCKER",
+    "scriptSha256": "c0b01b9e14e9e2a91be6557b99f5bd013f6f1563e55fb638d14133620c3b8f9a",
+    "oldRefsFail42P10": true,
+    "repairAccepted": true,
+    "oldHashAndRevision2Preserved": true,
+    "oldPairUniqueReadditionFails23505": true,
+    "nativeRlsOrBackupProof": false
+  },
+  "secretScan": {
+    "engine": "Gitleaks8.30.1",
+    "scope": "new rollback preflight test full file only",
+    "findings": 0,
+    "historyScanned": false
+  }
+}

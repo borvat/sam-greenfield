@@ -1,0 +1,26 @@
+/** Role contracts describe accountability; capability registration alone is not readiness. */
+export const COMPANY_ROLE_CONTRACTS:Record<string,{purpose:string;responsibilities:readonly string[];acceptance:readonly string[];escalation:string}>=Object.freeze({
+ operations:{purpose:'تنسيق التشغيل تحت إشراف SAM',responsibilities:['متابعة الأعمال المتوقفة والتصعيد','تنسيق الموارد ضمن سقف التوازي والميزانية القائم'],acceptance:['ربط كل متابعة بهدف ومهمة','لا إعادة محاولة خارج سياسة التعافي'],escalation:'تصعيد تعطل العمل أو تجاوز الموارد إلى SAM والمالك'},
+ projects:{purpose:'متابعة الخطة والاعتماديات والمواعيد',responsibilities:['متابعة تسلسل الخطوات المتحققة','إظهار التأخير والاعتماديات غير المنجزة'],acceptance:['كل خطوة مرتبطة بالخطة الحالية','المواعيد المجهولة تبقى UNKNOWN'],escalation:'تصعيد الاعتماديات والمواعيد غير القابلة للتحقيق'},
+ accountant:{purpose:'قراءة السجلات المحاسبية وتسويتها بالأدلة',responsibilities:['استرجاع القيود والفواتير من التكامل المعتمد','توضيح فروق التسوية ومصدرها'],acceptance:['ذكر الفترة والعملة ومعرفات القيود','لا قيد أو دفع دون صلاحية مالية صريحة'],escalation:'الفروق أو القيود الحساسة إلى المالك'},
+ finance:{purpose:'تحليل النقد والتكلفة والهوامش المثبتة',responsibilities:['حساب المؤشرات من مصادر متحققة','تمييز التوقعات عن النتائج الفعلية'],acceptance:['توثيق المعادلة والمصدر والعملة','إظهار نقص التكلفة أو التغطية'],escalation:'قرار التمويل أو الإنفاق إلى المالك'},
+ sales:{purpose:'متابعة الفرص وإعداد عروض المبيعات',responsibilities:['مراجعة سجل الفرص المعتمد','إعداد مسودات العروض والمتابعة'],acceptance:['تحديد العميل ومصدر الفرصة','لا إرسال أو التزام تجاري دون تفويض'],escalation:'التزام السعر أو الإرسال إلى المالك'},
+ marketplace:{purpose:'متابعة عمليات الأسواق الإلكترونية',responsibilities:['قراءة العروض والطلبات عبر قدرات bol القائمة','ربط التحليل بمعرف العرض أو الطلب'],acceptance:['تطابق معرفات النتائج والقراءة المستقلة','عمليات التعديل تمر بحدود الصلاحية القائمة'],escalation:'نقص البيانات أو تغيير تجاري حساس إلى SAM'},
+ suppliers:{purpose:'بحث الموردين ومقارنة العروض الموثقة',responsibilities:['جمع المصادر المعتمدة وتاريخها','مقارنة الشروط والتكلفة المتاحة'],acceptance:['مصدر لكل معلومة واتصال منشور','لا اختراع توفر أو طلب شراء'],escalation:'قرار المورد أو الشراء إلى المالك'},
+ negotiation:{purpose:'إعداد التفاوض والمتابعة والمراسلات',responsibilities:['قراءة المراسلات المصرح بها','تجهيز المسودات والشروط للمراجعة'],acceptance:['التمييز بين المسودة والرسالة المرسلة','الإرسال يتطلب بوابة الصلاحية الأصلية'],escalation:'تغيير الشروط أو الإرسال غير المفوض إلى المالك'},
+ warehouse:{purpose:'متابعة المخزون من WMS مثبت',responsibilities:['قراءة المخزون وحركاته عند توفر التكامل','إظهار الفروقات ونقص التغطية'],acceptance:['معرف المنتج والمستودع ووقت القياس','غياب التكامل يعني غير مجهز'],escalation:'تسوية المخزون أو التكامل المفقود إلى SAM'},
+ shipping:{purpose:'متابعة الشحن والمستندات',responsibilities:['قراءة التتبع والمستندات المصرح بها','كشف التأخير أو التعارض في الحالة'],acceptance:['معرف الشحنة ومصدر حالة التتبع','لا شراء ملصق أو حجز دون تفويض'],escalation:'تكلفة الشحن أو الحالة المتناقضة إلى المالك'},
+ research:{purpose:'بحث السوق والترندات بمصادر حديثة',responsibilities:['جمع المصادر وتواريخ الاسترجاع','تمييز الاستنتاج عن الحقيقة المتحققة'],acceptance:['توثيق المصدر وحدود التغطية','النص الخارجي لا يغير السياسة'],escalation:'مصدر غير متاح أو استنتاج غير مثبت إلى SAM'},
+ content:{purpose:'إعداد المحتوى والمستندات',responsibilities:['إعداد مسودات ومستندات من الأدلة','الحفاظ على المراجع وإصدارات الملفات'],acceptance:['ربط الناتج بمعرف المستند','لا نشر خارجي دون صلاحية محددة'],escalation:'النشر أو ادعاء غير موثق إلى المالك'},
+ developer:{purpose:'تنفيذ برمجي معزول ضمن coding gate',responsibilities:['تعديل النطاق المصرح فقط','تقديم فرق واختبارات ودليل مراجعة'],acceptance:['مصدر pinned ونتائج اختبارات قابلة لإعادة التنفيذ','لا نشر أو دمج main أو تغيير أسرار'],escalation:'تغيير إنتاج أو نطاق غير مصرح إلى المالك'},
+ systems:{purpose:'متابعة الصحة والتعافي المحدود',responsibilities:['قراءة فشل العمال والـleases','اقتراح إصلاحات معزولة وربطها بالحوادث'],acceptance:['إظهار fencing والحالة القديمة','لا توسيع retries أو تصفير الحجوزات'],escalation:'تعطل مستمر أو تغيير إنتاج إلى المالك'},
+ auditor:{purpose:'تحقق مستقل من التنفيذ',responsibilities:['مقارنة النتيجة بدليل مستقل','كشف نقص التغطية والتعارض'],acceptance:['هوية المدقق مستقلة عن المنفذ','لا تعديل النتائج لفرض VERIFIED'],escalation:'دليل متناقض أو غير قابل للملاحظة إلى SAM'}
+});
+export const COMPANY_HANDOFF=Object.freeze({
+ input:Object.freeze(['company_scope','goal_id','current_plan_id','queue_id','capability_id','authority ceiling and existing approval','existing budget','acceptance criteria and dependencies']),
+ execution:'Only the registered capability owner claims through existing leases/fencing; staff attribution grants no permissions.',
+ output:Object.freeze(['execution_id','result and evidence','verification_id and outcome','model ledger attribution or UNKNOWN','timestamps and blockers']),
+ blocked:'Return through existing HANDBACK or WAITING_OWNER/WAITING_EXTERNAL paths; never mark complete without independent verification.',
+ recovery:'Existing bounded kernel recovery owns expired leases and retries. No separate staff retry loop.',
+ independentAudit:'The executor cannot count as independent verifier; same-actor verification is excluded from staff performance.'
+});

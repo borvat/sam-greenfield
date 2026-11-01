@@ -1,0 +1,62 @@
+{
+  "observedAt": "2026-11-01T19:23:10.000205+00:00",
+  "status": "SOURCE_FIX_VERIFIED; PRODUCTION_RELEASE_BLOCKED",
+  "ownerScope": "Fix rollback root cause and parallel15staff/office; retain approved forward8a08; no main/production until backup+rollback gates",
+  "rollback": {
+    "runtimeCandidate": "2d4d32e286ff71307417f7375985b85214c7a2e6",
+    "surfacesCandidate": "0f056d36f98413b7590a405294693c0b5fc18885",
+    "forwardUnchanged": "8a08e6163516f30f37c65313134170744330c4f4",
+    "diff": "same single Hermes source file,2SQL lines each",
+    "independentSourceReview": "no blocking source findings",
+    "independentTests": 7,
+    "isolatedStatus": "PASS",
+    "limits": "PGlite full pinned modules+real00101/00106; not native/service rollback/restore"
+  },
+  "staffOffice": {
+    "source": "15Arabic role contracts+checklists+handoff, persisted office/status/evidence/ledger attribution+scoped memory",
+    "independentInitialAffectedTests": 9,
+    "initialReceipt": "staff-office-independent-verification.json",
+    "sourceReviewFindings": 2,
+    "resolved": [
+      "missing/null/malformed skill review checks rejected at DB boundary",
+      "task and profile labels stale-invalidated together"
+    ],
+    "independentPostReviewAffectedTests": 3,
+    "postReviewReceipt": "staff-office-post-review-independent-verification.json",
+    "repeatUnchangedSuites": false,
+    "nativeOrLiveAcceptance": false,
+    "ranks": "unassessed if complete proof absent",
+    "flags": "default off"
+  },
+  "backupRestore": {
+    "status": "BLOCKED_AUTHENTICATED_RECOVERY_ACCESS_AND_SAFE_RESTORE_TARGET_UNPROVEN",
+    "actualBrowserPath": "Render database Recovery redirected to sign-in",
+    "secureAuthRequestResult": "declined",
+    "credentialsExposed": false,
+    "authRetried": false,
+    "currentBackupExportListed": false,
+    "backupCreated": false,
+    "restoreRun": false,
+    "newServicesOrCosts": false,
+    "alternatives": [
+      "Use existing Render authenticated Recovery access to inspect a completed recent export and recovery window; no new service needed for read-only inspection",
+      "If a complete export exists, validate restore only in an already-approved isolated private PostgreSQL environment at no new cost",
+      "Do not use filtered RLS dump, create paid PITR instance, overwrite production or move client data into another project"
+    ]
+  },
+  "production": {
+    "migration00106Applied": false,
+    "deployTriggered": false,
+    "goalRecovered": false,
+    "freshMultispecialistProof": false,
+    "dataMutated": false,
+    "mainMerged": false,
+    "newCost": false
+  },
+  "secretScan": {
+    "rollback": "2complete files,0findings,not history",
+    "staff": "18full files,0findings,not history"
+  },
+  "publication": "local isolated Git branches only; no push or deploy",
+  "next": "Keep conditional approval; obtain safe authenticated backup/restore path, then native/service rollback admission before exact approved release. No general approval request."
+}
