@@ -1,0 +1,65 @@
+{
+  "observed_at": "2026-11-01T20:03:54.484144+00:00",
+  "owner_authorization": "One temporary isolated RenderPG15 restoration destination, totalspend<=7USD only if allfees,billingbounds and deletioneligibility verified first; no otherresource/main/GitHubbillingchanges.",
+  "existing_destination_check": {
+    "sam_database": "PG15 production, never used asrestoretarget",
+    "other_database": "WMSPG16, differentproject/shared; notused",
+    "safe_existing_native_pg15_target": false,
+    "local_native_server": "Currentuid0, allcapabilities0, NoNewPrivs1; ordinaryrunuser-to-oai failscannotsetgroups. No override/rootcheckpatch/serverstart."
+  },
+  "account_ui": {
+    "workspace_id": "tea-db35rbflot8c739g8rhg",
+    "workspace_plan": "Hobby",
+    "member_role": "Admin",
+    "projects_or_protected_environments": false,
+    "delete_database_control_enabled": true,
+    "delete_control_clicked": false,
+    "bandwidth": "2MB used/5GB workspaceallowance; not a reservedcap",
+    "pipeline": "120/500minutes and0USDpipeline spendlimit; not DBspendcap",
+    "tax_information": "BillingInfo No info provided; usageinvoice totals do not establishapplicabletax",
+    "billing_url": "https://dashboard.render.com/w/tea-db35rbflot8c739g8rhg/billing"
+  },
+  "quoted_configuration": {
+    "compute_usd_month": 6,
+    "storage_gb": 1,
+    "storage_usd_month": 0.3,
+    "total_usd_month": 6.3,
+    "prorated_by": "second",
+    "free_pitr_compute_option": false,
+    "autoscaling": false,
+    "ha": false,
+    "replicas": false
+  },
+  "independent_financial_review": {
+    "reviewer": "independent_reviewer",
+    "strict_allin_7usd_proved": false,
+    "reasons": [
+      "Applicabletax/otherpotentialfeesnotverified foraccount",
+      "No documentedDBhardspendcap orTTL; timelydeleteisoperational, notguaranteed"
+    ],
+    "deletion_eligibility": "Admin+unprotectedworkspace+enabledcontrol established; no actualdeleteperformed",
+    "sources": [
+      "https://render.com/docs/faq#billing",
+      "https://render.com/docs/outbound-bandwidth",
+      "https://render.com/docs/postgresql-creating-connecting",
+      "https://render.com/docs/postgresql-backups",
+      "https://render.com/docs/team-members",
+      "https://render.com/terms"
+    ]
+  },
+  "unapproved_narrow_proposal": {
+    "max_hours": 24,
+    "compute_storage_usd_bound_at_28day_month": 0.225,
+    "external_egress_gb_bound": 1,
+    "external_egress_usd_if_noallowance": 0.15,
+    "subtotal_usd_before_unverified_taxes_or_fees": 0.375,
+    "budget_nature": "Ownerwouldneedexplicitlyacceptmonitoredoperational7USDlimit ratherthanprovider-guaranteedallincap, or providefixedquote/enforcedcap/safe existingnative target. Merelyraisingthedollaramountdoesnotresolvetheguaranteecondition.",
+    "cleanup": "Preserve redactedverification and rollback evidence, evaluate need forrelease; no deletion oforiginals; no secondresource. Escalateifdeleteunavailable."
+  },
+  "resource_created": false,
+  "money_spent_on_new_resource": 0,
+  "production_migration_or_deployment": false,
+  "actual_restore": false,
+  "native_service_rollback": false,
+  "action_paused": "Paidresourcecreation anddependentproductionrelease only; nativeclientprep/archiveintegrity evidence completed safely; existingPR97isolatedsource retained."
+}
