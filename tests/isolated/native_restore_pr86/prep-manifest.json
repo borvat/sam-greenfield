@@ -1,5 +1,5 @@
 {
-  "status": "FROZEN_FOR_INDEPENDENT_REVIEW_NOT_EXECUTED",
+  "status": "FROZEN_MEMORY_BOUNDED_RETRY_PATCH_REVIEW_REQUIRED",
   "checks": {
     "javascriptSyntax": "PASS: seven authored JS modules",
     "pythonSyntax": "PASS AST only",
@@ -19,9 +19,9 @@
   "files": {
     "README.md": "d4895ada701c3f62b637ca7a44d659485eb27adfd4312781e7905ec83a9036c9",
     "prepare.py": "0f7428be0de0cfddb034800fcd5a78578119824cad305bfff08051e72d4b083a",
-    "common.cjs": "20002c9fd325de1671539411fabb3e38e0d22f3656234574178fb8b6115a1917",
-    "native-child.mjs": "f5d5557f69d909a33d3eb6328dd53e710140005f003c9275baf2c5d832476358",
-    "run-native.cjs": "c92d37b76b567fec049cf757ad2ded418041bcd0c8bde6ae4be95fee606151bd",
+    "common.cjs": "8e848cec6b52ecc091317441bc09a6f1a64b2269a105f44bfa89aa450f4ddb0f",
+    "native-child.mjs": "0edae577d316d581121744d039c4ff292b2f1df9f6f5dff31b050a8a7a1b3a8b",
+    "run-native.cjs": "a3a6081dee33bed5f523da39dbcfa2ee34fd22cea6bc15a3c1506e52ff918688",
     "process-registry.cjs": "6ed179b1a50749f6aa29a136fb20511d08f0cb0badcbd9ba8f9903d154a0be05",
     "process_registry_offline.test.cjs": "9cbee5d3366f7cb6be01a6616167637435ae8765ab9b4ea593bf49a47dc3b518",
     "bootstrap-app-login.cjs": "09f71201009cb7e54541fb5927dca572e05ed2a91dcea3a2d3bb3422ea7be33a",
@@ -34,5 +34,22 @@
     "source-pins.json": "5552bc3b279ebd6d138a358928c9966baa84cc6cb710189b1c41e97a25beca5f",
     "scan-initial-triage.json": "494913482a78704ae54481b2ea0177f6ab6084e1afa22525d7f0a648eca0e426",
     "deliverable-files.json": "7787fb031fb5528b7a1572a272f0169f4256ca7ac3716d860d45887a1cbc7289"
+  },
+  "retryPatch": {
+    "affectedSourceFiles": [
+      "common.cjs",
+      "run-native.cjs",
+      "native-child.mjs"
+    ],
+    "fileDigest": "One global reusable1MiB buffer, synchronous open/read/hash/finally-close; all artifact/source/dependency file digests unchanged SHA256 semantics",
+    "serviceConcurrency": "Serial actual CC stop -> MCP stop -> optional gated Runtime stop, each with same auth/read/hash/restart/fingerprint checks",
+    "failureDiagnostics": "Native catch writes static bounded failure receipt; parent records it or static child exit/signal classification before throwing",
+    "checks": {
+      "threeAffectedJavascriptSyntax": "PASS",
+      "offlineDigest": "PASS empty+3MiB17byte files, full-read forbidden, same1MiBbuffer identity, close on read error",
+      "databaseConnections": 0,
+      "samApplicationBoots": 0,
+      "sqlTestsRepeated": 0
+    }
   }
 }

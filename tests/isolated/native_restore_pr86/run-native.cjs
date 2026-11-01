@@ -24,6 +24,11 @@ async function main(){
   try{
    if(hold){await deadline(new Promise((resolve,reject)=>{child.once('message',m=>m?.committed?resolve():reject(Error('COMMIT_BARRIER_INVALID')));child.once('exit',()=>reject(Error('FORWARD_EXITED_BEFORE_COMMIT_BARRIER')));}),30000);await exit(child);}
    else{const result=await registry.wait(child,30000);if(result.exitCode!==0||result.signal)throw Error('NATIVE_PHASE_FAILED');}
+  }catch(error){
+   let classified=null;
+   if(fs.existsSync(receipt)&&fs.statSync(receipt).size<=8192){try{const failure=JSON.parse(fs.readFileSync(receipt,'utf8'));if(failure.status==='FAILED'&&failure.variant===variant&&failure.mode===mode)classified={status:'FAILED',variant,mode,error:common.safeError({message:failure.error?.code,code:failure.error?.sqlState})};}catch{}}
+   classified??={status:'FAILED',variant,mode,error:common.safeError(error),childExitCode:child.exitCode,childSignal:child.signalCode};receipts.push(classified);if(!fs.existsSync(receipt))common.writeJson(receipt,classified);
+   throw error;
   }finally{await registry.stop(child);}
   const result=JSON.parse(fs.readFileSync(receipt,'utf8'));receipts.push(result);return result;
  };
@@ -33,32 +38,39 @@ async function main(){
  };
  const appProof=[];
  const serviceRound=async(variant,round,includeRuntime)=>{
-  const base=common.baseEnvironment(url,c),sourceRoot=common.root(variant),pin=common.PINS.sources[variant],started=[];
-  const ccPort=await port(),mcpPort=await port(),runtimePort=await port(),ccToken=crypto.randomBytes(32).toString('hex'),mcpToken=crypto.randomBytes(32).toString('hex'),runtimeToken=crypto.randomBytes(32).toString('hex');
-  const env={...base,SAM_BUILD_REVISION:pin.commit,SAM_COMMAND_CENTER_PORT:String(ccPort),SAM_COMMAND_CENTER_HOST:'127.0.0.1',SAM_COMMAND_CENTER_BEARER_TOKEN:ccToken,SAM_COMMAND_CENTER_ALLOWED_HOSTS:'127.0.0.1',SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_MCP_PORT:String(mcpPort),SAM_MCP_HOST:'127.0.0.1',SAM_MCP_ALLOWED_HOSTS:'127.0.0.1',SAM_MCP_BEARER_TOKEN:mcpToken,SAM_MCP_ACTOR:'native-drill-read-only-caller',SAM_RUNTIME_PORT:String(runtimePort),SAM_RUNTIME_STATUS_BEARER_TOKEN:runtimeToken};
-  try{
-   for(const [name,file] of [['command-center','apps/command-center/src/main.ts'],['mcp','apps/mcp/src/main.ts'],...(includeRuntime?[['runtime','apps/runtime/src/main.ts']]:[])]){
-    if(name==='runtime'){const currentGate=await stage('runtime_fallback','runtime-gate');if(!currentGate.runtimeAllowed)throw Error('NATIVE_RUNTIME_QUEUE_NO_LONGER_EMPTY');}
-    const childEnv=name==='runtime'?{...env,PORT:String(runtimePort),SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'native-drill-startup-only',SAM_TICK_INTERVAL_MS:'86400000',SAM_SHUTDOWN_GRACE_MS:'5000',SAM_COMPOSITION_MODULE:path.join(sourceRoot,'apps/runtime/src/releaseCompositionModule.ts'),SAM_PRODUCTION_BUNDLE_MODULE:path.join(sourceRoot,'apps/production/src/localReleaseBundleModule.ts'),SAM_RELEASE_CAPABILITIES:'local.calculate,local.statistics'}:env;
-    const child=childProcess(['--import','tsx',path.join(sourceRoot,file)],sourceRoot,childEnv);started.push({name,child});services.push(child);
-    await health('http://127.0.0.1:'+({mcp:mcpPort,'command-center':ccPort,runtime:runtimePort}[name]),name,pin.commit);
+  const base=common.baseEnvironment(url,c),sourceRoot=common.root(variant),pin=common.PINS.sources[variant];
+  // Services occupy separate production containers; this bounded rehearsal starts them serially.
+  for(const [name,file] of [['command-center','apps/command-center/src/main.ts'],['mcp','apps/mcp/src/main.ts'],...(includeRuntime?[['runtime','apps/runtime/src/main.ts']]:[])]){
+   const servicePort=await port(),token=crypto.randomBytes(32).toString('hex');
+   const env={...base,SAM_BUILD_REVISION:pin.commit,SAM_COMMAND_CENTER_PORT:String(servicePort),SAM_COMMAND_CENTER_HOST:'127.0.0.1',SAM_COMMAND_CENTER_BEARER_TOKEN:token,SAM_COMMAND_CENTER_ALLOWED_HOSTS:'127.0.0.1',SAM_COMMAND_CENTER_READ_ONLY:'1',SAM_MCP_PORT:String(servicePort),SAM_MCP_HOST:'127.0.0.1',SAM_MCP_ALLOWED_HOSTS:'127.0.0.1',SAM_MCP_BEARER_TOKEN:token,SAM_MCP_ACTOR:'native-drill-read-only-caller',SAM_RUNTIME_PORT:String(servicePort),SAM_RUNTIME_STATUS_BEARER_TOKEN:token};
+   if(name==='runtime'){
+    const currentGate=await stage('runtime_fallback','runtime-gate');if(!currentGate.runtimeAllowed)throw Error('NATIVE_RUNTIME_QUEUE_NO_LONGER_EMPTY');
+    Object.assign(env,{PORT:String(servicePort),SAM_RUNTIME_HOST:'127.0.0.1',SAM_WORKER_ID:'native-drill-startup-only',SAM_TICK_INTERVAL_MS:'86400000',SAM_SHUTDOWN_GRACE_MS:'5000',SAM_COMPOSITION_MODULE:path.join(sourceRoot,'apps/runtime/src/releaseCompositionModule.ts'),SAM_PRODUCTION_BUNDLE_MODULE:path.join(sourceRoot,'apps/production/src/localReleaseBundleModule.ts'),SAM_RELEASE_CAPABILITIES:'local.calculate,local.statistics'});
    }
-   const cc='http://127.0.0.1:'+ccPort,headers={authorization:'Bearer '+ccToken};
-   if((await fetch(cc+'/api/goals')).status!==401)throw Error('CC_AUTH_DENIAL_FAILED');
-   const response=await fetch(cc+'/api/goals/'+state().input.goalId+'/timeline',{headers,signal:AbortSignal.timeout(5000)});if(response.status!==200)throw Error('CC_AUTHENTICATED_TIMELINE_FAILED');const timeline=(await response.json()).data;
-   const original=timeline.reports.find(r=>r.id===state().reportId),revision2=timeline.reports.find(r=>r.id===state().revision2Id);
-   if(!original||original.report_hash!==state().reportHash||!revision2)throw Error('CC_IMMUTABLE_REPORT_READBACK_FAILED');
-   const mcp='http://127.0.0.1:'+mcpPort+'/mcp';
-   if((await fetch(mcp,{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).status!==401)throw Error('MCP_AUTH_DENIAL_FAILED');
-   const req=createRequire(path.join(sourceRoot,'package.json')),sdk=await import(pathToFileURL(req.resolve('@modelcontextprotocol/sdk/client/index.js')).href),transportSdk=await import(pathToFileURL(req.resolve('@modelcontextprotocol/sdk/client/streamableHttp.js')).href),client=new sdk.Client({name:'native-rehearsal',version:'1.0.0'});
+   const child=childProcess(['--import','tsx',path.join(sourceRoot,file)],sourceRoot,env),endpoint='http://127.0.0.1:'+servicePort;
    try{
-    await deadline(client.connect(new transportSdk.StreamableHTTPClientTransport(new URL(mcp),{requestInit:{headers:{authorization:'Bearer '+mcpToken}}})),10000);
-    const saved=await deadline(client.callTool({name:'sam_get_report',arguments:{report_id:state().reportId}}),10000),payload=JSON.parse(saved.content.find(item=>item.type==='text').text);
-    if(payload.ok!==true||payload.data?.report?.id!==state().reportId||payload.data.report.report_hash!==state().reportHash||payload.data.executionPerformed!==false)throw Error('MCP_AUTHENTICATED_SAVED_REPORT_FAILED');
-   }finally{await client.close();}
-   if(includeRuntime){const response=await fetch('http://127.0.0.1:'+runtimePort+'/statusz',{headers:{authorization:'Bearer '+runtimeToken},signal:AbortSignal.timeout(3000)});if(response.status!==200)throw Error('RUNTIME_STATUS_PROOF_UNAVAILABLE');const metrics=await response.json();if(metrics.ticks!==0||metrics.errors!==0||metrics.inFlight!==false)throw Error('UNEXPECTED_RUNTIME_WORK_TICK');}
-   appProof.push({variant,round,commit:pin.commit,tree:pin.tree,actualMainFiles:true,loopbackOnly:true,providerEnvironment:'EMPTY_ALLOWLIST',authDenials:'PASS',ccSavedReport:'MATCH',mcpSavedReport:'MATCH',revision2Preserved:true,runtime:includeRuntime?'ACTUAL_MAIN_STARTUP_ONLY_NO_TICKS':'NOT_STARTED'});
-  }finally{for(const {name,child} of started.reverse()){const stopped=await exit(child);appProof.push({variant,round,service:name,gracefulStop:stopped.exitCode===0});}}
+    await health(endpoint,name,pin.commit);
+    if(name==='command-center'){
+     if((await fetch(endpoint+'/api/goals',{signal:AbortSignal.timeout(5000)})).status!==401)throw Error('CC_AUTH_DENIAL_FAILED');
+     const response=await fetch(endpoint+'/api/goals/'+state().input.goalId+'/timeline',{headers:{authorization:'Bearer '+token},signal:AbortSignal.timeout(5000)});if(response.status!==200)throw Error('CC_AUTHENTICATED_TIMELINE_FAILED');
+     const timeline=(await response.json()).data,original=timeline.reports.find(r=>r.id===state().reportId),revision2=timeline.reports.find(r=>r.id===state().revision2Id);
+     if(!original||original.report_hash!==state().reportHash||!revision2)throw Error('CC_IMMUTABLE_REPORT_READBACK_FAILED');
+    }else if(name==='mcp'){
+     const mcp=endpoint+'/mcp';if((await fetch(mcp,{method:'POST',headers:{'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(5000)})).status!==401)throw Error('MCP_AUTH_DENIAL_FAILED');
+     const req=createRequire(path.join(sourceRoot,'package.json')),sdk=await import(pathToFileURL(req.resolve('@modelcontextprotocol/sdk/client/index.js')).href),transportSdk=await import(pathToFileURL(req.resolve('@modelcontextprotocol/sdk/client/streamableHttp.js')).href),client=new sdk.Client({name:'native-rehearsal',version:'1.0.0'});
+     try{
+      await deadline(client.connect(new transportSdk.StreamableHTTPClientTransport(new URL(mcp),{requestInit:{headers:{authorization:'Bearer '+token}}})),10000);
+      const saved=await deadline(client.callTool({name:'sam_get_report',arguments:{report_id:state().reportId}}),10000),payload=JSON.parse(saved.content.find(item=>item.type==='text').text);
+      if(payload.ok!==true||payload.data?.report?.id!==state().reportId||payload.data.report.report_hash!==state().reportHash||payload.data.executionPerformed!==false)throw Error('MCP_AUTHENTICATED_SAVED_REPORT_FAILED');
+     }finally{await client.close();}
+    }else{
+     const response=await fetch(endpoint+'/statusz',{headers:{authorization:'Bearer '+token},signal:AbortSignal.timeout(3000)});if(response.status!==200)throw Error('RUNTIME_STATUS_PROOF_UNAVAILABLE');
+     const metrics=await response.json();if(metrics.ticks!==0||metrics.errors!==0||metrics.inFlight!==false)throw Error('UNEXPECTED_RUNTIME_WORK_TICK');
+    }
+    appProof.push({variant,round,service:name,commit:pin.commit,tree:pin.tree,actualMainFile:true,serialServiceProcess:true,loopbackOnly:true,providerEnvironment:'EMPTY_ALLOWLIST',authAndSavedRead:name==='runtime'?'ZERO_TICKS_ERRORS_AND_INFLIGHT':'PASS_SAVED_ORIGINAL_ID_HASH',revision2Preserved:true});
+   }finally{const stopped=await exit(child);appProof.push({variant,round,service:name,gracefulStop:stopped.exitCode===0});}
+   await stage(variant,'fingerprint');
+  }
  };
  const evidence={classification:'NATIVE_SYNTHETIC_REHEARSAL_NOT_LIVE_BUSINESS_ACCEPTANCE',targetRenderId:c.targetRenderId,databaseName:c.databaseName,startedAt:new Date().toISOString(),transport:{mode:c.tlsMode,certificateVerification:c.tlsMode==='verify-full',encryptedSessionAssertion:'Required in every native phase; actual application mains consume the same pinned URI'},runtimeArtifacts:artifacts,limits:['All catalog-discovered local tables are classified; only SELECT-visible restored rows are fingerprinted, and mandatory public queue/report/model/audit/memory/budget sources must be visible. Denied tables are explicit, not covered.','No providers, real report recovery, commerce or outside messages.','MCP actual main uses no dispatcher/providers; only saved-read methods are invoked by this harness.','Restricted-role fingerprints cover role-visible restored rows; owner-wide restore/ACL evidence is separate.'],receipts,appProof};
  try{

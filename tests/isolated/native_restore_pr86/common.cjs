@@ -2,6 +2,8 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const DIR=__dirname,PINS=JSON.parse(fs.readFileSync(path.join(DIR,'source-pins.json'),'utf8'));
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
+const FILE_DIGEST_BUFFER=Buffer.allocUnsafe(1024*1024);
+function fileSha(file){const digest=crypto.createHash('sha256'),fd=fs.openSync(file,'r');try{let bytes;while((bytes=fs.readSync(fd,FILE_DIGEST_BUFFER,0,FILE_DIGEST_BUFFER.length,null))!==0)digest.update(FILE_DIGEST_BUFFER.subarray(0,bytes));return digest.digest('hex');}finally{fs.closeSync(fd);}}
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function fail(code){throw Error(code);}
 function config(file){
@@ -28,7 +30,7 @@ function credentials(c){
 }
 function root(name){if(!PINS.sources[name])fail('SOURCE_VARIANT_INVALID');return path.join(DIR,'sources',name);}
 function verifySource(name){
- const base=root(name);for(const {path:file,sha256:hash} of PINS.sources[name].files)if(sha(fs.readFileSync(path.join(base,file)))!==hash)fail('PINNED_SOURCE_HASH_MISMATCH');
+ const base=root(name);for(const {path:file,sha256:hash} of PINS.sources[name].files)if(fileSha(path.join(base,file))!==hash)fail('PINNED_SOURCE_HASH_MISMATCH');
  return PINS.sources[name];
 }
 function verifyRuntimeArtifacts(checkTree=false){
@@ -37,16 +39,16 @@ function verifyRuntimeArtifacts(checkTree=false){
  if(a.nodeVersion!=='v24.22.1'||process.version!==a.nodeVersion||process.platform!=='linux'||process.arch!=='x64'||!a.reviewReference||/^(FILL|PENDING)/.test(a.reviewReference))fail('PINNED_NODE24_RUNTIME_REQUIRED');
  for(const key of ['nodeBinarySha256','nodeArchiveSha256','nodeChecksumsSha256','dependencyArchiveSha256','dependencyTreeManifestSha256','installProvenanceSha256'])if(!hex.test(a[key]||''))fail('RUNTIME_ARTIFACT_DIGEST_REQUIRED');
  for(const key of ['nodeBinaryPath','nodeArchivePath','nodeChecksumsPath','dependencyArchivePath','dependencyTreeManifestPath','dependencyRoot','installProvenancePath'])if(!path.isAbsolute(a[key]||''))fail('RUNTIME_ARTIFACT_PATH_REQUIRED');
- if(fs.realpathSync(process.execPath)!==fs.realpathSync(a.nodeBinaryPath)||sha(fs.readFileSync(process.execPath))!==a.nodeBinarySha256)fail('NODE_BINARY_INTEGRITY_MISMATCH');
- if(a.nodeChecksumSource!=='https://nodejs.org/dist/v24.22.1/SHASUMS256.txt'||sha(fs.readFileSync(a.nodeChecksumsPath))!==a.nodeChecksumsSha256||sha(fs.readFileSync(a.nodeArchivePath))!==a.nodeArchiveSha256)fail('NODE_OFFICIAL_ARTIFACT_PIN_MISMATCH');
+ if(fs.realpathSync(process.execPath)!==fs.realpathSync(a.nodeBinaryPath)||fileSha(process.execPath)!==a.nodeBinarySha256)fail('NODE_BINARY_INTEGRITY_MISMATCH');
+ if(a.nodeChecksumSource!=='https://nodejs.org/dist/v24.22.1/SHASUMS256.txt'||fileSha(a.nodeChecksumsPath)!==a.nodeChecksumsSha256||fileSha(a.nodeArchivePath)!==a.nodeArchiveSha256)fail('NODE_OFFICIAL_ARTIFACT_PIN_MISMATCH');
  const checksumLine=fs.readFileSync(a.nodeChecksumsPath,'utf8').split(/\r?\n/).find(line=>line.trim().split(/\s+/).at(-1)===path.basename(a.nodeArchivePath));
  if(!checksumLine||checksumLine.trim().split(/\s+/)[0]!==a.nodeArchiveSha256)fail('NODE_OFFICIAL_CHECKSUM_ENTRY_MISSING');
- if(sha(fs.readFileSync(a.dependencyArchivePath))!==a.dependencyArchiveSha256||sha(fs.readFileSync(a.dependencyTreeManifestPath))!==a.dependencyTreeManifestSha256)fail('DEPENDENCY_ARTIFACT_INTEGRITY_MISMATCH');
- if(sha(fs.readFileSync(a.installProvenancePath))!==a.installProvenanceSha256)fail('INSTALL_PROVENANCE_PIN_MISMATCH');
+ if(fileSha(a.dependencyArchivePath)!==a.dependencyArchiveSha256||fileSha(a.dependencyTreeManifestPath)!==a.dependencyTreeManifestSha256)fail('DEPENDENCY_ARTIFACT_INTEGRITY_MISMATCH');
+ if(fileSha(a.installProvenancePath)!==a.installProvenanceSha256)fail('INSTALL_PROVENANCE_PIN_MISMATCH');
  if(checkTree){
   const expected=JSON.parse(fs.readFileSync(a.dependencyTreeManifestPath,'utf8')).files;if(!Array.isArray(expected)||!expected.length)fail('DEPENDENCY_TREE_MANIFEST_REQUIRED');
   const root=fs.realpathSync(a.dependencyRoot),actual=[];
-  const walk=(dir,prefix='')=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true}).sort((x,y)=>x.name.localeCompare(y.name))){const relative=prefix+entry.name,full=path.join(dir,entry.name),stat=fs.lstatSync(full);if(stat.mode&0o6000)fail('UNSAFE_DEPENDENCY_FILE_MODE');if(entry.isDirectory())walk(full,relative+'/');else if(entry.isSymbolicLink()){const target=fs.realpathSync(full);if(!target.startsWith(root+path.sep))fail('DEPENDENCY_SYMLINK_ESCAPE');actual.push({path:relative,type:'symlink',target:fs.readlinkSync(full)});}else if(entry.isFile())actual.push({path:relative,type:'file',sha256:sha(fs.readFileSync(full))});else fail('DEPENDENCY_SPECIAL_FILE_FORBIDDEN');}};
+  const walk=(dir,prefix='')=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true}).sort((x,y)=>x.name.localeCompare(y.name))){const relative=prefix+entry.name,full=path.join(dir,entry.name),stat=fs.lstatSync(full);if(stat.mode&0o6000)fail('UNSAFE_DEPENDENCY_FILE_MODE');if(entry.isDirectory())walk(full,relative+'/');else if(entry.isSymbolicLink()){const target=fs.realpathSync(full);if(!target.startsWith(root+path.sep))fail('DEPENDENCY_SYMLINK_ESCAPE');actual.push({path:relative,type:'symlink',target:fs.readlinkSync(full)});}else if(entry.isFile())actual.push({path:relative,type:'file',sha256:fileSha(full)});else fail('DEPENDENCY_SPECIAL_FILE_FORBIDDEN');}};
   walk(root);const normalize=rows=>JSON.stringify([...rows].sort((x,y)=>x.path.localeCompare(y.path)));
   if(normalize(actual)!==normalize(expected))fail('UNPACKED_DEPENDENCY_TREE_INTEGRITY_MISMATCH');
  }
@@ -60,4 +62,4 @@ function baseEnvironment(databaseUrl,c){
 }
 function safeError(error){return {code:/^[A-Z][A-Z0-9_]{2,100}$/.test(error?.message||'')?error.message:'WITHHELD',sqlState:/^[0-9A-Z]{5}$/.test(error?.code||'')?error.code:null};}
 function writeJson(file,data){fs.writeFileSync(file,JSON.stringify(data,null,2)+'\n',{mode:0o600});}
-module.exports={DIR,PINS,sha,uuid,fail,config,credentials,root,verifySource,baseEnvironment,safeError,writeJson,verifyRuntimeArtifacts,tenantOptions};
+module.exports={DIR,PINS,sha,fileSha,uuid,fail,config,credentials,root,verifySource,baseEnvironment,safeError,writeJson,verifyRuntimeArtifacts,tenantOptions};

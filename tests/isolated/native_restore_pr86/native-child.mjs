@@ -131,4 +131,4 @@ try{
   process.send?.({committed:true,receiptPath});await new Promise(resolve=>process.once('SIGTERM',resolve));
  }
  await client.end();client=null;
-}catch(error){if(client)try{await client.query('ROLLBACK');await client.end();}catch{}console.error(JSON.stringify(common.safeError(error)));process.exitCode=1;}
+}catch(error){const failure={status:'FAILED',variant,mode,error:common.safeError(error)};try{common.writeJson(receiptPath,failure);}catch{}if(client)try{await client.query('ROLLBACK');await client.end();}catch{}console.error(JSON.stringify(failure.error));process.exitCode=1;}
