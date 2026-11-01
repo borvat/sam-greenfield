@@ -20,7 +20,7 @@ def lit(v):return "'"+v.replace("'","''")+"'"
 def mapped(role,database=False):
  if role=='PUBLIC':return role
  need(role in ROLES|{'postgres',ADMIN},'SOURCE_ACL_PRINCIPAL_REFUSED')
- return ADMIN if role=='postgres' or (database and role=='sam_trial_postgres_user') else role
+ return ADMIN if database and role=='sam_trial_postgres_user' else role
 def acl_entries(raw,owner,kind,database=False):
  if raw is None:
   base={'r':'arwdDxt','S':'rwU','f':'X','n':'UC','d':'CTc'}[kind]
@@ -99,6 +99,7 @@ def main():
   sql.append('ALTER ROLE '+qi(name)+' '+' '.join(flags)+(' VALID UNTIL '+lit(role['rolvaliduntil']) if role['rolvaliduntil'] else " VALID UNTIL 'infinity'")+';')
  reset_roles=sorted(ROLES|{ADMIN})
  objects=[]
+ managed_functions=[]
  for x in cat['schemas']:
   objects.append(('SCHEMA '+qi(x['nspname']),'n',x['owner'],x['acl'],False,
       'SELECT nspacl acl,nspowner owner FROM pg_namespace WHERE nspname='+lit(x['nspname'])))
@@ -110,8 +111,17 @@ def main():
  for x in cat['functions']:
   args=x['arguments'];need(bool(re.fullmatch(r'[a-zA-Z0-9_" .,\[\]]*',args)),'FUNCTION_ARGUMENTS_REFUSED')
   address=qi(x['nspname'])+'.'+qi(x['proname'])+'('+args+')'
-  objects.append(('FUNCTION '+address,'f',x['owner'],x['acl'],False,
-      'SELECT p.proacl acl,p.proowner owner FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='+lit(x['nspname'])+' AND p.proname='+lit(x['proname'])+' AND pg_get_function_identity_arguments(p.oid)='+lit(args)))
+  catalogsql='SELECT p.proacl acl,p.proowner owner,p.oid object_oid FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='+lit(x['nspname'])+' AND p.proname='+lit(x['proname'])+' AND pg_get_function_identity_arguments(p.oid)='+lit(args)
+  if x['owner']=='postgres':
+   need(x['acl']=='{=X/postgres,postgres=X/postgres,sam_trial_postgres_user=X/postgres}',
+        'MANAGED_EXTENSION_SOURCE_ACL_PATTERN_CHANGED')
+   expected=acl_entries(x['acl'],x['owner'],'f')
+   expected=sorted([[ADMIN if row[0]=='sam_trial_postgres_user' else row[0],*row[1:]] for row in expected],key=lambda z:(z[0],z[1],z[2],z[3]))
+   managed_functions.append((catalogsql,expected))
+  else:
+   need(x['owner']=='sam_trial_postgres_user','FUNCTION_OWNER_REFUSED')
+   objects.append(('FUNCTION '+address,'f',x['owner'],x['acl'],False,catalogsql))
+ need(len(managed_functions)==36,'MANAGED_EXTENSION_FUNCTION_COUNT_CHANGED')
  for x in cat['database']:
   need(x['datname']=='sam_trial_postgres' and x['owner']=='sam_trial_postgres_user','SOURCE_DATABASE_CHANGED')
   objects.append(('DATABASE '+qi(DB),'d',x['owner'],x['acl'],True,
@@ -126,6 +136,11 @@ def main():
    'rolinherit='+str(role['rolinherit']).upper(),'rolcreatedb='+str(role['rolcreatedb']).upper(),
    'rolcreaterole='+str(role['rolcreaterole']).upper(),'rolconnlimit='+str(int(role['rolconnlimit']))]
   checks.append('IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='+lit(role['rolname'])+' AND '+' AND '.join(tests)+") THEN RAISE EXCEPTION 'TARGET_ROLE_FLAGS_MISMATCH'; END IF;")
+ for catalogsql,expected in managed_functions:
+  expected_json=json.dumps(expected,separators=(',',':'))
+  checks.append('IF NOT EXISTS (SELECT 1 FROM ('+catalogsql+") o JOIN pg_depend d ON d.classid='pg_proc'::regclass AND d.objid=o.object_oid AND d.deptype='e' JOIN pg_extension e ON e.oid=d.refobjid WHERE e.extname='pgcrypto' AND pg_get_userbyid(o.owner)='postgres') THEN RAISE EXCEPTION 'MANAGED_PGCRYPTO_MEMBERSHIP_OWNER_MISMATCH'; END IF;")
+  expression="(SELECT COALESCE(jsonb_agg(jsonb_build_array(COALESCE(g.rolname,'PUBLIC'),r.rolname,a.privilege_type,a.is_grantable) ORDER BY COALESCE(g.rolname,'PUBLIC') COLLATE \"C\",r.rolname COLLATE \"C\",a.privilege_type COLLATE \"C\",a.is_grantable),'[]'::jsonb) FROM ("+catalogsql+") o CROSS JOIN LATERAL aclexplode(COALESCE(o.acl,acldefault('f'::\"char\",o.owner))) a LEFT JOIN pg_roles g ON g.oid=a.grantee JOIN pg_roles r ON r.oid=a.grantor)"
+  checks.append('IF '+expression+' IS DISTINCT FROM '+lit(expected_json)+"::jsonb THEN RAISE EXCEPTION 'MANAGED_PGCRYPTO_CREATOR_ACL_MISMATCH'; END IF;")
  for address,kind,owner,rawacl,dbmap,catalogsql in objects:
   entries=acl_entries(rawacl,owner,kind,dbmap)
   # Null ACL means standard default. Keep it null instead of inventing explicit grants.
@@ -156,10 +171,11 @@ def main():
  packet='\n'.join(sql)+'\n';(private/'acl-replay.private.sql').write_text(packet)
  execute(packet,'acl-replay')
  summary={'status':'PINNED_ACL_SEMANTICS_REPLAYED','target':HOST,'database':DB,'source_catalog_sha256':CATALOG_SHA,
-  'objects_checked':len(objects),'column_acls_checked':len(cat['column_acls']),'default_acls_source_count':0,
+  'objects_checked':len(objects)+len(managed_functions),'managed_pgcrypto_functions_readonly_asserted':len(managed_functions),'managed_pgcrypto_function_mutations':False,'raw_source_acls_identical':False,'column_acls_checked':len(cat['column_acls']),'default_acls_source_count':0,
   'source_role_settings_count':0,'source_memberships_count':0,'temporary_restore_owner_membership_retained':True,
   'intentional_differences':['All four source roles remain NOLOGIN; no production password copied.',
-    'Source postgres grantor/extension-function owner maps to target administrator.',
+    '36 provider-owned pgcrypto functions retain postgres owner/grantor unchanged; only source-extension-creator EXECUTE grantee maps to target administrator, readonly asserted, never mutated.',
+    'Managed extension raw ACLs intentionally differ in creator grantee; normalized context-specific mapping only.',
     'Source database owner maps to target administrator; application-object owners remain source owner.',
     'Target administrator retains restore-only source-owner membership; not part of source runtime memberships.'],
   'fixed_tenant_binding_derived_privately':True,'application_login_tested':False,'rls_changed':False,
