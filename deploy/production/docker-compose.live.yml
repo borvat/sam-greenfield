@@ -72,6 +72,9 @@ services:
       <<: *sam-env
       DATABASE_URL: postgres://sam_worker:${SAM_WORKER_DB_PASSWORD:?SAM_WORKER_DB_PASSWORD is required}@postgres:5432/${POSTGRES_DB}
       SAM_WORKER_ID: ${SAM_WORKER_ID:?SAM_WORKER_ID is required}
+      # Credential vault master keys: runtime worker ONLY (never mcp / command center / database).
+      SAM_VAULT_KEYS: ${SAM_VAULT_KEYS:?SAM_VAULT_KEYS is required}
+      SAM_VAULT_ACTIVE_KEY_VERSION: ${SAM_VAULT_ACTIVE_KEY_VERSION:?SAM_VAULT_ACTIVE_KEY_VERSION is required}
       SAM_COMPOSITION_MODULE: /app/apps/runtime/src/productionCompositionModule.ts
       HOST: 0.0.0.0
       PORT: 8080

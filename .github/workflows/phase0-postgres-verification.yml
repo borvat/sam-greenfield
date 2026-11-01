@@ -72,3 +72,5 @@ jobs:
           done
       - name: Role separation and tenant isolation
         run: npx tsx tests/rls/role_separation_isolation.ts
+      - name: Credential vault
+        run: npx tsx tests/rls/credential_vault.ts
