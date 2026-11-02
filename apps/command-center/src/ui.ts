@@ -9,7 +9,7 @@ export const commandCenterHtml=`<!doctype html>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}
 *{box-sizing:border-box}body{margin:0}.shell{max-width:1400px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand h1{margin:0;font-size:26px}.brand p{margin:5px 0;color:#4b5563}.badge{padding:8px 12px;border-radius:999px;background:#111827;color:white;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.metric .n{font-size:28px;font-weight:700}.metric .l{font-size:12px;color:#6b7280;margin-top:4px}
-.main{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:16px;margin:0}.goal{padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:9px;cursor:pointer}.goal:hover{border-color:#9ca3af}.row{display:flex;justify-content:space-between;gap:10px}.muted{color:#6b7280;font-size:12px}.state{font-size:11px;padding:4px 8px;border-radius:999px;background:#f3f4f6}.btn{border:0;background:#111827;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111827}.form input,.form textarea,.form select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;margin:6px 0 10px;background:white}.form textarea{min-height:105px;resize:vertical}.detail pre{white-space:pre-wrap;overflow:auto;background:#111827;color:#e5e7eb;padding:12px;border-radius:10px;font-size:11px;max-height:420px}.finance{line-height:1.55}.err{color:#b91c1c;font-size:12px}
+.main{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:16px;margin:0}.goal{padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:9px;cursor:pointer}.goal:hover{border-color:#9ca3af}.row{display:flex;justify-content:space-between;gap:10px}.muted{color:#6b7280;font-size:12px}.state{font-size:11px;padding:4px 8px;border-radius:999px;background:#f3f4f6}.btn{border:0;background:#111827;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111827}.form input,.form textarea,.form select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;margin:6px 0 10px;background:white}.form textarea{min-height:105px;resize:vertical}.detail pre{white-space:pre-wrap;overflow:auto;background:#111827;color:#e5e7eb;padding:12px;border-radius:10px;font-size:11px;max-height:420px}.finance{line-height:1.55}.err{color:#b91c1c;font-size:12px}.goal.selected{border-color:#111827;background:#f9fafb;box-shadow:inset 0 0 0 1px #111827}.pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:#eef2f7;color:#111827}.summary{padding:10px 0;border-top:1px solid #eef2f7}.summary p{margin:5px 0;line-height:1.5}.loading{color:#4b5563;font-size:13px}.detail details{margin-top:10px}.detail summary{cursor:pointer;font-size:12px;color:#4b5563}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
 </style>
 </head>
@@ -64,7 +64,7 @@ export const commandCenterHtml=`<!doctype html>
       <div id="notifications-results">Connect to inspect internal notifications.</div><div id="notifications-error" class="err" role="status"></div>
     </section>
   </div>
-  <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
+  <div class="card detail" id="timeline-section" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2><span class="muted" id="timeline-status">Select a goal</span></div><div id="report-result"></div><details id="raw-timeline" hidden><summary>Raw JSON</summary><pre id="timeline">Select a goal.</pre></details></div>
 </div>
 <script>
 let authGeneration=0,refreshGeneration=null,wakeRetry=0;
@@ -129,7 +129,7 @@ async function refresh(){const generation=authGeneration;
       metric("Pending approvals",o.pending_approvals),metric("Unresolved side effects",o.unresolved_side_effects),metric("Failed goals",o.failed_goals)
     ].join("");
     document.getElementById("goals").innerHTML=goals.data.map(g=>'<div class="goal" data-goal-id="'+escapeHtml(g.id)+'"><div class="row"><strong>'+escapeHtml(g.business_id+" · "+g.domain)+'</strong><span class="state">'+escapeHtml(g.state)+'</span></div><div style="margin-top:6px">'+escapeHtml(g.objective)+'</div><div class="muted">Priority '+g.priority+' · '+escapeHtml(g.authority_ceiling||"")+'</div></div>').join("")||'<div class="muted">No goals.</div>';
-    document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
+    document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});markSelected();
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
     await refreshInternalNotifications();
   }catch(e){if(generation!==authGeneration)return;
@@ -142,7 +142,75 @@ async function refresh(){const generation=authGeneration;
   finally{if(refreshGeneration===generation)refreshGeneration=null}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function timeline(id){const generation=authGeneration;try{const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");if(generation!==authGeneration)return;document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);const result=document.getElementById("report-result");result.textContent="";for(const r of x.data.reports||[]){const pre=document.createElement("pre");pre.textContent=JSON.stringify({reportId:r.id,hash:r.report_hash,summary:r.decision.summary,coverage:r.decision.report?.analysisCoverage||r.decision.coverage,limitations:r.decision.limitations||r.decision.report?.limitations,waitDiagnostics:r.decision.runtimeReview,semanticValidation:r.decision.report?.semanticPolicy||(r.decision.diagnostic?.schema==="sam.legacy_read_diagnostic.v1"?"DETERMINISTIC_BOUNDED_DIAGNOSTIC":"HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED"),retrieval:"SAVED_RESULT_ONLY_NO_EXECUTION"},null,2);result.appendChild(pre)}for(const a of x.data.audit||[]){if(a.action==="READ_REVIEW_DIAGNOSTIC"){const pre=document.createElement("pre");pre.textContent=JSON.stringify({waitDiagnostics:a.after_ref},null,2);result.appendChild(pre)}}}catch(e){if(generation!==authGeneration)return;document.getElementById("timeline").textContent=e.message}}
+let selectedGoalId=null;
+function pill(value){const span=document.createElement("span");span.className="pill";span.textContent=String(value);return span}
+function detailLine(label,value){const p=document.createElement("p");const strong=document.createElement("strong");strong.textContent=label+": ";p.appendChild(strong);p.appendChild(document.createTextNode(String(value)));return p}
+function markSelected(){document.querySelectorAll("#goals [data-goal-id]").forEach(function(el){if(selectedGoalId&&el.dataset&&el.dataset.goalId===selectedGoalId){el.classList.add("selected")}else{el.classList.remove("selected")}})}
+function renderTimeline(target,data){
+  const goal=data.goal||{};
+  const head=document.createElement("div");head.className="report-head";
+  if(goal.business_id)head.appendChild(pill(goal.business_id));
+  if(goal.state)head.appendChild(pill(goal.state));
+  if(goal.domain)head.appendChild(pill(goal.domain));
+  if(goal.authority_ceiling)head.appendChild(pill("authority "+goal.authority_ceiling));
+  target.appendChild(head);
+  if(goal.objective){const p=document.createElement("p");p.textContent=goal.objective;target.appendChild(p)}
+  const counts=document.createElement("p");counts.className="muted";
+  counts.textContent="plans "+((data.plans||[]).length)+" · executions "+((data.executions||[]).length)+" · verifications "+((data.verifications||[]).length)+" · reports "+((data.reports||[]).length);
+  target.appendChild(counts);
+  const reports=data.reports||[];
+  if(!reports.length){const p=document.createElement("p");p.className="muted";p.textContent=data.reportsAvailability==="MISSING_INTEGRATION_TABLE"?"No saved report table in this environment.":"No saved report for this goal yet.";target.appendChild(p)}
+  reports.forEach(function(r,index){
+    const card=document.createElement("div");card.className="summary";
+    const title=document.createElement("p");const strong=document.createElement("strong");
+    strong.textContent="Saved report "+(index+1);title.appendChild(strong);card.appendChild(title);
+    if(r.decision&&r.decision.summary){const p=document.createElement("p");p.textContent=r.decision.summary;card.appendChild(p)}
+    card.appendChild(detailLine("Report ID",r.id));
+    card.appendChild(detailLine("Hash",r.report_hash));
+    const cov=r.decision&&r.decision.report&&r.decision.report.analysisCoverage;
+    if(cov)card.appendChild(detailLine("Coverage",typeof cov==="object"?((cov.covered!==undefined?cov.covered:"?")+"/"+(cov.total!==undefined?cov.total:"?")):cov));
+    const limits=(r.decision&&r.decision.limitations)||(r.decision&&r.decision.report&&r.decision.report.limitations);
+    if(Array.isArray(limits)&&limits.length){const p=document.createElement("p");p.textContent="Limitations: "+limits.join(" · ");card.appendChild(p)}
+    const policy=(r.decision&&r.decision.report&&r.decision.report.semanticPolicy)||"HISTORICAL_NARRATIVE_NOT_SEMANTICALLY_VALIDATED";
+    card.appendChild(detailLine("Semantic validation",policy));
+    card.appendChild(detailLine("Retrieval","SAVED RESULT ONLY · no new execution"));
+    target.appendChild(card);
+  });
+  const diagnostics=(data.audit||[]).filter(function(a){return a.action==="READ_REVIEW_DIAGNOSTIC"});
+  if(diagnostics.length){
+    const box=document.createElement("details");const summary=document.createElement("summary");
+    summary.textContent="Wait diagnostics ("+diagnostics.length+")";box.appendChild(summary);
+    const pre=document.createElement("pre");pre.textContent=JSON.stringify(diagnostics.map(function(a){return a.after_ref}),null,2);box.appendChild(pre);
+    target.appendChild(box);
+  }
+}
+async function timeline(id){
+  const generation=authGeneration;
+  const result=document.getElementById("report-result"),raw=document.getElementById("raw-timeline"),status=document.getElementById("timeline-status"),section=document.getElementById("timeline-section");
+  selectedGoalId=id;markSelected();
+  if(section&&section.setAttribute)section.setAttribute("aria-busy","true");
+  if(status)status.textContent="Loading…";
+  result.textContent="";
+  const loading=document.createElement("p");loading.className="loading";loading.textContent="Loading timeline and saved reports…";result.appendChild(loading);
+  if(section&&typeof section.scrollIntoView==="function")section.scrollIntoView({behavior:"smooth",block:"start"});
+  try{
+    const x=await api("/api/goals/"+encodeURIComponent(id)+"/timeline");
+    if(generation!==authGeneration)return;
+    document.getElementById("timeline").textContent=JSON.stringify(x.data,null,2);
+    if(raw)raw.hidden=false;
+    result.textContent="";
+    renderTimeline(result,x.data);
+    if(status)status.textContent="Saved results only · no new execution";
+    if(section&&typeof section.scrollIntoView==="function")section.scrollIntoView({block:"start"});
+  }catch(e){
+    if(generation!==authGeneration)return;
+    result.textContent="";
+    const p=document.createElement("p");p.className="err";p.textContent=e.message;result.appendChild(p);
+    if(status)status.textContent="Failed";
+  }finally{
+    if(section&&section.removeAttribute)section.removeAttribute("aria-busy");
+  }
+}
 async function createGoal(){const generation=authGeneration;
   const error=document.getElementById("formError");error.textContent="";
   try{
