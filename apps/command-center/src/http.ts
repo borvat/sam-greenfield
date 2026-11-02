@@ -47,10 +47,10 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
 
   const server=createServer(async(req,res)=>{
     try{
-      if(req.method==="GET"&&req.url==="/livez"){json(res,200,{status:"alive",...buildRevision()});return}
+      if(req.method==="GET"&&req.url==="/livez"){const rev=buildRevision();json(res,200,{status:"alive",...rev,commit:rev.revision});return}
       if(req.method==="GET"&&req.url==="/readyz"){
         const state=await commandCenterReadiness(options.legalEntityId);
-        json(res,state.ready?200:503,{status:state.ready?"ready":"not_ready",...state,...buildRevision()});
+        const rev=buildRevision();json(res,state.ready?200:503,{status:state.ready?"ready":"not_ready",...state,...rev,commit:rev.revision});
         return;
       }
 

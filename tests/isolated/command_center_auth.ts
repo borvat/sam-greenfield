@@ -233,3 +233,20 @@ test('the wake window is bounded to two retries before a real error is shown',as
  assert.equal(ui.node('status').textContent,'ERROR');
  assert.match(ui.node('authError').textContent,/Service unavailable/);
 });
+
+test('health reports the deployed commit so a release can be verified against the running build',async()=>{
+ const previous=process.env.SAM_BUILD_REVISION;
+ process.env.SAM_BUILD_REVISION='0123456789abcdef0123456789abcdef01234567';
+ try{
+  const service=await startCommandCenterHttpServer({legalEntityId:'synthetic-unused',port:0,host:'127.0.0.1',bearerToken:syntheticToken,allowedHosts:'127.0.0.1'});
+  try{
+   const address=service.server.address();assert.ok(address&&typeof address!=='string');
+   const live=await (await fetch('http://127.0.0.1:'+address.port+'/livez')).json();
+   assert.equal(live.revision,'0123456789abcdef0123456789abcdef01234567');
+   assert.equal(live.commit,'0123456789abcdef0123456789abcdef01234567');
+  }finally{await service.close()}
+ }finally{
+  if(previous===undefined)delete process.env.SAM_BUILD_REVISION;
+  else process.env.SAM_BUILD_REVISION=previous;
+ }
+});
