@@ -7,7 +7,7 @@ export const commandCenterHtml=`<!doctype html>
 <title>SAM Executive Command Center</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}
-*{box-sizing:border-box}body{margin:0}.shell{max-width:1400px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand h1{margin:0;font-size:26px}.brand p{margin:5px 0;color:#6b7280}.badge{padding:8px 12px;border-radius:999px;background:#111827;color:white;font-size:12px}
+*{box-sizing:border-box}body{margin:0}.shell{max-width:1400px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand h1{margin:0;font-size:26px}.brand p{margin:5px 0;color:#4b5563}.badge{padding:8px 12px;border-radius:999px;background:#111827;color:white;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.metric .n{font-size:28px;font-weight:700}.metric .l{font-size:12px;color:#6b7280;margin-top:4px}
 .main{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.section-title h2{font-size:16px;margin:0}.goal{padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:9px;cursor:pointer}.goal:hover{border-color:#9ca3af}.row{display:flex;justify-content:space-between;gap:10px}.muted{color:#6b7280;font-size:12px}.state{font-size:11px;padding:4px 8px;border-radius:999px;background:#f3f4f6}.btn{border:0;background:#111827;color:white;border-radius:9px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111827}.form input,.form textarea,.form select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;margin:6px 0 10px;background:white}.form textarea{min-height:105px;resize:vertical}.detail pre{white-space:pre-wrap;overflow:auto;background:#111827;color:#e5e7eb;padding:12px;border-radius:10px;font-size:11px;max-height:420px}.finance{line-height:1.55}.err{color:#b91c1c;font-size:12px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.shell{padding:16px}}
@@ -34,8 +34,8 @@ export const commandCenterHtml=`<!doctype html>
         <div class="section-title"><h2>Create Executive Goal</h2></div>
         <textarea id="objective" placeholder="Example: Review current bol sales and accounting differences and produce a verified owner brief."></textarea>
         <input id="domain" value="owner_command" placeholder="domain"/>
-        <select id="authority"><option>YELLOW</option><option>GREEN</option></select>
-        <input id="priority" type="number" min="0" max="100" value="70"/>
+        <label for="authority">Authority ceiling</label><select id="authority"><option>YELLOW</option><option>GREEN</option></select>
+        <label for="priority">Priority (0-100)</label><input id="priority" type="number" min="0" max="100" value="70"/>
         <label for="acceptance">Optional owner acceptance contract (JSON; required by release profile)</label>
         <textarea id="acceptance" placeholder='{"version":1,"constraints":[{"capabilityId":"local.calculate","params":{"operation":"max"},"result":{"field":"value","equals":8}}]}'></textarea>
         <button class="btn" onclick="createGoal()">Create Goal</button>
