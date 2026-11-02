@@ -216,3 +216,20 @@ test('a rejected credential is never retried as a wake failure',async()=>{
  assert.equal(ui.node('status').textContent,'AUTH REQUIRED');
  assert.equal(ui.storage.size,0);
 });
+
+test('the wake window is bounded to two retries before a real error is shown',async()=>{
+ const timers:{fn:()=>void;ms:number}[]=[];
+ const ui=uiHarness(async()=>{throw Error('synthetic-secret network details')},{setTimeout(fn,ms){timers.push({fn,ms});return timers.length},clearTimeout(){}});
+ ui.run('token="synthetic-current";sessionStorage.setItem("sam_cc_token",token)');
+ await ui.run('refresh()');
+ assert.deepEqual(timers.filter(timer=>timer.ms===8000||timer.ms===20000).map(timer=>timer.ms),[8000]);
+ timers.find(timer=>timer.ms===8000)!.fn();
+ for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(timers.filter(timer=>timer.ms===8000||timer.ms===20000).map(timer=>timer.ms),[8000,20000]);
+ assert.equal(ui.node('status').textContent,'SERVICE WAKING');
+ timers.find(timer=>timer.ms===20000)!.fn();
+ for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(timers.filter(timer=>timer.ms===8000||timer.ms===20000).length,2,'no third retry is scheduled');
+ assert.equal(ui.node('status').textContent,'ERROR');
+ assert.match(ui.node('authError').textContent,/Service unavailable/);
+});

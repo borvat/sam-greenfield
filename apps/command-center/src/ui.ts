@@ -67,12 +67,12 @@ export const commandCenterHtml=`<!doctype html>
   <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
-let authGeneration=0,refreshGeneration=null,wakeRetry=null;
+let authGeneration=0,refreshGeneration=null,wakeRetry=0;
 let token=sessionStorage.getItem("sam_cc_token")||"";
 async function connect(){
   const value=document.getElementById("bearerToken").value.trim();
   if(!value){document.getElementById("authError").textContent="Enter a bearer token.";return}
-  authGeneration++;token=value;sessionStorage.setItem("sam_cc_token",token);
+  authGeneration++;wakeRetry=0;token=value;sessionStorage.setItem("sam_cc_token",token);
   document.getElementById("bearerToken").value="";
   document.getElementById("authError").textContent="";
   await refresh();
@@ -122,7 +122,7 @@ async function refresh(){const generation=authGeneration;
     const [overview,goals,finance]=results.map(result=>result.value);
     if(generation!==authGeneration||!token)return;
     document.getElementById("authPanel").hidden=true;
-    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";wakeRetry=null;
+    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";wakeRetry=0;
     const o=overview.data;
     document.getElementById("metrics").innerHTML=[
       metric("Active goals",o.active_goals),metric("Active work",o.active_work),metric("Waiting owner",o.waiting_owner),
@@ -135,9 +135,9 @@ async function refresh(){const generation=authGeneration;
   }catch(e){if(generation!==authGeneration)return;
     // Free instances take up to a minute to wake. One bounded retry covers the wake
     // window; a rejected credential, an invalid body or a second failure is never retried.
-    if(e&&e.transport===true&&wakeRetry!==generation){wakeRetry=generation;
+    if(e&&e.transport===true&&wakeRetry<2){wakeRetry++;
       document.getElementById("status").textContent="SERVICE WAKING";
-      setTimeout(()=>{if(generation===authGeneration)refresh()},8000);return}
+      setTimeout(()=>{if(generation===authGeneration)refresh()},wakeRetry===1?8000:20000);return}
     document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
   finally{if(refreshGeneration===generation)refreshGeneration=null}
 }
