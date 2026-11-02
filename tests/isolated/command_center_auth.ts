@@ -179,3 +179,40 @@ test('refresh prevents overlapping batches until every request settles and a new
  for(let i=7;i<10;i++)pending[i].resolve(ok(ui.requests[i].path));
  await new Promise(resolve=>setImmediate(resolve));pending[10].resolve(ok('/api/notifications'));await again;
 });
+
+test('keep-alive is bounded to the Render edge window so the proxy cannot reuse a closed socket',async()=>{
+ const service=await startCommandCenterHttpServer({legalEntityId:'synthetic-unused',port:0,host:'127.0.0.1',bearerToken:syntheticToken,allowedHosts:'127.0.0.1'});
+ try{
+  assert.equal(service.server.keepAliveTimeout,120000);
+  assert.ok(service.server.headersTimeout>service.server.keepAliveTimeout);
+ }finally{await service.close()}
+});
+
+test('one transport failure schedules exactly one bounded wake retry and renders the dashboard',async()=>{
+ const timers:{fn:()=>void;ms:number}[]=[];
+ const ok=(path:string)=>({status:200,ok:true,json:async()=>({data:path==='/api/goals'?[]:path==='/api/finance/latest'?null:path==='/api/notifications'?{records:[]}:{active_goals:2}})});
+ let failing=true;
+ const ui=uiHarness(async path=>{if(failing)throw Error('synthetic-secret network details');return ok(path)},{setTimeout(fn,ms){timers.push({fn,ms});return timers.length},clearTimeout(){}});
+ ui.run('token="synthetic-current";sessionStorage.setItem("sam_cc_token",token)');
+ await ui.run('refresh()');
+ const wake=timers.filter(timer=>timer.ms===8000);
+ assert.equal(wake.length,1,'exactly one wake retry is scheduled');
+ assert.equal(ui.node('status').textContent,'SERVICE WAKING');
+ assert.equal(ui.node('authError').textContent,'');
+ failing=false;wake[0].fn();
+ for(let i=0;i<8;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(ui.node('status').textContent,'LIVE');
+ assert.equal(ui.node('authPanel').hidden,true);
+ assert.equal(timers.filter(timer=>timer.ms===8000).length,1,'the wake retry is not re-armed by the retried batch');
+ assert.equal(ui.storage.get('sam_cc_token'),'synthetic-current');
+});
+
+test('a rejected credential is never retried as a wake failure',async()=>{
+ const timers:{fn:()=>void;ms:number}[]=[];
+ const ui=uiHarness(async()=>({status:401,ok:false,json:async()=>({error:'unauthorized',reason:'bearer_rejected',request_id:'11111111-1111-4111-8111-111111111111'})}),{setTimeout(fn,ms){timers.push({fn,ms});return timers.length},clearTimeout(){}});
+ ui.run('token="synthetic-current";sessionStorage.setItem("sam_cc_token",token)');
+ await ui.run('refresh()');
+ assert.equal(timers.filter(timer=>timer.ms===8000).length,0);
+ assert.equal(ui.node('status').textContent,'AUTH REQUIRED');
+ assert.equal(ui.storage.size,0);
+});

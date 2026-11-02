@@ -187,6 +187,13 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
     }
   });
 
+  // Render's edge keeps HTTP/1.1 sockets open for up to ~75s and reuses them.
+  // Node's defaults (5s keep-alive, 60s headers) close faster than the edge, so the
+  // proxy can reuse a socket this process already closed and the owner sees an
+  // intermittent non-JSON 502 instead of a dashboard response. Match the edge.
+  server.keepAliveTimeout=120_000;
+  server.headersTimeout=125_000;
+
   await new Promise<void>((resolve,reject)=>{
     server.once("error",reject);
     server.listen(options.port,options.host??"0.0.0.0",()=>{server.off("error",reject);resolve()});

@@ -67,7 +67,7 @@ export const commandCenterHtml=`<!doctype html>
   <div class="card detail" style="margin-top:16px"><div class="section-title"><h2>Golden Chain Timeline</h2></div><div id="report-result"></div><pre id="timeline">Select a goal.</pre></div>
 </div>
 <script>
-let authGeneration=0,refreshGeneration=null;
+let authGeneration=0,refreshGeneration=null,wakeRetry=null;
 let token=sessionStorage.getItem("sam_cc_token")||"";
 async function connect(){
   const value=document.getElementById("bearerToken").value.trim();
@@ -86,7 +86,7 @@ async function api(path,options={}){
   try{
   let r;
   try{r=await fetch(path,{...options,headers,signal:controller.signal})}
-  catch{current();throw Error(controller.signal.aborted?"Service request timed out. Try again.":"Service unavailable. Try again.")}
+  catch{current();const error=Error(controller.signal.aborted?"Service request timed out. Try again.":"Service unavailable. Try again.");error.transport=true;throw error}
   current();
   if(r.status===401){
     let body;try{body=await r.json()}catch{}
@@ -122,7 +122,7 @@ async function refresh(){const generation=authGeneration;
     const [overview,goals,finance]=results.map(result=>result.value);
     if(generation!==authGeneration||!token)return;
     document.getElementById("authPanel").hidden=true;
-    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";
+    document.getElementById("status").textContent=document.body.dataset.developmentSafe?"DEVELOPMENT · CONNECTED":"LIVE";wakeRetry=null;
     const o=overview.data;
     document.getElementById("metrics").innerHTML=[
       metric("Active goals",o.active_goals),metric("Active work",o.active_work),metric("Waiting owner",o.waiting_owner),
@@ -132,7 +132,13 @@ async function refresh(){const generation=authGeneration;
     document.querySelectorAll("#goals [data-goal-id]").forEach(el=>{el.onclick=()=>timeline(el.dataset.goalId)});
     document.getElementById("finance").textContent=finance.data?JSON.stringify(finance.data.after_ref,null,2):"No brief yet.";
     await refreshInternalNotifications();
-  }catch(e){if(generation!==authGeneration)return;document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
+  }catch(e){if(generation!==authGeneration)return;
+    // Free instances take up to a minute to wake. One bounded retry covers the wake
+    // window; a rejected credential, an invalid body or a second failure is never retried.
+    if(e&&e.transport===true&&wakeRetry!==generation){wakeRetry=generation;
+      document.getElementById("status").textContent="SERVICE WAKING";
+      setTimeout(()=>{if(generation===authGeneration)refresh()},8000);return}
+    document.getElementById("status").textContent=token?"ERROR":"AUTH REQUIRED";document.getElementById("formError").textContent=e.message;document.getElementById("authError").textContent=e.message}
   finally{if(refreshGeneration===generation)refreshGeneration=null}
 }
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
