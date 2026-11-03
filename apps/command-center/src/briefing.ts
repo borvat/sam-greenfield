@@ -13,6 +13,7 @@ export interface BriefingReceipt {
   generatedAt: string;
   factsHash: string;
   attempts: number;
+  attribution: 'VERIFIED' | 'MISSING' | 'FOREIGN';
 }
 
 export interface BriefingAnalysis {
@@ -32,7 +33,7 @@ export interface BriefingResult {
   deterministic: BriefingAnalysis;
   receipt: BriefingReceipt | null;
   facts: Record<string, unknown>;
-  budget: {spentUsd: number; limitUsd: number; callsLastHour: number; hourlyCap: number};
+  budget: {recordedUsd: number; estimatedUsd: number; spentUsd: number; reservedUsd: number; limitUsd: number; callsLastHour: number; hourlyCap: number};
 }
 
 /** Every knob below is an operating limit, so each one has a conservative default. */
@@ -44,6 +45,11 @@ const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
 /** Used only when a provider row carries no price: the audit row then records cost 0,
  *  and a dollar ceiling that reads that zero would never fire. */
 const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0012);
+/** Worst-case tokens one call can consume: the facts payload is capped in practice at ~950,
+ *  and the transport refuses any response above MAX_OUTPUT_TOKENS. */
+const MAX_INPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_INPUT_TOKENS || 1200);
+/** A rejected output is retried once, so one brief can cost two calls. */
+const MAX_ATTEMPTS = 2;
 const PROVIDER_ID = process.env.DEEPSEEK_PROVIDER_ID || 'deepseek';
 const PROVIDER_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-flash';
 
@@ -193,7 +199,7 @@ export function deterministicBrief(facts: any, lang: 'ar' | 'en' = 'ar'): Briefi
 /** What this company has already spent on briefs in the last 24 hours, read from the audit trail.
  *  The tenant context is set on the connection explicitly: the budget must not depend on how
  *  DATABASE_URL happens to be configured, and a session without it would silently read zero. */
-export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: number; callsLastHour: number}> {
+export async function briefingUsage(legalEntityId: string): Promise<{recordedUsd: number; estimatedUsd: number; callsLastHour: number}> {
   let client: any;
   try {
     const {pool} = await import('../../../packages/db/src/client');
@@ -201,7 +207,8 @@ export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: n
     await client.query('BEGIN');
     await client.query("select set_config('app.current_legal_entity_id',$1,true)", [legalEntityId]);
     const res = await client.query(
-      `select coalesce(sum(greatest(coalesce(cost,0), (coalesce(tokens,0)::float8/1000.0)*$2)),0)::float8 as spent,
+      `select coalesce(sum(coalesce(cost,0)),0)::float8 as recorded,
+              coalesce(sum(greatest(coalesce(cost,0), (coalesce(tokens,0)::float8/1000.0)*$2)),0)::float8 as estimated,
               count(*) filter (where created_at > now() - interval '1 hour')::int as calls_last_hour
          from model_calls
         where task='executive_briefing'
@@ -210,25 +217,56 @@ export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: n
       [legalEntityId, COST_PER_1K_TOKENS],
     );
     await client.query('COMMIT');
-    return {spentUsd: Number(res.rows[0]?.spent ?? 0), callsLastHour: Number(res.rows[0]?.calls_last_hour ?? 0)};
+    return {
+      recordedUsd: Number(res.rows[0]?.recorded ?? 0),
+      estimatedUsd: Number(res.rows[0]?.estimated ?? 0),
+      callsLastHour: Number(res.rows[0]?.calls_last_hour ?? 0),
+    };
   } catch {
     // An unreadable ledger must never unlock spending.
     if (client) await client.query('ROLLBACK').catch(() => {});
-    return {spentUsd: DAILY_BUDGET_USD, callsLastHour: HOURLY_CALL_CAP};
+    return {recordedUsd: DAILY_BUDGET_USD, estimatedUsd: DAILY_BUDGET_USD, callsLastHour: HOURLY_CALL_CAP};
   } finally {
     if (client) client.release();
   }
 }
 
 /** Refuses to spend when the session carries no tenant context: such a call would be written
- *  unattributed and would escape every per-company ceiling. */
+ *  unattributed and would escape every per-company ceiling. The check runs on a pooled client,
+ *  which is the same kind of connection the gateway will write through. */
 export async function tenantContextPresent(): Promise<boolean> {
+  let client: any;
   try {
     const {pool} = await import('../../../packages/db/src/client');
-    const res = await pool.query("select nullif(current_setting('app.current_legal_entity_id', true), '') as entity");
+    client = await pool.connect();
+    const res = await client.query("select nullif(current_setting('app.current_legal_entity_id', true), '') as entity");
     return Boolean(res.rows[0]?.entity);
   } catch {
     return false;
+  } finally {
+    if (client) client.release();
+  }
+}
+
+/** End-to-end attribution check: the newest briefing row must belong to this company.
+ *  A row written without the tenant context is invisible here, which is the point. */
+export async function lastBriefingAttribution(legalEntityId: string): Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'> {
+  let client: any;
+  try {
+    const {pool} = await import('../../../packages/db/src/client');
+    client = await pool.connect();
+    const res = await client.query(
+      `select legal_entity_id from model_calls
+        where task='executive_briefing' and created_at > now() - interval '3 minutes'
+        order by created_at desc limit 1`,
+    );
+    const row = res.rows[0];
+    if (!row) return 'MISSING';
+    return String(row.legal_entity_id) === legalEntityId ? 'VERIFIED' : 'FOREIGN';
+  } catch {
+    return 'MISSING';
+  } finally {
+    if (client) client.release();
   }
 }
 
@@ -278,13 +316,21 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     const fallback = deterministicBrief(facts, lang);
     const scope = `${legalEntityId}:${lang}`;
     const ledger = await briefingUsage(legalEntityId);
-    const budget = {spentUsd: Number(ledger.spentUsd.toFixed(6)), limitUsd: DAILY_BUDGET_USD, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
+    const round = (n: number) => Number(n.toFixed(6));
+    // Worst case for one call under the enforced caps, reserved before anything is sent.
+    const perAttempt = ((MAX_INPUT_TOKENS + MAX_OUTPUT_TOKENS) / 1000) * COST_PER_1K_TOKENS;
+    const perCall = MAX_ATTEMPTS * perAttempt;
+    const basis = Math.max(ledger.recordedUsd, ledger.estimatedUsd);
+    // Count the other calls already in flight (this one is in the map too).
+    const reserved = Math.max(0, inflight.size - 1) * perCall;
+    const budget = {recordedUsd: round(ledger.recordedUsd), estimatedUsd: round(ledger.estimatedUsd), spentUsd: round(basis), reservedUsd: round(reserved), limitUsd: DAILY_BUDGET_USD, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
     const previous = lastCall.get(scope);
     if (!options.force && previous && Date.now() - previous.at < MIN_CALL_INTERVAL_MS) return previous.value;
-    if (ledger.spentUsd >= DAILY_BUDGET_USD || ledger.callsLastHour >= HOURLY_CALL_CAP) {
+    const overBudget = basis + reserved + perCall > DAILY_BUDGET_USD;
+    if (overBudget || ledger.callsLastHour >= HOURLY_CALL_CAP) {
       const value: BriefingResult = {
         mode: 'MODEL_UNAVAILABLE',
-        reason: ledger.spentUsd >= DAILY_BUDGET_USD ? 'BUDGET_EXHAUSTED' : 'HOURLY_CAP_REACHED',
+        reason: ledger.callsLastHour >= HOURLY_CALL_CAP ? 'HOURLY_CAP_REACHED' : (reserved > 0 ? 'BUDGET_RESERVED' : 'BUDGET_EXHAUSTED'),
         analysis: null, deterministic: fallback, receipt: null, facts, budget,
       };
       lastCall.set(scope, {at: Date.now(), value});
@@ -335,7 +381,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     };
     try {
       // One retry only: a rejection is usually a shape slip, and two attempts stay under a cent.
-      while (attempts < 2) {
+      while (attempts < MAX_ATTEMPTS) {
         attempts += 1;
         const res = await model.invoke(payload);
         inputTokens += res.result.usage.inputTokens;
@@ -347,6 +393,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           lastReason = checked.reason;
           continue;
         }
+        const attribution = await lastBriefingAttribution(legalEntityId);
         const receipt: BriefingReceipt = {
           provider: res.providerId,
           model: res.result.model,
@@ -357,7 +404,14 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           generatedAt: new Date().toISOString(),
           factsHash,
           attempts,
+          attribution,
         };
+        if (attribution !== 'VERIFIED') {
+          // The call escaped this company's ledger; do not present it as an attributed analysis.
+          const value: BriefingResult = {mode: 'MODEL_UNAVAILABLE', reason: `ATTRIBUTION_${attribution}`, analysis: null, deterministic: fallback, receipt, facts, budget};
+          lastCall.set(scope, {at: Date.now(), value});
+          return value;
+        }
         const value: BriefingResult = {mode: 'MODEL', analysis: checked.value, deterministic: fallback, receipt, facts, budget};
         cache.set(key, {at: Date.now(), value});
         lastCall.set(scope, {at: Date.now(), value});
@@ -373,6 +427,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         generatedAt: new Date().toISOString(),
         factsHash,
         attempts,
+        attribution: await lastBriefingAttribution(legalEntityId),
       };
       const value: BriefingResult = {mode: 'MODEL_REJECTED', reason: lastReason, analysis: null, deterministic: fallback, receipt, facts, budget};
       lastCall.set(scope, {at: Date.now(), value});
