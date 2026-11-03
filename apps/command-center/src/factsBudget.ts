@@ -16,13 +16,13 @@ export function contractFor(lang: Lang): {output: string; rules: string[]} {
     rules: lang === 'en'
       ? [
           'Facts only; never invent numbers, names or outcomes.',
-          'evidence and basis are ids from facts.',
+          'evidence and basis are ids from facts.decisions[].id or .goalId, or facts.savedReports[].id.',
           'authority: GREEN, YELLOW or RED; owner decisions are YELLOW or RED.',
           'Short: headline <= 12 words, each field <= 30 words.',
         ]
       : [
           'حقائق فقط؛ لا تخترع أرقاماً أو أسماء أو نتائج.',
-          'evidence وbasis معرّفات من facts.',
+          'evidence وbasis معرّفات من facts.decisions[].id أو .goalId أو facts.savedReports[].id.',
           'authority: GREEN أو YELLOW أو RED؛ قرار المالك YELLOW أو RED.',
           'مختصر: العنوان ≤ 12 كلمة، كل حقل ≤ 30 كلمة.',
         ],

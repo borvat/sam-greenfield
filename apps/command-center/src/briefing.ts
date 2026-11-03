@@ -50,7 +50,7 @@ export interface BriefingResult {
 /** Every knob below is an operating limit, so each one has a conservative default. */
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const MIN_CALL_INTERVAL_MS = 60 * 1000;
-const MAX_OUTPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_OUTPUT_TOKENS || 900);
+const MAX_OUTPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_OUTPUT_TOKENS || 600);
 const DAILY_BUDGET_USD = Number(process.env.SAM_BRIEFING_BUDGET_USD || 0.25);
 const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
 /** Used only when a provider row carries no price: the audit row then records cost 0, and a
@@ -158,7 +158,11 @@ function validateAnalysis(raw: any, facts: any, lang: 'ar' | 'en' = 'ar'): Valid
   if (!Array.isArray(raw.ownerMust) || raw.ownerMust.length > 5) return {ok: false, code: 'LISTS', path: 'ownerMust'};
   if (!text(raw.nextStep, 300)) return {ok: false, code: 'NEXT_STEP', path: 'nextStep'};
 
-  const ids = new Set<string>([...facts.decisions.map((d: any) => d.id), ...facts.savedReports.map((r: any) => r.id)]);
+  // A decision carries two real handles: the decision id and the goal it belongs to.
+  // Both are stored rows, so both are valid citations; anything else still fails.
+  const ids = new Set<string>();
+  for (const d of facts.decisions) { if (d?.id) ids.add(String(d.id)); if (d?.goalId) ids.add(String(d.goalId)); }
+  for (const r of facts.savedReports) { if (r?.id) ids.add(String(r.id)); if (r?.goalId) ids.add(String(r.goalId)); }
   const evidence = Array.isArray(raw.problem.evidence) ? raw.problem.evidence : [];
   const badEvidence = evidence.findIndex((id: unknown) => typeof id !== 'string' || !ids.has(id));
   if (badEvidence >= 0) return {ok: false, code: 'EVIDENCE_ID', path: `problem.evidence[${badEvidence}]`};

@@ -188,3 +188,19 @@ test('an accepted brief is stored for later readers', async () => {
   assert.ok(saved, 'the brief was handed to the trail');
   assert.equal((saved.analysis as any).headline, goodOutput.headline);
 });
+
+test('a goal id is accepted as a citation while an unknown id is not', async () => {
+  const decisionId = 'aaaaaaaa-bbbb-4ccc-8ddd-00000000000a';
+  const facts2 = {...facts, decisions: [{...facts.decisions[0], id: decisionId, goalId: GOAL}]};
+  const ok = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {...deps(async () => reply({...goodOutput, impact: {statement: 'المسار متوقف', basis: [GOAL]}})), facts: async () => facts2},
+  });
+  assert.equal(ok.mode, 'MODEL', 'the goal id is a real handle');
+  const bad = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {...deps(async () => reply({...goodOutput, impact: {statement: 'المسار متوقف', basis: ['cccccccc-bbbb-4ccc-8ddd-00000000000b']}})), facts: async () => facts2},
+  });
+  assert.equal(bad.mode, 'MODEL_REJECTED');
+  assert.equal(bad.rejectionReason?.code, 'BASIS_ID');
+});
