@@ -41,7 +41,7 @@ function tightBudget() {
   let reads = 0;
   return async () => {
     reads += 1;
-    const spent = reads === 1 ? 0.0001 : 0.0019;
+    const spent = reads === 1 ? 0.0001 : 0.0055;
     return {recordedUsd: spent, estimatedUsd: spent, callsLastHour: 1};
   };
 }
@@ -112,4 +112,40 @@ test('a model without tenant context is never called', async () => {
   });
   assert.equal(calls, 0);
   assert.equal(result.reason, 'TENANT_CONTEXT_MISSING');
+});
+
+test('a provider outage is retried without spending a validation attempt', async () => {
+  let calls = 0;
+  const result = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {
+      ...deps(async () => {
+        calls += 1;
+        if (calls < 3) throw new Error('PROVIDER_UNAVAILABLE: HTTP 503');
+        return reply(goodOutput);
+      }),
+      sleep: async () => {},
+    },
+  });
+  assert.equal(calls, 3, 'two outages then one success');
+  assert.equal(result.mode, 'MODEL');
+  assert.equal(result.receipt?.attempts, 1, 'outages do not consume the paid attempt');
+  assert.equal(result.receipt?.transportRetries, 2);
+});
+
+test('a deterministic provider error is not retried', async () => {
+  let calls = 0;
+  const result = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {
+      ...deps(async () => {
+        calls += 1;
+        throw new Error('PROVIDER_INPUT_LIMIT');
+      }),
+      sleep: async () => {},
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.mode, 'MODEL_UNAVAILABLE');
+  assert.match(String(result.reason), /PROVIDER_INPUT_LIMIT/);
 });

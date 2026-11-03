@@ -15,6 +15,7 @@ export interface BriefingReceipt {
   generatedAt: string;
   factsHash: string;
   attempts: number;
+  transportRetries?: number;
   attribution: 'VERIFIED' | 'MISSING' | 'FOREIGN';
   callId: string;
 }
@@ -54,6 +55,27 @@ const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS ||
 
 /** A rejected output is retried once, so one brief can cost two calls. */
 const MAX_ATTEMPTS = 2;
+/** A provider outage produces no output and no charge, so it is retried briefly and does not
+ *  consume the validation attempts that cost money. */
+const TRANSPORT_RETRY_LIMIT = Number(process.env.SAM_BRIEFING_TRANSPORT_RETRIES || 3);
+const TRANSPORT_BACKOFF_MS = Number(process.env.SAM_BRIEFING_TRANSPORT_BACKOFF_MS || 1500);
+const TRANSIENT = /PROVIDER_UNAVAILABLE|HTTP 5[0-9][0-9]|ECONNRESET|ECONNREFUSED|ETIMEDOUT|fetch failed|socket hang up/i;
+
+async function invokeWithTransportRetry(callModel: (task: any) => Promise<any>, task: any, onRetry: () => void, sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms))): Promise<any> {
+  let lastError: unknown;
+  for (let i = 0; i < TRANSPORT_RETRY_LIMIT; i += 1) {
+    try {
+      return await callModel(task);
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (!TRANSIENT.test(message) || i === TRANSPORT_RETRY_LIMIT - 1) throw error;
+      onRetry();
+      await sleep(TRANSPORT_BACKOFF_MS * (i + 1));
+    }
+  }
+  throw lastError;
+}
 const PROVIDER_ID = process.env.DEEPSEEK_PROVIDER_ID || 'deepseek';
 const PROVIDER_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-flash';
 
@@ -332,23 +354,30 @@ export interface BriefingDeps {
   invoke?: (task: any) => Promise<any>;
   usage?: (legalEntityId: string) => Promise<{recordedUsd: number; estimatedUsd: number; callsLastHour: number}>;
   attribution?: (task: string, legalEntityId: string) => Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'>;
+  sleep?: (ms: number) => Promise<void>;
   tenant?: () => Promise<boolean>;
 }
 
 export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'; deps?: BriefingDeps} = {}): Promise<BriefingResult> {
   const lang: 'ar' | 'en' = options.lang === 'en' ? 'en' : 'ar';
   const full = await (options.deps?.facts ?? buildFacts)(legalEntityId);
-  // The sample is chosen and measured on the final request before anything is sent.
-  const fitted = fitFacts(full, lang, MAX_INPUT_TOKENS - CHAT_OVERHEAD_TOKENS);
+  const ledger = await (options.deps?.usage ?? briefingUsage)(legalEntityId);
+  const limitUsd = options.deps?.budgetUsd ?? DAILY_BUDGET_USD;
+  const spentBefore = Math.max(ledger.recordedUsd, ledger.estimatedUsd);
+  // The sample is sized to the money that is left, then measured on the final request:
+  // a brief that cannot be paid for is never built into a request.
+  const affordableTokens = Math.floor(((limitUsd - spentBefore) * 1000) / COST_PER_1K_TOKENS) - MAX_OUTPUT_TOKENS - CHAT_OVERHEAD_TOKENS;
+  const maxPromptBytes = Math.min(MAX_INPUT_TOKENS - CHAT_OVERHEAD_TOKENS, affordableTokens);
+  const fitted = maxPromptBytes >= 200 ? fitFacts(full, lang, maxPromptBytes) : null;
   if (!fitted) {
     return {
       mode: 'MODEL_UNAVAILABLE',
-      reason: 'FACTS_EXCEED_INPUT_BUDGET',
+      reason: affordableTokens < 200 ? 'BUDGET_TOO_SMALL_FOR_FACTS' : 'FACTS_EXCEED_INPUT_BUDGET',
       analysis: null,
       deterministic: deterministicBrief(full, lang),
       receipt: null,
       facts: full,
-      budget: {recordedUsd: 0, estimatedUsd: 0, spentUsd: 0, reservedUsd: 0, limitUsd: DAILY_BUDGET_USD, callsLastHour: 0, hourlyCap: HOURLY_CALL_CAP},
+      budget: {recordedUsd: Number(ledger.recordedUsd.toFixed(6)), estimatedUsd: Number(ledger.estimatedUsd.toFixed(6)), spentUsd: Number(spentBefore.toFixed(6)), reservedUsd: 0, limitUsd, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP},
     };
   }
   const facts = fitted.facts;
@@ -364,11 +393,10 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
   const task = (async (): Promise<BriefingResult> => {
     const fallback = deterministicBrief(facts, lang);
     const scope = `${legalEntityId}:${lang}`;
-    const ledger = await (options.deps?.usage ?? briefingUsage)(legalEntityId);
-    const limitUsd = options.deps?.budgetUsd ?? DAILY_BUDGET_USD;
     const round = (n: number) => Number(n.toFixed(6));
     // Worst case for one call under the enforced caps, reserved before anything is sent.
-    const perAttempt = ((MAX_INPUT_TOKENS + MAX_OUTPUT_TOKENS) / 1000) * COST_PER_1K_TOKENS;
+    // Reserve on the request that was actually built and measured, plus the template margin.
+    const perAttempt = ((fitted.promptBytes + CHAT_OVERHEAD_TOKENS + MAX_OUTPUT_TOKENS) / 1000) * COST_PER_1K_TOKENS;
     const basis = Math.max(ledger.recordedUsd, ledger.estimatedUsd);
     // Count the other calls already in flight (this one is in the map too).
     const reserved = Math.max(0, inflight.size - 1) * perAttempt;
@@ -402,6 +430,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     const started = Date.now();
     const briefId = randomUUID();
     let attempts = 0;
+    let transportRetries = 0;
     let spentUsd = 0;
     let inputTokens = 0;
     let outputTokens = 0;
@@ -431,7 +460,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         }
         attempts += 1;
         const attemptTask = `executive_briefing:${briefId}:${attempts}`;
-        const res = await callModel({...payload, task: attemptTask});
+        const res = await invokeWithTransportRetry(callModel as any, {...payload, task: attemptTask}, () => { transportRetries += 1; }, options.deps?.sleep);
         inputTokens += res.result.usage.inputTokens;
         outputTokens += res.result.usage.outputTokens;
         spentUsd += (res.result.usage.inputTokens / 1000) * 0.0003 + (res.result.usage.outputTokens / 1000) * 0.0012;
@@ -452,6 +481,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           generatedAt: new Date().toISOString(),
           factsHash,
           attempts,
+          transportRetries,
           attribution,
           callId: briefId,
         };
@@ -476,6 +506,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         generatedAt: new Date().toISOString(),
         factsHash,
         attempts,
+        transportRetries,
         attribution: await (options.deps?.attribution ?? briefingAttribution)(`executive_briefing:${briefId}:${attempts}`, legalEntityId),
         callId: briefId,
       };
