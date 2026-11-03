@@ -74,7 +74,7 @@ test('connect emits exact synthetic Bearer on same-origin API calls before concu
   ui.node('bearerToken').value='  '+syntheticToken+'  ';
   const connecting=ui.run('connect()');
   assert.equal(ui.node('bearerToken').value,'');assert.equal(ui.requests.length,3);
-  assert.deepEqual(ui.requests.map(r=>r.path),['/api/overview','/api/goals','/api/finance/latest']);
+  assert.deepEqual(ui.requests.map(r=>r.path),['/api/executive','/api/goals','/api/finance/latest']);
   for(const {path,options} of ui.requests){assert.equal(options.headers.Authorization,'Bearer '+syntheticToken);assert.ok(!path.includes(syntheticToken));}
   for(const resolve of pending)resolve({status:401,ok:false,json:async()=>({error:'unauthorized',reason:'missing_authorization',request_id:'11111111-1111-4111-8111-111111111111'})});
   await connecting;

@@ -1,10 +1,10 @@
 import {buildRevision} from '../../../packages/shared/src/buildRevision';
 import {randomUUID,timingSafeEqual} from "node:crypto";
 import {createServer,type IncomingMessage,type Server,type ServerResponse} from "node:http";
-import {commandCenterHtml} from "./ui";
+import {renderCommandCenterHtml} from "./ui";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import {commandCenterDevelopmentTelemetry} from "./developmentTelemetry";
-import {commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal,commandCenterOwnerMemory,commandCenterSaveOwnerDecision,commandCenterNotifications} from "./store";
+import {commandCenterExecutive,commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal,commandCenterOwnerMemory,commandCenterSaveOwnerDecision,commandCenterNotifications} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
 function bearer(req:IncomingMessage):string{const h=req.headers.authorization??"";return h.startsWith("Bearer ")?h.slice(7):""}
@@ -56,52 +56,19 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
 
       if(hosts.size>0&&!hosts.has(host(req))){json(res,403,{error:"host_not_allowed"});return}
       if(req.method==="GET"&&req.url==="/"){
-        const html=process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"
-          ? commandCenterHtml.replace("<body>",'<body data-development-safe="true">')
-              .replace("Owner view of goals, execution, verification and finance.",
-                autonomyEnabled()?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled.":
-                "Isolated development: external, financial and legal execution disabled. Goals remain unplanned.")
-          : commandCenterHtml;
+        const developmentSafe=process.env.SAM_DEVELOPMENT_SAFE_MODE==="1";
         const syntheticRelease=process.env.SAM_RELEASE_SYNTHETIC_PLANNER==="1";
-        let scopedHtml=autonomyEnabled()||syntheticRelease?html.replace('<input id="domain" value="owner_command"',
-          `<input id="domain" value="${syntheticRelease?"release_synthetic":"development_probe"}" readonly`)
-          .replace('<option>YELLOW</option><option>GREEN</option>','<option>GREEN</option>'):html;
-        if(syntheticRelease){
-          scopedHtml=scopedHtml
-            .replace("Owner view of goals, execution, verification and finance.",
-              "Synthetic pilot: bounded planning, local tools and independent verification. Finance and external operations disabled.")
-            .replace("Example: Review current bol sales and accounting differences and produce a verified owner brief.",
-              '{"synthetic":true,"operation":"max","values":[2,8,5]}'.replaceAll('"',"&quot;"))
-            .replace("Optional owner acceptance contract (JSON; required by release profile)",
-              "Required owner acceptance contract (JSON; verified independently)")
-            .replace('id="acceptance" placeholder=', 'id="acceptance" required placeholder=')
-            .replace("Number(value||0)",'(value==null?"DISABLED":Number(value||0))')
-            .replace('"LIVE"','"SYNTHETIC PILOT · CONNECTED"')
-            .replace('"No brief yet."','"Finance disabled for synthetic pilot."');
-        }
-        if(process.env.SAM_COMMAND_CENTER_READ_ONLY==="1"){
-          scopedHtml=scopedHtml
-            .replace('<body','<body data-read-only="true"')
-            .replace('<div class="shell">','<div class="shell"><div class="card" role="status">Read-only mode · وضع القراءة فقط. Goal creation is disabled; goals, reports and wait diagnostics remain available.</div>')
-            .replace('<div class="card form">','<div class="card form" hidden aria-hidden="true">')
-            .replaceAll('data-owner-mutation','data-owner-mutation hidden')
-            .replace('async function createGoal(){','async function createGoal(){\n  if(document.body.dataset.readOnly==="true")return;')
-            .replace('document.body.dataset.developmentSafe?','document.body.dataset.readOnly?"READ ONLY · CONNECTED":document.body.dataset.developmentSafe?');
-        }
-        if(acceptance&&acceptanceSafe()){
-          const escape=(s:string)=>s.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-          scopedHtml=scopedHtml
-            .replace('<body',`<body data-isolated-notification="${escape(acceptance.notificationId)}"`)
-            .replace('<div data-owner-mutation hidden>','<div data-owner-mutation>')
-            .replace('<textarea id="memory-statement"></textarea>',`<textarea id="memory-statement" readonly>${escape(acceptance.memoryFixture.statement)}</textarea>`)
-            .replace('<input id="memory-context" placeholder="procurement"/>',`<input id="memory-context" readonly value="${escape(acceptance.memoryFixture.context_key)}"/>`)
-            .replace('<input id="memory-source" value="command-center-owner-entry"/>',`<input id="memory-source" readonly value="${escape(acceptance.memoryFixture.source)}"/>`)
-            .replace('<input id="memory-date" type="text"',`<input id="memory-date" readonly value="${new Date().toISOString()}" type="text"`)
-            .replace('refresh();setInterval(refresh,15000);','refresh();')
-            .replace('Read-only mode · وضع القراءة فقط.','Read-only mode with exact synthetic fixture save/read acknowledgement only · وضع القراءة فقط.');
-        }
-        res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");
-        res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
+        const scopedHtml=renderCommandCenterHtml({
+          developmentSafe:developmentSafe||autonomyEnabled()||syntheticRelease,
+          developmentProbe:autonomyEnabled()&&!syntheticRelease,
+          developmentSubtitle:autonomyEnabled()
+            ?"Synthetic-only autonomy: two goals, four bounded model requests; external, financial and legal execution disabled."
+            :"Isolated development: external, financial and legal execution disabled. Goals remain unplanned.",
+          syntheticRelease,
+          readOnly:process.env.SAM_COMMAND_CENTER_READ_ONLY==="1",
+          isolated:acceptance&&acceptanceSafe()?acceptance:undefined
+        });
+        res.statusCode=200;res.setHeader("content-type","text/html; charset=utf-8");res.setHeader("cache-control","no-store");res.end(scopedHtml);return;
       }
       const origin=req.headers.origin;
       if(origin&&origins.size>0&&!origins.has(origin)){json(res,403,{error:"origin_not_allowed"});return}
@@ -145,6 +112,9 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
       if(req.method==="GET"&&req.url==="/api/overview"){
         json(res,200,{ok:true,data:await commandCenterOverview(options.legalEntityId)});return;
+      }
+      if(req.method==="GET"&&req.url==="/api/executive"){
+        json(res,200,{ok:true,data:await commandCenterExecutive(options.legalEntityId)});return;
       }
       if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
         if(!token){rejectAuthentication(req,res,true);return;}

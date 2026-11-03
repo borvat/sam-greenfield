@@ -180,3 +180,95 @@ export async function commandCenterNotifications(legalEntityId:string,action:'li
   return listOwnerNotifications(client,commandCenterOwner(legalEntityId));
  });
 }
+
+/**
+ * One read-only executive snapshot for the owner dashboard. Every field is derived
+ * from stored rows; anything the schema cannot answer is returned as null so the
+ * interface can show an honest unavailable state instead of an invented number.
+ */
+export async function commandCenterExecutive(legalEntityId:string){
+  return withTransaction(async client=>{
+    const restricted=restrictedReadScope();
+    const overview=(await client.query(`SELECT
+      (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state NOT IN ('COMPLETED','CANCELLED','FAILED')) AS active_goals,
+      (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state='COMPLETED') AS completed_goals,
+      (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state='FAILED') AS failed_goals,
+      (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND state='WAITING_OWNER') AS waiting_owner,
+      ${restricted?"NULL::int":"(SELECT COUNT(*)::int FROM approvals WHERE legal_entity_id=$1 AND status='PENDING')"} AS pending_approvals,
+      (SELECT COUNT(*)::int FROM work_queue w JOIN goals g ON g.id=w.goal_id WHERE g.company_scope=$1 AND w.status IN ('QUEUED','HANDBACK','LEASED','EXECUTING')) AS active_work,
+      ${restricted?"NULL::int":"(SELECT COUNT(*)::int FROM side_effect_operations WHERE legal_entity_id=$1 AND reconciliation_state='NEEDS_RECONCILIATION')"} AS unresolved_side_effects
+    `,[legalEntityId])).rows[0];
+
+    const approvalRows=restricted?[]:(await client.query(`
+      SELECT a.id,a.capability_id,a.authority_class,a.created_at,a.expiry_at,
+             g.id AS goal_id,g.business_id,g.objective
+      FROM approvals a JOIN goals g ON g.id=a.goal_id
+      WHERE a.legal_entity_id=$1 AND a.status='PENDING' AND g.company_scope=$1
+      ORDER BY a.created_at DESC LIMIT 20`,[legalEntityId])).rows;
+
+    const waitingRows=(await client.query(`
+      SELECT id,business_id,objective,replan_reason,updated_at,state
+      FROM goals WHERE company_scope=$1 AND state IN ('WAITING_OWNER','BLOCKED')
+      ORDER BY updated_at DESC LIMIT 20`,[legalEntityId])).rows;
+
+    const failedRows=(await client.query(`
+      SELECT id,business_id,objective,replan_reason,updated_at
+      FROM goals WHERE company_scope=$1 AND state='FAILED'
+      ORDER BY updated_at DESC LIMIT 5`,[legalEntityId])).rows;
+
+    const agents=(await client.query(`
+      SELECT e.actor,
+        COUNT(*)::int AS executions,
+        COUNT(*) FILTER (WHERE e.status='EXECUTED')::int AS executed,
+        COUNT(*) FILTER (WHERE COALESCE(v.result,'')='VERIFIED')::int AS verified,
+        COUNT(*) FILTER (WHERE COALESCE(v.result,'') IN ('FAILED','INCONCLUSIVE'))::int AS failed,
+        COUNT(*) FILTER (WHERE e.status IN ('PENDING','RUNNING') AND e.started_at > now() - interval '30 minutes')::int AS running,
+        MAX(COALESCE(e.finished_at,e.started_at)) AS last_at,
+        MAX(e.capability_id) AS last_capability
+      FROM executions e
+      JOIN goals g ON g.id=e.goal_id
+      LEFT JOIN verifications v ON v.execution_id=e.id
+      WHERE g.company_scope=$1
+      GROUP BY e.actor
+      ORDER BY MAX(COALESCE(e.finished_at,e.started_at)) DESC LIMIT 20`,[legalEntityId])).rows;
+
+    const reportAccess=(await client.query(`SELECT relation IS NOT NULL AS present,
+      CASE WHEN relation IS NULL THEN false ELSE has_table_privilege(current_user,relation,'SELECT') END AS allowed
+      FROM (SELECT to_regclass('goal_read_reviews') AS relation) access`)).rows[0];
+    const reports=reportAccess.allowed?(await client.query(`
+      SELECT r.id,r.goal_id,r.decision,r.report_hash,r.created_at,r.revision,
+             g.business_id,g.objective,g.state
+      FROM goal_read_reviews r JOIN goals g ON g.id=r.goal_id
+      WHERE g.company_scope=$1 ORDER BY r.created_at DESC LIMIT 12`,[legalEntityId])).rows:[];
+
+    const usage=(await client.query(`
+      SELECT COUNT(*)::int AS calls,
+             COALESCE(SUM(tokens),0)::bigint AS tokens,
+             COALESCE(SUM(cost),0)::float AS cost_usd,
+             COUNT(*) FILTER (WHERE success=false)::int AS failures,
+             COUNT(DISTINCT model)::int AS models,
+             MAX(created_at) AS last_at
+      FROM model_calls`)).rows[0];
+
+    const trend=(await client.query(`
+      SELECT to_char(date_trunc('day',created_at),'YYYY-MM-DD') AS day, COUNT(*)::int AS created
+      FROM goals WHERE company_scope=$1 AND created_at > now() - interval '14 days'
+      GROUP BY 1 ORDER BY 1`,[legalEntityId])).rows;
+    const completions=(await client.query(`
+      SELECT to_char(date_trunc('day',updated_at),'YYYY-MM-DD') AS day, COUNT(*)::int AS completed
+      FROM goals WHERE company_scope=$1 AND state='COMPLETED' AND updated_at > now() - interval '14 days'
+      GROUP BY 1 ORDER BY 1`,[legalEntityId])).rows;
+
+    const brief=await commandCenterLatestFinanceBrief(legalEntityId);
+
+    return {
+      generatedAt:new Date().toISOString(),
+      counts:overview,
+      decisions:{approvals:approvalRows,waiting:waitingRows,failed:failedRows,approvalsDisabled:restricted},
+      agents,
+      reports:{available:reportAccess.allowed,items:reports},
+      finance:{brief,usage:{...usage,tokens:String(usage.tokens)}},
+      trend:{created:trend,completed:completions}
+    };
+  });
+}
