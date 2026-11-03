@@ -103,8 +103,8 @@ async function refresh(){
 
 function renderAll(){
   const c=(state.exec&&state.exec.counts)?state.exec.counts:{};
-  const usage=(state.exec&&state.exec.finance&&state.exec.finance.usage)?state.exec.finance.usage:null;
-  renderKpis(c,usage);
+  renderKpis(c);
+  renderSituation();
   renderOverviewDecisions();
   renderGoalsPreview();
   renderTrend();
@@ -125,17 +125,43 @@ function renderAll(){
 function kpiCard(label,value,cls,hint){
   return '<div class="kpi '+(cls||"")+'"><div class="label">'+esc(label)+'</div><div class="value">'+esc(value)+'</div>'+(hint?'<div class="hint">'+esc(hint)+'</div>':"")+'</div>'
 }
-function renderKpis(c,usage){
+function renderKpis(c){
   const target=document.getElementById("metrics");if(!target)return;
-  const cost=usage&&n(usage.calls)>0?"$"+Number(usage.cost_usd||0).toFixed(2):"—";
+  const reports=(state.exec&&state.exec.reports&&typeof state.exec.reports.total==="number")?state.exec.reports.total:null;
   target.innerHTML=[
-    kpiCard(t("kpi.active"),n(c.active_goals),"",""),
+    kpiCard(t("kpi.active"),n(c.active_goals)),
     kpiCard(t("kpi.waiting"),n(c.waiting_owner)+n(c.pending_approvals),"accent",n(c.pending_approvals)+" "+t("kpi.approvals")),
-    kpiCard(t("kpi.failed"),n(c.failed_goals),n(c.failed_goals)?"bad":"",""),
-    kpiCard(t("kpi.completed"),n(c.completed_goals),"",""),
-    kpiCard(t("kpi.work"),n(c.active_work),"",""),
-    kpiCard(t("kpi.cost"),cost,"",usage?(n(usage.calls)+" "+t("finance.calls")):t("misc.unavailable"))
+    kpiCard(t("kpi.failed"),n(c.failed_goals),n(c.failed_goals)?"bad":""),
+    kpiCard(t("kpi.completed"),n(c.completed_goals)),
+    kpiCard(t("kpi.work"),n(c.active_work)),
+    kpiCard(t("kpi.reports"),reports===null?t("misc.unavailable"):reports)
   ].join("");
+}
+function numBlock(value,label){return '<div><b>'+n(value)+'</b><span>'+esc(label)+'</span></div>'}
+function topDecision(){
+  const list=collectDecisions();
+  const rank={approval:0,blocked:1,waiting:2,failed:3};
+  return list.slice().sort(function(a,b){return (rank[a.kind]===undefined?9:rank[a.kind])-(rank[b.kind]===undefined?9:rank[b.kind])})[0]||null;
+}
+function renderSituation(){
+  const a=(state.exec&&state.exec.activity)?state.exec.activity:null;
+  const what=document.getElementById("sit-what");
+  if(what){
+    what.innerHTML=a?('<div class="muted">'+esc(t("sit.window"))+'</div><div class="sit-nums">'+
+      numBlock(a.executions_24h,t("sit.exec"))+numBlock(a.verified_24h,t("sit.verified"))+numBlock(a.goals_24h,t("sit.goals"))+'</div>')
+      :('<div class="muted">'+esc(t("misc.unavailable"))+'</div>');
+  }
+  const focus=document.getElementById("sit-focus"),action=document.getElementById("sit-focus-action"),next=document.getElementById("sit-next");
+  const top=topDecision();
+  if(!top){
+    if(focus)focus.textContent=t("sit.nothing");
+    if(action)action.innerHTML="";
+    if(next)next.textContent=t("sit.none");
+    return;
+  }
+  if(focus)focus.innerHTML='<div class="row-title">'+esc(top.kindLabel)+'</div><div class="row-sub" style="margin-top:2px">'+esc(top.title)+'</div><div class="muted" style="margin-top:6px">'+esc(top.why)+'</div>';
+  if(action){action.innerHTML='<button class="btn primary small" type="button" data-open-goal="'+esc(top.goalId)+'">'+esc(t("decision.open"))+'</button>';bindDecisionButtons(action)}
+  if(next)next.textContent=t("sit.next."+top.kind);
 }
 function stateBadge(value){
   const raw=String(value||"");
@@ -188,23 +214,23 @@ function bindGoalRows(scope){
 }
 
 function decisionCard(item){
-  return '<div class="decision'+(item.severity==="high"?" sev-high":"")+'">'+
+  return '<div class="decision '+(item.severity==="high"?"sev-high":"sev-wait")+'">'+
     '<div class="decision-head"><span class="badge '+(item.badgeCls||"")+'">'+esc(item.kindLabel)+'</span><span class="decision-title">'+esc(item.title)+'</span></div>'+
     '<div class="row-sub" style="margin-top:6px">'+esc(item.why)+'</div>'+
     '<div class="row-meta"><span>'+esc(item.businessId||"")+'</span><span>'+esc(t("decision.since")+" "+timeAgo(item.since))+'</span>'+(item.extra?'<span>'+esc(item.extra)+'</span>':"")+'</div>'+
-    '<div class="decision-actions"><button class="btn small" type="button" data-open-goal="'+esc(item.goalId)+'">'+esc(t("decision.open"))+'</button></div></div>'
+    '<div class="muted" style="margin-top:8px">'+esc(t("sit.next."+(item.kind||"waiting")))+'</div><div class="decision-actions"><button class="btn small" type="button" data-open-goal="'+esc(item.goalId)+'">'+esc(t("decision.open"))+'</button></div></div>'
 }
 function collectDecisions(){
   const out=[];
   const d=(state.exec&&state.exec.decisions)?state.exec.decisions:{approvals:[],waiting:[],failed:[]};
   (d.approvals||[]).forEach(function(a){
-    out.push({severity:"high",badgeCls:"warn",kindLabel:t("decision.approval"),title:a.capability_id,why:t("decision.why.approval"),goalId:a.goal_id,businessId:a.business_id,since:a.created_at,extra:a.authority_class})
+    out.push({kind:"approval",severity:"high",badgeCls:"warn",kindLabel:t("decision.approval"),title:a.capability_id,why:t("decision.why.approval"),goalId:a.goal_id,businessId:a.business_id,since:a.created_at,extra:a.authority_class})
   });
   (d.waiting||[]).forEach(function(g){
-    out.push({severity:g.state==="BLOCKED"?"high":"",badgeCls:g.state==="BLOCKED"?"bad":"warn",kindLabel:t(g.state==="BLOCKED"?"decision.blocked":"decision.waiting"),title:g.objective,why:g.replan_reason||t(g.state==="BLOCKED"?"decision.why.blocked":"decision.why.waiting"),goalId:g.id,businessId:g.business_id,since:g.updated_at})
+    out.push({kind:g.state==="BLOCKED"?"blocked":"waiting",severity:g.state==="BLOCKED"?"high":"",badgeCls:g.state==="BLOCKED"?"bad":"warn",kindLabel:t(g.state==="BLOCKED"?"decision.blocked":"decision.waiting"),title:g.objective,why:g.replan_reason||t(g.state==="BLOCKED"?"decision.why.blocked":"decision.why.waiting"),goalId:g.id,businessId:g.business_id,since:g.updated_at})
   });
   (d.failed||[]).forEach(function(g){
-    out.push({severity:"",badgeCls:"bad",kindLabel:t("decision.failed"),title:g.objective,why:g.replan_reason||t("decision.why.failed"),goalId:g.id,businessId:g.business_id,since:g.updated_at})
+    out.push({kind:"failed",severity:"",badgeCls:"bad",kindLabel:t("decision.failed"),title:g.objective,why:g.replan_reason||t("decision.why.failed"),goalId:g.id,businessId:g.business_id,since:g.updated_at})
   });
   return out;
 }
@@ -237,11 +263,12 @@ function renderTrend(){
   completed.forEach(function(r){if(map2[r.day]!==undefined)map2[r.day]=n(r.completed)});
   const max=Math.max(1,Math.max.apply(null,days.map(function(d){return Math.max(map1[d],map2[d])})));
   const bars=days.map(function(d){
-    const h1=Math.round((map1[d]/max)*100),h2=Math.round((map2[d]/max)*100);
-    return '<div class="bar" title="'+esc(d)+' · '+map1[d]+'/'+map2[d]+'"><div class="b1" style="height:'+h1+'%"></div><div class="b2" style="height:'+h2+'%"></div></div>'
+    const v1=map1[d],v2=map2[d];
+    const h1=v1?Math.round((v1/max)*100):0,h2=v2?Math.round((v2/max)*100):0;
+    return '<div class="bar" title="'+esc(d)+' · '+v1+'/'+v2+'"><span class="b1" style="height:'+h1+'%"></span><span class="b2" style="height:'+h2+'%"></span></div>'
   }).join("");
   const axis=days.map(function(d,i){return '<span>'+(i%2===0?dayLabel(d):"")+'</span>'}).join("");
-  target.innerHTML='<div class="chart">'+bars+'</div><div class="chart-x">'+axis+'</div><div class="legend"><span class="l1"><i></i>'+esc(t("legend.created"))+'</span><span class="l2"><i></i>'+esc(t("legend.completed"))+'</span></div>';
+  target.innerHTML='<div class="chart-wrap"><div class="chart-max">'+max+'</div><div class="chart-grid"><i></i><i></i><i></i></div><div class="chart">'+bars+'</div></div><div class="chart-x">'+axis+'</div><div class="legend"><span class="l1"><i></i>'+esc(t("legend.created"))+'</span><span class="l2"><i></i>'+esc(t("legend.completed"))+'</span></div>';
 }
 
 function agentState(a){
@@ -315,23 +342,26 @@ function renderAlerts(){
 }
 
 function renderFinance(){
-  const brief=document.getElementById("finance-brief"),usage=document.getElementById("finance-usage");
+  const brief=document.getElementById("finance-brief"),usage=document.getElementById("finance-usage"),history=document.getElementById("finance-history");
+  if(history){
+    const h=(state.exec&&state.exec.finance&&state.exec.finance.history)?state.exec.finance.history:[];
+    history.innerHTML='<div class="card-head"><h3>'+esc(t("fin.history"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span><span class="meta">'+h.length+'</span></div>'+
+      (h.length?'<table class="tbl"><thead><tr><th>'+esc(t("report.id"))+'</th><th>'+esc(t("decision.since"))+'</th><th>'+esc(t("decision.open"))+'</th></tr></thead><tbody>'+
+        h.map(function(r){return '<tr><td class="muted">'+esc(String(r.id).slice(0,8))+'…</td><td class="muted">'+esc(new Date(r.timestamp).toISOString().slice(0,16).replace("T"," "))+'</td><td><button class="btn small" type="button" data-open-goal="'+esc(r.goal_id||"")+'">'+esc(t("decision.open"))+'</button></td></tr>'}).join("")+
+        '</tbody></table>':'<div class="empty">'+esc(t("fin.briefEmpty"))+'</div>');
+    bindDecisionButtons(history);
+  }
   const b=state.finance||(state.exec&&state.exec.finance?state.exec.finance.brief:null);
   if(brief){
     brief.innerHTML='<div class="card-head"><h3>'+esc(t("finance.brief"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span></div>'+
-      (b?'<dl class="kv"><dt>'+esc(t("report.id"))+'</dt><dd>'+esc(b.id)+'</dd><dt>'+esc(t("agent.last"))+'</dt><dd>'+esc(new Date(b.timestamp).toISOString())+'</dd></dl><details><summary>'+esc(t("report.raw"))+'</summary><pre>'+esc(JSON.stringify(b.after_ref,null,2))+'</pre></details>':'<div class="empty">'+esc(t("finance.noBrief"))+'</div>')
+      (b?'<dl class="kv"><dt>'+esc(t("report.id"))+'</dt><dd>'+esc(b.id)+'</dd><dt>'+esc(t("agent.last"))+'</dt><dd>'+esc(new Date(b.timestamp).toISOString())+'</dd></dl><details><summary>'+esc(t("report.raw"))+'</summary><pre>'+esc(JSON.stringify(b.after_ref,null,2))+'</pre></details>':'<div class="empty">'+esc(t("fin.briefEmpty"))+'</div>')
   }
   if(usage){
-    const u=(state.exec&&state.exec.finance&&state.exec.finance.usage)?state.exec.finance.usage:null;
-    if(!u||n(u.calls)===0){usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3><span class="prov unavailable">'+esc(t("prov.unavailable"))+'</span></div><div class="empty">'+esc(t("finance.unavailable"))+'</div>';return}
-    usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span></div><dl class="kv">'+
-      '<dt>'+esc(t("finance.calls"))+'</dt><dd>'+n(u.calls)+'</dd>'+
-      '<dt>'+esc(t("finance.tokens"))+'</dt><dd>'+esc(String(u.tokens))+'</dd>'+
-      '<dt>'+esc(t("finance.cost"))+'</dt><dd>$'+Number(u.cost_usd||0).toFixed(2)+'</dd>'+
-      '<dt>'+esc(t("finance.failures"))+'</dt><dd>'+n(u.failures)+'</dd>'+
-      '<dt>'+esc(t("finance.models"))+'</dt><dd>'+n(u.models)+'</dd></dl><p class="muted" style="margin-top:10px">'+esc(t("finance.note"))+'</p>'
-  }
-}
+    usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3><span class="prov unavailable">'+esc(t("prov.unavailable"))+'</span></div>'+
+      '<div class="empty" style="text-align:start"><b>'+esc(t("fin.blocked"))+'</b>'+
+      '<div class="muted" style="margin-top:6px">'+esc(t("fin.blockedWhy"))+'</div>'+
+      '<div class="muted" style="margin-top:6px">'+esc(t("fin.blockedNext"))+'</div></div>'
+  }}
 
 async function openGoal(id,quiet){
   if(!id)return;

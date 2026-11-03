@@ -241,14 +241,29 @@ export async function commandCenterExecutive(legalEntityId:string){
       FROM goal_read_reviews r JOIN goals g ON g.id=r.goal_id
       WHERE g.company_scope=$1 ORDER BY r.created_at DESC LIMIT 12`,[legalEntityId])).rows:[];
 
-    const usage=(await client.query(`
-      SELECT COUNT(*)::int AS calls,
-             COALESCE(SUM(tokens),0)::bigint AS tokens,
-             COALESCE(SUM(cost),0)::float AS cost_usd,
-             COUNT(*) FILTER (WHERE success=false)::int AS failures,
-             COUNT(DISTINCT model)::int AS models,
-             MAX(created_at) AS last_at
-      FROM model_calls`)).rows[0];
+    // model_calls carries no company column. A system-wide total inside a company-scoped
+    // dashboard could disclose another tenant's spend, so the snapshot does not read it at
+    // all; the interface reports an explicit unavailable state until the schema can attribute
+    // a call to a company (a migration that needs separate owner approval).
+    const activity=(await client.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM executions e JOIN goals g ON g.id=e.goal_id
+          WHERE g.company_scope=$1 AND e.started_at > now() - interval '24 hours') AS executions_24h,
+        (SELECT COUNT(*)::int FROM verifications v JOIN executions e ON e.id=v.execution_id JOIN goals g ON g.id=e.goal_id
+          WHERE g.company_scope=$1 AND v.result='VERIFIED' AND v.checked_at > now() - interval '24 hours') AS verified_24h,
+        (SELECT COUNT(*)::int FROM goals WHERE company_scope=$1 AND created_at > now() - interval '24 hours') AS goals_24h,
+        (SELECT MAX(e.started_at) FROM executions e JOIN goals g ON g.id=e.goal_id WHERE g.company_scope=$1) AS last_execution_at
+    `,[legalEntityId])).rows[0];
+    const recent=(await client.query(`
+      SELECT e.actor,e.capability_id,COALESCE(e.finished_at,e.started_at) AS at,
+             COALESCE(v.result,e.status) AS result
+      FROM executions e
+      JOIN goals g ON g.id=e.goal_id
+      LEFT JOIN verifications v ON v.execution_id=e.id
+      WHERE g.company_scope=$1
+      ORDER BY COALESCE(e.finished_at,e.started_at) DESC LIMIT 5`,[legalEntityId])).rows;
+    const reportTotal=reportAccess.allowed?(await client.query(`
+      SELECT COUNT(*)::int AS n FROM goal_read_reviews r JOIN goals g ON g.id=r.goal_id WHERE g.company_scope=$1`,[legalEntityId])).rows[0].n:null;
 
     const trend=(await client.query(`
       SELECT to_char(date_trunc('day',created_at),'YYYY-MM-DD') AS day, COUNT(*)::int AS created
@@ -260,15 +275,22 @@ export async function commandCenterExecutive(legalEntityId:string){
       GROUP BY 1 ORDER BY 1`,[legalEntityId])).rows;
 
     const brief=await commandCenterLatestFinanceBrief(legalEntityId);
+    // Stored finance briefs for this legal entity only (audit_log.entity_id is the entity).
+    const briefHistory=(await client.query(`
+      SELECT id,goal_id,timestamp,after_ref
+      FROM audit_log
+      WHERE entity_type='legal_entity' AND entity_id=$1 AND action='FINANCE_OPERATIONAL_BRIEF'
+      ORDER BY timestamp DESC, id DESC LIMIT 6`,[legalEntityId])).rows;
 
     return {
       generatedAt:new Date().toISOString(),
       counts:overview,
       decisions:{approvals:approvalRows,waiting:waitingRows,failed:failedRows,approvalsDisabled:restricted},
       agents,
-      reports:{available:reportAccess.allowed,items:reports},
-      finance:{brief,usage:{...usage,tokens:String(usage.tokens)}},
-      trend:{created:trend,completed:completions}
+      reports:{available:reportAccess.allowed,items:reports,total:reportTotal},
+      finance:{brief,history:briefHistory,usage:null,usageUnavailable:"NOT_TENANT_SCOPED"},
+      trend:{created:trend,completed:completions},
+      activity:{...activity,recent}
     };
   });
 }

@@ -60,6 +60,21 @@ export function renderShell(build: string): string {
 
       <div id="dashboard" hidden>
         <section class="view is-active" id="view-overview">
+          <div class="situation">
+            <div class="sit">
+              <div class="sit-label" data-i18n="sit.what">${t("ar", "sit.what")}</div>
+              <div class="sit-body" id="sit-what"></div>
+            </div>
+            <div class="sit accent">
+              <div class="sit-label" data-i18n="sit.focus">${t("ar", "sit.focus")}</div>
+              <div class="sit-body" id="sit-focus"></div>
+              <div class="sit-foot" id="sit-focus-action"></div>
+            </div>
+            <div class="sit">
+              <div class="sit-label" data-i18n="sit.next">${t("ar", "sit.next")}</div>
+              <div class="sit-body" id="sit-next"></div>
+            </div>
+          </div>
           <div class="grid-kpi" id="metrics"></div>
           <div class="grid-2">
             <div class="stack">
@@ -187,6 +202,7 @@ export function renderShell(build: string): string {
             <div class="card" id="finance-brief"></div>
             <div class="card" id="finance-usage"></div>
           </div>
+          <div class="card" id="finance-history" style="margin-top:16px"></div>
         </section>
 
         <section class="view" id="view-goal">
