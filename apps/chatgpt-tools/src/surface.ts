@@ -1,5 +1,6 @@
 import { createActionTools } from "./actionTools";
 import { createCoreReadTools } from "./coreReadTools";
+import { createBriefingTools } from "./briefingTools";
 import { ChatGPTToolRegistry } from "./registry";
 import type { ProductionActionDispatcher,RegisteredChatGPTTool } from "./types";
 import { localDevelopment, denyDevelopment } from "../../development/src/planningPolicy";
@@ -16,6 +17,7 @@ export function createChatGPTToolSurface(input:{
   return new ChatGPTToolRegistry([
     ...(input.additionalTools??[]),
     ...createCoreReadTools(),
+    ...createBriefingTools(),
     ...createActionTools(input.dispatcher)
   ]);
 }
