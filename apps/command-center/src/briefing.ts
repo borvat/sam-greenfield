@@ -217,6 +217,18 @@ export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: n
   }
 }
 
+/** Refuses to spend when the session carries no tenant context: such a call would be written
+ *  unattributed and would escape every per-company ceiling. */
+export async function tenantContextPresent(): Promise<boolean> {
+  try {
+    const {pool} = await import('../../../packages/db/src/client');
+    const res = await pool.query("select nullif(current_setting('app.current_legal_entity_id', true), '') as entity");
+    return Boolean(res.rows[0]?.entity);
+  } catch {
+    return false;
+  }
+}
+
 /** The adapter and endpoint the runtime already uses, with the pilot's output cap and no reasoning tokens. */
 async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -272,6 +284,12 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         reason: ledger.spentUsd >= DAILY_BUDGET_USD ? 'BUDGET_EXHAUSTED' : 'HOURLY_CAP_REACHED',
         analysis: null, deterministic: fallback, receipt: null, facts, budget,
       };
+      lastCall.set(scope, {at: Date.now(), value});
+      return value;
+    }
+
+    if (!(await tenantContextPresent())) {
+      const value: BriefingResult = {mode: 'MODEL_UNAVAILABLE', reason: 'TENANT_CONTEXT_MISSING', analysis: null, deterministic: fallback, receipt: null, facts, budget};
       lastCall.set(scope, {at: Date.now(), value});
       return value;
     }
