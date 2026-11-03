@@ -64,31 +64,31 @@ export function renderShell(build: string): string {
           <div class="grid-2">
             <div class="stack">
               <div class="card">
-                <div class="card-head"><h3 data-i18n="sec.decisions">${t("ar", "sec.decisions")}</h3><a href="#/decisions" data-nav="decisions" data-i18n="nav.decisions">${t("ar", "nav.decisions")}</a></div>
+                <div class="card-head"><h3 data-i18n="sec.decisions">${t("ar", "sec.decisions")}</h3><span class="prov real" data-i18n="prov.real">${t("ar", "prov.real")}</span><a href="#/decisions" data-nav="decisions" data-i18n="nav.decisions">${t("ar", "nav.decisions")}</a></div>
                 <div class="stack" id="overview-decisions"></div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-i18n="sec.goals">${t("ar", "sec.goals")}</h3><a href="#/goals" data-nav="goals" data-i18n="nav.goals">${t("ar", "nav.goals")}</a></div>
+                <div class="card-head"><h3 data-i18n="sec.goals">${t("ar", "sec.goals")}</h3><span class="prov real" data-i18n="prov.real">${t("ar", "prov.real")}</span><a href="#/goals" data-nav="goals" data-i18n="nav.goals">${t("ar", "nav.goals")}</a></div>
                 <div class="stack" id="goals"></div>
               </div>
             </div>
             <div class="stack">
               <div class="card">
-                <div class="card-head"><h3 data-i18n="sec.trend">${t("ar", "sec.trend")}</h3></div>
+                <div class="card-head"><h3 data-i18n="sec.trend">${t("ar", "sec.trend")}</h3><span class="prov derived" data-i18n="prov.derived">${t("ar", "prov.derived")}</span></div>
                 <div id="trend"></div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-i18n="sec.agents">${t("ar", "sec.agents")}</h3></div>
+                <div class="card-head"><h3 data-i18n="sec.agents">${t("ar", "sec.agents")}</h3><span class="prov real" data-i18n="prov.real">${t("ar", "prov.real")}</span></div>
                 <div id="agents-mini"></div>
               </div>
               <div class="card">
-                <div class="card-head"><h3 data-i18n="sec.alerts">${t("ar", "sec.alerts")}</h3></div>
+                <div class="card-head"><h3 data-i18n="sec.alerts">${t("ar", "sec.alerts")}</h3><span class="prov derived" data-i18n="prov.derived">${t("ar", "prov.derived")}</span></div>
                 <div id="alerts"></div>
               </div>
             </div>
           </div>
           <div class="card" style="margin-top:16px">
-            <div class="card-head"><h3 data-i18n="sec.reports">${t("ar", "sec.reports")}</h3><a href="#/reports" data-nav="reports" data-i18n="nav.reports">${t("ar", "nav.reports")}</a></div>
+            <div class="card-head"><h3 data-i18n="sec.reports">${t("ar", "sec.reports")}</h3><span class="prov real" data-i18n="prov.real">${t("ar", "prov.real")}</span><a href="#/reports" data-nav="reports" data-i18n="nav.reports">${t("ar", "nav.reports")}</a></div>
             <div class="stack" id="latest-reports"></div>
           </div>
         </section>

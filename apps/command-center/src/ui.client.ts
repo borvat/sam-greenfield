@@ -134,7 +134,7 @@ function renderKpis(c,usage){
     kpiCard(t("kpi.failed"),n(c.failed_goals),n(c.failed_goals)?"bad":"",""),
     kpiCard(t("kpi.completed"),n(c.completed_goals),"",""),
     kpiCard(t("kpi.work"),n(c.active_work),"",""),
-    kpiCard(t("kpi.cost"),cost,"",usage?n(usage.calls)+" · "+(usage.models||0)+" "+(STRINGS[lang]["finance.models"]||""):t("misc.unavailable"))
+    kpiCard(t("kpi.cost"),cost,"",usage?(n(usage.calls)+" "+t("finance.calls")):t("misc.unavailable"))
   ].join("");
 }
 function stateBadge(value){
@@ -308,23 +308,23 @@ function renderAlerts(){
   const target=document.getElementById("alerts");if(!target)return;
   const c=(state.exec&&state.exec.counts)||{};
   const items=[];
-  if(n(c.failed_goals)>0)items.push({cls:"bad",text:"أهداف فاشلة: "+n(c.failed_goals)});
-  if(n(c.unresolved_side_effects)>0)items.push({cls:"warn",text:"آثار جانبية تحتاج مطابقة: "+n(c.unresolved_side_effects)});
-  if(n(c.waiting_owner)>0)items.push({cls:"warn",text:"أهداف تنتظر قرارك: "+n(c.waiting_owner)});
-  target.innerHTML=items.length?items.map(function(i){return '<div class="row-item" style="cursor:default"><div class="row-main"><div class="row-title"><span class="badge '+i.cls+'">'+esc(i.text)+'</span></div></div></div>'}).join(""):'<div class="empty">لا توجد تنبيهات.</div>';
+  if(n(c.failed_goals)>0)items.push({cls:"bad",label:t("alert.failed"),value:n(c.failed_goals)});
+  if(n(c.unresolved_side_effects)>0)items.push({cls:"warn",label:t("alert.unresolved"),value:n(c.unresolved_side_effects)});
+  if(n(c.waiting_owner)>0)items.push({cls:"warn",label:t("alert.waiting"),value:n(c.waiting_owner)});
+  target.innerHTML=items.length?items.map(function(i){return '<div class="agent"><div><div class="name">'+esc(i.label)+'</div></div><span class="badge '+i.cls+'">'+esc(String(i.value))+'</span></div>'}).join(""):'<div class="empty">'+esc(t("alert.none"))+'</div>';
 }
 
 function renderFinance(){
   const brief=document.getElementById("finance-brief"),usage=document.getElementById("finance-usage");
   const b=state.finance||(state.exec&&state.exec.finance?state.exec.finance.brief:null);
   if(brief){
-    brief.innerHTML='<div class="card-head"><h3>'+esc(t("finance.brief"))+'</h3></div>'+
+    brief.innerHTML='<div class="card-head"><h3>'+esc(t("finance.brief"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span></div>'+
       (b?'<dl class="kv"><dt>'+esc(t("report.id"))+'</dt><dd>'+esc(b.id)+'</dd><dt>'+esc(t("agent.last"))+'</dt><dd>'+esc(new Date(b.timestamp).toISOString())+'</dd></dl><details><summary>'+esc(t("report.raw"))+'</summary><pre>'+esc(JSON.stringify(b.after_ref,null,2))+'</pre></details>':'<div class="empty">'+esc(t("finance.noBrief"))+'</div>')
   }
   if(usage){
     const u=(state.exec&&state.exec.finance&&state.exec.finance.usage)?state.exec.finance.usage:null;
-    if(!u||n(u.calls)===0){usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3></div><div class="empty">'+esc(t("finance.unavailable"))+'</div>';return}
-    usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3></div><dl class="kv">'+
+    if(!u||n(u.calls)===0){usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3><span class="prov unavailable">'+esc(t("prov.unavailable"))+'</span></div><div class="empty">'+esc(t("finance.unavailable"))+'</div>';return}
+    usage.innerHTML='<div class="card-head"><h3>'+esc(t("finance.usage"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span></div><dl class="kv">'+
       '<dt>'+esc(t("finance.calls"))+'</dt><dd>'+n(u.calls)+'</dd>'+
       '<dt>'+esc(t("finance.tokens"))+'</dt><dd>'+esc(String(u.tokens))+'</dd>'+
       '<dt>'+esc(t("finance.cost"))+'</dt><dd>$'+Number(u.cost_usd||0).toFixed(2)+'</dd>'+
