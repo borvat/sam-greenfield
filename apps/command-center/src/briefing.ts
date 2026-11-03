@@ -1,5 +1,6 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {commandCenterExecutive} from './store';
+import {CHAT_OVERHEAD_TOKENS, MAX_INPUT_TOKENS, classifyPrompt} from './promptBound';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
 
@@ -46,10 +47,7 @@ const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
 /** Used only when a provider row carries no price: the audit row then records cost 0,
  *  and a dollar ceiling that reads that zero would never fire. */
 const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0012);
-/** Proven upper bound on prompt tokens: every token decodes to at least one code point,
- *  so the code-point count can never be smaller than the token count. The transport
- *  therefore refuses a prompt whose code points exceed this cap, before any request. */
-const MAX_INPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_INPUT_TOKENS || 2800);
+
 /** A rejected output is retried once, so one brief can cost two calls. */
 const MAX_ATTEMPTS = 2;
 const PROVIDER_ID = process.env.DEEPSEEK_PROVIDER_ID || 'deepseek';
@@ -287,7 +285,7 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
       const body = JSON.parse(String(init.body));
       // Rejected before the request is sent: an over-limit prompt must not cost anything.
       const prompt = String(body?.messages?.[0]?.content ?? '');
-      if ([...prompt].length > MAX_INPUT_TOKENS) throw new Error('PROVIDER_INPUT_LIMIT');
+      if (!classifyPrompt(prompt).allowed) throw new Error('PROVIDER_INPUT_LIMIT');
       body.max_tokens = MAX_OUTPUT_TOKENS;
       body.thinking = {type: 'disabled'};
       body.response_format = {type: 'json_object'};
@@ -440,7 +438,9 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         attribution: await briefingAttribution(`executive_briefing:${briefId}:${attempts}`, legalEntityId),
         callId: briefId,
       };
-      const value: BriefingResult = {mode: 'MODEL_REJECTED', reason: lastReason, analysis: null, deterministic: fallback, receipt, facts, budget};
+      const value: BriefingResult = lastReason === 'BUDGET_EXHAUSTED'
+        ? {mode: 'MODEL_UNAVAILABLE', reason: 'BUDGET_EXHAUSTED', analysis: null, deterministic: fallback, receipt, facts, budget}
+        : {mode: 'MODEL_REJECTED', reason: lastReason, analysis: null, deterministic: fallback, receipt, facts, budget};
       lastCall.set(scope, {at: Date.now(), value});
       return value;
     } catch (error) {
