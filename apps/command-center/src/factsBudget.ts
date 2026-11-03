@@ -12,21 +12,19 @@ export function objectiveFor(lang: Lang): string {
 
 export function contractFor(lang: Lang): {output: string; rules: string[]} {
   return {
-    output: 'JSON: headline, problem{what,why,evidence[]}, impact{statement,basis[]}, options[{id,title,risk,authority}], samCan[], ownerMust[], nextStep.',
+    output: '{"headline","problem":{"what","why","evidence":[]},"impact":{"statement","basis":[]},"options":[{"id","title","risk","authority"}],"samCan":[],"ownerMust":[],"nextStep"}',
     rules: lang === 'en'
       ? [
           'Facts only; never invent numbers, names or outcomes.',
-          'evidence and basis must be ids taken from facts.',
-          'authority is GREEN, YELLOW or RED; anything needing the owner is YELLOW or RED.',
-          'Short: headline <= 12 words, each field <= 30 words, one line per option.',
-          'Facts are condensed: if condensed.omitted > 0, say so and assume nothing else.',
+          'evidence and basis are ids from facts.',
+          'authority: GREEN, YELLOW or RED; owner decisions are YELLOW or RED.',
+          'Short: headline <= 12 words, each field <= 30 words.',
         ]
       : [
           'حقائق فقط؛ لا تخترع أرقاماً أو أسماء أو نتائج.',
-          'evidence وbasis معرّفات من facts حصراً.',
-          'authority: GREEN أو YELLOW أو RED؛ ما يحتاج المالك YELLOW أو RED.',
-          'مختصر: العنوان ≤ 12 كلمة، كل حقل ≤ 30 كلمة، خيار واحد لكل سطر.',
-          'الحقائق مختصرة: إذا كان condensed.omitted أكبر من صفر فاذكر ذلك ولا تفترض غير المذكور.',
+          'evidence وbasis معرّفات من facts.',
+          'authority: GREEN أو YELLOW أو RED؛ قرار المالك YELLOW أو RED.',
+          'مختصر: العنوان ≤ 12 كلمة، كل حقل ≤ 30 كلمة.',
         ],
   };
 }
@@ -85,9 +83,10 @@ function assemble(full: any, decisions: any[], titleChars: number, reasonChars: 
     const key = String(d?.kind);
     if (key in totals) (totals as any)[key] += 1;
   }
+  const c = full.counts || {};
   return {
-    counts: full.counts,
-    window: {e24: full.window?.executions24h ?? null, v24: full.window?.verified24h ?? null, g24: full.window?.newGoals24h ?? null},
+    // Only the totals the brief reasons about; the rest stays in the dashboard.
+    counts: {active: c.active_goals ?? c.active ?? null, completed: c.completed_goals ?? c.completed ?? null, failed: c.failed_goals ?? c.failed ?? null, waiting: c.waiting_owner ?? null, approvals: c.pending_approvals ?? null},
     decisionTotals: totals,
     decisions: decisions.map((d) => ({
       id: d.id,

@@ -2,6 +2,7 @@ import {createHash, randomUUID} from 'node:crypto';
 import {CHAT_OVERHEAD_TOKENS, MAX_INPUT_TOKENS, classifyPrompt} from './promptBound';
 import {parseModelJson} from './jsonOutput';
 import {buildInput, fitFacts} from './factsBudget';
+import {loadBrief, saveBrief, type StoredBrief} from './briefStore';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
 
@@ -39,6 +40,9 @@ export interface BriefingResult {
   /** Why the model output was refused, kept separate from why a retry could not run. */
   rejectionReason?: RejectionReason | null;
   retryBlockedReason?: string | null;
+  /** True when the analysis comes from the stored brief because a new call was not affordable. */
+  fromStore?: boolean;
+  savedAt?: string | null;
   facts: Record<string, unknown>;
   budget: {recordedUsd: number; estimatedUsd: number; spentUsd: number; reservedUsd: number; limitUsd: number; callsLastHour: number; hourlyCap: number};
 }
@@ -49,9 +53,10 @@ const MIN_CALL_INTERVAL_MS = 60 * 1000;
 const MAX_OUTPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_OUTPUT_TOKENS || 900);
 const DAILY_BUDGET_USD = Number(process.env.SAM_BRIEFING_BUDGET_USD || 0.25);
 const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
-/** Used only when a provider row carries no price: the audit row then records cost 0,
- *  and a dollar ceiling that reads that zero would never fire. */
-const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0012);
+/** Used only when a provider row carries no price: the audit row then records cost 0, and a
+ *  dollar ceiling that reads that zero would never fire. Calibrated to 1.5x the three measured
+ *  production calls (0.0006 per 1k tokens), so the estimate stays above the real charge. */
+const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0009);
 
 /** A rejected output is retried once, so one brief can cost two calls. */
 const MAX_ATTEMPTS = 2;
@@ -356,6 +361,8 @@ export interface BriefingDeps {
   attribution?: (task: string, legalEntityId: string) => Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'>;
   sleep?: (ms: number) => Promise<void>;
   tenant?: () => Promise<boolean>;
+  load?: (legalEntityId: string, lang: 'ar' | 'en') => Promise<StoredBrief | null>;
+  save?: (legalEntityId: string, lang: string, brief: {analysis: unknown; receipt: unknown; facts: unknown}) => Promise<void>;
 }
 
 export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'; deps?: BriefingDeps} = {}): Promise<BriefingResult> {
@@ -370,6 +377,21 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
   const maxPromptBytes = Math.min(MAX_INPUT_TOKENS - CHAT_OVERHEAD_TOKENS, affordableTokens);
   const fitted = maxPromptBytes >= 200 ? fitFacts(full, lang, maxPromptBytes) : null;
   if (!fitted) {
+    const budget = {recordedUsd: Number(ledger.recordedUsd.toFixed(6)), estimatedUsd: Number(ledger.estimatedUsd.toFixed(6)), spentUsd: Number(spentBefore.toFixed(6)), reservedUsd: 0, limitUsd, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
+    const stored = await (options.deps?.load ?? loadBrief)(legalEntityId, lang).catch(() => null);
+    if (stored && stored.analysis) {
+      // A new call is not affordable, but the owner still sees the last real analysis.
+      return {
+        mode: 'MODEL',
+        analysis: stored.analysis as BriefingAnalysis,
+        deterministic: deterministicBrief(full, lang),
+        receipt: (stored.receipt as BriefingReceipt) ?? null,
+        facts: (stored.facts as Record<string, unknown>) ?? full,
+        budget,
+        fromStore: true,
+        savedAt: stored.savedAt,
+      };
+    }
     return {
       mode: 'MODEL_UNAVAILABLE',
       reason: affordableTokens < 200 ? 'BUDGET_TOO_SMALL_FOR_FACTS' : 'FACTS_EXCEED_INPUT_BUDGET',
@@ -377,12 +399,13 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       deterministic: deterministicBrief(full, lang),
       receipt: null,
       facts: full,
-      budget: {recordedUsd: Number(ledger.recordedUsd.toFixed(6)), estimatedUsd: Number(ledger.estimatedUsd.toFixed(6)), spentUsd: Number(spentBefore.toFixed(6)), reservedUsd: 0, limitUsd, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP},
+      budget,
     };
   }
   const facts = fitted.facts;
-  // Hash only stable content: a volatile field here would defeat the cache and bill every page load.
-  const factsHash = createHash('sha256').update(JSON.stringify(facts)).digest('hex');
+  // The cache key is the company's data, not the size the budget allowed: the same brief is
+  // reused across budget states instead of being recomputed into a refusal.
+  const factsHash = createHash('sha256').update(JSON.stringify(full)).digest('hex');
   // Tenant scope and language are part of the key: a brief produced for one company is never served to another.
   const key = `${legalEntityId}:${lang}:${factsHash}`;
   const hit = cache.get(key);
@@ -492,6 +515,8 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           return value;
         }
         const value: BriefingResult = {mode: 'MODEL', analysis: checked.value, deterministic: fallback, receipt, facts, budget};
+        // Best effort: the trail keeps the brief so it survives a restart or a spent budget.
+        void (options.deps?.save ?? saveBrief)(legalEntityId, lang, {analysis: checked.value, receipt, facts}).catch(() => {});
         cache.set(key, {at: Date.now(), value});
         lastCall.set(scope, {at: Date.now(), value});
         return value;

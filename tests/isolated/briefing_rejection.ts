@@ -149,3 +149,42 @@ test('a deterministic provider error is not retried', async () => {
   assert.equal(result.mode, 'MODEL_UNAVAILABLE');
   assert.match(String(result.reason), /PROVIDER_INPUT_LIMIT/);
 });
+
+test('a stored brief is served when the remaining budget cannot afford a new call', async () => {
+  let calls = 0;
+  const result = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {
+      ...deps(async () => { calls += 1; return reply(goodOutput); }, {recordedUsd: 0.0059, estimatedUsd: 0.0059, callsLastHour: 1}),
+      load: async () => ({analysis: goodOutput, receipt: {callId: 'stored-1', costUsd: 0.0007}, facts, savedAt: '2026-11-03T10:08:19.381Z'}),
+    },
+  });
+  assert.equal(calls, 0, 'no provider call is made');
+  assert.equal(result.mode, 'MODEL');
+  assert.equal(result.fromStore, true);
+  assert.equal(result.savedAt, '2026-11-03T10:08:19.381Z');
+  assert.equal(result.analysis?.headline, goodOutput.headline);
+});
+
+test('without a stored brief the same state refuses with a reason', async () => {
+  const result = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {
+      ...deps(async () => reply(goodOutput), {recordedUsd: 0.0059, estimatedUsd: 0.0059, callsLastHour: 1}),
+      load: async () => null,
+    },
+  });
+  assert.equal(result.mode, 'MODEL_UNAVAILABLE');
+  assert.ok(['BUDGET_TOO_SMALL_FOR_FACTS', 'FACTS_EXCEED_INPUT_BUDGET'].includes(String(result.reason)));
+});
+
+test('an accepted brief is stored for later readers', async () => {
+  let saved: any = null;
+  const result = await generateBriefing(ENTITY, {
+    force: true,
+    deps: {...deps(async () => reply(goodOutput)), save: async (_e, _l, brief) => { saved = brief; }},
+  });
+  assert.equal(result.mode, 'MODEL');
+  assert.ok(saved, 'the brief was handed to the trail');
+  assert.equal((saved.analysis as any).headline, goodOutput.headline);
+});
