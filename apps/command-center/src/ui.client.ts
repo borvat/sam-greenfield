@@ -244,7 +244,7 @@ function briefOf(){
 }
 async function loadBriefing(force){
   try{
-    const x=await api("/api/briefing"+(force?"?refresh=1":""),{timeout:60000});
+    const x=await api("/api/briefing?lang="+lang+(force?"&refresh=1":""),{timeout:60000});
     state.brief=x.data;
     renderBriefing();
   }catch(e){
@@ -527,6 +527,7 @@ function applyLang(next){
   const buttons=document.querySelectorAll("[data-lang]");
   for(let i=0;i<buttons.length;i++)buttons[i].classList.toggle("is-active",buttons[i].getAttribute("data-lang")===lang)
   if(state.exec)renderAll();
+  if(state.exec)void loadBriefing(false);
   const title=document.getElementById("pageTitle");
   const map={overview:"nav.overview",decisions:"nav.decisions",goals:"nav.goals",agents:"nav.agents",reports:"nav.reports",finance:"nav.finance",goal:"goal.detail.title"};
   if(title)title.textContent=t(map[state.view]||"nav.overview");

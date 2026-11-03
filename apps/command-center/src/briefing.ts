@@ -36,6 +36,8 @@ export interface BriefingResult {
 }
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const MIN_CALL_INTERVAL_MS = 60 * 1000;
+const lastCall = new Map<string, {at: number; value: BriefingResult}>();
 const cache = new Map<string, {at: number; value: BriefingResult}>();
 
 const clip = (value: unknown, max: number) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -56,7 +58,6 @@ export async function buildFacts(legalEntityId: string) {
     actor: clip(e.actor, 60), capability: clip(e.capability_id, 60), at: e.at, result: clip(e.result, 30),
   }));
   return {
-    generatedAt: new Date().toISOString(),
     company: {scope: 'configured legal entity only'},
     counts: snapshot.counts,
     window: {
@@ -82,11 +83,12 @@ function numbersIn(value: unknown, into: Set<string> = new Set()): Set<string> {
 }
 
 /** Rejects any digit the facts cannot support, any foreign evidence id, and any non-Arabic text. */
-function validateAnalysis(raw: any, facts: any): {ok: true; value: BriefingAnalysis} | {ok: false; reason: string} {
+function validateAnalysis(raw: any, facts: any, lang: 'ar' | 'en' = 'ar'): {ok: true; value: BriefingAnalysis} | {ok: false; reason: string} {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {ok: false, reason: 'NOT_OBJECT'};
   const required = ['headline', 'problem', 'impact', 'options', 'samCan', 'ownerMust', 'nextStep'];
   if (Object.keys(raw).some((k) => !required.includes(k))) return {ok: false, reason: 'FOREIGN_KEY'};
-  const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && AR_TEXT.test(v);
+  const script = lang === 'en' ? /[A-Za-z]/ : AR_TEXT;
+  const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && script.test(v);
   if (!text(raw.headline, 140)) return {ok: false, reason: 'HEADLINE'};
   if (!raw.problem || !text(raw.problem.what, 600) || !text(raw.problem.why, 600)) return {ok: false, reason: 'PROBLEM'};
   if (!raw.impact || !text(raw.impact.statement, 600)) return {ok: false, reason: 'IMPACT'};
@@ -164,14 +166,21 @@ function gateway(): ModelGateway | null {
   return new ModelGateway({deepseek: adapter} as any);
 }
 
-export async function generateBriefing(legalEntityId: string, options: {force?: boolean} = {}): Promise<BriefingResult> {
+export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'} = {}): Promise<BriefingResult> {
+  const lang: 'ar' | 'en' = options.lang === 'en' ? 'en' : 'ar';
   const facts = await buildFacts(legalEntityId);
+  // Hash only stable content: a volatile field here would defeat the cache and bill every page load.
   const factsHash = createHash('sha256').update(JSON.stringify(facts)).digest('hex');
-  const key = `${legalEntityId}:${factsHash}`;
+  const key = `${legalEntityId}:${lang}:${factsHash}`;
   const hit = cache.get(key);
   if (!options.force && hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
   const fallback = deterministicBrief(facts);
+  const scope = `${legalEntityId}:${lang}`;
+  const previous = lastCall.get(scope);
+  if (!options.force && previous && Date.now() - previous.at < MIN_CALL_INTERVAL_MS) {
+    return previous.value;
+  }
   const base: BriefingResult = {mode: 'MODEL_UNAVAILABLE', analysis: null, deterministic: fallback, receipt: null, facts};
 
   const model = gateway();
@@ -187,7 +196,9 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       preferredProviders: ['deepseek'],
       requiredModels: ['deepseek-flash'],
       input: {
-        objective: 'اكتب موجزاً تنفيذياً عربياً للمالك من الحقائق المرفقة فقط.',
+        objective: lang === 'en'
+          ? 'Write an executive brief for the owner in English, using only the supplied facts.'
+          : 'اكتب موجزاً تنفيذياً عربياً للمالك من الحقائق المرفقة فقط.',
         contract: {
           output: 'JSON فقط بالعربية، بالمفاتيح: headline, problem{what,why,evidence[]}, impact{statement,basis[]}, options[{id,title,risk,authority}], samCan[], ownerMust[], nextStep.',
           rules: [
@@ -197,6 +208,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
             'authority واحدة من GREEN أو YELLOW أو RED؛ ما يحتاج موافقة المالك يكون YELLOW أو RED.',
             'لا تدّعِ تنفيذاً؛ كل إجراء يمر عبر التفويض والتحقق.',
             'كل النصوص عربية فصيحة وقصيرة: العنوان ≤ 12 كلمة، كل حقل ≤ 30 كلمة، وكل خيار سطر واحد.',
+            ...(lang === 'en' ? ['ALL text values must be in English.'] : []),
             'لا تكرر الحقائق سرداً؛ اكتفِ بالاستنتاج.',
           ],
         },
@@ -204,7 +216,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       },
     });
     const parsed = typeof res.result.output === 'string' ? (() => { try { return JSON.parse(res.result.output as string); } catch { return null; } })() : res.result.output;
-    const checked = validateAnalysis(parsed, facts);
+    const checked = validateAnalysis(parsed, facts, lang);
     const costUsd = (res.result.usage.inputTokens / 1000) * 0.0003 + (res.result.usage.outputTokens / 1000) * 0.0012;
     const receipt: BriefingReceipt = {
       provider: res.providerId,
@@ -220,6 +232,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       ? {mode: 'MODEL', analysis: checked.value, deterministic: fallback, receipt, facts}
       : {mode: 'MODEL_REJECTED', reason: checked.reason, analysis: null, deterministic: fallback, receipt, facts};
     cache.set(key, {at: Date.now(), value});
+    lastCall.set(scope, {at: Date.now(), value});
     return value;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'MODEL_FAILED';

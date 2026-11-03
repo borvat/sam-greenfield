@@ -117,9 +117,9 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       if(req.method==="GET"&&req.url==="/api/executive"){
         json(res,200,{ok:true,data:await commandCenterExecutive(options.legalEntityId)});return;
       }
-      if(req.method==="GET"&&(req.url==="/api/briefing"||req.url==="/api/briefing?refresh=1")){
-        const force=req.url.indexOf("refresh=1")>=0;
-        json(res,200,{ok:true,data:await generateBriefing(options.legalEntityId,{force})});return;
+      if(req.method==="GET"&&(req.url||"").split("?")[0]==="/api/briefing"){
+        const q=new URL(req.url||"/","http://local");
+        json(res,200,{ok:true,data:await generateBriefing(options.legalEntityId,{force:q.searchParams.get("refresh")==="1",lang:q.searchParams.get("lang")==="en"?"en":"ar"})});return;
       }
       if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
         if(!token){rejectAuthentication(req,res,true);return;}
