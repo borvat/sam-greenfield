@@ -1,5 +1,4 @@
 import {createHash, randomUUID} from 'node:crypto';
-import {commandCenterExecutive} from './store';
 import {CHAT_OVERHEAD_TOKENS, MAX_INPUT_TOKENS, classifyPrompt} from './promptBound';
 import {parseModelJson} from './jsonOutput';
 import {buildInput, fitFacts} from './factsBudget';
@@ -36,6 +35,9 @@ export interface BriefingResult {
   analysis: BriefingAnalysis | null;
   deterministic: BriefingAnalysis;
   receipt: BriefingReceipt | null;
+  /** Why the model output was refused, kept separate from why a retry could not run. */
+  rejectionReason?: RejectionReason | null;
+  retryBlockedReason?: string | null;
   facts: Record<string, unknown>;
   budget: {recordedUsd: number; estimatedUsd: number; spentUsd: number; reservedUsd: number; limitUsd: number; callsLastHour: number; hourlyCap: number};
 }
@@ -65,6 +67,8 @@ const clip = (value: unknown, max: number) => String(value ?? '').replace(/\s+/g
 
 /** Facts are the only material the model may use; every id here is a real stored row. */
 export async function buildFacts(legalEntityId: string) {
+  // Lazy so the diagnostics tests can import this module without a database.
+  const {commandCenterExecutive} = await import('./store');
   const snapshot = await commandCenterExecutive(legalEntityId);
   const decisions = [
     ...snapshot.decisions.approvals.map((a: any) => ({id: a.id, kind: 'approval', goalId: a.goal_id, businessId: a.business_id, title: clip(a.capability_id, 80), since: a.created_at, reason: 'approval_required'})),
@@ -105,39 +109,62 @@ function numbersIn(value: unknown, into: Set<string> = new Set()): Set<string> {
   return into;
 }
 
-/** Rejects any digit the facts cannot support, any foreign evidence id, and any non-Arabic text. */
-function validateAnalysis(raw: any, facts: any, lang: 'ar' | 'en' = 'ar'): {ok: true; value: BriefingAnalysis} | {ok: false; reason: string} {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {ok: false, reason: 'NOT_OBJECT'};
+export interface RejectionReason {code: string; path: string; detail?: string}
+
+type Validation = {ok: true; value: BriefingAnalysis} | ({ok: false} & RejectionReason);
+
+/** Rejects any digit the facts cannot support, any foreign evidence id, and any text in the wrong script.
+ *  Every failure names the rule and the field, so a rejection is diagnosable without the raw output. */
+function validateAnalysis(raw: any, facts: any, lang: 'ar' | 'en' = 'ar'): Validation {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {ok: false, code: 'NOT_OBJECT', path: 'body'};
   const required = ['headline', 'problem', 'impact', 'options', 'samCan', 'ownerMust', 'nextStep'];
-  if (Object.keys(raw).some((k) => !required.includes(k))) return {ok: false, reason: 'FOREIGN_KEY'};
+  const foreign = Object.keys(raw).find((k) => !required.includes(k));
+  if (foreign) return {ok: false, code: 'FOREIGN_KEY', path: `body.${foreign}`};
   const script = lang === 'en' ? /[A-Za-z]/ : AR_TEXT;
   const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && script.test(v);
-  if (!text(raw.headline, 140)) return {ok: false, reason: 'HEADLINE'};
-  if (!raw.problem || !text(raw.problem.what, 600) || !text(raw.problem.why, 600)) return {ok: false, reason: 'PROBLEM'};
-  if (!raw.impact || !text(raw.impact.statement, 600)) return {ok: false, reason: 'IMPACT'};
-  if (!Array.isArray(raw.options) || raw.options.length < 1 || raw.options.length > 4) return {ok: false, reason: 'OPTIONS'};
-  if (!Array.isArray(raw.samCan) || raw.samCan.length > 5 || !Array.isArray(raw.ownerMust) || raw.ownerMust.length > 5) return {ok: false, reason: 'LISTS'};
-  if (!text(raw.nextStep, 300)) return {ok: false, reason: 'NEXT_STEP'};
+  if (!text(raw.headline, 140)) return {ok: false, code: 'HEADLINE', path: 'headline', detail: `len=${typeof raw.headline === 'string' ? raw.headline.length : 'n/a'}`};
+  if (!raw.problem || !text(raw.problem.what, 600)) return {ok: false, code: 'PROBLEM', path: 'problem.what'};
+  if (!text(raw.problem.why, 600)) return {ok: false, code: 'PROBLEM', path: 'problem.why'};
+  if (!raw.impact || !text(raw.impact.statement, 600)) return {ok: false, code: 'IMPACT', path: 'impact.statement'};
+  if (!Array.isArray(raw.options) || raw.options.length < 1 || raw.options.length > 4) return {ok: false, code: 'OPTIONS', path: 'options', detail: `count=${Array.isArray(raw.options) ? raw.options.length : 'n/a'}`};
+  if (!Array.isArray(raw.samCan) || raw.samCan.length > 5) return {ok: false, code: 'LISTS', path: 'samCan'};
+  if (!Array.isArray(raw.ownerMust) || raw.ownerMust.length > 5) return {ok: false, code: 'LISTS', path: 'ownerMust'};
+  if (!text(raw.nextStep, 300)) return {ok: false, code: 'NEXT_STEP', path: 'nextStep'};
 
   const ids = new Set<string>([...facts.decisions.map((d: any) => d.id), ...facts.savedReports.map((r: any) => r.id)]);
   const evidence = Array.isArray(raw.problem.evidence) ? raw.problem.evidence : [];
-  if (evidence.some((id: unknown) => typeof id !== 'string' || !ids.has(id))) return {ok: false, reason: 'EVIDENCE_ID'};
+  const badEvidence = evidence.findIndex((id: unknown) => typeof id !== 'string' || !ids.has(id));
+  if (badEvidence >= 0) return {ok: false, code: 'EVIDENCE_ID', path: `problem.evidence[${badEvidence}]`};
   const basis = Array.isArray(raw.impact.basis) ? raw.impact.basis : [];
-  if (basis.some((id: unknown) => typeof id !== 'string' || !ids.has(id))) return {ok: false, reason: 'BASIS_ID'};
+  const badBasis = basis.findIndex((id: unknown) => typeof id !== 'string' || !ids.has(id));
+  if (badBasis >= 0) return {ok: false, code: 'BASIS_ID', path: `impact.basis[${badBasis}]`};
 
   const allowedNumbers = numbersIn(facts);
-  const claimed = new Set<string>();
-  for (const part of [raw.headline, raw.problem.what, raw.problem.why, raw.impact.statement, raw.nextStep, ...raw.samCan, ...raw.ownerMust, ...raw.options.map((o: any) => o.title), ...raw.options.map((o: any) => o.risk)]) {
-    numbersIn(part, claimed);
+  const fields: [string, unknown][] = [
+    ['headline', raw.headline],
+    ['problem.what', raw.problem.what],
+    ['problem.why', raw.problem.why],
+    ['impact.statement', raw.impact.statement],
+    ['nextStep', raw.nextStep],
+    ...raw.samCan.map((v: unknown, i: number) => [`samCan[${i}]`, v] as [string, unknown]),
+    ...raw.ownerMust.map((v: unknown, i: number) => [`ownerMust[${i}]`, v] as [string, unknown]),
+    ...raw.options.map((o: any, i: number) => [`options[${i}].title`, o?.title] as [string, unknown]),
+    ...raw.options.map((o: any, i: number) => [`options[${i}].risk`, o?.risk] as [string, unknown]),
+  ];
+  for (const [path, value] of fields) {
+    for (const n of numbersIn(value)) {
+      if (!allowedNumbers.has(n)) return {ok: false, code: 'UNSUPPORTED_NUMBER', path, detail: `number=${n}`};
+    }
   }
-  for (const n of claimed) if (!allowedNumbers.has(n)) return {ok: false, reason: 'UNSUPPORTED_NUMBER'};
 
-  const options = raw.options.map((o: any, index: number) => {
-    if (!o || typeof o.id !== 'string' || !text(o.title, 160) || !text(o.risk, 300)) return null;
-    if (!['GREEN', 'YELLOW', 'RED'].includes(o.authority)) return null;
-    return {id: clip(o.id, 40) || String(index + 1), title: o.title, risk: o.risk, authority: o.authority};
-  });
-  if (options.some((o: any) => o === null)) return {ok: false, reason: 'OPTION_SHAPE'};
+  for (let i = 0; i < raw.options.length; i += 1) {
+    const o = raw.options[i];
+    if (!o || typeof o.id !== 'string') return {ok: false, code: 'OPTION_SHAPE', path: `options[${i}].id`};
+    if (!text(o.title, 160)) return {ok: false, code: 'OPTION_SHAPE', path: `options[${i}].title`};
+    if (!text(o.risk, 300)) return {ok: false, code: 'OPTION_SHAPE', path: `options[${i}].risk`};
+    if (!['GREEN', 'YELLOW', 'RED'].includes(o.authority)) return {ok: false, code: 'OPTION_SHAPE', path: `options[${i}].authority`, detail: `value=${String(o.authority).slice(0, 20)}`};
+  }
+  const options = raw.options.map((o: any, index: number) => ({id: clip(o.id, 40) || String(index + 1), title: o.title, risk: o.risk, authority: o.authority}));
 
   return {
     ok: true,
@@ -299,9 +326,18 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
   return new ModelGateway({[PROVIDER_ID]: adapter} as any);
 }
 
-export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'} = {}): Promise<BriefingResult> {
+export interface BriefingDeps {
+  budgetUsd?: number;
+  facts?: (legalEntityId: string) => Promise<any>;
+  invoke?: (task: any) => Promise<any>;
+  usage?: (legalEntityId: string) => Promise<{recordedUsd: number; estimatedUsd: number; callsLastHour: number}>;
+  attribution?: (task: string, legalEntityId: string) => Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'>;
+  tenant?: () => Promise<boolean>;
+}
+
+export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'; deps?: BriefingDeps} = {}): Promise<BriefingResult> {
   const lang: 'ar' | 'en' = options.lang === 'en' ? 'en' : 'ar';
-  const full = await buildFacts(legalEntityId);
+  const full = await (options.deps?.facts ?? buildFacts)(legalEntityId);
   // The sample is chosen and measured on the final request before anything is sent.
   const fitted = fitFacts(full, lang, MAX_INPUT_TOKENS - CHAT_OVERHEAD_TOKENS);
   if (!fitted) {
@@ -328,17 +364,18 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
   const task = (async (): Promise<BriefingResult> => {
     const fallback = deterministicBrief(facts, lang);
     const scope = `${legalEntityId}:${lang}`;
-    const ledger = await briefingUsage(legalEntityId);
+    const ledger = await (options.deps?.usage ?? briefingUsage)(legalEntityId);
+    const limitUsd = options.deps?.budgetUsd ?? DAILY_BUDGET_USD;
     const round = (n: number) => Number(n.toFixed(6));
     // Worst case for one call under the enforced caps, reserved before anything is sent.
     const perAttempt = ((MAX_INPUT_TOKENS + MAX_OUTPUT_TOKENS) / 1000) * COST_PER_1K_TOKENS;
     const basis = Math.max(ledger.recordedUsd, ledger.estimatedUsd);
     // Count the other calls already in flight (this one is in the map too).
     const reserved = Math.max(0, inflight.size - 1) * perAttempt;
-    const budget = {recordedUsd: round(ledger.recordedUsd), estimatedUsd: round(ledger.estimatedUsd), spentUsd: round(basis), reservedUsd: round(reserved), limitUsd: DAILY_BUDGET_USD, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
+    const budget = {recordedUsd: round(ledger.recordedUsd), estimatedUsd: round(ledger.estimatedUsd), spentUsd: round(basis), reservedUsd: round(reserved), limitUsd, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
     const previous = lastCall.get(scope);
     if (!options.force && previous && Date.now() - previous.at < MIN_CALL_INTERVAL_MS) return previous.value;
-    const overBudget = basis + reserved + perAttempt > DAILY_BUDGET_USD;
+    const overBudget = basis + reserved + perAttempt > limitUsd;
     if (overBudget || ledger.callsLastHour >= HOURLY_CALL_CAP) {
       const value: BriefingResult = {
         mode: 'MODEL_UNAVAILABLE',
@@ -349,14 +386,18 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       return value;
     }
 
-    if (!(await tenantContextPresent())) {
+    if (!(await (options.deps?.tenant ?? tenantContextPresent)())) {
       const value: BriefingResult = {mode: 'MODEL_UNAVAILABLE', reason: 'TENANT_CONTEXT_MISSING', analysis: null, deterministic: fallback, receipt: null, facts, budget};
       lastCall.set(scope, {at: Date.now(), value});
       return value;
     }
 
-    const model = await gateway();
-    if (!model) return {mode: 'MODEL_UNAVAILABLE', reason: 'NO_PROVIDER_CREDENTIAL', analysis: null, deterministic: fallback, receipt: null, facts, budget};
+    let callModel = options.deps?.invoke;
+    if (!callModel) {
+      const model = await gateway();
+      if (!model) return {mode: 'MODEL_UNAVAILABLE', reason: 'NO_PROVIDER_CREDENTIAL', analysis: null, deterministic: fallback, receipt: null, facts, budget};
+      callModel = (t: any) => model.invoke(t);
+    }
 
     const started = Date.now();
     const briefId = randomUUID();
@@ -364,7 +405,8 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     let spentUsd = 0;
     let inputTokens = 0;
     let outputTokens = 0;
-    let lastReason = '';
+    let lastRejection: RejectionReason | null = null;
+    let retryBlockedReason: string | null = null;
     const payload = {
       task: 'executive_briefing',
       capability: 'planning',
@@ -381,25 +423,25 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       while (attempts < MAX_ATTEMPTS) {
         if (attempts > 0) {
           // A retry is admitted only against the ledger as it stands now.
-          const fresh = await briefingUsage(legalEntityId);
-          if (Math.max(fresh.recordedUsd, fresh.estimatedUsd) + perAttempt > DAILY_BUDGET_USD) {
-            lastReason = 'BUDGET_EXHAUSTED';
+          const fresh = await (options.deps?.usage ?? briefingUsage)(legalEntityId);
+          if (Math.max(fresh.recordedUsd, fresh.estimatedUsd) + perAttempt > limitUsd) {
+            retryBlockedReason = 'BUDGET_EXHAUSTED';
             break;
           }
         }
         attempts += 1;
         const attemptTask = `executive_briefing:${briefId}:${attempts}`;
-        const res = await model.invoke({...payload, task: attemptTask});
+        const res = await callModel({...payload, task: attemptTask});
         inputTokens += res.result.usage.inputTokens;
         outputTokens += res.result.usage.outputTokens;
         spentUsd += (res.result.usage.inputTokens / 1000) * 0.0003 + (res.result.usage.outputTokens / 1000) * 0.0012;
         const parsed = parseModelJson(res.result.output);
         const checked = validateAnalysis(parsed, facts, lang);
         if (!checked.ok) {
-          lastReason = checked.reason;
+          lastRejection = {code: checked.code, path: checked.path, detail: checked.detail};
           continue;
         }
-        const attribution = await briefingAttribution(attemptTask, legalEntityId);
+        const attribution = await (options.deps?.attribution ?? briefingAttribution)(attemptTask, legalEntityId);
         const receipt: BriefingReceipt = {
           provider: res.providerId,
           model: res.result.model,
@@ -434,12 +476,16 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         generatedAt: new Date().toISOString(),
         factsHash,
         attempts,
-        attribution: await briefingAttribution(`executive_briefing:${briefId}:${attempts}`, legalEntityId),
+        attribution: await (options.deps?.attribution ?? briefingAttribution)(`executive_briefing:${briefId}:${attempts}`, legalEntityId),
         callId: briefId,
       };
-      const value: BriefingResult = lastReason === 'BUDGET_EXHAUSTED'
-        ? {mode: 'MODEL_UNAVAILABLE', reason: 'BUDGET_EXHAUSTED', analysis: null, deterministic: fallback, receipt, facts, budget}
-        : {mode: 'MODEL_REJECTED', reason: lastReason, analysis: null, deterministic: fallback, receipt, facts, budget};
+      const value: BriefingResult = {
+        mode: 'MODEL_REJECTED',
+        reason: lastRejection ? lastRejection.code : (retryBlockedReason ?? 'MODEL_REJECTED'),
+        rejectionReason: lastRejection,
+        retryBlockedReason,
+        analysis: null, deterministic: fallback, receipt, facts, budget,
+      };
       lastCall.set(scope, {at: Date.now(), value});
       return value;
     } catch (error) {

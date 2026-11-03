@@ -318,8 +318,12 @@ function renderBriefing(){
   const receipt=document.getElementById("brief-receipt");
   if(receipt){
     const r=b.receipt;
+    const rej=state.brief&&state.brief.rejectionReason?state.brief.rejectionReason:null;
+    const blocked=state.brief&&state.brief.retryBlockedReason?state.brief.retryBlockedReason:null;
     receipt.innerHTML='<div class="card-head"><h3>'+esc(t("brief.receipt"))+'</h3></div>'+
       (!b.mode?('<div class="muted">'+esc(t("brief.mode.loading"))+'</div>'):"")+
+      (rej?('<div class="muted" style="margin-bottom:8px">'+esc(t("brief.rejectedAt"))+': '+esc(rej.code)+' · '+esc(rej.path)+(rej.detail?' · '+esc(rej.detail):'')+'</div>'):"")+
+      (blocked?('<div class="muted" style="margin-bottom:8px">'+esc(t("brief.retryBlocked"))+': '+esc(blocked)+'</div>'):"")+
       (r?('<dl class="kv"><dt>'+esc(t("brief.model"))+'</dt><dd>'+esc(r.model)+'</dd>'+
         '<dt>'+esc(t("brief.tokens"))+'</dt><dd>'+n(r.inputTokens)+' → '+n(r.outputTokens)+'</dd>'+
         '<dt>'+esc(t("brief.cost"))+'</dt><dd>$'+Number(r.costUsd||0).toFixed(4)+'</dd>'+
