@@ -1,6 +1,4 @@
 import {createHash} from 'node:crypto';
-import {ModelGateway} from '../../../packages/model-gateway/src/gateway';
-import {OpenAICompatibleChatAdapter} from '../../../packages/model-providers/src/openaiCompatible';
 import {commandCenterExecutive} from './store';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
@@ -156,9 +154,15 @@ export function deterministicBrief(facts: any): BriefingAnalysis {
   };
 }
 
-function gateway(): ModelGateway | null {
+/** Loaded lazily: the gateway pulls configuration at import time, and the
+ *  auth tests must be able to import this module without a database URL. */
+async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) return null;
+  const [{ModelGateway}, {OpenAICompatibleChatAdapter}] = await Promise.all([
+    import('../../../packages/model-gateway/src/gateway'),
+    import('../../../packages/model-providers/src/openaiCompatible'),
+  ]);
   const adapter = new OpenAICompatibleChatAdapter('deepseek', {
     apiKey,
     baseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
@@ -183,7 +187,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
   }
   const base: BriefingResult = {mode: 'MODEL_UNAVAILABLE', analysis: null, deterministic: fallback, receipt: null, facts};
 
-  const model = gateway();
+  const model = await gateway();
   if (!model) return {...base, reason: 'NO_PROVIDER_CREDENTIAL'};
 
   const started = Date.now();

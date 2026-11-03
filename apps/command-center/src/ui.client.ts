@@ -90,7 +90,7 @@ async function refresh(){
     document.getElementById("status").className="pill live";
     wakeRetry=0;
     renderAll();
-    void loadBriefing(false);
+    if(typeof setTimeout==="function")setTimeout(function(){void loadBriefing(false)},900);
     await refreshInternalNotifications();
   }catch(e){
     if(generation!==authGeneration)return;
@@ -293,8 +293,8 @@ function renderBriefing(){
   const openBtn=document.getElementById("brief-open");
   const top=topDecision();
   if(openBtn){
-    if(top){openBtn.style.display="";openBtn.textContent=t("decision.open");openBtn.onclick=function(){go("goal",top.goalId)}}
-    else{openBtn.style.display="none";openBtn.onclick=null}
+    if(top){if(openBtn.style)openBtn.style.display="";openBtn.textContent=t("decision.open");openBtn.onclick=function(){go("goal",top.goalId)}}
+    else{if(openBtn.style)openBtn.style.display="none";openBtn.onclick=null}
   }
 
   const modeEl=document.getElementById("brief-mode");
