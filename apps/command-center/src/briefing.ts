@@ -46,9 +46,10 @@ const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
 /** Used only when a provider row carries no price: the audit row then records cost 0,
  *  and a dollar ceiling that reads that zero would never fire. */
 const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0012);
-/** Worst-case tokens one call can consume: the facts payload is capped in practice at ~950,
- *  and the transport refuses any response above MAX_OUTPUT_TOKENS. */
-const MAX_INPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_INPUT_TOKENS || 1200);
+/** Proven upper bound on prompt tokens: every token decodes to at least one code point,
+ *  so the code-point count can never be smaller than the token count. The transport
+ *  therefore refuses a prompt whose code points exceed this cap, before any request. */
+const MAX_INPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_INPUT_TOKENS || 2800);
 /** A rejected output is retried once, so one brief can cost two calls. */
 const MAX_ATTEMPTS = 2;
 const PROVIDER_ID = process.env.DEEPSEEK_PROVIDER_ID || 'deepseek';
@@ -286,7 +287,7 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
       const body = JSON.parse(String(init.body));
       // Rejected before the request is sent: an over-limit prompt must not cost anything.
       const prompt = String(body?.messages?.[0]?.content ?? '');
-      if (Math.ceil(Buffer.byteLength(prompt, 'utf8') / 3) > MAX_INPUT_TOKENS) throw new Error('PROVIDER_INPUT_LIMIT');
+      if ([...prompt].length > MAX_INPUT_TOKENS) throw new Error('PROVIDER_INPUT_LIMIT');
       body.max_tokens = MAX_OUTPUT_TOKENS;
       body.thinking = {type: 'disabled'};
       body.response_format = {type: 'json_object'};
@@ -318,14 +319,13 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     const round = (n: number) => Number(n.toFixed(6));
     // Worst case for one call under the enforced caps, reserved before anything is sent.
     const perAttempt = ((MAX_INPUT_TOKENS + MAX_OUTPUT_TOKENS) / 1000) * COST_PER_1K_TOKENS;
-    const perCall = MAX_ATTEMPTS * perAttempt;
     const basis = Math.max(ledger.recordedUsd, ledger.estimatedUsd);
     // Count the other calls already in flight (this one is in the map too).
-    const reserved = Math.max(0, inflight.size - 1) * perCall;
+    const reserved = Math.max(0, inflight.size - 1) * perAttempt;
     const budget = {recordedUsd: round(ledger.recordedUsd), estimatedUsd: round(ledger.estimatedUsd), spentUsd: round(basis), reservedUsd: round(reserved), limitUsd: DAILY_BUDGET_USD, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
     const previous = lastCall.get(scope);
     if (!options.force && previous && Date.now() - previous.at < MIN_CALL_INTERVAL_MS) return previous.value;
-    const overBudget = basis + reserved + perCall > DAILY_BUDGET_USD;
+    const overBudget = basis + reserved + perAttempt > DAILY_BUDGET_USD;
     if (overBudget || ledger.callsLastHour >= HOURLY_CALL_CAP) {
       const value: BriefingResult = {
         mode: 'MODEL_UNAVAILABLE',
@@ -382,6 +382,14 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     try {
       // One retry only: a rejection is usually a shape slip, and two attempts stay under a cent.
       while (attempts < MAX_ATTEMPTS) {
+        if (attempts > 0) {
+          // A retry is admitted only against the ledger as it stands now.
+          const fresh = await briefingUsage(legalEntityId);
+          if (Math.max(fresh.recordedUsd, fresh.estimatedUsd) + perAttempt > DAILY_BUDGET_USD) {
+            lastReason = 'BUDGET_EXHAUSTED';
+            break;
+          }
+        }
         attempts += 1;
         const attemptTask = `executive_briefing:${briefId}:${attempts}`;
         const res = await model.invoke({...payload, task: attemptTask});
