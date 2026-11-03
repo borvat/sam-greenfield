@@ -1,4 +1,4 @@
-import {createHash} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 import {commandCenterExecutive} from './store';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
@@ -14,6 +14,7 @@ export interface BriefingReceipt {
   factsHash: string;
   attempts: number;
   attribution: 'VERIFIED' | 'MISSING' | 'FOREIGN';
+  callId: string;
 }
 
 export interface BriefingAnalysis {
@@ -211,7 +212,7 @@ export async function briefingUsage(legalEntityId: string): Promise<{recordedUsd
               coalesce(sum(greatest(coalesce(cost,0), (coalesce(tokens,0)::float8/1000.0)*$2)),0)::float8 as estimated,
               count(*) filter (where created_at > now() - interval '1 hour')::int as calls_last_hour
          from model_calls
-        where task='executive_briefing'
+        where task like 'executive_briefing%'
           and legal_entity_id=$1
           and created_at > now() - interval '24 hours'`,
       [legalEntityId, COST_PER_1K_TOKENS],
@@ -248,18 +249,13 @@ export async function tenantContextPresent(): Promise<boolean> {
   }
 }
 
-/** End-to-end attribution check: the newest briefing row must belong to this company.
- *  A row written without the tenant context is invisible here, which is the point. */
-export async function lastBriefingAttribution(legalEntityId: string): Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'> {
+/** Attribution of one specific call, located by the marker carried in its task name. */
+export async function briefingAttribution(task: string, legalEntityId: string): Promise<'VERIFIED' | 'MISSING' | 'FOREIGN'> {
   let client: any;
   try {
     const {pool} = await import('../../../packages/db/src/client');
     client = await pool.connect();
-    const res = await client.query(
-      `select legal_entity_id from model_calls
-        where task='executive_briefing' and created_at > now() - interval '3 minutes'
-        order by created_at desc limit 1`,
-    );
+    const res = await client.query('select legal_entity_id from model_calls where task=$1', [task]);
     const row = res.rows[0];
     if (!row) return 'MISSING';
     return String(row.legal_entity_id) === legalEntityId ? 'VERIFIED' : 'FOREIGN';
@@ -288,6 +284,9 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
     transport: async (url: string, init: RequestInit, timeout?: number) => {
       if (url !== endpoint) throw new Error('PROVIDER_DESTINATION_DENIED');
       const body = JSON.parse(String(init.body));
+      // Rejected before the request is sent: an over-limit prompt must not cost anything.
+      const prompt = String(body?.messages?.[0]?.content ?? '');
+      if (Math.ceil(Buffer.byteLength(prompt, 'utf8') / 3) > MAX_INPUT_TOKENS) throw new Error('PROVIDER_INPUT_LIMIT');
       body.max_tokens = MAX_OUTPUT_TOKENS;
       body.thinking = {type: 'disabled'};
       body.response_format = {type: 'json_object'};
@@ -347,6 +346,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
     if (!model) return {mode: 'MODEL_UNAVAILABLE', reason: 'NO_PROVIDER_CREDENTIAL', analysis: null, deterministic: fallback, receipt: null, facts, budget};
 
     const started = Date.now();
+    const briefId = randomUUID();
     let attempts = 0;
     let spentUsd = 0;
     let inputTokens = 0;
@@ -383,7 +383,8 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       // One retry only: a rejection is usually a shape slip, and two attempts stay under a cent.
       while (attempts < MAX_ATTEMPTS) {
         attempts += 1;
-        const res = await model.invoke(payload);
+        const attemptTask = `executive_briefing:${briefId}:${attempts}`;
+        const res = await model.invoke({...payload, task: attemptTask});
         inputTokens += res.result.usage.inputTokens;
         outputTokens += res.result.usage.outputTokens;
         spentUsd += (res.result.usage.inputTokens / 1000) * 0.0003 + (res.result.usage.outputTokens / 1000) * 0.0012;
@@ -393,7 +394,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           lastReason = checked.reason;
           continue;
         }
-        const attribution = await lastBriefingAttribution(legalEntityId);
+        const attribution = await briefingAttribution(attemptTask, legalEntityId);
         const receipt: BriefingReceipt = {
           provider: res.providerId,
           model: res.result.model,
@@ -405,6 +406,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
           factsHash,
           attempts,
           attribution,
+          callId: briefId,
         };
         if (attribution !== 'VERIFIED') {
           // The call escaped this company's ledger; do not present it as an attributed analysis.
@@ -427,7 +429,8 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         generatedAt: new Date().toISOString(),
         factsHash,
         attempts,
-        attribution: await lastBriefingAttribution(legalEntityId),
+        attribution: await briefingAttribution(`executive_briefing:${briefId}:${attempts}`, legalEntityId),
+        callId: briefId,
       };
       const value: BriefingResult = {mode: 'MODEL_REJECTED', reason: lastReason, analysis: null, deterministic: fallback, receipt, facts, budget};
       lastCall.set(scope, {at: Date.now(), value});
