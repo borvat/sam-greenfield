@@ -187,11 +187,17 @@ export function deterministicBrief(facts: any, lang: 'ar' | 'en' = 'ar'): Briefi
   };
 }
 
-/** What this company has already spent on briefs in the last 24 hours, read from the audit trail. */
-async function usage(legalEntityId: string): Promise<{spentUsd: number; callsLastHour: number}> {
+/** What this company has already spent on briefs in the last 24 hours, read from the audit trail.
+ *  The tenant context is set on the connection explicitly: the budget must not depend on how
+ *  DATABASE_URL happens to be configured, and a session without it would silently read zero. */
+export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: number; callsLastHour: number}> {
+  let client: any;
   try {
     const {pool} = await import('../../../packages/db/src/client');
-    const res = await pool.query(
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query("select set_config('app.current_legal_entity_id',$1,true)", [legalEntityId]);
+    const res = await client.query(
       `select coalesce(sum(cost),0)::float8 as spent,
               count(*) filter (where created_at > now() - interval '1 hour')::int as calls_last_hour
          from model_calls
@@ -200,10 +206,14 @@ async function usage(legalEntityId: string): Promise<{spentUsd: number; callsLas
           and created_at > now() - interval '24 hours'`,
       [legalEntityId],
     );
+    await client.query('COMMIT');
     return {spentUsd: Number(res.rows[0]?.spent ?? 0), callsLastHour: Number(res.rows[0]?.calls_last_hour ?? 0)};
   } catch {
     // An unreadable ledger must never unlock spending.
+    if (client) await client.query('ROLLBACK').catch(() => {});
     return {spentUsd: DAILY_BUDGET_USD, callsLastHour: HOURLY_CALL_CAP};
+  } finally {
+    if (client) client.release();
   }
 }
 
@@ -252,7 +262,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
   const task = (async (): Promise<BriefingResult> => {
     const fallback = deterministicBrief(facts, lang);
     const scope = `${legalEntityId}:${lang}`;
-    const ledger = await usage(legalEntityId);
+    const ledger = await briefingUsage(legalEntityId);
     const budget = {spentUsd: Number(ledger.spentUsd.toFixed(6)), limitUsd: DAILY_BUDGET_USD, callsLastHour: ledger.callsLastHour, hourlyCap: HOURLY_CALL_CAP};
     const previous = lastCall.get(scope);
     if (!options.force && previous && Date.now() - previous.at < MIN_CALL_INTERVAL_MS) return previous.value;
