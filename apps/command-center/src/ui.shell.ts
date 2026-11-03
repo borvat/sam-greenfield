@@ -75,6 +75,7 @@ export function renderShell(build: string): string {
               </div>
               <div class="brief-label" data-i18n="brief.evidence">${t("ar", "brief.evidence")}</div>
               <div class="chips" id="brief-evidence"></div>
+              <div class="brief-condensed" id="brief-condensed" hidden></div>
               <div class="brief-label" data-i18n="brief.impact">${t("ar", "brief.impact")}</div>
               <p id="brief-impact"></p>
               <div class="brief-label" data-i18n="brief.options">${t("ar", "brief.options")}</div>

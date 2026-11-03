@@ -2,6 +2,7 @@ import {createHash, randomUUID} from 'node:crypto';
 import {commandCenterExecutive} from './store';
 import {CHAT_OVERHEAD_TOKENS, MAX_INPUT_TOKENS, classifyPrompt} from './promptBound';
 import {parseModelJson} from './jsonOutput';
+import {buildInput, fitFacts} from './factsBudget';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
 
@@ -300,7 +301,21 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
 
 export async function generateBriefing(legalEntityId: string, options: {force?: boolean; lang?: 'ar' | 'en'} = {}): Promise<BriefingResult> {
   const lang: 'ar' | 'en' = options.lang === 'en' ? 'en' : 'ar';
-  const facts = await buildFacts(legalEntityId);
+  const full = await buildFacts(legalEntityId);
+  // The sample is chosen and measured on the final request before anything is sent.
+  const fitted = fitFacts(full, lang, MAX_INPUT_TOKENS - CHAT_OVERHEAD_TOKENS);
+  if (!fitted) {
+    return {
+      mode: 'MODEL_UNAVAILABLE',
+      reason: 'FACTS_EXCEED_INPUT_BUDGET',
+      analysis: null,
+      deterministic: deterministicBrief(full, lang),
+      receipt: null,
+      facts: full,
+      budget: {recordedUsd: 0, estimatedUsd: 0, spentUsd: 0, reservedUsd: 0, limitUsd: DAILY_BUDGET_USD, callsLastHour: 0, hourlyCap: HOURLY_CALL_CAP},
+    };
+  }
+  const facts = fitted.facts;
   // Hash only stable content: a volatile field here would defeat the cache and bill every page load.
   const factsHash = createHash('sha256').update(JSON.stringify(facts)).digest('hex');
   // Tenant scope and language are part of the key: a brief produced for one company is never served to another.
@@ -358,23 +373,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
       preferredProviders: [PROVIDER_ID],
       requiredModels: [PROVIDER_MODEL],
       input: {
-        objective: lang === 'en'
-          ? 'Write an executive brief for the owner in English, using only the supplied facts.'
-          : 'اكتب موجزاً تنفيذياً عربياً للمالك من الحقائق المرفقة فقط.',
-        contract: {
-          output: 'JSON only, with keys: headline, problem{what,why,evidence[]}, impact{statement,basis[]}, options[{id,title,risk,authority}], samCan[], ownerMust[], nextStep.',
-          rules: [
-            'استخدم فقط الحقائق المرفقة. لا تخترع أرقاماً أو أسماء أو نتائج.',
-            'لا تذكر أي رقم غير موجود حرفياً في facts.',
-            'evidence وbasis يجب أن تكون معرّفات موجودة في facts.decisions أو facts.savedReports.',
-            'authority واحدة من GREEN أو YELLOW أو RED؛ ما يحتاج موافقة المالك يكون YELLOW أو RED.',
-            'لا تدّعِ تنفيذاً؛ كل إجراء يمر عبر التفويض والتحقق.',
-            'كل النصوص عربية فصيحة وقصيرة: العنوان ≤ 12 كلمة، كل حقل ≤ 30 كلمة، وكل خيار سطر واحد.',
-            'لا تكرر الحقائق سرداً؛ اكتفِ بالاستنتاج.',
-            ...(lang === 'en' ? ['ALL text values must be in English.'] : []),
-          ],
-        },
-        facts,
+        ...buildInput(facts, lang),
       },
     };
     try {

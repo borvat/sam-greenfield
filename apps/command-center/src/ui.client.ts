@@ -278,6 +278,16 @@ function renderBriefing(){
     }).join(""):'<span class="muted">'+esc(t("misc.noData"))+'</span>';
     bindDecisionButtons(ev);
   }
+  const cond=document.getElementById("brief-condensed");
+  if(cond){
+    const c=facts&&facts.condensed?facts.condensed:null;
+    const totals=facts&&facts.decisionTotals?facts.decisionTotals:{};
+    const total=Number(c?c.shown+c.omitted:(totals.approval||0)+(totals.blocked||0)+(totals.waiting||0)+(totals.failed||0));
+    if(c&&c.omitted>0&&total>0){
+      cond.hidden=false;
+      cond.textContent=t("brief.condensed").replace("{shown}",n(c.shown)).replace("{total}",n(total));
+    }else{cond.hidden=true;cond.textContent=""}
+  }
   const opts=document.getElementById("brief-options");
   if(opts){
     opts.innerHTML=(b.data.options||[]).length?b.data.options.map(function(o){
