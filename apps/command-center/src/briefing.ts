@@ -1,6 +1,7 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {commandCenterExecutive} from './store';
 import {CHAT_OVERHEAD_TOKENS, MAX_INPUT_TOKENS, classifyPrompt} from './promptBound';
+import {parseModelJson} from './jsonOutput';
 
 export type BriefingMode = 'MODEL' | 'MODEL_REJECTED' | 'MODEL_UNAVAILABLE';
 
@@ -288,7 +289,6 @@ async function gateway(): Promise<{invoke: (task: any) => Promise<any>} | null> 
       if (!classifyPrompt(prompt).allowed) throw new Error('PROVIDER_INPUT_LIMIT');
       body.max_tokens = MAX_OUTPUT_TOKENS;
       body.thinking = {type: 'disabled'};
-      body.response_format = {type: 'json_object'};
       const response = await fetchJson(url, {...init, body: JSON.stringify(body)}, timeout);
       const used = response?.usage?.completion_tokens;
       if (Number.isInteger(used) && used > MAX_OUTPUT_TOKENS) throw new Error('PROVIDER_USAGE_EXCEEDED');
@@ -394,7 +394,7 @@ export async function generateBriefing(legalEntityId: string, options: {force?: 
         inputTokens += res.result.usage.inputTokens;
         outputTokens += res.result.usage.outputTokens;
         spentUsd += (res.result.usage.inputTokens / 1000) * 0.0003 + (res.result.usage.outputTokens / 1000) * 0.0012;
-        const parsed = typeof res.result.output === 'string' ? (() => { try { return JSON.parse(res.result.output as string); } catch { return null; } })() : res.result.output;
+        const parsed = parseModelJson(res.result.output);
         const checked = validateAnalysis(parsed, facts, lang);
         if (!checked.ok) {
           lastReason = checked.reason;
