@@ -4,6 +4,7 @@ import {createServer,type IncomingMessage,type Server,type ServerResponse} from 
 import {renderCommandCenterHtml} from "./ui";
 import { autonomyEnabled } from "../../development/src/autonomyBoundary";
 import {commandCenterDevelopmentTelemetry} from "./developmentTelemetry";
+import {generateBriefing} from "./briefing";
 import {commandCenterExecutive,commandCenterOverview,commandCenterGoals,commandCenterGoalTimeline,commandCenterLatestFinanceBrief,commandCenterReadiness,createOwnerGoal,commandCenterOwnerMemory,commandCenterSaveOwnerDecision,commandCenterNotifications} from "./store";
 
 function csv(value:string|undefined):string[]{return (value??"").split(",").map(v=>v.trim()).filter(Boolean)}
@@ -115,6 +116,10 @@ export async function startCommandCenterHttpServer(options:CommandCenterHttpOpti
       }
       if(req.method==="GET"&&req.url==="/api/executive"){
         json(res,200,{ok:true,data:await commandCenterExecutive(options.legalEntityId)});return;
+      }
+      if(req.method==="GET"&&(req.url==="/api/briefing"||req.url==="/api/briefing?refresh=1")){
+        const force=req.url.indexOf("refresh=1")>=0;
+        json(res,200,{ok:true,data:await generateBriefing(options.legalEntityId,{force})});return;
       }
       if(req.method==="GET"&&req.url==="/api/telemetry"&&process.env.SAM_DEVELOPMENT_SAFE_MODE==="1"){
         if(!token){rejectAuthentication(req,res,true);return;}

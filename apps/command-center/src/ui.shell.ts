@@ -60,20 +60,36 @@ export function renderShell(build: string): string {
 
       <div id="dashboard" hidden>
         <section class="view is-active" id="view-overview">
-          <div class="situation">
-            <div class="sit">
-              <div class="sit-label" data-i18n="sit.what">${t("ar", "sit.what")}</div>
+          <div class="brief-grid">
+            <div class="card brief-main">
+              <div class="brief-head">
+                <span class="brief-kicker" data-i18n="brief.kicker">${t("ar", "brief.kicker")}</span>
+                <span class="prov" id="brief-mode"></span>
+                <button class="btn small" type="button" id="brief-refresh" data-i18n="brief.refresh">${t("ar", "brief.refresh")}</button>
+              </div>
               <div class="sit-body" id="sit-what"></div>
+              <h3 class="brief-headline" id="sit-focus"></h3>
+              <div class="brief-cols">
+                <div><div class="brief-label" data-i18n="brief.what">${t("ar", "brief.what")}</div><p id="brief-problem"></p></div>
+                <div><div class="brief-label" data-i18n="brief.why">${t("ar", "brief.why")}</div><p id="brief-why"></p></div>
+              </div>
+              <div class="brief-label" data-i18n="brief.evidence">${t("ar", "brief.evidence")}</div>
+              <div class="chips" id="brief-evidence"></div>
+              <div class="brief-label" data-i18n="brief.impact">${t("ar", "brief.impact")}</div>
+              <p id="brief-impact"></p>
+              <div class="brief-label" data-i18n="brief.options">${t("ar", "brief.options")}</div>
+              <div class="opts" id="brief-options"></div>
+              <div class="brief-cols">
+                <div><div class="brief-label" data-i18n="brief.can">${t("ar", "brief.can")}</div><ul id="brief-can"></ul></div>
+                <div><div class="brief-label" data-i18n="brief.owner">${t("ar", "brief.owner")}</div><ul id="brief-owner"></ul></div>
+              </div>
+              <div class="brief-next"><span id="sit-next"></span><button class="btn primary small" type="button" id="brief-open"></button></div>
+              <div class="brief-disclaimer" data-i18n="brief.disclaimer">${t("ar", "brief.disclaimer")}</div>
             </div>
-            <div class="sit accent">
-              <div class="sit-label" data-i18n="sit.focus">${t("ar", "sit.focus")}</div>
-              <div class="sit-body" id="sit-focus"></div>
-              <div class="sit-foot" id="sit-focus-action"></div>
-            </div>
-            <div class="sit">
-              <div class="sit-label" data-i18n="sit.next">${t("ar", "sit.next")}</div>
-              <div class="sit-body" id="sit-next"></div>
-            </div>
+            <aside class="stack">
+              <div class="card" id="brief-receipt"></div>
+              <div class="card" id="brief-outcome"></div>
+            </aside>
           </div>
           <div class="grid-kpi" id="metrics"></div>
           <div class="grid-2">

@@ -10,7 +10,7 @@ function esc(v){return String(v===null||v===undefined?"":v).replace(/[&<>"']/g,f
 function n(value){return Number(value||0)}
 let authGeneration=0,refreshGeneration=null,wakeRetry=0,selectedGoalId=null;
 let token=sessionStorage.getItem("sam_cc_token")||"";
-const state={exec:null,goals:[],finance:null,timeline:null,view:"overview",goalId:null,query:"",filter:"all"};
+const state={exec:null,goals:[],finance:null,timeline:null,view:"overview",goalId:null,query:"",filter:"all",brief:null};
 
 async function connect(){
   const input=document.getElementById("bearerToken");
@@ -41,7 +41,7 @@ async function api(path,options){
   const current=function(){if(generation!==authGeneration)throw Error("Outdated authentication response ignored.")};
   const headers=Object.assign({},options.headers||{},{Authorization:"Bearer "+token});
   if(options.body)headers["Content-Type"]="application/json";
-  const controller=new AbortController(),timeout=setTimeout(function(){controller.abort()},15000);
+  const deadline=options.timeout||15000;const controller=new AbortController(),timeout=setTimeout(function(){controller.abort()},deadline);
   try{
     let r;
     try{r=await fetch(path,Object.assign({},options,{headers:headers,signal:controller.signal}))}
@@ -90,6 +90,7 @@ async function refresh(){
     document.getElementById("status").className="pill live";
     wakeRetry=0;
     renderAll();
+    void loadBriefing(false);
     await refreshInternalNotifications();
   }catch(e){
     if(generation!==authGeneration)return;
@@ -104,7 +105,7 @@ async function refresh(){
 function renderAll(){
   const c=(state.exec&&state.exec.counts)?state.exec.counts:{};
   renderKpis(c);
-  renderSituation();
+  renderBriefing();
   renderOverviewDecisions();
   renderGoalsPreview();
   renderTrend();
@@ -142,26 +143,6 @@ function topDecision(){
   const list=collectDecisions();
   const rank={approval:0,blocked:1,waiting:2,failed:3};
   return list.slice().sort(function(a,b){return (rank[a.kind]===undefined?9:rank[a.kind])-(rank[b.kind]===undefined?9:rank[b.kind])})[0]||null;
-}
-function renderSituation(){
-  const a=(state.exec&&state.exec.activity)?state.exec.activity:null;
-  const what=document.getElementById("sit-what");
-  if(what){
-    what.innerHTML=a?('<div class="muted">'+esc(t("sit.window"))+'</div><div class="sit-nums">'+
-      numBlock(a.executions_24h,t("sit.exec"))+numBlock(a.verified_24h,t("sit.verified"))+numBlock(a.goals_24h,t("sit.goals"))+'</div>')
-      :('<div class="muted">'+esc(t("misc.unavailable"))+'</div>');
-  }
-  const focus=document.getElementById("sit-focus"),action=document.getElementById("sit-focus-action"),next=document.getElementById("sit-next");
-  const top=topDecision();
-  if(!top){
-    if(focus)focus.textContent=t("sit.nothing");
-    if(action)action.innerHTML="";
-    if(next)next.textContent=t("sit.none");
-    return;
-  }
-  if(focus)focus.innerHTML='<div class="row-title">'+esc(top.kindLabel)+'</div><div class="row-sub" style="margin-top:2px">'+esc(top.title)+'</div><div class="muted" style="margin-top:6px">'+esc(top.why)+'</div>';
-  if(action){action.innerHTML='<button class="btn primary small" type="button" data-open-goal="'+esc(top.goalId)+'">'+esc(t("decision.open"))+'</button>';bindDecisionButtons(action)}
-  if(next)next.textContent=t("sit.next."+top.kind);
 }
 function stateBadge(value){
   const raw=String(value||"");
@@ -212,13 +193,13 @@ function bindGoalRows(scope){
   const nodes=scope.querySelectorAll("[data-goal-id]");
   for(let i=0;i<nodes.length;i++){(function(el){el.onclick=function(){go("goal",el.getAttribute("data-goal-id"))}})(nodes[i])}
 }
-
 function decisionCard(item){
   return '<div class="decision '+(item.severity==="high"?"sev-high":"sev-wait")+'">'+
     '<div class="decision-head"><span class="badge '+(item.badgeCls||"")+'">'+esc(item.kindLabel)+'</span><span class="decision-title">'+esc(item.title)+'</span></div>'+
     '<div class="row-sub" style="margin-top:6px">'+esc(item.why)+'</div>'+
     '<div class="row-meta"><span>'+esc(item.businessId||"")+'</span><span>'+esc(t("decision.since")+" "+timeAgo(item.since))+'</span>'+(item.extra?'<span>'+esc(item.extra)+'</span>':"")+'</div>'+
-    '<div class="muted" style="margin-top:8px">'+esc(t("sit.next."+(item.kind||"waiting")))+'</div><div class="decision-actions"><button class="btn small" type="button" data-open-goal="'+esc(item.goalId)+'">'+esc(t("decision.open"))+'</button></div></div>'
+    '<div class="muted" style="margin-top:8px">'+esc(t("sit.next."+(item.kind||"waiting")))+'</div>'+
+    '<div class="decision-actions"><button class="btn small" type="button" data-open-goal="'+esc(item.goalId)+'">'+esc(t("decision.open"))+'</button></div></div>'
 }
 function collectDecisions(){
   const out=[];
@@ -251,7 +232,105 @@ function renderDecisionsView(){
   target.innerHTML=list.length?list.map(decisionCard).join(""):'<div class="empty">'+esc(t("sec.decisions.empty"))+'</div>';
   bindDecisionButtons(target);
 }
+function briefOf(){
+  const b=state.brief;
+  if(b&&b.analysis)return {data:b.analysis,mode:"MODEL",receipt:b.receipt,reason:null,facts:b.facts};
+  if(b&&b.deterministic)return {data:b.deterministic,mode:b.mode,receipt:b.receipt||null,reason:b.reason||null,facts:b.facts};
+  const top=topDecision();
+  return {data:{headline:top?(top.kindLabel+": "+(top.businessId||"")):t("sit.nothing"),
+    problem:{what:top?top.title:t("sit.nothing"),why:top?(top.why||""):"",evidence:top?[top.goalId]:[]},
+    impact:{statement:"",basis:[]},options:[],samCan:[],ownerMust:[],
+    nextStep:top?t("sit.next."+top.kind):t("sit.none")},mode:null,receipt:null,reason:null,facts:null};
+}
+async function loadBriefing(force){
+  try{
+    const x=await api("/api/briefing"+(force?"?refresh=1":""),{timeout:60000});
+    state.brief=x.data;
+    renderBriefing();
+  }catch(e){
+    if(!state.brief)renderBriefing();
+  }
+}
+function renderBriefing(){
+  const b=briefOf();
+  const a=(state.exec&&state.exec.activity)?state.exec.activity:null;
+  const what=document.getElementById("sit-what");
+  if(what)what.innerHTML=a?('<div class="muted">'+esc(t("sit.window"))+'</div><div class="sit-nums">'+
+      numBlock(a.executions_24h,t("sit.exec"))+numBlock(a.verified_24h,t("sit.verified"))+numBlock(a.goals_24h,t("sit.goals"))+'</div>'):"";
+  const focus=document.getElementById("sit-focus");
+  if(focus)focus.textContent=b.data.headline||"";
+  const problem=document.getElementById("brief-problem");if(problem)problem.textContent=b.data.problem?.what||"";
+  const why=document.getElementById("brief-why");if(why)why.textContent=b.data.problem?.why||"";
+  const impact=document.getElementById("brief-impact");if(impact)impact.textContent=b.data.impact?.statement||"";
+  const next=document.getElementById("sit-next");if(next)next.textContent=b.data.nextStep||"";
 
+  const facts=b.facts;
+  const bizOf={};
+  if(facts){for(const d of (facts.decisions||[]))bizOf[d.id]=d;for(const r of (facts.savedReports||[]))bizOf[r.id]=r;}
+  const ev=document.getElementById("brief-evidence");
+  if(ev){
+    const ids=(b.data.problem?.evidence||[]);
+    ev.innerHTML=ids.length?ids.map(function(id){
+      const f=bizOf[id]||{};
+      const label=f.businessId||(String(id).slice(0,8)+"…");
+      const goal=f.goalId||id;
+      return '<button class="chip" type="button" data-open-goal="'+esc(goal)+'">'+esc(label)+'</button>';
+    }).join(""):'<span class="muted">'+esc(t("misc.noData"))+'</span>';
+    bindDecisionButtons(ev);
+  }
+  const opts=document.getElementById("brief-options");
+  if(opts){
+    opts.innerHTML=(b.data.options||[]).length?b.data.options.map(function(o){
+      const cls=o.authority==="GREEN"?"ok":o.authority==="YELLOW"?"warn":"bad";
+      return '<div class="opt"><span class="badge '+cls+'">'+esc(o.authority)+'</span><div><b>'+esc(o.title)+'</b><div class="muted">'+esc(o.risk)+'</div></div></div>';
+    }).join(""):'<span class="muted">'+esc(t("misc.noData"))+'</span>';
+  }
+  const can=document.getElementById("brief-can");
+  if(can)can.innerHTML=(b.data.samCan||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")||('<li class="muted">'+esc(t("misc.noData"))+'</li>');
+  const owner=document.getElementById("brief-owner");
+  if(owner)owner.innerHTML=(b.data.ownerMust||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")||('<li class="muted">'+esc(t("misc.noData"))+'</li>');
+
+  const openBtn=document.getElementById("brief-open");
+  const top=topDecision();
+  if(openBtn){
+    if(top){openBtn.style.display="";openBtn.textContent=t("decision.open");openBtn.onclick=function(){go("goal",top.goalId)}}
+    else{openBtn.style.display="none";openBtn.onclick=null}
+  }
+
+  const modeEl=document.getElementById("brief-mode");
+  if(modeEl){
+    if(!b.mode){modeEl.className="prov loading";modeEl.textContent=t("brief.mode.loading")}
+    else{const mode=b.mode;
+    modeEl.className="prov "+(mode==="MODEL"?"real":(mode==="MODEL_REJECTED"?"derived":"unavailable"));
+    modeEl.textContent=t(mode==="MODEL"?"brief.mode.model":(mode==="MODEL_REJECTED"?"brief.mode.rejected":"brief.mode.unavailable"))}
+  }
+
+  const receipt=document.getElementById("brief-receipt");
+  if(receipt){
+    const r=b.receipt;
+    receipt.innerHTML='<div class="card-head"><h3>'+esc(t("brief.receipt"))+'</h3></div>'+
+      (!b.mode?('<div class="muted">'+esc(t("brief.mode.loading"))+'</div>'):"")+
+      (r?('<dl class="kv"><dt>'+esc(t("brief.model"))+'</dt><dd>'+esc(r.model)+'</dd>'+
+        '<dt>'+esc(t("brief.tokens"))+'</dt><dd>'+n(r.inputTokens)+' → '+n(r.outputTokens)+'</dd>'+
+        '<dt>'+esc(t("brief.cost"))+'</dt><dd>$'+Number(r.costUsd||0).toFixed(4)+'</dd>'+
+        '<dt>'+esc(t("brief.latency"))+'</dt><dd>'+Math.round(n(r.latencyMs)/1000)+'s</dd>'+
+        '<dt>'+esc(t("brief.factsHash"))+'</dt><dd>'+esc(String(r.factsHash).slice(0,12))+'…</dd></dl>')
+        :('<div class="muted">'+esc(b.reason||t("brief.mode.unavailable"))+'</div>'))+
+      '<div class="muted" style="margin-top:10px">'+esc(t("brief.refreshNote"))+'</div>';
+  }
+
+  const outcome=document.getElementById("brief-outcome");
+  if(outcome){
+    const reps=(facts&&facts.savedReports)||[];
+    const execs=(facts&&facts.recentExecutions)||[];
+    let html='<div class="card-head"><h3>'+esc(t("brief.outcome"))+'</h3><span class="prov real">'+esc(t("prov.real"))+'</span></div>';
+    if(reps.length){const r=reps[0];html+='<div class="row-sub">'+esc(r.summary||"")+'</div><div class="row-meta"><span>'+esc(r.businessId||"")+'</span><span>'+esc(new Date(r.at).toISOString().slice(0,16).replace("T"," "))+'</span></div><div class="decision-actions"><button class="btn small" type="button" data-open-goal="'+esc(r.goalId)+'">'+esc(t("decision.open"))+'</button></div>'}
+    else if(execs.length){html+=execs.slice(0,2).map(function(e){return '<div class="row-sub">'+esc(e.actor)+' · '+esc(e.capability)+' · '+esc(e.result)+'</div>'}).join("")}
+    else{html+='<div class="empty">'+esc(t("brief.noOutcome"))+'</div>'}
+    outcome.innerHTML=html;
+    bindDecisionButtons(outcome);
+  }
+}
 function renderTrend(){
   const target=document.getElementById("trend");if(!target)return;
   const created=(state.exec&&state.exec.trend&&state.exec.trend.created)||[];
@@ -549,6 +628,7 @@ function boot(){
   const langBtns=document.querySelectorAll("[data-lang]");
   for(let i=0;i<langBtns.length;i++){(function(el){el.addEventListener("click",function(){applyLang(el.getAttribute("data-lang"))})})(langBtns[i])}
   const reload=document.getElementById("reloadBtn");if(reload)reload.addEventListener("click",function(){refresh()});
+  const briefRefresh=document.getElementById("brief-refresh");if(briefRefresh)briefRefresh.addEventListener("click",function(){loadBriefing(true)});
   const menu=document.getElementById("menuBtn");if(menu)menu.addEventListener("click",function(){const s=document.getElementById("sidebar");if(s)s.classList.toggle("is-open")});
   const search=document.getElementById("goalSearch");if(search)search.addEventListener("input",function(){state.query=search.value;renderGoalList()});
   const filter=document.getElementById("goalFilter");if(filter)filter.addEventListener("change",function(){state.filter=filter.value;renderGoalList()});
