@@ -41,6 +41,9 @@ const MIN_CALL_INTERVAL_MS = 60 * 1000;
 const MAX_OUTPUT_TOKENS = Number(process.env.SAM_BRIEFING_MAX_OUTPUT_TOKENS || 900);
 const DAILY_BUDGET_USD = Number(process.env.SAM_BRIEFING_BUDGET_USD || 0.25);
 const HOURLY_CALL_CAP = Number(process.env.SAM_BRIEFING_HOURLY_CALL_CAP || 6);
+/** Used only when a provider row carries no price: the audit row then records cost 0,
+ *  and a dollar ceiling that reads that zero would never fire. */
+const COST_PER_1K_TOKENS = Number(process.env.SAM_BRIEFING_COST_PER_1K_TOKENS || 0.0012);
 const PROVIDER_ID = process.env.DEEPSEEK_PROVIDER_ID || 'deepseek';
 const PROVIDER_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-flash';
 
@@ -198,13 +201,13 @@ export async function briefingUsage(legalEntityId: string): Promise<{spentUsd: n
     await client.query('BEGIN');
     await client.query("select set_config('app.current_legal_entity_id',$1,true)", [legalEntityId]);
     const res = await client.query(
-      `select coalesce(sum(cost),0)::float8 as spent,
+      `select coalesce(sum(greatest(coalesce(cost,0), (coalesce(tokens,0)::float8/1000.0)*$2)),0)::float8 as spent,
               count(*) filter (where created_at > now() - interval '1 hour')::int as calls_last_hour
          from model_calls
         where task='executive_briefing'
           and legal_entity_id=$1
           and created_at > now() - interval '24 hours'`,
-      [legalEntityId],
+      [legalEntityId, COST_PER_1K_TOKENS],
     );
     await client.query('COMMIT');
     return {spentUsd: Number(res.rows[0]?.spent ?? 0), callsLastHour: Number(res.rows[0]?.calls_last_hour ?? 0)};
