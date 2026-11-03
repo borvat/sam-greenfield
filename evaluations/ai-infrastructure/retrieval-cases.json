@@ -1,0 +1,10 @@
+[
+ {"id":"exact","query":"reserveStock","expected":"inventory.ts"},
+ {"id":"stock","query":"prevent overselling simultaneous purchases","expected":"inventory.ts"},
+ {"id":"returns","query":"undo reward points after partial return","expected":"refunds.ts"},
+ {"id":"revocation","query":"refuse expired credentials before sending request","expected":"identity.ts"},
+ {"id":"uncertain","query":"keep money held when response is lost","expected":"budget.ts"},
+ {"id":"rotation","query":"compare-and-swap credential version","expected":"rotation.md"},
+ {"id":"privacy","query":"separate marketplace from accounting access","expected":"privacy.md"},
+ {"id":"cache","query":"discount cached input only on reported hits","expected":"cache.md"}
+]

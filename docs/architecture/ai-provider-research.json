@@ -1,0 +1,102 @@
+{
+  "reviewedDate": "2026-10-26",
+  "activation": "disabled",
+  "liveProviderCalls": 0,
+  "accountQuotasVerified": false,
+  "providers": [
+    {
+      "provider": "qwen",
+      "existingAdapter": "packages/model-providers/src/env.ts",
+      "observedModelIds": [
+        "qwen3.8-flash",
+        "qwen-plus",
+        "qwen3.8-max"
+      ],
+      "contextObserved": "Up to 1M, model/version dependent",
+      "endpoint": "Use region/workspace-specific compatible-mode/v1 endpoint from account console",
+      "prices": "Region, model, tier and cache-mode specific; no default executable tariff",
+      "cache": "Implicit cache-hit accounting prepared; explicit cache creation disabled (separate charges)",
+      "sources": [
+        "https://www.alibabacloud.com/help/en/model-studio/compatibility-of-openai-with-dashscope",
+        "https://www.alibabacloud.com/help/en/model-studio/model-pricing"
+      ]
+    },
+    {
+      "provider": "deepseek",
+      "existingAdapter": "packages/model-providers/src/env.ts",
+      "observedModelIds": [
+        "deepseek-flash",
+        "deepseek-v4-pro"
+      ],
+      "observedVersions": [
+        "DeepSeek-V4.1-Flash-1017",
+        "DeepSeek-V4-Pro-0813"
+      ],
+      "contextObserved": "1M; up to 384K output per pricing documentation",
+      "endpoint": "https://api.deepseek.com/v1",
+      "exampleUsdPerMillionPeak": {
+        "deepseek-flash": {
+          "inputMiss": 0.3,
+          "inputHit": 0.006,
+          "output": 1.2
+        },
+        "deepseek-v4-pro": {
+          "inputMiss": 1.32,
+          "inputHit": 0.044,
+          "output": 3.96
+        }
+      },
+      "prices": "Off-peak differs; explicit reviewed worst-case profile required before calls",
+      "sources": [
+        "https://api-docs.deepseek.com/quick_start/pricing/"
+      ]
+    },
+    {
+      "provider": "kimi",
+      "adapter": "Existing OpenAICompatibleChatAdapter via isolated decorator",
+      "observedModelIds": [
+        "kimi-k3.1-pro",
+        "kimi-k3.1-pro-highspeed"
+      ],
+      "contextObserved": 1048576,
+      "endpoint": "https://api.moonshot.ai/v1",
+      "exampleUsdPerMillion": {
+        "kimi-k3.1-pro": {
+          "input": 2.0,
+          "cachedInput": 0.2,
+          "output": 10.0
+        }
+      },
+      "maxOutput": "Not independently established; must be reviewed before executable profile",
+      "sources": [
+        "https://platform.kimi.ai/docs/get-your-api-key",
+        "https://platform.kimi.ai/docs/pricing/chat"
+      ]
+    },
+    {
+      "provider": "amd",
+      "adapter": "Existing OpenAICompatibleChatAdapter via isolated decorator",
+      "endpoint": "https://developer.amd.com.cn/radeon/api/v1",
+      "observedModelIds": [
+        "DeepSeek-V4-Flash",
+        "DeepSeek-V4.1-Flash",
+        "Qwen3.8-Flash-Next",
+        "Qwen3.8-27B"
+      ],
+      "pricingUnit": "Token Factory points, not USD; per-model rates must not be installed as dollar tariffs",
+      "quota": "Account daily points balance and headers not available; 111 million tokens not proven",
+      "rateLimits": "Typical 20 RPM per account, 30 RPM per key, 8 concurrent per key; effective account headers prevail; daily reset UTC+8",
+      "data": "Documentation says short rolling content retention currently two days, possible exceptions",
+      "usage": "Trial/development only, no production or resale",
+      "keyRotation": "Regeneration revokes previous key immediately; expiration not specified in read documentation",
+      "sources": [
+        "https://amd-aim.github.io/radeon-cloud-docs/guides/token-factory/",
+        "https://amd-aim.github.io/radeon-cloud-docs/api/rate-limits/",
+        "https://amd-aim.github.io/radeon-cloud-docs/api/terms/",
+        "https://amd-aim.github.io/radeon-cloud-docs/api/authentication/",
+        "https://amd-aim.github.io/radeon-cloud-docs/api/usage/",
+        "https://amd-aim.github.io/radeon-cloud-docs/models/overview/"
+      ]
+    }
+  ]
+}

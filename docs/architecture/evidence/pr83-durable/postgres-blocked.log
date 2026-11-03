@@ -1,0 +1,23 @@
+﹣ PostgreSQL: concurrent workers cannot reserve a budget that only covers one request (0.656026ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: same request reuses saved identity after process restart; different content is rejected (0.133287ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: SIGKILL after reservation preserves held budget with no resend after restart (0.065697ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: SIGKILL after actual synthetic HTTP send persists unresolved spend and blocks resending (0.074069ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: database server crash/restart preserves request, reservation and approval usage (0.117193ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: service revocation and project disable survive fresh ledger and identity objects (0.19695ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: forged identity, mismatched SAM goal, expired grant and revoked approval are denied before send (0.073238ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: project revocation remains denied after database restart even with a valid service grant (0.269908ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero (0.10222ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: reported usage, calculated cost and verified invoice are separate values (0.561718ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history (0.141458ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: changed limits use revision CAS; expired periods do not erase held reservations (0.059508ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: ledger database unavailable rejects admission without a secret/provider operation (0.126447ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL: unallocated legacy model_calls history is never silently treated as free (0.083102ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+﹣ PostgreSQL + actual SAM Gateway + real Vault: one canonical model_calls reservation/usage record (0.125325ms) # BLOCKED: only root UID mapped; PostgreSQL refuses root and non-root UID cannot be created
+ℹ tests 15
+ℹ suites 0
+ℹ pass 0
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 15
+ℹ todo 0
+ℹ duration_ms 327.980248

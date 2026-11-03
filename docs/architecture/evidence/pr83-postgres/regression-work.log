@@ -1,0 +1,66 @@
+✔ benchmark independently rejects incorrect outputs and does not execute returned code (2.836797ms)
+✔ benchmark preserves unknown usage for failed calls and redacts errors (0.593681ms)
+✔ benchmark expands the long context corpus rather than merely claiming it (5.519741ms)
+✔ duplicate benchmark case IDs fail before any call (0.580564ms)
+✔ driver faults: drain existing stale idle clients before running the transaction body once (39.538685ms)
+✔ driver faults: a lost COMMIT acknowledgement discards the connection without replaying the transaction (39.820385ms)
+✔ exact money does not use floating point and rounds partial micro-USD conservatively (27.343836ms)
+✔ SAM verifier accepts signed scope and rejects forged, expired, wrong audience/project and read-only tokens (388.386992ms)
+✔ stable content fingerprint binds task, approval, project, environment and SAM queue IDs (20.49165ms)
+✔ real SAM ModelGateway delegates reserve, Vault credential, dispatch and receipt without legacy double-write (360.995376ms)
+✔ actual outer Gateway fallback stops on ambiguous provider failure and missing usage (19.422136ms)
+✔ rejected authority, ledger failure and forged direct adapter invocation cause zero provider calls (1.168554ms)
+✔ Vault denies wrong-project reader and pre-dispatch failure is distinguished from possible send (7.522993ms)
+✔ real Vault rotation is picked up by the bound provider and no provider secret enters stored legacy results (8.582656ms)
+✔ in-flight cancellation cannot cause a paid alternative attempt through actual Gateway (36.328089ms)
+✔ without extension, actual SAM gateway retains previous fallback and legacy recording (1.109429ms)
+✔ normal Vault file storage is encrypted and audit does not contain raw key (287.597882ms)
+✔ Vault reader cannot rotate an AI credential (14.147095ms)
+✔ Vault reader cannot read another project or production (14.678336ms)
+✔ production refuses plaintext Vault address (0.521466ms)
+✔ Vault policy denies path traversal and unknown domains (0.191498ms)
+✔ CAS rotation rejects stale writers and next call uses replacement key (25.272042ms)
+✔ Vault data survives server replacement and re-unseal (575.748413ms)
+✔ disabled secret fails closed without model dispatch (22.750533ms)
+✔ revoked Vault reader stops dispatch (24.32232ms)
+✔ Qwen/DeepSeek/Kimi/AMD reuse existing chat adapter with bounded output (62.787454ms)
+✔ no raw credential appears in adapter serializable state or audit (14.156831ms)
+✔ a service token used as correlation ID is hashed before audit (7.036372ms)
+✔ a prompt cannot request credential reads or change project (10.508159ms)
+✔ wrong project identity cannot select a different client (4.822458ms)
+✔ revoked service identity and forged tokens fail before dispatch (5.995796ms)
+✔ expired identities fail and grants are immutable (0.33152ms)
+✔ disabling a service invalidates all its credentials and records administrative operations (0.643196ms)
+✔ production binding remains disabled even with a valid identity (6.198988ms)
+✔ live networking requires explicit test gate (8.440019ms)
+✔ unknown/stale tariff and invalid model or classification cannot dispatch (15.018883ms)
+✔ AMD rejects internal data even if explicitly granted (7.991563ms)
+✔ endpoint allowlist and redirects prevent credential forwarding (11.486596ms)
+✔ strict budgets reserve before any provider call (10.165618ms)
+✔ concurrent same-ID dispatch produces exactly one provider call (73.723872ms)
+✔ concurrent different-ID dispatch shares project budget (76.753066ms)
+✔ rate limits are applied before dispatch and retry-after imposes cooldown (24.21989ms)
+✔ ambiguous failures retain reservation and forbid replay (11.36982ms)
+✔ unknown/invalid usage, model mismatch and secret echo fail closed (59.061256ms)
+✔ revoking identity while a model runs prevents response delivery (71.808559ms)
+✔ audit failure stops model calls (10.817897ms)
+✔ oversized input fails without provider dispatch (10.215669ms)
+✔ quality, privacy, latency and stability gates precede cost ranking (0.963601ms)
+✔ cache accounting discounts only reported cached input (0.218929ms)
+✔ health checks distinguish model availability from inference proof (16.505102ms)
+✔ external requests require verified free account quota before secret access (5.893103ms)
+✔ cancellation before admission performs zero calls; in-flight cancellation retains its reservation (32.311845ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 52
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12888.564852
+
+SOURCE_COMMIT=f27152e271e3945a89dbc2bbaa6f54ab7d05a97a
+WORK_NODE=v24.22.1
+REAL_VAULT=v1.21.0
+POSTGRES_TESTS_INTENTIONALLY_NOT_INCLUDED_IN_THIS_LOCAL_RUN
+TEST_PROCESS_EXIT_CODE=0

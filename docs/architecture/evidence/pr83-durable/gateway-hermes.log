@@ -1,0 +1,15 @@
+✔ real SAM ModelGateway delegates reserve, Vault credential, dispatch and receipt without legacy double-write (166.260183ms)
+✔ actual outer Gateway fallback stops on ambiguous provider failure and missing usage (13.064796ms)
+✔ rejected authority, ledger failure and forged direct adapter invocation cause zero provider calls (0.716265ms)
+✔ Vault denies wrong-project reader and pre-dispatch failure is distinguished from possible send (5.115686ms)
+✔ real Vault rotation is picked up by the bound provider and no provider secret enters stored legacy results (6.235967ms)
+✔ in-flight cancellation cannot cause a paid alternative attempt through actual Gateway (32.338469ms)
+✔ without extension, actual SAM gateway retains previous fallback and legacy recording (0.928688ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 834.580033

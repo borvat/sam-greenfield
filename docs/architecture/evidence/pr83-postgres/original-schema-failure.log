@@ -1,0 +1,268 @@
+TAP version 13
+# Subtest: PostgreSQL: concurrent workers cannot reserve a budget that only covers one request
+not ok 1 - PostgreSQL: concurrent workers cannot reserve a budget that only covers one request
+  ---
+  duration_ms: 1480.821519
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:140'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: same request reuses saved identity after process restart; different content is rejected
+not ok 2 - PostgreSQL: same request reuses saved identity after process restart; different content is rejected
+  ---
+  duration_ms: 3.326405
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:714'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: SIGKILL after reservation preserves held budget with no resend after restart
+not ok 3 - PostgreSQL: SIGKILL after reservation preserves held budget with no resend after restart
+  ---
+  duration_ms: 0.07803
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:2356'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: SIGKILL after actual synthetic HTTP send persists unresolved spend and blocks resending
+not ok 4 - PostgreSQL: SIGKILL after actual synthetic HTTP send persists unresolved spend and blocks resending
+  ---
+  duration_ms: 0.05069
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:2886'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: database server crash/restart preserves request, reservation and approval usage
+not ok 5 - PostgreSQL: database server crash/restart preserves request, reservation and approval usage
+  ---
+  duration_ms: 0.05308
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:3878'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: service revocation and project disable survive fresh ledger and identity objects
+not ok 6 - PostgreSQL: service revocation and project disable survive fresh ledger and identity objects
+  ---
+  duration_ms: 0.085729
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:4641'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: forged identity, mismatched SAM goal, expired grant and revoked approval are denied before send
+not ok 7 - PostgreSQL: forged identity, mismatched SAM goal, expired grant and revoked approval are denied before send
+  ---
+  duration_ms: 0.05065
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:5489'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: project revocation remains denied after database restart even with a valid service grant
+not ok 8 - PostgreSQL: project revocation remains denied after database restart even with a valid service grant
+  ---
+  duration_ms: 0.100109
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:6412'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero
+not ok 9 - PostgreSQL: malformed/missing usage stays NULL, unknown failure retains reserve, not zero
+  ---
+  duration_ms: 0.196619
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:6984'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: reported usage, calculated cost and verified invoice are separate values
+not ok 10 - PostgreSQL: reported usage, calculated cost and verified invoice are separate values
+  ---
+  duration_ms: 0.13755
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:7675'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history
+not ok 11 - PostgreSQL: known pre-send failure releases exposure but does not erase estimated/reserved history
+  ---
+  duration_ms: 0.03611
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:8742'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: changed limits use revision CAS; expired periods do not erase held reservations
+not ok 12 - PostgreSQL: changed limits use revision CAS; expired periods do not erase held reservations
+  ---
+  duration_ms: 0.02772
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:9231'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: ledger database unavailable rejects admission without a secret/provider operation
+not ok 13 - PostgreSQL: ledger database unavailable rejects admission without a secret/provider operation
+  ---
+  duration_ms: 0.03025
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:10217'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL: unallocated legacy model_calls history is never silently treated as free
+not ok 14 - PostgreSQL: unallocated legacy model_calls history is never silently treated as free
+  ---
+  duration_ms: 0.026119
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:7:10659'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+# Subtest: PostgreSQL + actual SAM Gateway + real Vault: one canonical model_calls reservation/usage record
+not ok 15 - PostgreSQL + actual SAM Gateway + real Vault: one canonical model_calls reservation/usage record
+  ---
+  duration_ms: 0.025059
+  type: 'test'
+  location: '/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:8:268'
+  failureType: 'hookFailed'
+  error: 'type "vector" does not exist'
+  code: '42704'
+  name: 'error'
+  stack: |-
+    /work/repo/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async postgresHarness (/work/repo/tests/ai-infrastructure/postgresHarness.ts:38:5)
+    async TestContext.<anonymous> (/work/repo/tests/ai-infrastructure/durable-postgres.test.ts:29:39)
+    async TestHook.run (node:internal/test_runner/test:1054:7)
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 0
+# fail 15
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2045.28206
+POSTGRES_SUITE_EXIT_CODE 1
+
+REMOTE_EXIT_CODE=1

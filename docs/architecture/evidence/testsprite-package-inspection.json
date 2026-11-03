@@ -1,0 +1,19 @@
+{
+  "package": "@testsprite/testsprite-mcp",
+  "version": "0.0.47",
+  "license": "BUSL-1.1",
+  "apiKeyRequired": true,
+  "liveRun": false,
+  "newAccountCreated": false,
+  "paidPlanActivated": false,
+  "cloudTunnelOpened": false,
+  "productionAccess": false,
+  "browserAttempt": "BLOCKED: local Chromium startup denied Unix socket/process operations",
+  "independentFallback": "HTTP + mocked DOM against synthetic fixture, not a browser run",
+  "packageSource": "https://www.npmjs.com/package/@testsprite/testsprite-mcp",
+  "sources": [
+    "https://www.testsprite.com/pricing",
+    "https://www.testsprite.com/privacy",
+    "https://docs.testsprite.com/"
+  ]
+}
