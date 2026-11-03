@@ -95,3 +95,11 @@ test('the company comes from the database session when the caller has none', asy
   assert.equal(r.ok, true);
   assert.equal(asked, ENTITY);
 });
+
+test('the answer states whether a provider credential is configured, never its value', async () => {
+  const [tool] = createBriefingTools({tenant: async () => ENTITY, load: async () => stored, generate: async () => { throw new Error('no'); }});
+  const r = await tool.handler({}, {actor: 'chatgpt', systemOwner: true});
+  const data: any = r.data;
+  assert.equal(typeof data.provider.configured, 'boolean');
+  assert.equal(JSON.stringify(data).includes('sk-'), false);
+});

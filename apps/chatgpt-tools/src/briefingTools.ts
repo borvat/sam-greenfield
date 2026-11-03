@@ -46,9 +46,16 @@ function evidenceOf(facts: any, ids: unknown): { id: string; kind: string; title
   });
 }
 
+/** Presence of a provider credential, never its value: it lets the owner tell a
+ *  budget refusal from a configuration refusal without a paid call. */
+function providerState() {
+  return {configured: Boolean(process.env.DEEPSEEK_API_KEY), model: process.env.DEEPSEEK_MODEL ?? null};
+}
+
 function shape(result: BriefingResult) {
   const analysis = result.analysis;
   return {
+    provider: providerState(),
     mode: result.mode,
     reason: result.reason ?? null,
     analysis,
@@ -105,6 +112,7 @@ export function createBriefingTools(deps?: Partial<Deps>): RegisteredChatGPTTool
           return {
             ok: true,
             data: {
+              provider: providerState(),
               mode: 'MODEL',
               fromStore: true,
               savedAt: stored.savedAt,
