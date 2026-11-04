@@ -11,6 +11,8 @@ export interface OwnerReportEmailBinding {
  activatedAt:string;
  activationAuditId:string;
  dataClassification:'PUBLIC'|'INTERNAL'|'CONFIDENTIAL';
+ /** One owner-authorized saved report that may be delivered despite the activation cutoff. */
+ backfillReportId?:string|null;
 }
 const OWNER='ceo@suroohholdings.com',MAX_ATTEMPTS=3;
 export function ownerReportEmailParams(row:any,recipient:string){
@@ -28,6 +30,7 @@ export async function runOwnerReportEmailTick(binding?:OwnerReportEmailBinding,a
  const config={...binding};
  if(config.recipient!==OWNER||!uuidPattern.test(config.legalEntityId)||!uuidPattern.test(config.activationAuditId)||
   !Number.isFinite(Date.parse(config.activatedAt))||!['PUBLIC','INTERNAL','CONFIDENTIAL'].includes(config.dataClassification))return {enabled:false,reason:'INVALID_BINDING'};
+ if(config.backfillReportId&&!uuidPattern.test(config.backfillReportId))return {enabled:false,reason:'INVALID_BINDING'};
  try{
   const scoped=async<T>(fn:(c:any)=>Promise<T>)=>transaction(db,async c=>{
    await authorizedCompany(c,{actor:'runtime-owner-report-email',systemOwner:true,legalEntityId:config.legalEntityId});
@@ -40,17 +43,20 @@ export async function runOwnerReportEmailTick(binding?:OwnerReportEmailBinding,a
    return fn(c);
   });
   const claimed=await scoped(async c=>{
-   const row=(await c.query(`SELECT n.*,r.id AS report_id,r.report_hash,r.decision
+   const row=(await c.query(`SELECT n.*,r.id AS report_id,r.report_hash,r.decision,(n.created_at < $2::timestamptz) AS backfill_exception
     FROM owner_notifications n JOIN goals g ON g.id=n.goal_id AND g.company_scope=n.legal_entity_id
     JOIN goal_read_reviews r ON r.id::text=n.body->'report'->>'id' AND r.goal_id=g.id
       AND r.report_hash=n.body->'report'->>'hash' AND r.decision->>'status'='complete'
-    WHERE n.legal_entity_id=$1 AND n.kind='COMPLETED' AND n.created_at >= $2::timestamptz
-      AND r.created_at >= $2::timestamptz
-      AND ((n.status='UNROUTED' AND n.attempt=0 AND n.channel IS NULL AND n.recipient_ref IS NULL)
-       OR (n.channel='gmail' AND n.recipient_ref=$3 AND
-        ((n.status='RETRY' AND n.next_attempt_at<=now() AND n.attempt<$4) OR
-         (n.status='SENDING' AND n.lease_until<=now()))))
-    ORDER BY n.created_at,n.id LIMIT 1 FOR UPDATE OF n SKIP LOCKED`,[config.legalEntityId,config.activatedAt,config.recipient,MAX_ATTEMPTS])).rows[0];
+    WHERE n.legal_entity_id=$1 AND n.kind='COMPLETED'
+      AND NOT EXISTS(SELECT 1 FROM owner_notifications x WHERE x.legal_entity_id=n.legal_entity_id AND x.id<>n.id
+        AND x.body->'report'->>'id'=r.id::text AND x.status IN ('ACCEPTED','CONFIRMED'))
+      AND (($5::text IS NOT NULL AND r.id::text=$5::text AND n.status='UNROUTED' AND n.attempt=0 AND n.channel IS NULL AND n.recipient_ref IS NULL)
+       OR (n.created_at >= $2::timestamptz AND r.created_at >= $2::timestamptz
+        AND ((n.status='UNROUTED' AND n.attempt=0 AND n.channel IS NULL AND n.recipient_ref IS NULL)
+         OR (n.channel='gmail' AND n.recipient_ref=$3 AND
+          ((n.status='RETRY' AND n.next_attempt_at<=now() AND n.attempt<$4) OR
+           (n.status='SENDING' AND n.lease_until<=now()))))))
+    ORDER BY n.created_at,n.id LIMIT 1 FOR UPDATE OF n SKIP LOCKED`,[config.legalEntityId,config.activatedAt,config.recipient,MAX_ATTEMPTS,config.backfillReportId??null])).rows[0];
    if(!row)return null;
    const reconcile=row.status==='SENDING',attempt=Number(row.attempt)+(reconcile?0:1),params=ownerReportEmailParams(row,config.recipient);
    const updated=await c.query(`UPDATE owner_notifications SET status='SENDING',channel='gmail',recipient_ref=$2,
@@ -92,6 +98,8 @@ export async function runOwnerReportEmailTick(binding?:OwnerReportEmailBinding,a
        schema:'sam.owner_report_email_admission.v1',activationAuditId:config.activationAuditId,
        notificationId:claimed.id,goalId:claimed.goal_id,reportId:claimed.report_id,reportHash:claimed.report_hash,
        attempt:claimed.attempt,idempotencyKey:claimed.key,params:claimed.params,paramsHash:sha256Hex(claimed.params),
+       exception:claimed.backfill_exception?'BACKFILL_REPORT_ID':null,
+       backfillReportId:claimed.backfill_exception?config.backfillReportId:null,
        dataClassification:config.dataClassification})]);
    });
   }catch{return await finish(claimed.attempt<MAX_ATTEMPTS?'RETRY':'FAILED',null,'PRE_SEND_ADMISSION_DENIED')}

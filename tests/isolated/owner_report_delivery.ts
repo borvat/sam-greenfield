@@ -168,3 +168,39 @@ test('standing notification consent does not authorize generic Gmail or mutate g
   }finally{client.release()}
  }finally{await f.sql.close()}
 });
+
+test('one owner-authorized pre-cutover report is delivered exactly once and no other old report is touched',async()=>{
+ process.env.SAM_OWNER_REPORT_EMAIL_ENABLED='true';const f=await fixture();try{
+  const R2='88888888-8888-4888-8888-888888888888',N2='99999999-9999-4999-8999-999999999999',N3='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  await f.sql.exec("UPDATE owner_notifications SET created_at=now()-interval '2 hours';UPDATE goal_read_reviews SET created_at=now()-interval '2 hours'");
+  await f.sql.query("INSERT INTO goal_read_reviews(id,goal_id,report_hash,decision,created_at) VALUES($1,$2,$3,$4,now()-interval '2 hours')",[R2,G,'b'.repeat(64),{status:'complete',summary:'Second saved report'}]);
+  await f.sql.query("INSERT INTO owner_notifications(id,legal_entity_id,goal_id,dedup_key,kind,severity,title,body,created_at) VALUES($1,$2,$3,'synthetic:two','COMPLETED','INFO','Synthetic',$4,now()-interval '2 hours')",[N2,A,G,{report:{id:R2,hash:'b'.repeat(64)}}]);
+  await f.sql.query("INSERT INTO owner_notifications(id,legal_entity_id,goal_id,dedup_key,kind,severity,title,body,created_at) VALUES($1,$2,$3,'synthetic:dup','COMPLETED','INFO','Synthetic',$4,now()-interval '90 minutes')",[N3,A,G,{report:{id:R,hash:'a'.repeat(64)}}]);
+  const activatedAt=new Date(Date.now()-3600_000).toISOString();
+  await f.sql.query("UPDATE audit_log SET after_ref=jsonb_set(after_ref,'{activatedAt}',to_jsonb($1::text))",[activatedAt]);
+  const cutoff={...binding,activatedAt};
+  assert.equal((await runOwnerReportEmailTick(cutoff,f.adapter,f.db)).processed,false,'cutoff alone selected nothing');
+  assert.equal(f.sends(),0);
+  const allowed={...cutoff,backfillReportId:R};
+  assert.equal((await runOwnerReportEmailTick(allowed,f.adapter,f.db)).outcome,'ACCEPTED');
+  assert.equal(f.sends(),1);
+  assert.equal((await f.row()).status,'ACCEPTED');
+  assert.equal((await f.sql.query<any>('SELECT status FROM owner_notifications WHERE id=$1',[N2])).rows[0].status,'UNROUTED','other saved report untouched');
+  assert.equal((await f.sql.query<any>('SELECT status FROM owner_notifications WHERE id=$1',[N3])).rows[0].status,'UNROUTED','duplicate notification for the same report untouched');
+  assert.equal((await runOwnerReportEmailTick(allowed,f.adapter,f.db)).processed,false,'no repeat for the same report');
+  assert.equal(f.sends(),1);
+  const admission=(await f.sql.query<any>("SELECT after_ref FROM audit_log WHERE action='OWNER_REPORT_EMAIL_ADMITTED'")).rows[0].after_ref;
+  assert.equal(admission.exception,'BACKFILL_REPORT_ID');assert.equal(admission.backfillReportId,R);
+ }finally{await f.sql.close()}
+});
+
+test('backfill exception is bounded to a valid single report id and absent by default',()=>{
+ const bundle={capabilities:[],toolDefinitions:[],toolAdapters:[]};
+ const env={SAM_OWNER_REPORT_EMAIL_ENABLED:'true',SAM_DEFAULT_LEGAL_ENTITY_ID:A,
+  SAM_OWNER_REPORT_EMAIL_ACTIVATION_AUDIT_ID:X,SAM_OWNER_REPORT_EMAIL_ACTIVATED_AT:binding.activatedAt,
+  SAM_OWNER_REPORT_EMAIL_DATA_CLASSIFICATION:'INTERNAL',GOOGLE_OAUTH_CLIENT_ID:'synthetic-client',
+  GOOGLE_OAUTH_CLIENT_SECRET:'synthetic-test-fixture-only',GOOGLE_OAUTH_REFRESH_TOKEN:'synthetic-test-fixture-only'};
+ assert.equal(withOwnerReportEmailFromEnv(bundle,env).ownerReportEmail?.backfillReportId,undefined);
+ assert.throws(()=>withOwnerReportEmailFromEnv(bundle,{...env,SAM_OWNER_REPORT_EMAIL_BACKFILL_REPORT_ID:'not-a-uuid'}),/SERVER_BINDING_INVALID/);
+ assert.equal(withOwnerReportEmailFromEnv(bundle,{...env,SAM_OWNER_REPORT_EMAIL_BACKFILL_REPORT_ID:R}).ownerReportEmail?.backfillReportId,R);
+});
