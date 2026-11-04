@@ -26,6 +26,7 @@ export const EXECUTIVE_BRIEF_VERIFICATION_CONTRACTS:VerificationContractSpec[]=[
 const verification:VerificationAdapter={
   capabilityId:EXECUTIVE_BRIEF_CAPABILITY,
   async verify(input){
+   try{
     const evidence:any=input.execution.evidence??{};
     const callId=typeof evidence.callId==='string'?evidence.callId:'';
     const factsHash=typeof evidence.factsHash==='string'?evidence.factsHash:'';
@@ -55,9 +56,13 @@ const verification:VerificationAdapter={
       )).rowCount;
       if(!stored)return fail('FACTS_HASH_NOT_STORED');
       return {result:'VERIFIED',evidence:{callId,callRowId:call.id,provider:call.provider,model:call.model,tokens:Number(call.tokens),cost:Number(call.cost),factsHash},verifier:'executive-brief-attribution'};
-    }catch{
-      return fail('VERIFICATION_UNAVAILABLE');
+    }catch(error:any){
+      // A broken check must become a visible verdict, not an execution that never verifies.
+      return {result:'FAILED' as const, evidence:{reason:'VERIFIER_ERROR', code:String(error?.code??'').slice(0,40), message:String(error?.message??'').slice(0,140)}, verifier:'executive-brief-attribution'};
     }finally{client.release();}
+   }catch(error:any){
+     return {result:'FAILED' as const, evidence:{reason:'VERIFIER_UNAVAILABLE', code:String(error?.code??'').slice(0,40), message:String(error?.message??'').slice(0,140)}, verifier:'executive-brief-attribution'};
+   }
   }
 };
 

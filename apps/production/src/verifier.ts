@@ -43,7 +43,8 @@ export async function verifyNextExecution(
   // completed the candidate since the initial selection.
   const eligible=await lease.query(`SELECT e.id FROM executions e JOIN goals g ON g.id=e.goal_id WHERE e.id=$1 AND g.state IN ('EXECUTING','VERIFYING') AND e.status='EXECUTED' AND e.plan_id=g.current_plan_id AND NOT EXISTS(SELECT 1 FROM verifications v WHERE v.execution_id=e.id)`,[candidate.id]);
   if(!eligible.rowCount)return {processed:false};
-  const outcome=await verifier.verify({
+  let outcome;
+  try{outcome=await verifier.verify({
     execution:{
       id:candidate.id,
       capabilityId:candidate.capability_id,
@@ -58,7 +59,7 @@ export async function verifyNextExecution(
       requiredEvidenceFields:candidate.required_evidence_fields??{},
       independentQueryTemplate:candidate.independent_query_template??{}
     }
-  });
+  });}catch(error){outcome={result:'FAILED' as const,evidence:{reason:'VERIFIER_THREW',code:String((error as any)?.code??'').slice(0,40),message:String((error as any)?.message??'').slice(0,140)},verifier:'verifier-guard'};}
 
   const verificationId=await recordIndependentVerificationAtomic({
     executionId:candidate.id,
