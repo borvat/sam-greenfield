@@ -160,6 +160,7 @@ DATABASE_URL='postgres://…?options=-c%20app.current_legal_entity_id%3D<entity>
 
 ## 9) مهمة التسليم إلى المالك — الحالة الحالية (BLOCKED)
 
+المستلم الثابت والمعتمد: `ceo@suroohholdings.com` (مكتوب في الكود حرفياً، بلا متغير بيئة، ولا نسخة مخالفة في المستودع).
 التفصيل الكامل والأدلة في `docs/engineering/owner-delivery-20261104/{RESULT.md,READINESS.json}`.
 
 | البوابة | الحالة | الدليل المختصر |

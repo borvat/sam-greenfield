@@ -3,23 +3,34 @@
   "capturedAt": "2026-11-04T05:04:27Z",
   "commit": "6b0368bb054bff3e8cc38209a7038b245ae22600",
   "branch": "feat/command-center-2-20261103",
-  "recipient": "ceo@surooholdings.com",
+  "recipient": "ceo@suroohholdings.com",
   "recipientCopiesInRepo": {
-    "code": [
-      "apps/notifications/src/delivery.ts:10",
-      "apps/notifications/src/delivery.ts:15",
-      "apps/production/src/ownerReportEmailBundle.ts:21"
-    ],
-    "tests": [
-      "tests/isolated/owner_notification_delivery_access.ts:72",
-      "tests/isolated/owner_report_delivery.ts:16",
-      "tests/isolated/owner_report_delivery.ts:134"
-    ],
-    "docs": [
-      "docs/engineering/owner-handoff-20261102/email-preflight-live.json:22",
-      "docs/engineering/SAM-RESUME.md:150"
-    ],
-    "conflictingVariants": []
+    "canonical": "ceo@suroohholdings.com",
+    "occurrences": 16,
+    "files": {
+      "code": [
+        "apps/notifications/src/delivery.ts (2)",
+        "apps/production/src/ownerReportEmailBundle.ts (1)"
+      ],
+      "tests": [
+        "tests/isolated/owner_report_delivery.ts (2)",
+        "tests/isolated/owner_notification_delivery_access.ts (1)"
+      ],
+      "docs": [
+        "docs/engineering/owner-handoff-20261102/email-preflight-live.json (1)",
+        "docs/engineering/review-recovery-progress-20261028.md (1)",
+        "docs/engineering/SAM-RESUME.md (1)",
+        "docs/engineering/owner-delivery-20261104/READINESS.json (1)",
+        "docs/engineering/owner-delivery-20261104/RESULT.md (2)"
+      ],
+      "planning": [
+        "_bmad-output/owner-handoff-source-readiness-20261102.md (1)",
+        "_bmad-output/plan-owner-operational-handoff-20261102.md (1)"
+      ]
+    },
+    "conflictingVariants": [],
+    "verification": "grep for the double-h form returns 16 occurrences; grep for the single-h variant returns 0",
+    "overridePath": "none: the recipient is a literal in OwnerReportEmailBinding and the factory, with no environment variable"
   },
   "liveRevisions": {
     "sam-runtime": "26b386a96f53f0e6e947adf51769275c0d8c9ae9",
@@ -127,7 +138,7 @@
           "attemptsRls": false,
           "mutationPerformed": false
         },
-        "whyNotReverified": "direct external Postgres connection from this host reaches TLSv1.3 then the server closes before any startup response; no Render Shell access without owner login",
+        "whyNotReverified": "direct external Postgres connection from this host reaches TLSv1.3 then the server closes before any startup response; the same failure occurs against the second production database (surooh-wms-evidence-synthetic), so it is host egress, not database state; no Render Shell access without owner login",
         "implication": "attemptsRls=false indicates 00107 (ENABLE/FORCE RLS on notification_delivery_attempts) may not be applied in production, and the runtime role holds no delivery writes; the operator provisioner expects 00107 present"
       }
     },
