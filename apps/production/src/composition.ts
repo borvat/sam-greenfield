@@ -55,8 +55,13 @@ export function createProductionComposition(input:{
   const hasSideEffects=Object.keys(input.bundle.catalog.authorityPolicies()).some(id=>input.bundle.tools.definition(id).sideEffect);
 
   const attempt=async<T>(stage:string,run:()=>Promise<T>):Promise<T|{processed:false;failed:true;reason:string}>=>{
-    try{return await run();}catch{
-      console.error(JSON.stringify({event:'RUNTIME_STAGE_FAILED',stage,details:'withheld'}));
+    try{return await run();}catch(error){
+      // Sanitized: the stage, the SQLSTATE when there is one, and an app error code only when the
+      // message is a bare code. Free text and request data stay withheld.
+      const code=typeof (error as any)?.code==='string'?(error as any).code:null;
+      const message=error instanceof Error?error.message:String(error);
+      const reason=/^[A-Z0-9_.:-]{3,80}$/.test(message)?message:'MESSAGE_WITHHELD';
+      console.error(JSON.stringify({event:'RUNTIME_STAGE_FAILED',stage,code,reason}));
       return {processed:false,failed:true,reason:'STAGE_FAILED'};
     }
   };
