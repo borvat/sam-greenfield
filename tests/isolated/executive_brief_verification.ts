@@ -52,6 +52,8 @@ test('a traced, billed, same-tenant call with a stored facts hash verifies', asy
     const out = await verifier().verify(call(callId, hash));
     assert.equal(out.result, 'VERIFIED');
     assert.equal((out.evidence as any).tokens, 975);
+    assert.equal((out.evidence as any).success, true);
+    assert.equal(typeof (out.evidence as any).factsHash, 'string');
   } finally {
     await cleanup(callId);
   }

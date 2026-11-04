@@ -18,7 +18,8 @@ export const EXECUTIVE_BRIEF_VERIFICATION_CONTRACTS:VerificationContractSpec[]=[
   description:'An executive brief is verified only when its trace id names a stored model_calls row for this company, that call succeeded with billed tokens, and the stored brief keeps the same facts hash.',
   verificationMethod:'db_query',
   // The kernel only accepts plain JSON types here; 'uuid' or 'integer' fail its check.
-  requiredEvidenceFields:{callId:'string',factsHash:'string',provider:'string',model:'string'},
+  // Plain JSON types only: the kernel compares typeof(value) with this literal.
+  requiredEvidenceFields:{callId:'string',factsHash:'string',provider:'string',model:'string',tokens:'number',success:'boolean'},
   // The trace id is not model_calls.id: the engine records it inside task as
   // executive_briefing:<callId>:<attempt>. Binding on task is the correct join.
   independentQueryTemplate:{query:"select id,provider,model,tokens,cost,success,legal_entity_id from model_calls where task like ('executive_briefing:'||$1||':%') order by created_at desc limit 1"}
@@ -56,7 +57,7 @@ const verification:VerificationAdapter={
         [entity,callId,factsHash],
       )).rowCount;
       if(!stored)return fail('FACTS_HASH_NOT_STORED');
-      return {result:'VERIFIED',evidence:{callId,callRowId:call.id,provider:call.provider,model:call.model,tokens:Number(call.tokens),cost:Number(call.cost),factsHash},verifier:'executive-brief-attribution'};
+      return {result:'VERIFIED',evidence:{callId,factsHash,provider:String(call.provider),model:String(call.model),tokens:Number(call.tokens),success:call.success===true,callRowId:call.id,cost:Number(call.cost)},verifier:'executive-brief-attribution'};
     }catch(error:any){
       // A broken check must become a visible verdict, not an execution that never verifies.
       return {result:'FAILED' as const, evidence:{reason:'VERIFIER_ERROR', code:String(error?.code??'').slice(0,40), message:String(error?.message??'').slice(0,140)}, verifier:'executive-brief-attribution'};
