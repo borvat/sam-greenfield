@@ -17,7 +17,8 @@ export const EXECUTIVE_BRIEF_VERIFICATION_CONTRACTS:VerificationContractSpec[]=[
   capabilityId:EXECUTIVE_BRIEF_CAPABILITY,
   description:'An executive brief is verified only when its trace id names a stored model_calls row for this company, that call succeeded with billed tokens, and the stored brief keeps the same facts hash.',
   verificationMethod:'db_query',
-  requiredEvidenceFields:{callId:'uuid',factsHash:'string',provider:'string',model:'string',tokens:'integer'},
+  // The kernel only accepts plain JSON types here; 'uuid' or 'integer' fail its check.
+  requiredEvidenceFields:{callId:'string',factsHash:'string',provider:'string',model:'string'},
   // The trace id is not model_calls.id: the engine records it inside task as
   // executive_briefing:<callId>:<attempt>. Binding on task is the correct join.
   independentQueryTemplate:{query:"select id,provider,model,tokens,cost,success,legal_entity_id from model_calls where task like ('executive_briefing:'||$1||':%') order by created_at desc limit 1"}

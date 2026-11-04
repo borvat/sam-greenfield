@@ -26,7 +26,7 @@ test('a contract exists and forbids trusting the execution result', () => {
   const spec=EXECUTIVE_BRIEF_VERIFICATION_CONTRACTS[0];
   assert.equal(spec.capabilityId,EXECUTIVE_BRIEF_CAPABILITY);
   assert.equal(spec.verificationMethod,'db_query');
-  assert.equal((spec.requiredEvidenceFields as any).callId,'uuid');
+  assert.equal((spec.requiredEvidenceFields as any).callId,'string');
   assert.equal((spec.requiredEvidenceFields as any).factsHash,'string');
   assert.match(String((spec.independentQueryTemplate as any).query),/executive_briefing:/);
 });
