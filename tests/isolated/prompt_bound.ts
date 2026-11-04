@@ -50,3 +50,10 @@ test('emoji and rare characters are counted by their bytes, not by their glyph c
   assert.equal(rare.codePoints, 1);
   assert.equal(rare.bytes, 4);
 });
+
+test('the measured task name has the same length as a real call task', async () => {
+  const {randomUUID} = await import('node:crypto');
+  const measured = `executive_briefing:${'00000000-0000-4000-8000-000000000000'}:2`;
+  const real = `executive_briefing:${randomUUID()}:2`;
+  assert.equal(Buffer.byteLength(measured, 'utf8'), Buffer.byteLength(real, 'utf8'));
+});

@@ -36,8 +36,10 @@ export function buildInput(facts: unknown, lang: Lang): Record<string, unknown> 
 
 /** Bytes of the final request body as the provider will see it, template overhead excluded. */
 export function promptBytes(facts: unknown, lang: Lang): number {
+  // Measure with the real task shape: the engine sends executive_briefing:<callId>:<attempt>,
+  // which is longer than the bare name. Measuring the short form under-counted the request.
   const prompt = taskPrompt({
-    task: 'executive_briefing',
+    task: `executive_briefing:${'00000000-0000-4000-8000-000000000000'}:2`,
     capability: 'planning',
     dataClassification: 'INTERNAL',
     input: buildInput(facts, lang),
