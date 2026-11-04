@@ -113,6 +113,10 @@ export function withExecutiveBrief(bundle:ProductionBundle):ProductionBundle{
             callId:brief.receipt?.callId??null,
             attribution:brief.receipt?.attribution??'MISSING',
             factsHash:brief.receipt?.factsHash??null,
+            provider:brief.receipt?.provider??null,
+            model:brief.receipt?.model??null,
+            inputTokens:brief.receipt?.inputTokens??null,
+            outputTokens:brief.receipt?.outputTokens??null,
             fromStore:brief.fromStore===true,
             costUsd:brief.receipt?.costUsd??null
           }
