@@ -32,7 +32,12 @@ export async function verifyNextExecution(
 
   if(!candidate) return {processed:false};
   const verifier=bundle.verifiers.get(candidate.capability_id);
-  if(!verifier) return {processed:false};
+  if(!verifier){
+    // Silence here left executions unverified with nothing to inspect. Record the gap instead.
+    await recordIndependentVerificationAtomic({executionId:candidate.id,verifier:'verifier-registry',contractId:candidate.contract_id,
+      independentEvidence:{reason:'NO_VERIFIER_REGISTERED',capabilityId:candidate.capability_id},result:'FAILED'}).catch(()=>{});
+    return {processed:true,executionId:candidate.id};
+  }
 
   const lease=await pool.connect();
   let locked=false;
