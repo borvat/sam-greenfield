@@ -12,14 +12,16 @@ export function createHealthServer(gate:ReadinessGate,metrics?:()=>unknown):Serv
     }
 
     if(req.url==="/livez"){
+      const rev=buildRevision();
       res.setHeader("content-type","application/json");
       res.statusCode=200;
-      res.end(JSON.stringify({status:"alive",...buildRevision()}));
+      res.end(JSON.stringify({status:"alive",...rev,commit:rev.revision}));
       return;
     }
 
     if(req.url==="/readyz"){
       const state=gate.snapshot();
+      const rev=buildRevision();
       res.setHeader("content-type","application/json");
       res.statusCode=state.ready ? 200 : 503;
       res.end(JSON.stringify({
@@ -28,7 +30,7 @@ export function createHealthServer(gate:ReadinessGate,metrics?:()=>unknown):Serv
         recovering:state.recovering,
         shuttingDown:state.shuttingDown,
         recoveredAt:state.recoveredAt,
-        ...buildRevision()
+        ...rev,commit:rev.revision
       }));
       return;
     }
