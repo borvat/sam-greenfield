@@ -1,0 +1,198 @@
+{
+  "schema": "sam.owner_report_email.readiness.v1",
+  "capturedAt": "2026-11-04T05:04:27Z",
+  "commit": "6b0368bb054bff3e8cc38209a7038b245ae22600",
+  "branch": "feat/command-center-2-20261103",
+  "recipient": "ceo@surooholdings.com",
+  "recipientCopiesInRepo": {
+    "code": [
+      "apps/notifications/src/delivery.ts:10",
+      "apps/notifications/src/delivery.ts:15",
+      "apps/production/src/ownerReportEmailBundle.ts:21"
+    ],
+    "tests": [
+      "tests/isolated/owner_notification_delivery_access.ts:72",
+      "tests/isolated/owner_report_delivery.ts:16",
+      "tests/isolated/owner_report_delivery.ts:134"
+    ],
+    "docs": [
+      "docs/engineering/owner-handoff-20261102/email-preflight-live.json:22",
+      "docs/engineering/SAM-RESUME.md:150"
+    ],
+    "conflictingVariants": []
+  },
+  "liveRevisions": {
+    "sam-runtime": "26b386a96f53f0e6e947adf51769275c0d8c9ae9",
+    "sam-mcp": "5311db5111e238e9a3553e2aba6d352e9e475a8a",
+    "sam-command-center": "a7508caa674b469aa46294d64a621b06336706e4",
+    "observedVia": "GET /livez on each service"
+  },
+  "deployedCodePath": {
+    "compositionImportsTick": "apps/production/src/composition.ts:1 and :95 in 26b386a",
+    "bundleWiring": "apps/production/src/defaultBundleModule.ts:41 calls withOwnerReportEmailFromEnv in 26b386a",
+    "autoDeploy": "no on all three services; live revision is pinned by SHA",
+    "status": "PASS"
+  },
+  "localCodeTests": {
+    "command": "DATABASE_URL='postgres://unused:unused@127.0.0.1:5432/unused' node --import tsx --test tests/isolated/owner_report_delivery.ts",
+    "result": "21 tests, 21 pass, 0 fail",
+    "provisioningCommand": "DATABASE_URL='postgres://unused:unused@127.0.0.1:5432/unused' node --import tsx --test tests/isolated/owner_notification_delivery_access.ts",
+    "provisioningResult": "5 tests, 5 pass, 0 fail",
+    "proves": [
+      "single send under standing consent",
+      "repeated and concurrent ticks send once (idempotency owner-report-email:<notificationId>)",
+      "DISABLED before any database connection when the flag is absent",
+      "TRANSPORT_OR_BINDING_UNAVAILABLE when binding or gmail_send adapter is missing",
+      "owner standing consent does not authorize generic gmail_send or raise goal ceilings",
+      "least-privilege provisioning preflight and column grants under SET ROLE sam_runtime_app"
+    ],
+    "doesNotProve": [
+      "provider acceptance",
+      "inbox arrival",
+      "production application of 00107 or grants",
+      "Google send consent"
+    ]
+  },
+  "gates": [
+    {
+      "id": "G1_CODE_AND_DUPLICATE_GUARD",
+      "status": "PASS",
+      "evidence": "deployed composition/bundle wiring at 26b386a; 21/21 delivery tests including concurrent single-send; idempotency key and ACCEPTED state prevent resend of the same notification"
+    },
+    {
+      "id": "G2_GOOGLE_SEND_CONSENT",
+      "status": "BLOCKED",
+      "evidence": {
+        "tokenExchangeHttp": 200,
+        "grantedScopes": [
+          "https://www.googleapis.com/auth/drive.metadata.readonly",
+          "https://www.googleapis.com/auth/gmail.readonly"
+        ],
+        "gmailSend": false,
+        "gmailReadonly": true,
+        "mcpConnectionStatus": {
+          "sendCapability": "NOT_AUTHORIZED",
+          "discoveredReadTools": 7,
+          "authorizationStored": true
+        }
+      },
+      "meaning": "no send scope on the runtime refresh token; any send would fail at the provider with insufficient scope"
+    },
+    {
+      "id": "G3_ACTIVATION_BINDING",
+      "status": "BLOCKED",
+      "evidence": {
+        "runtimeEnvVarCount": 23,
+        "presentNames": [
+          "SAM_BRIEFING_BUDGET_USD",
+          "SAM_EXECUTIVE_BRIEF_ENABLED",
+          "GOOGLE_OAUTH_REFRESH_TOKEN",
+          "DATABASE_URL"
+        ],
+        "missingNames": [
+          "SAM_OWNER_REPORT_EMAIL_ENABLED",
+          "SAM_OWNER_REPORT_EMAIL_ACTIVATED_AT",
+          "SAM_OWNER_REPORT_EMAIL_ACTIVATION_AUDIT_ID",
+          "SAM_OWNER_REPORT_EMAIL_DATA_CLASSIFICATION"
+        ],
+        "companyResolution": {
+          "SAM_COMMAND_CENTER_LEGAL_ENTITY_ID": "73aa81c6-3a23-4369-9408-8bea0956d399 from env group sam-prod-common",
+          "SAM_DEFAULT_LEGAL_ENTITY_ID": "absent"
+        },
+        "googleClientEnv": {
+          "GOOGLE_OAUTH_CLIENT_ID": "from env group sam-prod-google-client",
+          "GOOGLE_OAUTH_CLIENT_SECRET": "from env group sam-prod-google-client",
+          "GOOGLE_OAUTH_REFRESH_TOKEN": "set on sam-runtime, length 103"
+        },
+        "activationAuditRows": 0,
+        "auditScanWindow": {
+          "rows": 200,
+          "oldest": "2026-10-22T13:03:22.902Z",
+          "newest": "2026-11-04T03:25:20.998Z",
+          "source": "sam_list_audit limit 200"
+        }
+      },
+      "meaning": "with the flag absent the tick returns DISABLED before any connection; with a partial binding the factory throws OWNER_REPORT_EMAIL_SERVER_BINDING_INVALID"
+    },
+    {
+      "id": "G4_RUNTIME_DB_PRIVILEGES",
+      "status": "UNVERIFIED_THIS_SESSION",
+      "evidence": {
+        "priorReport": {
+          "source": "docs/engineering/owner-handoff-20261102/email-preflight-live.json",
+          "checkedAt": "2026-11-01T23:30:10.315Z",
+          "role": "sam_runtime_app",
+          "canUpdateDeliveryChannel": false,
+          "canInsertAttempt": false,
+          "attemptsRls": false,
+          "mutationPerformed": false
+        },
+        "whyNotReverified": "direct external Postgres connection from this host reaches TLSv1.3 then the server closes before any startup response; no Render Shell access without owner login",
+        "implication": "attemptsRls=false indicates 00107 (ENABLE/FORCE RLS on notification_delivery_attempts) may not be applied in production, and the runtime role holds no delivery writes; the operator provisioner expects 00107 present"
+      }
+    },
+    {
+      "id": "G5_ELIGIBLE_SAVED_REPORT",
+      "status": "BLOCKED",
+      "evidence": {
+        "notificationCounts": {
+          "UNROUTED": 7,
+          "SUPPRESSED": 2
+        },
+        "completedNotificationsWithReport": [
+          {
+            "notificationId": "12c64dd4-a93d-4526-9254-3121039cb188",
+            "goalId": "6751e9a4-cda5-465e-9f8a-611eeea582b7",
+            "reportId": "939ea95c-6d02-478d-9a41-d5d3a04e139b",
+            "reportHash": "122c6c4be8134b7ffe4e6a64f36a95a47e54a614a009ffdda1dbf257b2fec5c4",
+            "decisionStatus": "complete",
+            "createdAt": "2026-11-01T22:58:44.815Z"
+          },
+          {
+            "notificationId": "7d87f96c-0ece-4b30-b1c6-1d476a4cc385",
+            "reportId": "22234432-f21e-4a82-b24d-faf32f3635bb",
+            "createdAt": "2026-11-01T22:43:29.711Z"
+          },
+          {
+            "notificationId": "73dfea23-b130-4eab-9b5a-e83ce62d310c",
+            "reportId": "97c433b0-61e2-4b47-9894-0cc6fb72ccd2",
+            "createdAt": "2026-11-01T22:39:25.212Z"
+          },
+          {
+            "notificationId": "e0283121-947e-47b9-94e7-8be1aae16299",
+            "reportId": "3ccab2cc-ed84-4534-9c17-70c9271b5e06",
+            "createdAt": "2026-10-28T02:01:15.209Z"
+          }
+        ],
+        "executiveBriefNotification": {
+          "id": "42585a8d-449b-4544-a9db-4b30a53ac89f",
+          "goalId": "dd6c6244-d40e-4c28-b6c4-3758ee63034d",
+          "createdAt": "2026-11-04T04:21:36.204Z",
+          "report": null,
+          "summaryMeaning": "COMPLETED without a linked read-review report"
+        },
+        "cutoverRule": "delivery.ts selects only notifications with created_at >= binding.activatedAt and a matching complete goal_read_reviews row"
+      },
+      "meaning": "every saved report predates any truthful activation timestamp, and the accepted executive brief is not a read-review report, so an activation recorded now would select zero rows"
+    }
+  ],
+  "actionsPerformed": {
+    "providerSend": false,
+    "externalEmail": false,
+    "envChanged": false,
+    "secretChanged": false,
+    "permissionChanged": false,
+    "deployment": false,
+    "merge": false,
+    "newAnalysisGenerated": false,
+    "budgetChanged": false,
+    "logCleared": false
+  },
+  "readOnlyChecksUsed": [
+    "GET https://api.render.com/v1/services/{id}/env-vars (names and presence only)",
+    "GET https://api.render.com/v1/env-groups/{id} (names and presence only)",
+    "GET https://api.render.com/v1/postgres/{id}/connection-info (connection attempted, refused by server)",
+    "POST https://oauth2.googleapis.com/token then GET /tokeninfo (scope inventory only)",
+    "MCP tools: sam_list_notifications, sam_notification_status, sam_list_audit, sam_get_report, sam_google_connection_status, sam_runtime_health, sam_system_status, sam_list_approvals"
+  ]
+}
