@@ -14,11 +14,17 @@ import { BOL_VERIFICATION_CONTRACTS } from "../../production/src/bolBundle";
 import { FINANCE_RECONCILIATION_CONTRACTS } from "../../production/src/financeReconciliationBundle";
 import {HERMES_VERIFICATION_CONTRACTS} from '../../production/src/hermesDataAnalysis';
 import { createFinanceOperationalTickFromEnv } from "../../production/src/financeOperationalLoop";
+import { provisionExecutiveBriefContract } from "../../production/src/executiveBriefCapability";
 
 export default (async()=>{
 const config=loadRuntimeConfig();
 if(config.mode==='production'){
  await assertRuntimeTenantBinding(pool);
+}
+// Enabling the capability also provisions its verification contract (idempotent).
+if(process.env.SAM_EXECUTIVE_BRIEF_ENABLED==='1'){
+  try{await provisionExecutiveBriefContract();}
+  catch(error){console.error(JSON.stringify({event:'EXECUTIVE_BRIEF_CONTRACT_PROVISION_FAILED',details:'withheld'}));}
 }
 const bundlePath=process.env.SAM_PRODUCTION_BUNDLE_MODULE?.trim()??"";
 const bundle=await loadProductionBundle(bundlePath);

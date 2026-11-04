@@ -9,6 +9,7 @@ import { withEBoekhoudenFromEnv } from "./eboekhoudenBundle";
 import { withBolRetailerFromEnv } from "./bolMcpBundle";
 import { withFinanceReconciliationFromEnv } from "./financeReconciliationBundle";
 import {withHermesDataAnalysisFromEnv} from './hermesDataAnalysis';
+import {withExecutiveBrief} from './executiveBriefCapability';
 
 async function buildBundle():Promise<ProductionBundle>{
   let bundle:ProductionBundle={capabilities:[],toolDefinitions:[],toolAdapters:[]};
@@ -31,6 +32,11 @@ async function buildBundle():Promise<ProductionBundle>{
       toolDefinitions:bundle.toolDefinitions.filter(d=>keep(d.capabilityId)),
       toolAdapters:bundle.toolAdapters.filter(a=>keep(a.capabilityId)),
       verificationAdapters:bundle.verificationAdapters?.filter(v=>keep(v.capabilityId))};
+  }
+  // Opt-in capability: a failed registration must never keep the worker from starting.
+  if(process.env.SAM_EXECUTIVE_BRIEF_ENABLED==='1'){
+    try{bundle=withExecutiveBrief(bundle);}
+    catch(error){console.error(JSON.stringify({event:'EXECUTIVE_BRIEF_REGISTRATION_FAILED',details:'withheld'}));}
   }
   return withOwnerReportEmailFromEnv(await withHermesDataAnalysisFromEnv(bundle));
 }
